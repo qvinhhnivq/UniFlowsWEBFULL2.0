@@ -1,0 +1,1 @@
+const form=document.querySelector('#login-form');form.onsubmit=e=>{e.preventDefault();if(document.querySelector('#password').value==='UniFLOWs2026!'){sessionStorage.setItem('uniflows-admin','true');location.href='admin.html'}else document.querySelector('#login-error').style.display='block'};

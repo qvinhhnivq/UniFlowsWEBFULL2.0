@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/l/:artist/:release", "destination": "/listen.html?artist=:artist&release=:release" }
+  ]
+}
