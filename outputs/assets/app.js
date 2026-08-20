@@ -1,15 +1,265 @@
-import{getData}from'./data.js';
-const data=getData(),$=(s,r=document)=>r.querySelector(s),esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])),slug=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-const link=(u='#')=>u&&u!=='#'?u:'#';
-document.body.insertAdjacentHTML('afterbegin',`<header class="nav"><a href="index.html" class="brand">UNIFLOWs<small>label / est. 2026</small></a><button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button><nav class="nav-links"><a href="artists.html">Nghệ sĩ</a><a href="about.html">Về chúng tôi</a><a href="news.html">Tạp chí</a><a href="contact.html">Liên hệ</a><a class="artist-login-link" href="artist-login.html">Artist login ↗</a></nav></header>`);
-document.body.insertAdjacentHTML('beforeend',`<div class="smart-modal" id="smart-modal" aria-hidden="true"><div class="smart-dialog"><button class="close-modal" aria-label="Đóng">×</button><span class="eyebrow">UniFLOWs / Smart link</span><h2 id="smart-title">Nghe ngay</h2><p>Chọn nền tảng yêu thích của bạn.</p><div id="platform-links" class="platform-links"></div></div></div><footer><span>© 2026 UniFLOWs Label</span><span>${esc(data.city)}</span><span>Independent music company</span></footer>`);
-$('.menu').onclick=()=>{let o=document.body.classList.toggle('menu-open');$('.menu').setAttribute('aria-expanded',o)};
-document.querySelectorAll('[data-content]').forEach(n=>{let v=n.dataset.content.split('.').reduce((o,k)=>o?.[k],data);if(v!==undefined)n.textContent=v});document.querySelectorAll('[data-email]').forEach(n=>{n.textContent=data.email;n.href=`mailto:${data.email}`});
-function artists(){let grid=$('[data-artists]');if(grid)grid.innerHTML=data.artists.map(a=>`<a class="artist" href="artist.html?id=${encodeURIComponent(a.id)}"><img src="${esc(a.image)}" alt="${esc(a.name)}"><div class="artist-info"><span>${esc(a.genre)}</span><h4>${esc(a.name)}</h4><b>Khám phá ↗</b></div></a>`).join('')}
-function articleCards(){let root=$('[data-articles]');if(!root)return;const build=()=>{let all=data.articles.filter(a=>a.published),q=($('#article-search')?.value||'').toLowerCase();return all.filter(a=>(a.title+a.category).toLowerCase().includes(q)).map((a,i)=>`<article class="${i?'news-card':'feature'}"><span class="date">${esc(a.category)} / ${esc(a.date)}</span><h3>${esc(a.title)}</h3><p>${esc(a.excerpt||'')}</p><a class="card-link" href="article.html?id=${encodeURIComponent(a.id)}">Đọc bài đầy đủ →</a></article>`).join('')||'<p class="empty">Không tìm thấy bài viết phù hợp.</p>'};root.innerHTML=build();$('#article-search')?.addEventListener('input',()=>root.innerHTML=build())}
-function artistDetail(){let root=$('[data-artist-detail]');if(!root)return;const a=data.artists.find(x=>x.id===new URLSearchParams(location.search).get('id'));if(!a){root.innerHTML='<p>Không tìm thấy nghệ sĩ.</p>';return}const gallery=(a.gallery?.length?a.gallery:[a.image]).filter(Boolean);root.innerHTML=`<section class="artist-detail"><img src="${esc(a.image)}" alt="${esc(a.name)}"><div><span class="eyebrow">${esc(a.genre)}</span><h1>${esc(a.name)}</h1><p>${esc(a.bio)}</p><div class="socials"><a href="${link(a.instagram)}" target="_blank">Instagram ↗</a><a href="${link(a.youtube)}" target="_blank">YouTube ↗</a><a href="${link(a.tiktok)}" target="_blank">TikTok ↗</a></div></div></section>${gallery.length>1?`<section class="gallery"><div class="section-head"><h2>Gallery</h2><span class="kicker">${gallery.length} images</span></div><div class="gallery-grid">${gallery.map((img,i)=>`<img src="${esc(img)}" alt="${esc(a.name)} — ảnh ${i+1}">`).join('')}</div></section>`:''}<section class="releases"><div class="section-head"><h2>Sản phẩm</h2><span class="kicker">Listen everywhere</span></div>${a.products.map(p=>`<a class="release" href="listen.html?artist=${encodeURIComponent(a.id)}&release=${encodeURIComponent(p.slug||slug(p.title))}"><span>${esc(p.type)}</span><strong>${esc(p.title)}</strong><b>Smart link ↗</b></a>`).join('')}</section>`}
-function openSmart(p){let links=p.links||{};let defaults={Spotify:links.spotify||p.url||'#','Apple Music':links.apple||p.url||'#','YouTube Music':links.youtube||p.url||'#',SoundCloud:links.soundcloud||p.url||'#','Nhaccuatui (NCT)':links.nct||p.url||'#','Zing MP3':links.zingmp3||p.url||'#'};let extra=Object.entries(links).filter(([name])=>!['spotify','apple','youtube','soundcloud','nct','zingmp3'].includes(name)).map(([name,url])=>[name,url]);$('#smart-title').textContent=p.title;$('#platform-links').innerHTML=[...Object.entries(defaults),...extra].map(([n,u])=>`<a href="${link(u)}" target="_blank" rel="noreferrer">${esc(n)}<span>↗</span></a>`).join('');$('#smart-modal').classList.add('show');$('#smart-modal').setAttribute('aria-hidden','false')}
-$('.close-modal').onclick=()=>$('#smart-modal').classList.remove('show');$('#smart-modal').onclick=e=>{if(e.target===$('#smart-modal'))$('#smart-modal').classList.remove('show')};
-function articleDetail(){let root=$('[data-article-detail]');if(!root)return;let a=data.articles.find(x=>x.id===new URLSearchParams(location.search).get('id'));if(!a||!a.published){root.innerHTML='<p>Không tìm thấy bài viết.</p>';return}root.innerHTML=`<article class="article-detail">${a.cover?`<img class="article-cover" src="${esc(a.cover)}" alt="${esc(a.title)}">`:''}<span class="eyebrow">${esc(a.category)} / ${esc(a.date)}</span><h1>${esc(a.title)}</h1><p class="lead">${esc(a.excerpt)}</p><div class="article-meta">Bởi ${esc(a.author||'UniFLOWs Editorial')} · ${esc(a.readTime||'3 phút đọc')}</div><div class="article-body">${esc(a.body).replace(/\n/g,'<br>')}</div><div class="article-actions"><button id="share-article">Chia sẻ bài viết ↗</button><a class="card-link" href="news.html">← Quay lại tạp chí</a></div></article>`;$('#share-article').onclick=async()=>{try{await navigator.share({title:a.title,url:location.href})}catch{await navigator.clipboard?.writeText(location.href);$('#share-article').textContent='Đã sao chép liên kết ✓'}}}
-function smartPage(){let root=$('[data-smartlink-page]');if(!root)return;let q=new URLSearchParams(location.search),parts=location.pathname.split('/').filter(Boolean),artistId=q.get('artist')||(parts[0]==='l'?parts[1]:''),releaseId=q.get('release')||(parts[0]==='l'?parts[2]:''),a=data.artists.find(x=>x.id===artistId),p=a?.products?.find(x=>(x.slug||slug(x.title))===releaseId)||a?.products?.[Number(releaseId)];if(!a||!p){root.innerHTML='<p class="smart-error">Không tìm thấy Smart Link này.</p>';return}let links=p.links||{},defaults={Spotify:links.spotify||p.url||'#','Apple Music':links.apple||p.url||'#','YouTube Music':links.youtube||p.url||'#',SoundCloud:links.soundcloud||p.url||'#','Nhaccuatui (NCT)':links.nct||p.url||'#','Zing MP3':links.zingmp3||p.url||'#'},extra=Object.entries(links).filter(([name])=>!['spotify','apple','youtube','soundcloud','nct','zingmp3'].includes(name)).map(([name,url])=>[name,url]),key=`uniflows-clicks-${a.id}-${releaseId}`,count=Number(localStorage.getItem(key)||0);root.innerHTML=`<section class="smart-page"><a class="smart-logo" href="index.html">UNIFLOWs</a><img class="smart-art" src="${esc(a.image)}" alt="${esc(a.name)}"><span class="eyebrow">${esc(a.name)} / ${esc(p.type)}</span><h1>${esc(p.title)}</h1><p>Nghe trên nền tảng bạn yêu thích.</p><div class="smart-platforms">${[...Object.entries(defaults),...extra].map(([name,url])=>`<a data-platform href="${link(url)}" target="_blank" rel="noreferrer">${esc(name)}<span>↗</span></a>`).join('')}</div><button id="share-smart" class="smart-share">Chia sẻ Smart Link</button><small id="click-count">${count?`${count.toLocaleString('vi-VN')} lượt mở link`:''}</small></section>`;root.querySelectorAll('[data-platform]').forEach(btn=>btn.onclick=()=>{count++;localStorage.setItem(key,count);$('#click-count').textContent=`${count.toLocaleString('vi-VN')} lượt mở link`});$('#share-smart').onclick=async()=>{try{await navigator.share({title:`${a.name} — ${p.title}`,url:location.href})}catch{await navigator.clipboard?.writeText(location.href);$('#share-smart').textContent='Đã sao chép liên kết ✓'}}}
-artists();articleCards();artistDetail();articleDetail();smartPage();
+import { getData, getLocalCachedData } from './data.js';
+
+let data = getLocalCachedData();
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+const slug = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const link = (u = '#') => (u && u !== '#' ? u : '#');
+
+// Insert Header
+if (!$('.nav')) {
+  document.body.insertAdjacentHTML('afterbegin', `
+    <header class="nav">
+      <a href="index.html" class="brand">UNIFLOWs<small>label / est. 2026</small></a>
+      <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
+      <nav class="nav-links">
+        <a href="artists.html">Nghệ sĩ</a>
+        <a href="about.html">Về chúng tôi</a>
+        <a href="news.html">Tạp chí</a>
+        <a href="contact.html">Liên hệ</a>
+        <a class="artist-login-link" href="artist-login.html">Artist login ↗</a>
+      </nav>
+    </header>
+  `);
+}
+
+// Insert Footer & Modal
+if (!$('#smart-modal')) {
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="smart-modal" id="smart-modal" aria-hidden="true">
+      <div class="smart-dialog">
+        <button class="close-modal" aria-label="Đóng">×</button>
+        <span class="eyebrow">UniFLOWs / Smart link</span>
+        <h2 id="smart-title">Nghe ngay</h2>
+        <p>Chọn nền tảng yêu thích của bạn.</p>
+        <div id="platform-links" class="platform-links"></div>
+      </div>
+    </div>
+    <footer>
+      <span>© 2026 UniFLOWs Label</span>
+      <span id="footer-city">${esc(data.city)}</span>
+      <span>Independent music company</span>
+    </footer>
+  `);
+}
+
+$('.menu')?.addEventListener('click', () => {
+  let o = document.body.classList.toggle('menu-open');
+  $('.menu').setAttribute('aria-expanded', o);
+});
+
+function renderContent() {
+  document.querySelectorAll('[data-content]').forEach(n => {
+    let v = n.dataset.content.split('.').reduce((o, k) => o?.[k], data);
+    if (v !== undefined) n.textContent = v;
+  });
+  document.querySelectorAll('[data-email]').forEach(n => {
+    n.textContent = data.email;
+    n.href = `mailto:${data.email}`;
+  });
+  const footerCity = $('#footer-city');
+  if (footerCity) footerCity.textContent = data.city;
+}
+
+function artists() {
+  let grid = $('[data-artists]');
+  if (!grid) return;
+  grid.innerHTML = data.artists.map(a => `
+    <a class="artist" href="artist.html?id=${encodeURIComponent(a.id)}">
+      <img src="${esc(a.image)}" alt="${esc(a.name)}">
+      <div class="artist-info">
+        <span>${esc(a.genre)}</span>
+        <h4>${esc(a.name)}</h4>
+        <b>Khám phá ↗</b>
+      </div>
+    </a>
+  `).join('');
+}
+
+function articleCards() {
+  let root = $('[data-articles]');
+  if (!root) return;
+  const build = () => {
+    let all = (data.articles || []).filter(a => a.published);
+    let q = ($('#article-search')?.value || '').toLowerCase();
+    let filtered = all.filter(a => (a.title + (a.category || '')).toLowerCase().includes(q));
+    return filtered.map((a, i) => `
+      <article class="${i ? 'news-card' : 'feature'}">
+        <span class="date">${esc(a.category)} / ${esc(a.date)}</span>
+        <h3>${esc(a.title)}</h3>
+        <p>${esc(a.excerpt || '')}</p>
+        <a class="card-link" href="article.html?id=${encodeURIComponent(a.id)}">Đọc bài đầy đủ →</a>
+      </article>
+    `).join('') || '<p class="empty">Không tìm thấy bài viết phù hợp.</p>';
+  };
+  root.innerHTML = build();
+  $('#article-search')?.addEventListener('input', () => root.innerHTML = build());
+}
+
+function artistDetail() {
+  let root = $('[data-artist-detail]');
+  if (!root) return;
+  const a = data.artists.find(x => x.id === new URLSearchParams(location.search).get('id'));
+  if (!a) {
+    root.innerHTML = '<p>Không tìm thấy nghệ sĩ.</p>';
+    return;
+  }
+  const gallery = (a.gallery?.length ? a.gallery : [a.image]).filter(Boolean);
+  root.innerHTML = `
+    <section class="artist-detail">
+      <img src="${esc(a.image)}" alt="${esc(a.name)}">
+      <div>
+        <span class="eyebrow">${esc(a.genre)}</span>
+        <h1>${esc(a.name)}</h1>
+        <p>${esc(a.bio)}</p>
+        <div class="socials">
+          <a href="${link(a.instagram)}" target="_blank" rel="noreferrer">Instagram ↗</a>
+          <a href="${link(a.youtube)}" target="_blank" rel="noreferrer">YouTube ↗</a>
+          <a href="${link(a.tiktok)}" target="_blank" rel="noreferrer">TikTok ↗</a>
+        </div>
+      </div>
+    </section>
+    ${gallery.length > 1 ? `
+      <section class="gallery">
+        <div class="section-head">
+          <h2>Gallery</h2>
+          <span class="kicker">${gallery.length} images</span>
+        </div>
+        <div class="gallery-grid">
+          ${gallery.map((img, i) => `<img src="${esc(img)}" alt="${esc(a.name)} — ảnh ${i + 1}">`).join('')}
+        </div>
+      </section>
+    ` : ''}
+    <section class="releases">
+      <div class="section-head">
+        <h2>Sản phẩm</h2>
+        <span class="kicker">Listen everywhere</span>
+      </div>
+      ${(a.products || []).map(p => `
+        <a class="release" href="listen.html?artist=${encodeURIComponent(a.id)}&release=${encodeURIComponent(p.slug || slug(p.title))}">
+          <span>${esc(p.type)}</span>
+          <strong>${esc(p.title)}</strong>
+          <b>Smart link ↗</b>
+        </a>
+      `).join('')}
+    </section>
+  `;
+}
+
+function articleDetail() {
+  let root = $('[data-article-detail]');
+  if (!root) return;
+  let a = (data.articles || []).find(x => x.id === new URLSearchParams(location.search).get('id'));
+  if (!a || !a.published) {
+    root.innerHTML = '<p>Không tìm thấy bài viết.</p>';
+    return;
+  }
+  root.innerHTML = `
+    <article class="article-detail">
+      ${a.cover ? `<img class="article-cover" src="${esc(a.cover)}" alt="${esc(a.title)}">` : ''}
+      <span class="eyebrow">${esc(a.category)} / ${esc(a.date)}</span>
+      <h1>${esc(a.title)}</h1>
+      <p class="lead">${esc(a.excerpt)}</p>
+      <div class="article-meta">Bởi ${esc(a.author || 'UniFLOWs Editorial')} · ${esc(a.readTime || '3 phút đọc')}</div>
+      <div class="article-body">${esc(a.body).replace(/\n/g, '<br>')}</div>
+      <div class="article-actions">
+        <button id="share-article">Chia sẻ bài viết ↗</button>
+        <a class="card-link" href="news.html">← Quay lại tạp chí</a>
+      </div>
+    </article>
+  `;
+  $('#share-article')?.addEventListener('click', async () => {
+    try {
+      await navigator.share({ title: a.title, url: location.href });
+    } catch {
+      await navigator.clipboard?.writeText(location.href);
+      $('#share-article').textContent = 'Đã sao chép liên kết ✓';
+    }
+  });
+}
+
+function smartPage() {
+  let root = $('[data-smartlink-page]');
+  if (!root) return;
+  let q = new URLSearchParams(location.search);
+  let parts = location.pathname.split('/').filter(Boolean);
+  let artistId = q.get('artist') || (parts[0] === 'l' ? parts[1] : '');
+  let releaseId = q.get('release') || (parts[0] === 'l' ? parts[2] : '');
+  let a = (data.artists || []).find(x => x.id === artistId);
+  let p = a?.products?.find(x => (x.slug || slug(x.title)) === releaseId) || a?.products?.[Number(releaseId)];
+
+  if (!a || !p) {
+    root.innerHTML = '<p class="smart-error">Không tìm thấy Smart Link này.</p>';
+    return;
+  }
+
+  let links = p.links || {};
+  let defaults = {
+    Spotify: links.spotify || p.url || '#',
+    'Apple Music': links.apple || p.url || '#',
+    'YouTube Music': links.youtube || p.url || '#',
+    SoundCloud: links.soundcloud || p.url || '#',
+    'Nhaccuatui (NCT)': links.nct || p.url || '#',
+    'Zing MP3': links.zingmp3 || p.url || '#'
+  };
+  let extra = Object.entries(links).filter(([name]) => !['spotify', 'apple', 'youtube', 'soundcloud', 'nct', 'zingmp3'].includes(name)).map(([name, url]) => [name, url]);
+  let key = `uniflows-clicks-${a.id}-${releaseId}`;
+  let count = Number(localStorage.getItem(key) || 0);
+
+  root.innerHTML = `
+    <section class="smart-page">
+      <a class="smart-logo" href="index.html">UNIFLOWs</a>
+      <img class="smart-art" src="${esc(p.artworkUrl || a.image)}" alt="${esc(p.title)}">
+      <span class="eyebrow">${esc(a.name)} / ${esc(p.type)}</span>
+      <h1>${esc(p.title)}</h1>
+      <p>Nghe trên nền tảng bạn yêu thích.</p>
+      <div class="smart-platforms">
+        ${[...Object.entries(defaults), ...extra].map(([name, url]) => `
+          <a data-platform href="${link(url)}" target="_blank" rel="noreferrer">${esc(name)}<span>↗</span></a>
+        `).join('')}
+      </div>
+      <button id="share-smart" class="smart-share">Chia sẻ Smart Link</button>
+      <small id="click-count">${count ? `${count.toLocaleString('vi-VN')} lượt mở link` : ''}</small>
+    </section>
+  `;
+
+  root.querySelectorAll('[data-platform]').forEach(btn => {
+    btn.onclick = () => {
+      count++;
+      localStorage.setItem(key, count);
+      $('#click-count').textContent = `${count.toLocaleString('vi-VN')} lượt mở link`;
+    };
+  });
+
+  $('#share-smart')?.addEventListener('click', async () => {
+    try {
+      await navigator.share({ title: `${a.name} — ${p.title}`, url: location.href });
+    } catch {
+      await navigator.clipboard?.writeText(location.href);
+      $('#share-smart').textContent = 'Đã sao chép liên kết ✓';
+    }
+  });
+}
+
+function renderAll() {
+  renderContent();
+  artists();
+  articleCards();
+  artistDetail();
+  articleDetail();
+  smartPage();
+}
+
+// 1. Initial render using cached data
+renderAll();
+
+// 2. Fetch live data from Supabase and re-render if updated
+getData().then(liveData => {
+  data = liveData;
+  renderAll();
+});
+
+$('.close-modal')?.addEventListener('click', () => $('#smart-modal')?.classList.remove('show'));
+$('#smart-modal')?.addEventListener('click', e => {
+  if (e.target === $('#smart-modal')) $('#smart-modal').classList.remove('show');
+});

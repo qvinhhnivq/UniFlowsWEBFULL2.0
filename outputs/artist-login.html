@@ -1,1 +1,84 @@
-<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Artist Login — UniFLOWs</title><link rel="stylesheet" href="assets/app.css"></head><body><main class="admin"><span class="eyebrow">UniFLOWs / Artist portal</span><h1>Artist<br>login.</h1><p class="portal-note">Không có tài khoản? Liên hệ A&R của UniFLOWs để được mời vào hệ thống.</p><p id="artist-login-error" class="notice">Email hoặc mật khẩu chưa đúng.</p><form id="artist-login-form"><div class="field"><label>Email nghệ sĩ</label><input id="artist-email" required type="email" placeholder="artist@email.com"></div><div class="field"><label>Mật khẩu</label><input id="artist-password" required type="password"></div><div class="actions"><button class="button">Đăng nhập portal</button><a class="button alt" href="index.html">Quay lại website</a></div></form></main><script>document.querySelector('#artist-login-form').onsubmit=e=>{e.preventDefault();if(document.querySelector('#artist-email').value==='lumi@uniflowslabel.com'&&document.querySelector('#artist-password').value==='LumiDemo2026!'){sessionStorage.setItem('uniflows-artist','true');location.href='portal.html'}else document.querySelector('#artist-login-error').style.display='block'}</script></body></html>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Artist Login — UniFLOWs</title>
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <main class="admin">
+    <span class="eyebrow">UniFLOWs / Artist portal</span>
+    <h1>Artist<br>login.</h1>
+    <p class="portal-note">Đăng nhập cổng nghệ sĩ để nộp sản phẩm phát hành, theo dõi doanh thu và số liệu streams.</p>
+    
+    <p id="artist-login-error" class="notice" style="display: none;"></p>
+    
+    <form id="artist-login-form">
+      <div class="field">
+        <label for="artist-email">Email nghệ sĩ</label>
+        <input id="artist-email" required type="email" autocomplete="username" placeholder="lumi@uniflowslabel.com">
+      </div>
+      <div class="field">
+        <label for="artist-password">Mật khẩu</label>
+        <input id="artist-password" required type="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div class="actions">
+        <button class="button" type="submit" id="artist-submit-btn">Đăng nhập Portal</button>
+        <a class="button alt" href="index.html">Quay lại website</a>
+      </div>
+    </form>
+  </main>
+
+  <script type="module">
+    import { supabase, isSupabaseConfigured, getCurrentUserProfile } from './assets/supabase.js';
+
+    const form = document.querySelector('#artist-login-form');
+    const errorNotice = document.querySelector('#artist-login-error');
+    const submitBtn = document.querySelector('#artist-submit-btn');
+
+    function showError(msg) {
+      errorNotice.textContent = msg;
+      errorNotice.style.display = 'block';
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      errorNotice.style.display = 'none';
+      const email = document.querySelector('#artist-email').value.trim();
+      const password = document.querySelector('#artist-password').value;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang đăng nhập...';
+
+      try {
+        if (isSupabaseConfigured()) {
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+
+          const profile = await getCurrentUserProfile();
+          sessionStorage.setItem('uniflows-artist', 'true');
+          sessionStorage.setItem('uniflows-artist-id', profile?.artist_id || 'lumi');
+          sessionStorage.setItem('uniflows-artist-email', email);
+          location.href = 'portal.html';
+        } else {
+          // Demo fallback
+          if (email === 'lumi@uniflowslabel.com' && password === 'LumiDemo2026!') {
+            sessionStorage.setItem('uniflows-artist', 'true');
+            sessionStorage.setItem('uniflows-artist-id', 'lumi');
+            sessionStorage.setItem('uniflows-artist-email', email);
+            location.href = 'portal.html';
+          } else {
+            throw new Error('Email hoặc mật khẩu chưa đúng (Demo: lumi@uniflowslabel.com / LumiDemo2026!).');
+          }
+        }
+      } catch (err) {
+        showError(err.message || 'Đăng nhập không thành công.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Đăng nhập Portal';
+      }
+    };
+  </script>
+</body>
+</html>
