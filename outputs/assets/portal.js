@@ -108,6 +108,7 @@ async function renderReleases() {
 
   list.innerHTML = releases.map(p => {
     const isTakedownRequested = p.submissionStatus === 'Yêu cầu gỡ / xóa bản phát hành';
+    const releaseSlug = p.slug || slug(p.title);
     return `
       <div class="queue-item" style="border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:100px 1fr auto auto;gap:15px;align-items:center;">
         <span>${p.type || 'Single'}</span>
@@ -120,7 +121,7 @@ async function renderReleases() {
         <div style="display:flex;gap:0.8rem;align-items:center;">
           ${p.audioUrl ? `<a href="${p.audioUrl}" target="_blank" title="Nghe file Master">🎵 Audio</a>` : ''}
           ${p.artworkUrl ? `<a href="${p.artworkUrl}" target="_blank" title="Xem Artwork">🖼 Artwork</a>` : ''}
-          <a href="listen?release=${encodeURIComponent(p.slug || slug(p.title))}" target="_blank">Smart Link ↗</a>
+          <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank">Smart Link (/listen/${releaseSlug}) ↗</a>
         </div>
         <div>
           ${p.id ? (

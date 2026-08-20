@@ -173,10 +173,12 @@ async function loadReleasesQueue() {
             </div>
           </div>
 
-          <div style="display:flex;gap:15px;margin:15px 0;flex-wrap:wrap;align-items:center;background:#f3f3f3;padding:10px;">
-            ${r.audio_url ? `<a href="${r.audio_url}" target="_blank" style="font-weight:600;color:#0066cc;">🎵 Nghe File Master WAV/FLAC ↗</a>` : '<span style="opacity:0.5">Không có audio</span>'}
-            ${r.artwork_url ? `<a href="${r.artwork_url}" target="_blank" style="font-weight:600;color:#0066cc;">🖼 Xem Artwork Gốc ↗</a>` : '<span style="opacity:0.5">Không có artwork</span>'}
-            <a href="listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" style="font-weight:600;color:#008800;">🔗 Mở SmartLink (/listen/${releaseSlug}) ↗</a>
+          <!-- Direct Short Link Box & File Links -->
+          <div style="display:flex;gap:12px;margin:15px 0;flex-wrap:wrap;align-items:center;background:#f3f3f3;padding:12px;border-radius:4px;">
+            ${r.audio_url ? `<a href="${r.audio_url}" target="_blank" style="font-weight:600;color:#0066cc;">🎵 File Master ↗</a>` : '<span style="opacity:0.5">Không có audio</span>'}
+            ${r.artwork_url ? `<a href="${r.artwork_url}" target="_blank" style="font-weight:600;color:#0066cc;">🖼 Artwork Gốc ↗</a>` : '<span style="opacity:0.5">Không có artwork</span>'}
+            <a href="/listen/${releaseSlug}" target="_blank" style="font-weight:700;color:#008800;">🔗 Mở SmartLink (/listen/${releaseSlug}) ↗</a>
+            <button type="button" class="button alt" data-copy-link="/listen/${releaseSlug}" style="padding:6px 10px;font-size:11px;background:#fff;margin:0;">📋 Copy link rút gọn</button>
           </div>
 
           <h4 style="margin:12px 0 6px;font-size:14px;text-transform:uppercase;">Cập nhật link các nền tảng streaming (SmartLink)</h4>
@@ -221,6 +223,22 @@ async function loadReleasesQueue() {
 }
 
 function attachReleaseEvents() {
+  // Copy smartlink button
+  releasesBox.querySelectorAll('[data-copy-link]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const path = e.target.dataset.copyLink;
+      const fullUrl = `${location.origin}${path}`;
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+        btn.textContent = 'Đã chép link ✓';
+        setTimeout(() => btn.textContent = '📋 Copy link rút gọn', 2000);
+      } catch {
+        prompt('Copy link chia sẻ tại đây:', fullUrl);
+      }
+    });
+  });
+
+  // Add dynamic custom DSP row
   releasesBox.querySelectorAll('.add-custom-dsp-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const relId = e.target.dataset.addDspTo;
@@ -244,6 +262,7 @@ function attachReleaseEvents() {
     btn.onclick = () => btn.closest('.custom-dsp-row')?.remove();
   });
 
+  // Status change
   releasesBox.querySelectorAll('[data-release-status]').forEach(select => {
     select.addEventListener('change', async (e) => {
       const releaseId = e.target.dataset.releaseStatus;
@@ -263,6 +282,7 @@ function attachReleaseEvents() {
     });
   });
 
+  // Save DSP links for release
   releasesBox.querySelectorAll('[data-save-release-links]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const releaseId = e.target.dataset.saveReleaseLinks;
@@ -270,12 +290,14 @@ function attachReleaseEvents() {
       if (!card) return;
 
       const links = {};
+      // 1. Standard DSPs
       card.querySelectorAll('[data-dsp]').forEach(input => {
         const dsp = input.dataset.dsp;
         const val = input.value.trim();
         if (val) links[dsp] = val;
       });
 
+      // 2. Custom DSPs
       card.querySelectorAll('.custom-dsp-row').forEach(row => {
         const name = row.querySelector('.custom-dsp-name')?.value.trim();
         const url = row.querySelector('.custom-dsp-url')?.value.trim();
@@ -304,6 +326,7 @@ function attachReleaseEvents() {
     });
   });
 
+  // Delete release / Approve takedown
   releasesBox.querySelectorAll('[data-delete-release]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const releaseId = e.target.dataset.deleteRelease;

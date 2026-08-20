@@ -174,7 +174,7 @@ function artistDetail() {
         <span class="kicker">Listen everywhere</span>
       </div>
       ${(a.products || []).length > 0 ? (a.products || []).map(p => `
-        <a class="release" href="listen?release=${encodeURIComponent(p.slug || slug(p.title))}">
+        <a class="release" href="/listen/${encodeURIComponent(p.slug || slug(p.title))}">
           <span>${esc(p.type)}</span>
           <strong>${esc(p.title)}</strong>
           <b>Smart link ↗</b>
@@ -227,7 +227,7 @@ function smartPage() {
   let releaseSlug = q.get('release') || '';
   let artistId = q.get('artist') || '';
 
-  // Clean path resolution: /listen/vet-sang or /l/vet-sang
+  // Clean path resolution: /listen/o-ki or /l/o-ki
   if (!releaseSlug) {
     if (parts[0] === 'listen' || parts[0] === 'l') {
       if (parts.length >= 3) {
@@ -290,8 +290,10 @@ function smartPage() {
     }
   });
 
-  let key = `uniflows-clicks-${a.id}-${p.slug || slug(p.title)}`;
+  const finalReleaseSlug = p.slug || slug(p.title);
+  let key = `uniflows-clicks-${a.id}-${finalReleaseSlug}`;
   let count = Number(localStorage.getItem(key) || 0);
+  const shareCleanUrl = `${location.origin}/listen/${finalReleaseSlug}`;
 
   root.innerHTML = `
     <section class="smart-page">
@@ -309,7 +311,7 @@ function smartPage() {
           </div>
         `}
       </div>
-      <button id="share-smart" class="smart-share">Chia sẻ Smart Link</button>
+      <button id="share-smart" class="smart-share">Chia sẻ Smart Link (${shareCleanUrl})</button>
       <small id="click-count">${count ? `${count.toLocaleString('vi-VN')} lượt mở link` : ''}</small>
     </section>
   `;
@@ -324,10 +326,11 @@ function smartPage() {
 
   $('#share-smart')?.addEventListener('click', async () => {
     try {
-      await navigator.share({ title: `${a.name} — ${p.title}`, url: location.href });
+      await navigator.share({ title: `${a.name} — ${p.title}`, url: shareCleanUrl });
     } catch {
-      await navigator.clipboard?.writeText(location.href);
-      $('#share-smart').textContent = 'Đã sao chép liên kết ✓';
+      await navigator.clipboard?.writeText(shareCleanUrl);
+      $('#share-smart').textContent = 'Đã sao chép link rút gọn ✓';
+      setTimeout(() => $('#share-smart').textContent = `Chia sẻ Smart Link (${shareCleanUrl})`, 2500);
     }
   });
 }
