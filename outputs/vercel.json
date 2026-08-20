@@ -1,10 +1,11 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "rewrites": [
-    { "source": "/listen/:path*", "destination": "/listen.html" },
-    { "source": "/l/:path*", "destination": "/listen.html" },
-    { "source": "/article/:path*", "destination": "/article.html" },
-    { "source": "/artist/:path*", "destination": "/artist.html" }
+  "routes": [
+    { "src": "/listen/([^/]+)/([^/]+)", "dest": "/listen.html?artist=$1&release=$2" },
+    { "src": "/listen/([^/]+)", "dest": "/listen.html?release=$1" },
+    { "src": "/l/([^/]+)/([^/]+)", "dest": "/listen.html?artist=$1&release=$2" },
+    { "src": "/l/([^/]+)", "dest": "/listen.html?release=$1" },
+    { "handle": "filesystem" }
   ]
 }
