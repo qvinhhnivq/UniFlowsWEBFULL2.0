@@ -4,7 +4,18 @@ let data = getLocalCachedData();
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
 const slug = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const validUrl = u => u && u.trim() !== '' && u.trim() !== '#' && u.trim() !== 'javascript:void(0)';
+
+function formatSocialUrl(u) {
+  if (!u) return '';
+  let str = String(u).trim();
+  if (!str || str === '#' || str === 'javascript:void(0)') return '';
+  str = str.replace(/^[#\s]+/, '');
+  if (!str) return '';
+  if (!/^https?:\/\//i.test(str)) {
+    str = 'https://' + str;
+  }
+  return str;
+}
 
 // Insert Header with Clean URLs
 if (!$('.nav')) {
@@ -138,11 +149,17 @@ function artistDetail() {
   }
   const gallery = (a.gallery?.length ? a.gallery : [a.image]).filter(Boolean);
   
-  // Social links filtering
+  // Social links sanitation
+  const ig = formatSocialUrl(a.instagram);
+  const yt = formatSocialUrl(a.youtube);
+  const tt = formatSocialUrl(a.tiktok);
+  const sp = formatSocialUrl(a.spotify);
+
   const socialLinksHtml = [
-    validUrl(a.instagram) ? `<a href="${a.instagram}" target="_blank" rel="noreferrer">Instagram ↗</a>` : '',
-    validUrl(a.youtube) ? `<a href="${a.youtube}" target="_blank" rel="noreferrer">YouTube ↗</a>` : '',
-    validUrl(a.tiktok) ? `<a href="${a.tiktok}" target="_blank" rel="noreferrer">TikTok ↗</a>` : ''
+    ig ? `<a href="${ig}" target="_blank" rel="noopener noreferrer">Instagram ↗</a>` : '',
+    yt ? `<a href="${yt}" target="_blank" rel="noopener noreferrer">YouTube ↗</a>` : '',
+    tt ? `<a href="${tt}" target="_blank" rel="noopener noreferrer">TikTok ↗</a>` : '',
+    sp ? `<a href="${sp}" target="_blank" rel="noopener noreferrer">Spotify ↗</a>` : ''
   ].filter(Boolean).join('');
 
   root.innerHTML = `
@@ -173,13 +190,16 @@ function artistDetail() {
         <h2>Sản phẩm</h2>
         <span class="kicker">Listen everywhere</span>
       </div>
-      ${(a.products || []).length > 0 ? (a.products || []).map(p => `
-        <a class="release" href="/listen/${encodeURIComponent(p.slug || slug(p.title))}">
-          <span>${esc(p.type)}</span>
-          <strong>${esc(p.title)}</strong>
-          <b>Smart link ↗</b>
-        </a>
-      `).join('') : '<p class="empty" style="padding:20px 3vw;">Chưa có bản phát hành nào được đăng tải.</p>'}
+      ${(a.products || []).length > 0 ? (a.products || []).map(p => {
+        const pSlug = p.slug || slug(p.title);
+        return `
+          <a class="release" href="/listen/${encodeURIComponent(pSlug)}">
+            <span>${esc(p.type)}</span>
+            <strong>${esc(p.title)}</strong>
+            <b>Smart link ↗</b>
+          </a>
+        `;
+      }).join('') : '<p class="empty" style="padding:20px 3vw;">Chưa có bản phát hành nào được đăng tải.</p>'}
     </section>
   `;
 }
@@ -221,8 +241,8 @@ function smartPage() {
   if (!root) return;
 
   let q = new URLSearchParams(location.search);
-  let pathname = location.pathname.replace(/^\/+|\/+$/g, '');
-  let parts = pathname.split('/');
+  let rawPath = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
+  let parts = rawPath.split('/').filter(Boolean);
 
   let releaseSlug = q.get('release') || '';
   let artistId = q.get('artist') || '';
@@ -233,10 +253,14 @@ function smartPage() {
       if (parts.length >= 3) {
         artistId = parts[1];
         releaseSlug = parts[2];
-      } else if (parts.length === 2) {
+      } else if (parts.length >= 2) {
         releaseSlug = parts[1];
       }
     }
+  }
+
+  if (releaseSlug) {
+    releaseSlug = releaseSlug.replace(/\.html$/i, '');
   }
 
   let a = null;
@@ -245,14 +269,14 @@ function smartPage() {
   if (artistId) {
     a = (data.artists || []).find(x => x.id === artistId);
     if (a) {
-      p = a.products?.find(x => (x.slug || slug(x.title)) === releaseSlug) || a.products?.[Number(releaseSlug)];
+      p = a.products?.find(x => (x.slug || slug(x.title)) === releaseSlug || slug(x.title) === slug(releaseSlug));
     }
   }
 
-  // If artist is not specified or not found, search across all artists
+  // Search across all artists
   if (!p && releaseSlug) {
     for (const art of (data.artists || [])) {
-      const found = art.products?.find(x => (x.slug || slug(x.title)) === releaseSlug || slug(x.title) === slug(releaseSlug));
+      const found = (art.products || []).find(x => (x.slug || slug(x.title)) === releaseSlug || slug(x.title) === slug(releaseSlug));
       if (found) {
         a = art;
         p = found;
@@ -275,25 +299,26 @@ function smartPage() {
 
   let links = p.links || {};
   let platforms = [
-    { name: 'Spotify', url: links.spotify },
-    { name: 'Apple Music', url: links.apple || links.applemusic },
-    { name: 'YouTube Music', url: links.youtube || links.youtubemusic },
-    { name: 'SoundCloud', url: links.soundcloud },
-    { name: 'Nhaccuatui (NCT)', url: links.nct },
-    { name: 'Zing MP3', url: links.zingmp3 || links.zing }
-  ].filter(item => validUrl(item.url));
+    { name: 'Spotify', url: formatSocialUrl(links.spotify) },
+    { name: 'Apple Music', url: formatSocialUrl(links.apple || links.applemusic) },
+    { name: 'YouTube Music', url: formatSocialUrl(links.youtube || links.youtubemusic) },
+    { name: 'SoundCloud', url: formatSocialUrl(links.soundcloud) },
+    { name: 'Nhaccuatui (NCT)', url: formatSocialUrl(links.nct) },
+    { name: 'Zing MP3', url: formatSocialUrl(links.zingmp3 || links.zing) }
+  ].filter(item => Boolean(item.url));
 
   // Add extra custom platforms if any
   Object.entries(links).forEach(([k, v]) => {
-    if (!['spotify', 'apple', 'applemusic', 'youtube', 'youtubemusic', 'soundcloud', 'nct', 'zingmp3', 'zing'].includes(k.toLowerCase()) && validUrl(v)) {
-      platforms.push({ name: k, url: v });
+    const formatted = formatSocialUrl(v);
+    if (!['spotify', 'apple', 'applemusic', 'youtube', 'youtubemusic', 'soundcloud', 'nct', 'zingmp3', 'zing'].includes(k.toLowerCase()) && formatted) {
+      platforms.push({ name: k, url: formatted });
     }
   });
 
   const finalReleaseSlug = p.slug || slug(p.title);
   let key = `uniflows-clicks-${a.id}-${finalReleaseSlug}`;
   let count = Number(localStorage.getItem(key) || 0);
-  const shareCleanUrl = `${location.origin}/listen/${finalReleaseSlug}`;
+  const shareCleanUrl = `${location.origin}/listen/${encodeURIComponent(finalReleaseSlug)}`;
 
   root.innerHTML = `
     <section class="smart-page">
@@ -304,14 +329,14 @@ function smartPage() {
       <p>Nghe trên nền tảng bạn yêu thích.</p>
       <div class="smart-platforms">
         ${platforms.length > 0 ? platforms.map(item => `
-          <a data-platform href="${item.url}" target="_blank" rel="noreferrer">${esc(item.name)}<span>↗</span></a>
+          <a data-platform href="${item.url}" target="_blank" rel="noopener noreferrer">${esc(item.name)}<span>↗</span></a>
         `).join('') : `
           <div style="padding:20px;border:1px dashed #555;font-size:14px;color:#aaa;">
             Đang cập nhật link streaming trên các nền tảng...
           </div>
         `}
       </div>
-      <button id="share-smart" class="smart-share">Chia sẻ Smart Link (${shareCleanUrl})</button>
+      <button id="share-smart" class="smart-share">Chia sẻ Smart Link</button>
       <small id="click-count">${count ? `${count.toLocaleString('vi-VN')} lượt mở link` : ''}</small>
     </section>
   `;
@@ -329,8 +354,8 @@ function smartPage() {
       await navigator.share({ title: `${a.name} — ${p.title}`, url: shareCleanUrl });
     } catch {
       await navigator.clipboard?.writeText(shareCleanUrl);
-      $('#share-smart').textContent = 'Đã sao chép link rút gọn ✓';
-      setTimeout(() => $('#share-smart').textContent = `Chia sẻ Smart Link (${shareCleanUrl})`, 2500);
+      $('#share-smart').textContent = 'Đã sao chép liên kết ✓';
+      setTimeout(() => $('#share-smart').textContent = 'Chia sẻ Smart Link', 2500);
     }
   });
 }

@@ -21,6 +21,7 @@ const esc = s => String(s ?? '').replace(/"/g, '&quot;');
 const slug = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 function showNotice(msg) {
+  if (!notice) return;
   notice.textContent = msg;
   notice.style.display = 'block';
   scrollTo({ top: 0, behavior: 'smooth' });
@@ -36,6 +37,7 @@ function renderEmailsEditor(emailsList) {
       <button type="button" class="remove-email-btn button alt" style="padding:10px 14px;">✕</button>
     </div>
   `).join('');
+
   emailsContainer.querySelectorAll('.remove-email-btn').forEach(btn => {
     btn.onclick = () => btn.closest('.custom-email-row')?.remove();
   });
@@ -130,7 +132,7 @@ async function loadReleasesQueue() {
     if (error) throw error;
     releases = dbReleases || [];
     if (releases.length === 0) {
-      releasesBox.innerHTML = '<p class="empty">Không có bản phát hành nào.</p>';
+      releasesBox.innerHTML = '<p class="empty">Không có bản phát hành nào trong hàng đợi.</p>';
       return;
     }
     releasesBox.innerHTML = releases.map((r) => {
@@ -159,11 +161,24 @@ async function loadReleasesQueue() {
               </select>
             </div>
           </div>
-          <div style="display:flex;gap:12px;margin:15px 0;flex-wrap:wrap;align-items:center;background:#f3f3f3;padding:12px;">
-            ${r.audio_url ? `<a href="${r.audio_url}" target="_blank" style="font-weight:600;color:#0066cc;">🎵 File Master ↗</a>` : '<span style="opacity:0.5">Không có audio</span>'}
-            ${r.artwork_url ? `<a href="${r.artwork_url}" target="_blank" style="font-weight:600;color:#0066cc;">🖼 Artwork ↗</a>` : '<span style="opacity:0.5">Không có artwork</span>'}
-            <a href="/listen/${releaseSlug}" target="_blank" style="font-weight:700;color:#008800;">🔗 /listen/${releaseSlug} ↗</a>
-            <button type="button" data-copy-link="/listen/${releaseSlug}" class="button alt" style="padding:6px 10px;font-size:11px;margin:0;">📋 Copy link</button>
+          <div style="margin:15px 0;background:#f3f3f3;padding:14px;border-radius:4px;">
+            <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+              ${r.artwork_url ? `<img src="${esc(r.artwork_url)}" alt="Artwork" style="width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ccc;">` : ''}
+              <div style="flex:1;min-width:220px;">
+                ${r.audio_url ? `
+                  <audio controls preload="none" src="${esc(r.audio_url)}" style="width:100%;height:36px;margin-bottom:6px;"></audio>
+                  <div style="display:flex;gap:12px;font-size:12px;font-weight:600;">
+                    <a href="${r.audio_url}" target="_blank" style="color:#0066cc;">📥 Tải / Mở File Master Audio ↗</a>
+                    ${r.artwork_url ? `<a href="${r.artwork_url}" target="_blank" style="color:#0066cc;">🖼 Xem Artwork Gốc ↗</a>` : ''}
+                  </div>
+                ` : '<span style="opacity:0.6;font-size:12px;">Chưa có file Master Audio</span>'}
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid #e0e0e0;padding-top:10px;">
+              <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank" style="font-weight:700;color:#008800;font-size:13px;">🔗 Mở SmartLink: /listen/${releaseSlug} ↗</a>
+              <button type="button" data-copy-link="listen/${encodeURIComponent(releaseSlug)}" class="button alt" style="padding:5px 10px;font-size:11px;margin:0;">📋 Copy link: /listen/${releaseSlug}</button>
+              <button type="button" data-copy-link="l/${encodeURIComponent(releaseSlug)}" class="button alt" style="padding:5px 10px;font-size:11px;margin:0;">📋 Copy link siêu ngắn: /l/${releaseSlug}</button>
+            </div>
           </div>
           <h4 style="margin:12px 0 6px;font-size:14px;text-transform:uppercase;">Link nền tảng streaming (SmartLink)</h4>
           <div class="mini-grid">
@@ -186,8 +201,24 @@ async function loadReleasesQueue() {
             </div>
             <button type="button" class="button alt add-custom-dsp-btn" data-add-dsp-to="${r.id}" style="padding:6px 12px;font-size:11px;margin-top:4px;">+ Thêm nền tảng khác</button>
           </div>
+          <h4 style="margin:16px 0 6px;font-size:14px;text-transform:uppercase;color:#b45309;">📊 Doanh thu, Streams & Playlists cho bài hát này (Hiện trên Portal)</h4>
+          <div class="mini-grid">
+            <div class="field">
+              <label>Lượt streams bài này</label>
+              <input data-rel-streams="${r.id}" value="${esc(r.metadata?.streams || '0')}" placeholder="Ví dụ: 125,400 hoặc 125.4K">
+            </div>
+            <div class="field">
+              <label>Doanh thu bài này (₫)</label>
+              <input data-rel-revenue="${r.id}" value="${esc(r.metadata?.revenue || '0')}" placeholder="Ví dụ: 6,800,000">
+            </div>
+          </div>
+          <div class="field" style="margin-top:6px;">
+            <label>Playlists & Thành tích đạt được (mỗi dòng một playlist - sẽ hiện huy hiệu trên Portal nghệ sĩ)</label>
+            <textarea data-rel-playlists="${r.id}" rows="2" placeholder="Spotify · RADAR Vietnam&#10;Apple Music · V-Pop Không Thể Bỏ Lỡ&#10;Zing MP3 · Top 100 V-Pop">${(Array.isArray(r.metadata?.playlists) ? r.metadata.playlists : []).join('\n')}</textarea>
+          </div>
+
           <div style="display:flex;justify-content:space-between;margin-top:15px;align-items:center;border-top:1px solid #eee;padding-top:12px;">
-            <button class="button" type="button" data-save-release-links="${r.id}" style="padding:10px 14px;font-size:11px;">Lưu link SmartLink</button>
+            <button class="button" type="button" data-save-release-links="${r.id}" style="padding:10px 14px;font-size:11px;">Lưu toàn bộ SmartLink, Doanh thu & Playlists</button>
             <button class="button alt remove" type="button" data-delete-release="${r.id}" style="padding:10px 14px;font-size:11px;${isTakedown ? 'background:#ff4d4f;color:#fff;' : ''}">
               ${isTakedown ? '🗑 Duyệt gỡ & Xóa vĩnh viễn' : '🗑 Xóa bản phát hành này'}
             </button>
@@ -203,7 +234,8 @@ async function loadReleasesQueue() {
 function attachReleaseEvents() {
   releasesBox.querySelectorAll('[data-copy-link]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const fullUrl = `${location.origin}${e.target.dataset.copyLink}`;
+      const path = e.target.dataset.copyLink;
+      const fullUrl = `${location.origin}/${path}`;
       try {
         await navigator.clipboard.writeText(fullUrl);
         btn.textContent = '✓ Đã chép';
@@ -255,11 +287,29 @@ function attachReleaseEvents() {
         const url = row.querySelector('.custom-dsp-url')?.value.trim();
         if (name && url) links[name] = url;
       });
+
+      const streams = card.querySelector(`[data-rel-streams="${releaseId}"]`)?.value.trim() || '0';
+      const revenue = card.querySelector(`[data-rel-revenue="${releaseId}"]`)?.value.trim() || '0';
+      const rawPlaylists = card.querySelector(`[data-rel-playlists="${releaseId}"]`)?.value || '';
+      const playlists = rawPlaylists.split('\n').map(s => s.trim()).filter(Boolean);
+
+      const rel = releases.find(r => r.id === releaseId) || {};
+      const currentMeta = (typeof rel.metadata === 'object' && rel.metadata) ? rel.metadata : {};
+      const updatedMeta = {
+        ...currentMeta,
+        streams,
+        revenue,
+        playlists
+      };
+
       btn.disabled = true; btn.textContent = 'Đang lưu...';
-      const { error } = await supabase.from('releases').update({ links }).eq('id', releaseId);
-      btn.disabled = false; btn.textContent = 'Lưu link SmartLink';
+      const { error } = await supabase.from('releases').update({
+        links,
+        metadata: updatedMeta
+      }).eq('id', releaseId);
+      btn.disabled = false; btn.textContent = 'Lưu toàn bộ SmartLink, Doanh thu & Playlists';
       if (error) alert('Lỗi: ' + error.message);
-      else showNotice('✓ Đã cập nhật link SmartLink!');
+      else showNotice('✓ Đã lưu thành công link SmartLink, Doanh thu và Playlists cho bài hát!');
     });
   });
 
@@ -337,16 +387,14 @@ document.querySelector('#add-article')?.addEventListener('click', () => {
   render();
 });
 
-// ===== XỬ LÝ XÓA NGHỆ SĨ VÀ BÀI VIẾT - XÓA TRỰC TIẾP TRÊN SUPABASE =====
+// Xóa nghệ sĩ và bài viết trực tiếp trên Supabase
 document.addEventListener('click', async e => {
-  // Xóa nghệ sĩ
   const removeArtistIdx = e.target.dataset.removeArtist;
   if (removeArtistIdx !== undefined) {
     const artistEl = e.target.closest('[data-artist]');
     const artistId = artistEl?.dataset.artistId;
     if (!confirm(`Bạn có chắc muốn xóa nghệ sĩ "${artistId}" và toàn bộ dữ liệu liên quan?`)) return;
     
-    // Xóa trên Supabase trước
     if (isSupabaseConfigured() && artistId) {
       e.target.disabled = true;
       e.target.textContent = 'Đang xóa...';
@@ -358,21 +406,18 @@ document.addEventListener('click', async e => {
         return;
       }
     }
-    // Xóa khỏi local state
     data.artists.splice(+removeArtistIdx, 1);
     await saveData(data);
     showNotice(`✓ Đã xóa nghệ sĩ thành công!`);
     render();
   }
 
-  // Xóa bài viết
   const removeArticleIdx = e.target.dataset.removeArticle;
   if (removeArticleIdx !== undefined) {
     const articleEl = e.target.closest('[data-article]');
     const articleId = articleEl?.dataset.articleId;
     if (!confirm(`Bạn có chắc muốn xóa bài viết này?`)) return;
 
-    // Xóa trên Supabase trước
     if (isSupabaseConfigured() && articleId) {
       e.target.disabled = true;
       e.target.textContent = 'Đang xóa...';
@@ -384,7 +429,6 @@ document.addEventListener('click', async e => {
         return;
       }
     }
-    // Xóa khỏi local state
     data.articles.splice(+removeArticleIdx, 1);
     await saveData(data);
     showNotice(`✓ Đã xóa bài viết thành công!`);

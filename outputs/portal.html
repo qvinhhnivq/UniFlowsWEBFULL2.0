@@ -57,18 +57,30 @@
         <p id="portal-notice" class="notice" style="display: none;"></p>
 
         <form id="release-form" class="release-form">
-          <div class="form-title"><span>01</span><h3>Files & artwork</h3></div>
+          <div class="form-title"><span>01</span><h3>Files & artwork (Tải lên hoặc Dán link Drive)</h3></div>
           
-          <div class="upload-zone">
-            <input id="audio-file" name="audioFile" type="file" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg">
-            <b id="audio-filename">Thả hoặc chọn file master WAV/FLAC vào đây</b>
-            <span>16-bit hoặc 24-bit · stereo · tối đa 96 kHz</span>
+          <div style="margin-bottom: 20px;">
+            <label style="font-weight: 600; font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 6px;">1. File Master Audio (WAV / FLAC / MP3)</label>
+            <div class="upload-zone" style="margin-bottom: 8px;">
+              <input id="audio-file" name="audioFile" type="file" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg">
+              <b id="audio-filename">Thả hoặc chọn file master từ máy tính</b>
+              <span>16-bit / 24-bit · stereo · tối đa 96 kHz</span>
+            </div>
+            <div class="field">
+              <input name="audioExternalUrl" id="audio-external-url" placeholder="Hoặc dán Link Google Drive / Dropbox / WeTransfer chứa file Master (Khuyên dùng để không tốn dung lượng server)">
+            </div>
           </div>
 
-          <div class="upload-zone compact">
-            <input id="artwork-file" name="artworkFile" type="file" accept="image/jpeg,image/png,image/webp">
-            <b id="artwork-filename">Artwork 3000 × 3000 px</b>
-            <span>JPG/PNG · Không có watermark hoặc logo nền tảng</span>
+          <div style="margin-bottom: 20px;">
+            <label style="font-weight: 600; font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 6px;">2. Artwork (3000 × 3000 px)</label>
+            <div class="upload-zone compact" style="margin-bottom: 8px;">
+              <input id="artwork-file" name="artworkFile" type="file" accept="image/jpeg,image/png,image/webp">
+              <b id="artwork-filename">Chọn file ảnh Artwork từ máy (JPG/PNG)</b>
+              <span>Chuẩn 3000 × 3000 px</span>
+            </div>
+            <div class="field">
+              <input name="artworkExternalUrl" id="artwork-external-url" placeholder="Hoặc dán Link ảnh Artwork trực tiếp (Google Drive, Imgur, CDN...)">
+            </div>
           </div>
 
           <div class="form-title"><span>02</span><h3>Release metadata</h3></div>
@@ -135,12 +147,16 @@
           <div><span>YouTube Music</span><b id="earn-youtube">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
           <div><span>NCT / Zing / khác</span><b id="earn-other">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
         </div>
-        <p class="portal-note">Doanh thu hiển thị là ước tính. Statement chính thức và số tiền khả dụng được cập nhật sau khi UniFLOWs nhận báo cáo từ các DSP.</p>
+        <div style="margin-top:25px;">
+          <h3 style="font-size:16px;letter-spacing:-0.03em;margin-bottom:10px;">Báo cáo chi tiết theo từng bài hát</h3>
+          <div id="track-earnings-list"></div>
+        </div>
+        <p class="portal-note" style="margin-top:15px;">Doanh thu hiển thị là ước tính. Statement chính thức và số tiền khả dụng được cập nhật sau khi UniFLOWs nhận báo cáo từ các DSP.</p>
       </section>
 
       <!-- Insights -->
       <section id="insights" class="portal-section">
-        <div class="section-head"><h2>Thống kê người nghe</h2><span class="kicker">Last 28 days</span></div>
+        <div class="section-head"><h2>Thống kê người nghe & Playlists</h2><span class="kicker">Editorial & Insights</span></div>
         <div class="chart-placeholder">
           <i style="--h:20%"></i><i style="--h:35%"></i><i style="--h:25%"></i><i style="--h:50%"></i><i style="--h:40%"></i>
           <i style="--h:65%"></i><i style="--h:55%"></i><i style="--h:80%"></i><i style="--h:60%"></i><i style="--h:85%"></i>
@@ -150,6 +166,10 @@
           <div><span>Top territory</span><strong>Việt Nam</strong><small>Quốc gia dẫn đầu</small></div>
           <div><span>Top city</span><strong>Hồ Chí Minh</strong><small>Thành phố nghe nhiều nhất</small></div>
           <div><span>Top source</span><strong>DSP Editorial & Algorithmic</strong><small>Nguồn streams</small></div>
+        </div>
+        <div style="margin-top:25px;">
+          <h3 style="font-size:16px;letter-spacing:-0.03em;margin-bottom:10px;">Thành tích Playlist (Editorial Placements)</h3>
+          <div id="artist-playlists-showcase"></div>
         </div>
       </section>
 

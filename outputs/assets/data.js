@@ -139,11 +139,13 @@ export async function getData() {
       merged.aboutText = settings.about_text || merged.aboutText;
       merged.email = settings.email || merged.email;
       
-      // Parse emails (support both array format and object format)
-      if (Array.isArray(settings.emails)) {
+      // Parse emails: support array format, object format, and preserve cached emails if column missing
+      if (Array.isArray(settings.emails) && settings.emails.length > 0) {
         merged.emails = settings.emails;
-      } else if (settings.emails && typeof settings.emails === 'object') {
+      } else if (settings.emails && typeof settings.emails === 'object' && Object.keys(settings.emails).length > 0) {
         merged.emails = Object.entries(settings.emails).map(([label, email]) => ({ label, email }));
+      } else if (cached.emails && Array.isArray(cached.emails) && cached.emails.length > 0) {
+        merged.emails = cached.emails;
       } else {
         merged.emails = defaultData.emails;
       }
@@ -197,7 +199,7 @@ export async function getData() {
     localStorage.setItem('uniflows-content', JSON.stringify(merged));
     return merged;
   } catch (err) {
-    console.warn('Không thể kết nối Supabase, sử dụng dữ liệu cục bộ:', err);
+    console.warn('Lỗi lấy dữ liệu từ Supabase, fallback dữ liệu cục bộ:', err);
     return cached;
   }
 }
@@ -208,7 +210,8 @@ export async function saveData(data) {
   if (!isSupabaseConfigured()) return true;
 
   try {
-    await supabase.from('site_settings').upsert({
+    // 1. Save site_settings (try with emails, if column doesn't exist fallback without error)
+    const settingsPayload = {
       id: 'main',
       tagline: data.tagline,
       hero_text: data.heroText,
@@ -218,8 +221,16 @@ export async function saveData(data) {
       emails: data.emails || defaultData.emails,
       city: data.city,
       updated_at: new Date().toISOString()
-    });
+    };
 
+    const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
+    if (settingsError) {
+      // If error might be because emails column is missing in DB, retry without emails column
+      delete settingsPayload.emails;
+      await supabase.from('site_settings').upsert(settingsPayload);
+    }
+
+    // 2. Save artists
     for (const a of data.artists) {
       await supabase.from('artists').upsert({
         id: a.id,
@@ -237,6 +248,7 @@ export async function saveData(data) {
       });
     }
 
+    // 3. Save articles
     for (const art of data.articles) {
       await supabase.from('articles').upsert({
         id: art.id,

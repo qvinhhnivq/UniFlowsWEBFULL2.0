@@ -82,16 +82,22 @@ async function renderReleases() {
         .order('created_at', { ascending: false });
 
       if (!error && dbReleases) {
-        releases = dbReleases.map(r => ({
-          id: r.id,
-          title: r.title,
-          type: r.type,
-          slug: r.slug,
-          submissionStatus: r.submission_status || 'Đã phát hành',
-          audioUrl: r.audio_url,
-          artworkUrl: r.artwork_url,
-          links: r.links || {}
-        }));
+        releases = dbReleases.map(r => {
+          const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+          return {
+            id: r.id,
+            title: r.title,
+            type: r.type,
+            slug: r.slug,
+            submissionStatus: r.submission_status || 'Đã phát hành',
+            audioUrl: r.audio_url,
+            artworkUrl: r.artwork_url,
+            links: r.links || {},
+            streams: meta.streams || '0',
+            revenue: meta.revenue || '0',
+            playlists: Array.isArray(meta.playlists) ? meta.playlists : []
+          };
+        });
       }
     } catch (e) {
       console.warn('Lỗi tải release:', e);
@@ -101,38 +107,99 @@ async function renderReleases() {
   const pending = releases.filter(r => r.submissionStatus?.includes('chờ') || r.submissionStatus?.includes('Duyệt') || r.submissionStatus?.includes('gỡ')).length;
   if (pendingCountEl) pendingCountEl.textContent = String(pending).padStart(2, '0');
 
+  // 1. Render Catalogue list with badges
   if (releases.length === 0) {
     list.innerHTML = '<p class="empty">Chưa có bản phát hành nào trong catalogue.</p>';
-    return;
-  }
+  } else {
+    list.innerHTML = releases.map(p => {
+      const isTakedownRequested = p.submissionStatus === 'Yêu cầu gỡ / xóa bản phát hành';
+      const releaseSlug = p.slug || slug(p.title);
+      const playlistsHtml = (p.playlists && p.playlists.length > 0)
+        ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${p.playlists.map(pl => `<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:bold;">🌟 ${pl}</span>`).join('')}</div>`
+        : '';
 
-  list.innerHTML = releases.map(p => {
-    const isTakedownRequested = p.submissionStatus === 'Yêu cầu gỡ / xóa bản phát hành';
-    const releaseSlug = p.slug || slug(p.title);
-    return `
-      <div class="queue-item" style="border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:100px 1fr auto auto;gap:15px;align-items:center;">
-        <span>${p.type || 'Single'}</span>
-        <div>
-          <strong>${p.title}</strong>
-          <div style="font-size:12px;opacity:0.8;margin-top:2px;">
-            Trạng thái: <b style="color:${isTakedownRequested ? '#d9534f' : 'inherit'};">${p.submissionStatus || 'Đã phát hành'}</b>
+      return `
+        <div class="queue-item" style="border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:100px 1fr auto auto;gap:15px;align-items:center;">
+          <span>${p.type || 'Single'}</span>
+          <div>
+            <strong>${p.title}</strong>
+            <div style="font-size:12px;opacity:0.8;margin:3px 0;">
+              Trạng thái: <b style="color:${isTakedownRequested ? '#d9534f' : 'inherit'};">${p.submissionStatus || 'Đã phát hành'}</b>
+              · <span style="background:#f3f3f3;padding:1px 6px;border-radius:3px;">Streams: <b>${p.streams || 0}</b></span>
+              · <span style="background:#e6f4ea;color:#137333;padding:1px 6px;border-radius:3px;font-weight:bold;">₫ ${p.revenue || 0}</span>
+            </div>
+            ${playlistsHtml}
+          </div>
+          <div style="display:flex;gap:0.8rem;align-items:center;">
+            ${p.audioUrl ? `<a href="${p.audioUrl}" target="_blank" title="Nghe file Master">🎵 Audio</a>` : ''}
+            ${p.artworkUrl ? `<a href="${p.artworkUrl}" target="_blank" title="Xem Artwork">🖼 Artwork</a>` : ''}
+            <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank">Smart Link (/listen/${releaseSlug}) ↗</a>
+          </div>
+          <div>
+            ${p.id ? (
+              isTakedownRequested
+                ? `<span style="font-size:11px;color:#d9534f;font-weight:bold;">⏳ Đang chờ duyệt gỡ</span>`
+                : `<button class="button alt remove" type="button" data-request-takedown="${p.id}" style="padding:6px 10px;font-size:10px;">Yêu cầu gỡ bài</button>`
+            ) : ''}
           </div>
         </div>
-        <div style="display:flex;gap:0.8rem;align-items:center;">
-          ${p.audioUrl ? `<a href="${p.audioUrl}" target="_blank" title="Nghe file Master">🎵 Audio</a>` : ''}
-          ${p.artworkUrl ? `<a href="${p.artworkUrl}" target="_blank" title="Xem Artwork">🖼 Artwork</a>` : ''}
-          <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank">Smart Link (/listen/${releaseSlug}) ↗</a>
+      `;
+    }).join('');
+  }
+
+  // 2. Render Track Earnings Breakdown table
+  const trackEarningsList = document.querySelector('#track-earnings-list');
+  if (trackEarningsList) {
+    if (releases.length === 0) {
+      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có dữ liệu doanh thu chi tiết.</p>';
+    } else {
+      trackEarningsList.innerHTML = `
+        <div style="border:1px solid var(--line);border-radius:4px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;">
+            <span>Tên bản phát hành</span>
+            <span>Lượt Streams</span>
+            <span>Doanh thu ước tính</span>
+            <span>Đối soát</span>
+          </div>
+          ${releases.map(p => `
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:12px 14px;border-top:1px solid var(--line);font-size:13px;align-items:center;">
+              <strong>${p.title}</strong>
+              <span>${p.streams || '0'}</span>
+              <b style="color:#137333;">₫ ${p.revenue || '0'}</b>
+              <span style="font-size:11px;color:#008800;font-weight:600;">✓ Đã xác nhận</span>
+            </div>
+          `).join('')}
         </div>
-        <div>
-          ${p.id ? (
-            isTakedownRequested
-              ? `<span style="font-size:11px;color:#d9534f;font-weight:bold;">⏳ Đang chờ duyệt gỡ</span>`
-              : `<button class="button alt remove" type="button" data-request-takedown="${p.id}" style="padding:6px 10px;font-size:10px;">Yêu cầu gỡ bài</button>`
-          ) : ''}
+      `;
+    }
+  }
+
+  // 3. Render Playlists Showcase
+  const playlistShowcase = document.querySelector('#artist-playlists-showcase');
+  if (playlistShowcase) {
+    const allPlaylists = [];
+    releases.forEach(p => {
+      (p.playlists || []).forEach(pl => {
+        allPlaylists.push({ track: p.title, playlist: pl });
+      });
+    });
+
+    if (allPlaylists.length === 0) {
+      playlistShowcase.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>';
+    } else {
+      playlistShowcase.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;">
+          ${allPlaylists.map(item => `
+            <div style="background:#fff;border:1px solid #fed7aa;padding:12px;border-radius:6px;">
+              <div style="font-size:10px;color:#c2410c;font-weight:bold;text-transform:uppercase;margin-bottom:4px;">🌟 Editorial Playlist</div>
+              <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${item.playlist}</div>
+              <div style="font-size:12px;opacity:0.8;">Bản phát hành: <em>${item.track}</em></div>
+            </div>
+          `).join('')}
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }
+  }
 
   // Attach takedown request events
   list.querySelectorAll('[data-request-takedown]').forEach(btn => {
@@ -182,16 +249,20 @@ form?.addEventListener('submit', async (e) => {
     let audioUrl = '';
     let artworkUrl = '';
 
-    // 1. Upload Master Audio WAV/FLAC
+    // 1. Upload Master Audio hoặc dùng Link ngoài
     if (audioFile) {
       submitBtn.textContent = 'Đang tải Audio...';
       audioUrl = await uploadAudioFile(audioFile, `${artist.id}_${slug(v.title)}`);
+    } else if (v.audioExternalUrl && v.audioExternalUrl.trim()) {
+      audioUrl = v.audioExternalUrl.trim();
     }
 
-    // 2. Upload Artwork
+    // 2. Upload Artwork hoặc dùng Link ngoài
     if (artworkFile) {
       submitBtn.textContent = 'Đang tải Artwork...';
       artworkUrl = await uploadArtworkFile(artworkFile, `${artist.id}_${slug(v.title)}_art`);
+    } else if (v.artworkExternalUrl && v.artworkExternalUrl.trim()) {
+      artworkUrl = v.artworkExternalUrl.trim();
     }
 
     const releaseSlug = slug(v.title);
