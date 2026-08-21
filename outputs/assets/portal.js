@@ -68,6 +68,12 @@ if (artist) {
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${artist.estimatedRevenue || '0'}`;
   if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${artist.payableBalance || '0'}`;
 
+  const ovPayableEl = document.querySelector('#overview-payable-balance');
+  if (ovPayableEl) ovPayableEl.textContent = `₫ ${artist.payableBalance || '0'}`;
+
+  const avatarEl = document.querySelector('#portal-artist-avatar');
+  if (avatarEl && artist.image) avatarEl.src = artist.image;
+
   // Role Badge & Banner Setup
   const roleBadgeEl = document.querySelector('#portal-role-badge');
   const roleBannerEl = document.querySelector('#portal-role-banner');
@@ -96,6 +102,15 @@ if (artist) {
     roleBadgeEl.style.fontWeight = '700';
     roleBadgeEl.style.lineHeight = '1.4';
     roleBadgeEl.style.whiteSpace = 'nowrap';
+  }
+
+  // Permissions: Collab restriction
+  if (artist.roleType === 'collab') {
+    document.querySelectorAll('.release-action-btn').forEach(btn => {
+      btn.style.display = 'none';
+    });
+    const collabNotice = document.querySelector('#collab-release-notice');
+    if (collabNotice) collabNotice.style.display = 'block';
   }
 
   if (roleBannerEl) {
@@ -276,11 +291,19 @@ handleHash();
 // MODAL DIALOGS (RELEASE & PAYOUT)
 // ----------------------------------------------------
 openReleaseModalBtn?.addEventListener('click', () => {
+  if (artist.roleType === 'collab') {
+    alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
+    return;
+  }
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
   releaseDialog?.showModal();
 });
 
 quickOpenReleaseModalBtn?.addEventListener('click', () => {
+  if (artist.roleType === 'collab') {
+    alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
+    return;
+  }
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
   releaseDialog?.showModal();
 });
@@ -350,7 +373,7 @@ function renderReleaseListItems() {
   }
 
   if (filtered.length === 0) {
-    list.innerHTML = '<p class="empty" style="padding:15px;background:#fff;border:1px solid var(--line);">Không tìm thấy bản phát hành nào theo bộ lọc này.</p>';
+    list.innerHTML = '<p class="empty" style="padding:20px;background:#fff;border:1px solid var(--line);border-radius:4px;">Không tìm thấy bản phát hành nào theo bộ lọc này.</p>';
     return;
   }
 
@@ -364,38 +387,46 @@ function renderReleaseListItems() {
       : '';
 
     const statusBadge = isPending
-      ? `<span style="display:inline-block;padding:2px 8px;background:#fef3c7;color:#b45309;border-radius:10px;font-size:11px;font-weight:bold;">⏳ Đang chờ UniFLOWs duyệt</span>`
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fef3c7;color:#b45309;border-radius:12px;font-size:11px;font-weight:bold;">⏳ Đang chờ UniFLOWs duyệt</span>`
       : (isTakedownRequested
-        ? `<span style="display:inline-block;padding:2px 8px;background:#fee2e2;color:#b91c1c;border-radius:10px;font-size:11px;font-weight:bold;">🔴 Yêu cầu gỡ</span>`
-        : `<span style="display:inline-block;padding:2px 8px;background:#dcfce7;color:#15803d;border-radius:10px;font-size:11px;font-weight:bold;">🟢 Đã phát hành (Live)</span>`);
+        ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fee2e2;color:#b91c1c;border-radius:12px;font-size:11px;font-weight:bold;">🔴 Yêu cầu gỡ</span>`
+        : `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#dcfce7;color:#15803d;border-radius:12px;font-size:11px;font-weight:bold;">🟢 Live trên 150+ DSPs</span>`);
 
     const splitBadge = p.isSplit
-      ? `<span style="display:inline-block;padding:2px 8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:10px;font-size:10px;font-weight:bold;">🤝 Split ${p.percentage}% (${esc(p.userRole)})</span>`
-      : '';
+      ? `<span style="display:inline-block;padding:3px 10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:12px;font-size:11px;font-weight:bold;">🤝 Split ${p.percentage}% (${esc(p.userRole)})</span>`
+      : `<span style="display:inline-block;padding:3px 10px;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:12px;font-size:11px;font-weight:bold;">⭐ Nghệ sĩ chính (100%)</span>`;
+
+    const artworkSrc = p.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
 
     return `
-      <div class="queue-item" style="border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:110px 1fr auto auto;gap:15px;align-items:center;">
-        <span>${esc(p.type || 'Single')}</span>
+      <div class="portal-release-card">
+        <img class="portal-release-thumb" src="${esc(artworkSrc)}" alt="${esc(p.title)}">
         <div>
-          <strong style="font-size: 16px;">${esc(p.title)}</strong>
-          <div style="font-size:12px;opacity:0.8;margin:4px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;background:#000;color:#fff;padding:2px 6px;border-radius:3px;font-weight:bold;">${esc(p.type || 'Single')}</span>
             ${statusBadge}
             ${splitBadge}
-            · <span style="background:#f3f3f3;padding:1px 6px;border-radius:3px;">Streams bạn nhận: <b>${p.userStreams.toLocaleString('vi-VN')}</b></span>
-            · <span style="background:#e6f4ea;color:#137333;padding:1px 6px;border-radius:3px;font-weight:bold;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</span>
+          </div>
+          <strong style="font-size: 18px; display:block; margin: 4px 0 2px;">${esc(p.title)}</strong>
+          <div style="font-size:12px;color:#64748b;margin-bottom:6px;">
+            Nghệ sĩ chính: <b>${esc(p.primaryArtistName || artist.name)}</b> · Vai trò: <b>${esc(p.userRole || 'Main')}</b>
+          </div>
+          <div style="font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;">🎧 Streams bạn nhận: <b>${p.userStreams.toLocaleString('vi-VN')}</b></span>
+            <span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:bold;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</span>
           </div>
           ${playlistsHtml}
         </div>
-        <div style="display:flex;gap:0.8rem;align-items:center;font-size:12px;">
-          ${p.audioUrl ? `<a href="${esc(p.audioUrl)}" target="_blank" title="Nghe file Master" style="border-bottom:1px solid;">🎵 Master</a>` : ''}
-          ${p.artworkUrl ? `<a href="${esc(p.artworkUrl)}" target="_blank" title="Xem Artwork" style="border-bottom:1px solid;">🖼 Artwork</a>` : ''}
-          <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank" style="border-bottom:1px solid;font-weight:bold;">SmartLink ↗</a>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          ${p.audioUrl ? `<a href="${esc(p.audioUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;font-weight:bold;">🎵 Master</a>` : ''}
+          ${p.artworkUrl ? `<a href="${esc(p.artworkUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;">🖼 Artwork</a>` : ''}
+          <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank" class="button" style="padding:6px 14px;font-size:11px;font-weight:bold;background:#000;color:#fff;">SmartLink ↗</a>
         </div>
         <div>
-          ${p.id ? (
+          ${(p.id && artist.roleType !== 'collab') ? (
             isTakedownRequested
-              ? `<span style="font-size:11px;color:#d9534f;font-weight:bold;">⏳ Đang chờ duyệt gỡ</span>`
-              : `<button class="button alt remove" type="button" data-request-takedown="${esc(p.id)}" style="padding:6px 10px;font-size:10px;">Yêu cầu gỡ bài</button>`
+              ? `<span style="font-size:11px;color:#d9534f;font-weight:bold;display:block;">⏳ Đang chờ duyệt gỡ</span>`
+              : `<button class="button alt remove" type="button" data-request-takedown="${esc(p.id)}" style="padding:6px 10px;font-size:10px;">Yêu cầu gỡ</button>`
           ) : ''}
         </div>
       </div>
@@ -674,7 +705,13 @@ async function renderReleases() {
     if (el) el.innerHTML = htmlContent;
 
     const ovEl = document.querySelector(`#${p.ovId}`);
-    if (ovEl) ovEl.innerHTML = htmlContent;
+    if (ovEl) ovEl.textContent = `₫ ${p.rev.toLocaleString('vi-VN')}`;
+
+    const key = p.name === 'Spotify' ? 'spotify' : (p.name === 'Apple Music' ? 'apple' : (p.name === 'YouTube Music' ? 'youtube' : 'other'));
+    const badgeEl = document.querySelector(`#dsp-badge-${key}`);
+    const barEl = document.querySelector(`#dsp-bar-${key}`);
+    if (badgeEl) badgeEl.textContent = `${p.pct}%`;
+    if (barEl) barEl.style.width = `${Math.max(5, p.pct)}%`;
   });
 
   // Insights Geography & Top Sources
@@ -711,6 +748,10 @@ async function renderReleases() {
 // ----------------------------------------------------
 form?.addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (artist.roleType === 'collab') {
+    alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
+    return;
+  }
   submitBtn.disabled = true;
   submitBtn.textContent = 'Đang gửi...';
   notice.style.display = 'none';

@@ -25,3 +25,32 @@
 .artist-picker-card.active{background:var(--ink);color:#fff;}
 .artist-picker-card img{width:40px;height:40px;border-radius:50%;object-fit:cover;}
 
+/* Premium Artist Dashboard UI Enhancements */
+.portal-profile-bar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:#fff;border:1px solid var(--ink);padding:20px 24px;margin-bottom:25px;box-shadow:0 4px 16px rgba(0,0,0,0.04);}
+.portal-avatar-wrap{display:flex;align-items:center;gap:18px;}
+.portal-avatar-wrap img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--ink);box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+.portal-verified-pill{font:10px 'DM Mono',monospace;font-weight:700;color:#059669;background:#ecfdf5;border:1px solid #a7f3d0;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;}
+
+.portal-grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:25px;}
+.portal-card-metric{background:#fff;border:1px solid var(--ink);padding:22px 20px;position:relative;transition:transform 0.2s,box-shadow 0.2s;display:flex;flex-direction:column;justify-content:space-between;min-height:120px;}
+.portal-card-metric:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.06);}
+.portal-card-metric .metric-label{font:11px 'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:#475569;display:flex;align-items:center;justify-content:space-between;}
+.portal-card-metric .metric-val{font-size:clamp(26px,2.4vw,38px);font-weight:800;letter-spacing:-0.05em;margin:10px 0 6px;line-height:1;}
+.portal-card-metric .metric-foot{font:11px 'DM Mono',monospace;color:#64748b;}
+
+.portal-dsp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:15px;}
+.portal-dsp-box{background:#fff;border:1px solid #cbd5e1;padding:20px;border-radius:4px;transition:border-color 0.2s;}
+.portal-dsp-box:hover{border-color:var(--ink);}
+.portal-dsp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.portal-dsp-head strong{font-size:14px;display:flex;align-items:center;gap:6px;}
+.portal-dsp-bar-wrap{width:100%;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-top:10px;}
+.portal-dsp-bar-fill{height:100%;border-radius:3px;transition:width 0.4s ease;}
+
+.portal-release-card{background:#fff;border:1px solid var(--line);padding:16px 20px;margin-bottom:12px;border-radius:4px;display:grid;grid-template-columns:72px 1fr auto auto;gap:20px;align-items:center;transition:all 0.2s ease;}
+.portal-release-card:hover{border-color:var(--ink);box-shadow:0 4px 14px rgba(0,0,0,0.05);}
+.portal-release-thumb{width:72px;height:72px;border-radius:4px;object-fit:cover;background:#222;box-shadow:0 2px 6px rgba(0,0,0,0.15);}
+@media(max-width:768px){
+  .portal-release-card{grid-template-columns:1fr;gap:12px;}
+  .portal-release-thumb{width:100%;height:180px;}
+}
+
