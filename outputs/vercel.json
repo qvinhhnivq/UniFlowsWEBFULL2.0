@@ -2,7 +2,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/listen/:slug*", "destination": "/listen.html" },
-    { "source": "/l/:slug*", "destination": "/listen.html" }
+    { "source": "/listen/:slug*", "destination": "/listen" },
+    { "source": "/l/:slug*", "destination": "/l" },
+    { "source": "/artist/:slug*", "destination": "/artist" },
+    { "source": "/article/:slug*", "destination": "/article" }
   ]
 }

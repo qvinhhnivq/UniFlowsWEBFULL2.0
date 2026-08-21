@@ -24,6 +24,17 @@ export const defaultData = {
       monthlyStreams: '248.6K',
       estimatedRevenue: '18,400,000',
       payableBalance: '12,750,000',
+      spotifyStreams: '150,000',
+      spotifyRevenue: '10,500,000',
+      appleStreams: '60,000',
+      appleRevenue: '4,600,000',
+      youtubeStreams: '28,000',
+      youtubeRevenue: '2,300,000',
+      otherStreams: '10,600',
+      otherRevenue: '1,000,000',
+      topCountry: 'Việt Nam',
+      topCity: 'Hồ Chí Minh',
+      topSource: 'Spotify Editorial & Algorithmic',
       products: [
         { title: 'Vệt Sáng', type: 'Single · 2026', slug: 'vet-sang', url: '#' },
         { title: 'Live at The Flow', type: 'Live session · 2026', slug: 'live-at-the-flow', url: '#' }
@@ -42,6 +53,17 @@ export const defaultData = {
       monthlyStreams: '0',
       estimatedRevenue: '0',
       payableBalance: '0',
+      spotifyStreams: '0',
+      spotifyRevenue: '0',
+      appleStreams: '0',
+      appleRevenue: '0',
+      youtubeStreams: '0',
+      youtubeRevenue: '0',
+      otherStreams: '0',
+      otherRevenue: '0',
+      topCountry: 'Việt Nam',
+      topCity: 'Hồ Chí Minh',
+      topSource: 'DSP Organic Search',
       products: [
         { title: 'Dải Tần', type: 'EP · 2026', slug: 'dai-tan', url: '#' }
       ],
@@ -59,6 +81,17 @@ export const defaultData = {
       monthlyStreams: '0',
       estimatedRevenue: '0',
       payableBalance: '0',
+      spotifyStreams: '0',
+      spotifyRevenue: '0',
+      appleStreams: '0',
+      appleRevenue: '0',
+      youtubeStreams: '0',
+      youtubeRevenue: '0',
+      otherStreams: '0',
+      otherRevenue: '0',
+      topCountry: 'Việt Nam',
+      topCity: 'Hồ Chí Minh',
+      topSource: 'DSP Organic Search',
       products: [
         { title: 'Đường Đua', type: 'Single · 2026', slug: 'duong-dua', url: '#' }
       ],
@@ -139,7 +172,7 @@ export async function getData() {
       merged.aboutText = settings.about_text || merged.aboutText;
       merged.email = settings.email || merged.email;
       
-      // Parse emails: support array format, object format, and preserve cached emails if column missing
+      // Parse emails
       if (Array.isArray(settings.emails) && settings.emails.length > 0) {
         merged.emails = settings.emails;
       } else if (settings.emails && typeof settings.emails === 'object' && Object.keys(settings.emails).length > 0) {
@@ -154,31 +187,52 @@ export async function getData() {
     }
 
     if (artistsData && artistsData.length > 0) {
-      merged.artists = artistsData.map(a => ({
-        id: a.id,
-        name: a.name,
-        genre: a.genre,
-        image: a.image,
-        bio: a.bio,
-        gallery: Array.isArray(a.gallery) ? a.gallery : (typeof a.gallery === 'string' ? JSON.parse(a.gallery || '[]') : []),
-        instagram: a.instagram || '',
-        youtube: a.youtube || '',
-        tiktok: a.tiktok || '',
-        monthlyStreams: a.monthly_streams || '0',
-        estimatedRevenue: a.estimated_revenue || '0',
-        payableBalance: a.payable_balance || '0',
-        products: (a.releases || []).map(r => ({
-          id: r.id,
-          title: r.title,
-          type: r.type,
-          slug: r.slug,
-          submissionStatus: r.submission_status,
-          links: r.links || {},
-          audioUrl: r.audio_url,
-          artworkUrl: r.artwork_url,
-          metadata: r.metadata
-        }))
-      }));
+      merged.artists = artistsData.map(a => {
+        const localCachedArtist = (cached.artists || []).find(x => x.id === a.id) || {};
+        const stats = (typeof a.stats === 'object' && a.stats) ? a.stats : {};
+        return {
+          id: a.id,
+          name: a.name,
+          genre: a.genre,
+          image: a.image,
+          bio: a.bio,
+          gallery: Array.isArray(a.gallery) ? a.gallery : (typeof a.gallery === 'string' ? JSON.parse(a.gallery || '[]') : []),
+          instagram: a.instagram || '',
+          youtube: a.youtube || '',
+          tiktok: a.tiktok || '',
+          monthlyStreams: a.monthly_streams !== undefined ? a.monthly_streams : (localCachedArtist.monthlyStreams || '0'),
+          estimatedRevenue: a.estimated_revenue !== undefined ? a.estimated_revenue : (localCachedArtist.estimatedRevenue || '0'),
+          payableBalance: a.payable_balance !== undefined ? a.payable_balance : (localCachedArtist.payableBalance || '0'),
+          spotifyStreams: stats.spotifyStreams || localCachedArtist.spotifyStreams || '0',
+          spotifyRevenue: stats.spotifyRevenue || localCachedArtist.spotifyRevenue || '0',
+          appleStreams: stats.appleStreams || localCachedArtist.appleStreams || '0',
+          appleRevenue: stats.appleRevenue || localCachedArtist.appleRevenue || '0',
+          youtubeStreams: stats.youtubeStreams || localCachedArtist.youtubeStreams || '0',
+          youtubeRevenue: stats.youtubeRevenue || localCachedArtist.youtubeRevenue || '0',
+          otherStreams: stats.otherStreams || localCachedArtist.otherStreams || '0',
+          otherRevenue: stats.otherRevenue || localCachedArtist.otherRevenue || '0',
+          topCountry: stats.topCountry || localCachedArtist.topCountry || 'Việt Nam',
+          topCity: stats.topCity || localCachedArtist.topCity || 'Hồ Chí Minh',
+          topSource: stats.topSource || localCachedArtist.topSource || 'Spotify Editorial & Algorithmic',
+          products: (a.releases || []).map(r => {
+            const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+            return {
+              id: r.id,
+              title: r.title,
+              type: r.type,
+              slug: r.slug,
+              submissionStatus: r.submission_status,
+              links: r.links || {},
+              audioUrl: r.audio_url,
+              artworkUrl: r.artwork_url,
+              streams: meta.streams || '0',
+              revenue: meta.revenue || '0',
+              playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
+              metadata: r.metadata
+            };
+          })
+        };
+      });
     }
 
     if (articlesData && articlesData.length > 0) {
@@ -210,7 +264,7 @@ export async function saveData(data) {
   if (!isSupabaseConfigured()) return true;
 
   try {
-    // 1. Save site_settings (try with emails, if column doesn't exist fallback without error)
+    // 1. Save site_settings
     const settingsPayload = {
       id: 'main',
       tagline: data.tagline,
@@ -225,14 +279,27 @@ export async function saveData(data) {
 
     const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
     if (settingsError) {
-      // If error might be because emails column is missing in DB, retry without emails column
       delete settingsPayload.emails;
       await supabase.from('site_settings').upsert(settingsPayload);
     }
 
-    // 2. Save artists
+    // 2. Save artists with complete stats json
     for (const a of data.artists) {
-      await supabase.from('artists').upsert({
+      const stats = {
+        spotifyStreams: a.spotifyStreams || '0',
+        spotifyRevenue: a.spotifyRevenue || '0',
+        appleStreams: a.appleStreams || '0',
+        appleRevenue: a.appleRevenue || '0',
+        youtubeStreams: a.youtubeStreams || '0',
+        youtubeRevenue: a.youtubeRevenue || '0',
+        otherStreams: a.otherStreams || '0',
+        otherRevenue: a.otherRevenue || '0',
+        topCountry: a.topCountry || 'Việt Nam',
+        topCity: a.topCity || 'Hồ Chí Minh',
+        topSource: a.topSource || 'Spotify Editorial & Algorithmic'
+      };
+
+      const artistPayload = {
         id: a.id,
         name: a.name,
         genre: a.genre,
@@ -244,8 +311,18 @@ export async function saveData(data) {
         tiktok: a.tiktok || '',
         monthly_streams: a.monthlyStreams || '0',
         estimated_revenue: a.estimatedRevenue || '0',
-        payable_balance: a.payableBalance || '0'
-      });
+        payable_balance: a.payableBalance || '0',
+        stats: stats
+      };
+
+      const { error: artistError } = await supabase.from('artists').upsert(artistPayload);
+      if (artistError) {
+        delete artistPayload.stats;
+        delete artistPayload.monthly_streams;
+        delete artistPayload.estimated_revenue;
+        delete artistPayload.payable_balance;
+        await supabase.from('artists').upsert(artistPayload);
+      }
     }
 
     // 3. Save articles

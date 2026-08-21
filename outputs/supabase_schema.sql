@@ -58,6 +58,7 @@ create table public.artists (
   monthly_streams text default '0',
   estimated_revenue text default '0',
   payable_balance text default '0',
+  stats jsonb default '{}'::jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

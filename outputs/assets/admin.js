@@ -74,11 +74,29 @@ function artistEditor(a, i) {
         <div class="field"><label>YouTube URL</label><input data-key="youtube" value="${esc(a.youtube || '')}" placeholder="https://youtube.com/..."></div>
         <div class="field"><label>TikTok URL</label><input data-key="tiktok" value="${esc(a.tiktok || '')}" placeholder="https://tiktok.com/@..."></div>
       </div>
-      <h4 style="margin: 15px 0 5px; font-size: 15px; text-transform: uppercase;">Doanh thu nghệ sĩ</h4>
+      <h4 style="margin: 18px 0 6px; font-size: 14px; text-transform: uppercase; color:#b45309;">📊 Doanh thu & Streams chi tiết theo từng nền tảng (DSP Breakdown)</h4>
       <div class="mini-grid">
-        <div class="field"><label>Monthly Streams</label><input data-key="monthlyStreams" value="${esc(a.monthlyStreams || '0')}"></div>
-        <div class="field"><label>Doanh thu ước tính (₫)</label><input data-key="estimatedRevenue" value="${esc(a.estimatedRevenue || '0')}"></div>
-        <div class="field"><label>Số dư khả dụng (₫)</label><input data-key="payableBalance" value="${esc(a.payableBalance || '0')}"></div>
+        <div class="field"><label>Spotify Streams</label><input data-key="spotifyStreams" value="${esc(a.spotifyStreams || '0')}" placeholder="Ví dụ: 150,000"></div>
+        <div class="field"><label>Spotify Doanh thu (₫)</label><input data-key="spotifyRevenue" value="${esc(a.spotifyRevenue || '0')}" placeholder="Ví dụ: 10,500,000"></div>
+        <div class="field"><label>Apple Music Streams</label><input data-key="appleStreams" value="${esc(a.appleStreams || '0')}" placeholder="Ví dụ: 60,000"></div>
+        <div class="field"><label>Apple Music Doanh thu (₫)</label><input data-key="appleRevenue" value="${esc(a.appleRevenue || '0')}" placeholder="Ví dụ: 4,600,000"></div>
+        <div class="field"><label>YouTube Music Streams</label><input data-key="youtubeStreams" value="${esc(a.youtubeStreams || '0')}" placeholder="Ví dụ: 28,000"></div>
+        <div class="field"><label>YouTube Music Doanh thu (₫)</label><input data-key="youtubeRevenue" value="${esc(a.youtubeRevenue || '0')}" placeholder="Ví dụ: 2,300,000"></div>
+        <div class="field"><label>Khác (Zing/NCT) Streams</label><input data-key="otherStreams" value="${esc(a.otherStreams || '0')}" placeholder="Ví dụ: 10,000"></div>
+        <div class="field"><label>Khác (Zing/NCT) Doanh thu (₫)</label><input data-key="otherRevenue" value="${esc(a.otherRevenue || '0')}" placeholder="Ví dụ: 1,000,000"></div>
+      </div>
+
+      <h4 style="margin: 15px 0 6px; font-size: 14px; text-transform: uppercase; color:#0369a1;">🌍 Thống kê Địa lý & Nguồn Doanh thu Dẫn đầu (Insights)</h4>
+      <div class="mini-grid">
+        <div class="field"><label>Quốc gia nghe nhiều nhất (Top Country)</label><input data-key="topCountry" value="${esc(a.topCountry || 'Việt Nam')}" placeholder="Ví dụ: Việt Nam"></div>
+        <div class="field"><label>Thành phố stream tốt nhất (Top City)</label><input data-key="topCity" value="${esc(a.topCity || 'Hồ Chí Minh')}" placeholder="Ví dụ: Hồ Chí Minh"></div>
+        <div class="field"><label>Nguồn streams/doanh thu cao nhất (Top Source)</label><input data-key="topSource" value="${esc(a.topSource || 'Spotify Editorial & Algorithmic')}" placeholder="Ví dụ: Spotify Editorial Playlists"></div>
+        <div class="field"><label>Số dư có thể thanh toán (₫)</label><input data-key="payableBalance" value="${esc(a.payableBalance || '0')}" placeholder="Ví dụ: 12,750,000"></div>
+      </div>
+
+      <div class="mini-grid" style="margin-top:10px;">
+        <div class="field"><label>Tổng Streams tháng này (Ghi đè thủ công nếu muốn)</label><input data-key="monthlyStreams" value="${esc(a.monthlyStreams || '0')}" placeholder="Tự động tính từ các DSP nếu để 0"></div>
+        <div class="field"><label>Tổng Doanh thu ước tính (Ghi đè thủ công nếu muốn)</label><input data-key="estimatedRevenue" value="${esc(a.estimatedRevenue || '0')}" placeholder="Tự động tính từ các DSP nếu để 0"></div>
       </div>
       <div class="field" style="margin-top:10px;"><label>Sản phẩm (mỗi dòng: Tên | Loại | Nền tảng=URL)</label><textarea data-key="products" rows="3">${(a.products || []).map(p => `${p.title} | ${p.type} | ${Object.entries(p.links || { Spotify: p.url || '#' }).map(([n, u]) => `${n}=${u}`).join(', ')}`).join('\n')}</textarea></div>
       <button class="button alt remove" type="button" data-remove-artist="${i}" style="margin-top:10px;">Xóa nghệ sĩ này</button>
