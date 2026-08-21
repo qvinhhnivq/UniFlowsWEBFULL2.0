@@ -17,7 +17,7 @@
     <!-- Admin Navigation Tabs -->
     <nav class="admin-nav-tabs" id="admin-tabs">
       <button type="button" class="admin-tab-btn active" data-tab="admin-tab-releases">💿 01 / Duyệt phát hành & SmartLink</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">👥 02 / Quản lý Nghệ sĩ</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">👥 02 / Quản lý Nghệ sĩ & Tài khoản Portal</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-payouts">💳 03 / Quản lý Rút tiền</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 04 / Bài viết & Tạp chí</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-settings">⚙️ 05 / Cấu hình Trang & Email</button>
@@ -65,20 +65,33 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 2: QUẢN LÝ NGHỆ SĨ & DSP STATS -->
+      <!-- TAB 2: QUẢN LÝ NGHỆ SĨ & TÀI KHOẢN PORTAL -->
       <!-- ========================================== -->
       <section id="admin-tab-artists" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
         <div class="section-head" style="padding-left: 0; padding-right: 0;">
           <div>
-            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Quản lý Nghệ sĩ & Thống kê DSP</h2>
-            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Chọn nghệ sĩ để chỉnh sửa chi tiết, phân bổ doanh thu Spotify / Apple / YouTube và thị phần địa lý.</p>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Quản lý Nghệ sĩ & Tài khoản Portal</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý nghệ sĩ công khai trên web và các tài khoản người dùng đăng nhập Portal (không bắt buộc hiển thị lên web).</p>
           </div>
-          <button class="button" type="button" id="add-artist">+ Thêm nghệ sĩ mới</button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="button" type="button" id="add-artist">+ Thêm Nghệ sĩ lên Web</button>
+            <button class="button alt" type="button" id="add-portal-user" style="border: 1px solid var(--ink); background: #f0fdf4; color: #166534;">+ Thêm Tài khoản Portal nội bộ</button>
+          </div>
         </div>
 
         <!-- Quick Artist Selector to avoid clutter -->
         <div style="margin: 15px 0;">
-          <label style="font-size: 12px; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 8px;">Danh sách nghệ sĩ (Bấm để mở form chỉnh sửa):</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 8px;">
+            <label style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Danh sách tài khoản (Bấm để mở form chỉnh sửa):</label>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11px; opacity: 0.7;">Lọc loại tài khoản:</span>
+              <select id="admin-user-type-filter" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--ink); background: #fff;">
+                <option value="all">Tất cả tài khoản</option>
+                <option value="public">🌐 Nghệ sĩ hiển thị trên Web</option>
+                <option value="private">🔒 Tài khoản Portal nội bộ (Ẩn khỏi Web)</option>
+              </select>
+            </div>
+          </div>
           <div id="artist-selector-grid" class="artist-picker-grid"></div>
         </div>
 

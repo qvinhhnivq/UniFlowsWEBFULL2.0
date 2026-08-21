@@ -193,28 +193,53 @@ addAnnouncementBtn?.addEventListener('click', () => {
 });
 
 // ----------------------------------------------------
-// ARTIST MANAGER (SELECTOR + CARD EDITOR)
+// ARTIST & USER MANAGER (SELECTOR + CARD EDITOR)
 // ----------------------------------------------------
 function renderArtistSelector() {
   if (!artistSelectorGrid) return;
   if (!data.artists || data.artists.length === 0) {
-    artistSelectorGrid.innerHTML = '<p class="empty" style="grid-column:1/-1;">Chưa có nghệ sĩ nào.</p>';
+    artistSelectorGrid.innerHTML = '<p class="empty" style="grid-column:1/-1;">Chưa có tài khoản nghệ sĩ / người dùng nào.</p>';
+    return;
+  }
+
+  const typeFilter = document.querySelector('#admin-user-type-filter')?.value || 'all';
+  let filteredArtists = data.artists;
+  if (typeFilter === 'public') {
+    filteredArtists = data.artists.filter(a => a.showOnWeb !== false && a.showOnWeb !== 'false');
+  } else if (typeFilter === 'private') {
+    filteredArtists = data.artists.filter(a => a.showOnWeb === false || a.showOnWeb === 'false');
+  }
+
+  if (filteredArtists.length === 0) {
+    artistSelectorGrid.innerHTML = '<p class="empty" style="grid-column:1/-1;">Không có tài khoản nào theo bộ lọc này.</p>';
     return;
   }
 
   if (!selectedArtistId || !data.artists.some(a => a.id === selectedArtistId)) {
-    selectedArtistId = data.artists[0].id;
+    selectedArtistId = filteredArtists[0]?.id || data.artists[0].id;
   }
 
-  artistSelectorGrid.innerHTML = data.artists.map((a, idx) => `
-    <div class="artist-picker-card ${a.id === selectedArtistId ? 'active' : ''}" data-select-artist-id="${esc(a.id)}">
-      <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80')}" alt="${esc(a.name)}">
-      <div>
-        <strong style="font-size: 14px; display: block;">${esc(a.name || 'Nghệ sĩ')}</strong>
-        <span style="font-size: 11px; opacity: 0.7;">${esc(a.genre || 'Pop')}</span>
+  artistSelectorGrid.innerHTML = filteredArtists.map((a) => {
+    const isPublic = a.showOnWeb !== false && a.showOnWeb !== 'false';
+    const roleBadge = a.roleType === 'distribution' ? '💿 Phân phối' :
+      (a.roleType === 'producer' ? '🎛️ Producer' :
+      (a.roleType === 'manager' ? '👔 Quản lý' : '⭐ Độc quyền'));
+
+    return `
+      <div class="artist-picker-card ${a.id === selectedArtistId ? 'active' : ''}" data-select-artist-id="${esc(a.id)}" style="position:relative;">
+        <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80')}" alt="${esc(a.name)}">
+        <div style="flex:1;min-width:0;">
+          <strong style="font-size: 13px; display: block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(a.name || 'Người dùng')}</strong>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;">
+            <span style="font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; background:${isPublic ? '#dbeafe' : '#fef3c7'}; color:${isPublic ? '#1e40af' : '#92400e'};">
+              ${isPublic ? '🌐 Web' : '🔒 Portal'}
+            </span>
+            <span style="font-size: 9px; opacity: 0.75;">${esc(roleBadge)}</span>
+          </div>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   artistSelectorGrid.querySelectorAll('[data-select-artist-id]').forEach(card => {
     card.addEventListener('click', () => {
@@ -224,6 +249,10 @@ function renderArtistSelector() {
     });
   });
 }
+
+document.querySelector('#admin-user-type-filter')?.addEventListener('change', () => {
+  renderArtistSelector();
+});
 
 function renderSelectedArtistEditor() {
   if (!artistsBox) return;
@@ -237,29 +266,64 @@ function renderSelectedArtistEditor() {
   attachArtistUploadEvents();
 }
 
-const artistEditor = (a, idx) => `
+const artistEditor = (a, idx) => {
+  const isPublic = a.showOnWeb !== false && a.showOnWeb !== 'false';
+
+  return `
   <div class="item-editor" data-artist data-artist-id="${esc(a.id)}" data-artist-idx="${idx}" style="background:#fff;border:2px solid var(--ink);padding:24px;margin-top:10px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:12px;flex-wrap:wrap;gap:10px;">
       <div>
-        <span class="eyebrow" style="color:#2563eb;">Đang chỉnh sửa nghệ sĩ</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="eyebrow" style="color:#2563eb;margin:0;">Đang chỉnh sửa</span>
+          <span style="font-size:10px;padding:2px 6px;border-radius:10px;font-weight:bold;background:${isPublic ? '#dbeafe' : '#fef3c7'};color:${isPublic ? '#1e40af' : '#92400e'};">
+            ${isPublic ? '🌐 Hiển thị trên Web' : '🔒 Chỉ dùng Portal nội bộ'}
+          </span>
+        </div>
         <h3 style="margin:4px 0 0;font-size:22px;">${esc(a.name)}</h3>
       </div>
-      <button class="button alt remove" type="button" data-remove-artist="${idx}" style="padding:6px 12px;font-size:11px;">✕ Xóa nghệ sĩ này</button>
+      <button class="button alt remove" type="button" data-remove-artist="${idx}" style="padding:6px 12px;font-size:11px;">✕ Xóa tài khoản này</button>
+    </div>
+
+    <!-- 01: Visibility & Role Settings -->
+    <div style="background:#e0f2fe;border:1px solid #7dd3fc;padding:15px;margin-bottom:15px;">
+      <h4 style="margin:0 0 10px;font-size:13px;text-transform:uppercase;color:#0369a1;">⚙️ Phân loại tài khoản & Quyền hiển thị Website</h4>
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;color:#0369a1;">Trạng thái hiển thị Website</label>
+          <select data-key="showOnWeb" style="padding:10px;border:1px solid var(--ink);background:#fff;font-weight:bold;">
+            <option value="true" ${isPublic ? 'selected' : ''}>🌐 Hiển thị trên Website (Nghệ sĩ công khai - Public Roster)</option>
+            <option value="false" ${!isPublic ? 'selected' : ''}>🔒 Chỉ dùng Portal (ẨN khỏi Website công khai)</option>
+          </select>
+          <small style="margin-top:4px;display:block;opacity:0.8;">Chọn "Chỉ dùng Portal" nếu không muốn người này xuất hiện trên trang chủ hay trang Nghệ sĩ.</small>
+        </div>
+
+        <div class="field">
+          <label style="font-weight:bold;color:#0369a1;">Phân loại tài khoản / Vai trò</label>
+          <select data-key="roleType" style="padding:10px;border:1px solid var(--ink);background:#fff;">
+            <option value="distribution" ${a.roleType === 'distribution' ? 'selected' : ''}>💿 Nghệ sĩ Phân phối (Distribution Client)</option>
+            <option value="exclusive" ${a.roleType === 'exclusive' ? 'selected' : ''}>⭐ Nghệ sĩ Độc quyền (Exclusive Artist)</option>
+            <option value="producer" ${a.roleType === 'producer' ? 'selected' : ''}>🎛️ Producer / Nhạc sĩ (Producer Account)</option>
+            <option value="manager" ${a.roleType === 'manager' ? 'selected' : ''}>👔 Quản lý / Đại diện (Manager Account)</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <div class="mini-grid">
-      <div class="field"><label>Tên nghệ sĩ</label><input data-key="name" value="${esc(a.name)}" required></div>
+      <div class="field"><label>Tên nghệ sĩ / Tên người dùng</label><input data-key="name" value="${esc(a.name)}" required></div>
       <div class="field"><label>ID hệ thống (Slug cố định)</label><input data-key="id" value="${esc(a.id)}" required></div>
       <div class="field"><label>Email đăng nhập Portal (để liên kết tài khoản)</label><input data-key="email" value="${esc(a.email || '')}" placeholder="artist@uniflowslabel.com"></div>
-      <div class="field"><label>Thể loại chính</label><input data-key="genre" value="${esc(a.genre)}"></div>
+      <div class="field"><label>Thể loại chính / Lĩnh vực</label><input data-key="genre" value="${esc(a.genre || 'Independent')}"></div>
       <div class="field" style="grid-column: 1 / -1;">
-        <label>URL Ảnh đại diện (Hoặc dán Link trực tiếp)</label>
+        <label>URL Ảnh đại diện (Hoặc tải ảnh từ máy tính)</label>
         <input data-key="image" id="artist-img-${idx}" value="${esc(a.image)}" placeholder="https://...">
         <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
           <input type="file" accept="image/*" class="artist-file-input" data-target-input="#artist-img-${idx}" data-status-el="#artist-status-${idx}" style="font-size:11px;">
           <span id="artist-status-${idx}" style="font-size:11px;color:#008800;"></span>
         </div>
       </div>
+    </div>
+
     <!-- Contract & Accounting Cycle Settings -->
     <div style="background:#fffbe6;border:1px solid #ffe58f;padding:15px;margin:15px 0;">
       <h4 style="margin:0 0 10px;font-size:13px;text-transform:uppercase;color:#d48806;">📜 Hợp đồng & Kỳ đối soát doanh thu</h4>
@@ -299,26 +363,19 @@ const artistEditor = (a, idx) => `
         <div class="field"><label>Top Thành phố</label><input data-key="topCity" value="${esc(a.topCity || 'Hồ Chí Minh')}" placeholder="Ví dụ: Hồ Chí Minh"></div>
         <div class="field" style="grid-column: 1 / -1;"><label>Nguồn Streams dẫn đầu</label><input data-key="topSource" value="${esc(a.topSource || 'DSP Editorial & Algorithmic')}" placeholder="Ví dụ: DSP Editorial Playlists"></div>
       </div>
-
-      <h4 style="margin:15px 0 10px;font-size:13px;text-transform:uppercase;color:#555;">💰 Tổng số liệu chung (Tuỳ chọn ghi đè)</h4>
-      <div class="mini-grid">
-        <div class="field"><label>Tổng Streams tháng này</label><input data-key="monthlyStreams" value="${esc(a.monthlyStreams || '0')}"></div>
-        <div class="field"><label>Tổng Doanh thu ước tính (₫)</label><input data-key="estimatedRevenue" value="${esc(a.estimatedRevenue || '0')}"></div>
-        <div class="field"><label>Số dư khả dụng ban đầu (₫)</label><input data-key="payableBalance" value="${esc(a.payableBalance || '0')}"></div>
-      </div>
     </div>
 
-    <div class="field"><label>Tiểu sử / Giới thiệu</label><textarea data-key="bio" rows="3">${esc(a.bio)}</textarea></div>
-
-    <div class="mini-grid" style="margin-top:10px;">
-      <div class="field"><label>Instagram URL</label><input data-key="instagram" value="${esc(a.instagram || '')}"></div>
-      <div class="field"><label>YouTube URL</label><input data-key="youtube" value="${esc(a.youtube || '')}"></div>
-      <div class="field"><label>TikTok URL</label><input data-key="tiktok" value="${esc(a.tiktok || '')}"></div>
+    <!-- Bio & Links -->
+    <div class="field"><label>Tiểu sử nghệ sĩ / Giới thiệu</label><textarea data-key="bio" rows="3">${esc(a.bio || '')}</textarea></div>
+    <div class="mini-grid">
+      <div class="field"><label>Instagram URL</label><input data-key="instagram" value="${esc(a.instagram || '')}" placeholder="https://instagram.com/..."></div>
+      <div class="field"><label>YouTube URL</label><input data-key="youtube" value="${esc(a.youtube || '')}" placeholder="https://youtube.com/..."></div>
+      <div class="field"><label>TikTok URL</label><input data-key="tiktok" value="${esc(a.tiktok || '')}" placeholder="https://tiktok.com/@..."></div>
     </div>
-
     <div class="field" style="margin-top:10px;"><label>Bộ sưu tập ảnh Gallery (Mỗi dòng một URL ảnh)</label><textarea data-key="gallery" rows="3">${esc((a.gallery || []).join('\n'))}</textarea></div>
   </div>
 `;
+};
 
 function attachArtistUploadEvents() {
   document.querySelectorAll('.artist-file-input').forEach(input => {
@@ -894,7 +951,11 @@ function readItems(selector, kind) {
   return [...document.querySelectorAll(selector)].map(el => {
     let obj = {};
     el.querySelectorAll('[data-key]').forEach(input => {
-      obj[input.dataset.key] = input.type === 'checkbox' ? input.checked : input.value.trim();
+      let val = input.type === 'checkbox' ? input.checked : input.value.trim();
+      if (input.dataset.key === 'showOnWeb') {
+        val = val === 'true' || val === true;
+      }
+      obj[input.dataset.key] = val;
     });
     if (kind === 'artist') {
       obj.gallery = (obj.gallery || '').split('\n').map(x => x.trim()).filter(Boolean);
@@ -909,9 +970,37 @@ document.querySelector('#add-artist')?.addEventListener('click', () => {
     id: newId,
     name: 'Nghệ sĩ mới',
     email: '',
-    genre: 'Pop',
+    showOnWeb: true,
+    roleType: 'exclusive',
+    genre: 'Pop / Indie',
     image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
     bio: '',
+    products: [],
+    instagram: '',
+    youtube: '',
+    tiktok: '',
+    monthlyStreams: '0',
+    estimatedRevenue: '0',
+    payableBalance: '0',
+    payoutCycle: 'Hàng tháng (Monthly)',
+    royaltyRate: '80% Master',
+    contractTerm: '2024 - 2027'
+  });
+  selectedArtistId = newId;
+  render();
+});
+
+document.querySelector('#add-portal-user')?.addEventListener('click', () => {
+  const newId = 'user-' + Date.now().toString(36);
+  data.artists.push({
+    id: newId,
+    name: 'Người dùng Portal mới',
+    email: '',
+    showOnWeb: false,
+    roleType: 'distribution',
+    genre: 'Distribution',
+    image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
+    bio: 'Tài khoản người dùng / nghệ sĩ phân phối nội bộ.',
     products: [],
     instagram: '',
     youtube: '',

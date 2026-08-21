@@ -107,11 +107,18 @@ function renderContent() {
 function artists() {
   let grid = $('[data-artists]');
   if (!grid) return;
-  grid.innerHTML = data.artists.map(a => `
+  const publicArtists = (data.artists || []).filter(a => a.showOnWeb !== false && a.showOnWeb !== 'false');
+  
+  if (publicArtists.length === 0) {
+    grid.innerHTML = '<p class="empty" style="padding:20px;grid-column:1/-1;">Danh sách nghệ sĩ đang được cập nhật.</p>';
+    return;
+  }
+
+  grid.innerHTML = publicArtists.map(a => `
     <a class="artist" href="artist?id=${encodeURIComponent(a.id)}">
-      <img src="${esc(a.image)}" alt="${esc(a.name)}">
+      <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80')}" alt="${esc(a.name)}">
       <div class="artist-info">
-        <span>${esc(a.genre)}</span>
+        <span>${esc(a.genre || 'Music')}</span>
         <h4>${esc(a.name)}</h4>
         <b>Khám phá ↗</b>
       </div>

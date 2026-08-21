@@ -213,7 +213,9 @@ export async function getData() {
           id: a.id,
           name: a.name,
           email: a.email || stats.email || localCachedArtist.email || '',
-          genre: a.genre,
+          showOnWeb: a.show_on_web !== undefined ? a.show_on_web : (stats.showOnWeb !== undefined ? stats.showOnWeb : (localCachedArtist.showOnWeb !== undefined ? localCachedArtist.showOnWeb : true)),
+          roleType: a.role_type || stats.roleType || localCachedArtist.roleType || 'distribution',
+          genre: a.genre || 'Music',
           image: a.image,
           bio: a.bio,
           gallery: Array.isArray(a.gallery) ? a.gallery : (typeof a.gallery === 'string' ? JSON.parse(a.gallery || '[]') : []),
@@ -312,6 +314,8 @@ export async function saveData(data) {
     for (const a of data.artists) {
       const stats = {
         email: a.email || '',
+        showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false',
+        roleType: a.roleType || 'distribution',
         payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
         royaltyRate: a.royaltyRate || '80% Master',
         contractTerm: a.contractTerm || '2024 - 2027',
