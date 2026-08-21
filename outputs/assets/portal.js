@@ -288,14 +288,143 @@ window.addEventListener('hashchange', handleHash);
 handleHash();
 
 // ----------------------------------------------------
-// MODAL DIALOGS (RELEASE & PAYOUT)
+// STUDIO MULTI-STEP RELEASE BUILDER WIZARD
 // ----------------------------------------------------
+let wizardCurrentStep = 1;
+const totalWizardSteps = 4;
+
+const prevStepBtn = document.querySelector('#prev-step-btn');
+const nextStepBtn = document.querySelector('#next-step-btn');
+const submitReleaseBtn = document.querySelector('#submit-release-btn');
+const stepperItems = document.querySelectorAll('.stepper-item');
+
+function updateWizardStep(step) {
+  wizardCurrentStep = Math.max(1, Math.min(totalWizardSteps, step));
+
+  // Switch panels
+  for (let i = 1; i <= totalWizardSteps; i++) {
+    const panel = document.querySelector(`#step-panel-${i}`);
+    if (panel) {
+      if (i === wizardCurrentStep) {
+        panel.classList.add('active');
+      } else {
+        panel.classList.remove('active');
+      }
+    }
+  }
+
+  // Update Stepper Bar
+  stepperItems.forEach(item => {
+    const itemStep = parseInt(item.dataset.step, 10);
+    if (itemStep === wizardCurrentStep) {
+      item.className = 'stepper-item active';
+    } else if (itemStep < wizardCurrentStep) {
+      item.className = 'stepper-item completed';
+    } else {
+      item.className = 'stepper-item';
+    }
+  });
+
+  // Manage Nav Buttons
+  if (prevStepBtn) {
+    prevStepBtn.style.display = wizardCurrentStep > 1 ? 'inline-block' : 'none';
+  }
+
+  if (wizardCurrentStep === totalWizardSteps) {
+    if (nextStepBtn) nextStepBtn.style.display = 'none';
+    if (submitReleaseBtn) submitReleaseBtn.style.display = 'inline-block';
+    updateLiveMockup();
+  } else {
+    if (nextStepBtn) {
+      nextStepBtn.style.display = 'inline-block';
+      const labels = [
+        '',
+        'Tiếp tục: Audio & Artwork →',
+        'Tiếp tục: Tác quyền & Credits →',
+        'Tiếp tục: Lịch phát hành & Review →'
+      ];
+      nextStepBtn.textContent = labels[wizardCurrentStep] || 'Tiếp tục →';
+    }
+    if (submitReleaseBtn) submitReleaseBtn.style.display = 'none';
+  }
+}
+
+nextStepBtn?.addEventListener('click', () => {
+  // Step 1 Validation
+  if (wizardCurrentStep === 1) {
+    const titleVal = document.querySelector('#wizard-title-input')?.value.trim();
+    if (!titleVal) {
+      alert('Vui lòng nhập Tên bản phát hành (Release Title).');
+      document.querySelector('#wizard-title-input')?.focus();
+      return;
+    }
+  }
+
+  // Step 2 Validation
+  if (wizardCurrentStep === 2) {
+    const hasAudio = audioFileInput?.files[0] || document.querySelector('#audio-external-url')?.value.trim();
+    const hasArt = artworkFileInput?.files[0] || document.querySelector('#artwork-external-url')?.value.trim();
+    if (!hasAudio) {
+      alert('Vui lòng tải lên File Master Audio hoặc dán Link Google Drive/Dropbox chứa Audio.');
+      return;
+    }
+    if (!hasArt) {
+      alert('Vui lòng tải lên Ảnh bìa Artwork hoặc dán Link URL Ảnh bìa.');
+      return;
+    }
+  }
+
+  // Step 3 Validation
+  if (wizardCurrentStep === 3) {
+    const songwriters = document.querySelector('[name="songwriters"]')?.value.trim();
+    const producers = document.querySelector('[name="producers"]')?.value.trim();
+    if (!songwriters || !producers) {
+      alert('Vui lòng điền đầy đủ thông tin Nhạc sĩ sáng tác và Nhà sản xuất âm nhạc.');
+      return;
+    }
+  }
+
+  updateWizardStep(wizardCurrentStep + 1);
+});
+
+prevStepBtn?.addEventListener('click', () => {
+  updateWizardStep(wizardCurrentStep - 1);
+});
+
+stepperItems.forEach(item => {
+  item.addEventListener('click', () => {
+    const targetStep = parseInt(item.dataset.step, 10);
+    if (targetStep < wizardCurrentStep) {
+      updateWizardStep(targetStep);
+    }
+  });
+});
+
+function updateLiveMockup() {
+  const title = document.querySelector('#wizard-title-input')?.value.trim() || 'Tên bài hát của bạn';
+  const type = document.querySelector('#wizard-type-select')?.value || 'Single';
+  const feat = document.querySelector('#wizard-feat-input')?.value.trim();
+  const date = document.querySelector('#wizard-date-input')?.value;
+  const primaryName = artist?.name || 'Nghệ sĩ chính';
+
+  const mockTitleEl = document.querySelector('#wizard-mock-title');
+  const mockTypeEl = document.querySelector('#wizard-mock-type');
+  const mockArtistEl = document.querySelector('#wizard-mock-artist');
+  const mockDateEl = document.querySelector('#wizard-mock-date');
+
+  if (mockTitleEl) mockTitleEl.textContent = title;
+  if (mockTypeEl) mockTypeEl.textContent = type.toUpperCase();
+  if (mockArtistEl) mockArtistEl.textContent = feat ? `${primaryName} (${feat})` : primaryName;
+  if (mockDateEl) mockDateEl.textContent = date || 'Chưa chọn ngày';
+}
+
 openReleaseModalBtn?.addEventListener('click', () => {
   if (artist.roleType === 'collab') {
     alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
     return;
   }
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
+  updateWizardStep(1);
   releaseDialog?.showModal();
 });
 
@@ -305,6 +434,7 @@ quickOpenReleaseModalBtn?.addEventListener('click', () => {
     return;
   }
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
+  updateWizardStep(1);
   releaseDialog?.showModal();
 });
 
@@ -316,18 +446,52 @@ cancelReleaseBtn?.addEventListener('click', () => {
   releaseDialog?.close();
 });
 
-// File name change indicators
+// File name change indicators & live visual feedback
 audioFileInput?.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file && audioFilename) {
-    audioFilename.textContent = `✓ Audio: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+    audioFilename.textContent = `✓ Đã chọn Master: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+    audioFilename.style.color = '#059669';
   }
 });
 
 artworkFileInput?.addEventListener('change', (e) => {
   const file = e.target.files[0];
-  if (file && artworkFilename) {
-    artworkFilename.textContent = `✓ Artwork: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  if (file) {
+    if (artworkFilename) {
+      artworkFilename.textContent = `✓ Đã nạp Artwork: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      artworkFilename.style.color = '#059669';
+    }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const artUrl = evt.target.result;
+      const dropArtPreview = document.querySelector('#wizard-art-preview');
+      const mockArt = document.querySelector('#wizard-mock-art');
+      const artDropContent = document.querySelector('#art-drop-content');
+      if (dropArtPreview) {
+        dropArtPreview.src = artUrl;
+        dropArtPreview.style.display = 'block';
+      }
+      if (artDropContent) artDropContent.style.display = 'none';
+      if (mockArt) mockArt.src = artUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+const artUrlInput = document.querySelector('#artwork-external-url');
+artUrlInput?.addEventListener('input', (e) => {
+  const url = e.target.value.trim();
+  if (url) {
+    const mockArt = document.querySelector('#wizard-mock-art');
+    const dropArtPreview = document.querySelector('#wizard-art-preview');
+    const artDropContent = document.querySelector('#art-drop-content');
+    if (dropArtPreview) {
+      dropArtPreview.src = url;
+      dropArtPreview.style.display = 'block';
+    }
+    if (artDropContent) artDropContent.style.display = 'none';
+    if (mockArt) mockArt.src = url;
   }
 });
 
