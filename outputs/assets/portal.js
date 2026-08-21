@@ -84,11 +84,18 @@ if (artist) {
 
   const currentRole = roleMap[artist.roleType] || roleMap.distribution;
   if (roleBadgeEl) {
-    roleBadgeEl.style.display = 'inline-block';
+    roleBadgeEl.style.display = 'inline-flex';
+    roleBadgeEl.style.alignItems = 'center';
     roleBadgeEl.textContent = currentRole.text;
     roleBadgeEl.style.background = currentRole.bg;
     roleBadgeEl.style.color = currentRole.color;
     roleBadgeEl.style.border = `1px solid ${currentRole.border}`;
+    roleBadgeEl.style.letterSpacing = '0.5px';
+    roleBadgeEl.style.fontFamily = "'DM Mono', monospace, sans-serif";
+    roleBadgeEl.style.fontSize = '11px';
+    roleBadgeEl.style.fontWeight = '700';
+    roleBadgeEl.style.lineHeight = '1.4';
+    roleBadgeEl.style.whiteSpace = 'nowrap';
   }
 
   if (roleBannerEl) {

@@ -243,10 +243,10 @@ function renderArtistSelector() {
         <div style="flex:1;min-width:0;">
           <strong style="font-size: 13px; display: block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(a.name || 'Người dùng')}</strong>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;">
-            <span style="font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; background:${isPublic ? '#dbeafe; color:#1e40af' : '#fef3c7; color:#92400e'};">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;font-weight:bold;letter-spacing:0;line-height:1.2;background:${isPublic ? '#dbeafe; color:#1e40af' : '#fef3c7; color:#92400e'};">
               ${isPublic ? '🌐 Web' : '🔒 Portal'}
             </span>
-            <span style="font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; background:${roleBg};">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;font-weight:bold;letter-spacing:0;line-height:1.2;background:${roleBg};">
               ${esc(roleBadge)}
             </span>
           </div>
