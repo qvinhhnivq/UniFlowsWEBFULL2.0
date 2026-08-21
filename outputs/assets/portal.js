@@ -1521,7 +1521,287 @@ changePasswordForm?.addEventListener('submit', async (e) => {
       savePasswordSubmitBtn.textContent = 'Lưu mật khẩu';
     }
   }
+// ====================================================
+// COPYRIGHT & GREEN-LIST REQUESTS SYSTEM (MAJOR LABEL)
+// ====================================================
+const openCopyrightReportBtn = document.querySelector('#open-copyright-report-btn');
+const copyrightDialog = document.querySelector('#copyright-dialog');
+const closeCopyrightDialogBtn = document.querySelector('#close-copyright-dialog-btn');
+const closeCopyrightDialogBtn2 = document.querySelector('#close-copyright-dialog-btn-2');
+const copyrightReportForm = document.querySelector('#copyright-report-form');
+const copyrightDialogNotice = document.querySelector('#copyright-dialog-notice');
+const submitCopyrightBtn = document.querySelector('#submit-copyright-btn');
+
+const openGreenlistBtn = document.querySelector('#open-greenlist-btn');
+const greenlistDialog = document.querySelector('#greenlist-dialog');
+const closeGreenlistDialogBtn = document.querySelector('#close-greenlist-dialog-btn');
+const closeGreenlistDialogBtn2 = document.querySelector('#close-greenlist-dialog-btn-2');
+const greenlistRequestForm = document.querySelector('#greenlist-request-form');
+const greenlistDialogNotice = document.querySelector('#greenlist-dialog-notice');
+const submitGreenlistBtn = document.querySelector('#submit-greenlist-btn');
+
+const serviceRequestsList = document.querySelector('#service-requests-list');
+const refreshServiceRequestsBtn = document.querySelector('#refresh-service-requests-btn');
+
+function populateReleaseOptionsInDialogs() {
+  const crSelect = document.querySelector('#cr-release-select');
+  const glSelect = document.querySelector('#gl-track-scope');
+
+  if (crSelect) {
+    crSelect.innerHTML = '<option value="">-- Chọn bài hát từ catalogue của bạn --</option>' +
+      cachedFetchedReleases.map(r => `<option value="${esc(r.title)}">${esc(r.title)} (${esc(r.type || 'Single')})</option>`).join('');
+  }
+
+  if (glSelect) {
+    glSelect.innerHTML = '<option value="Toàn bộ kho nhạc của Nghệ sĩ (All Catalogue)">🌟 Toàn bộ bài hát của bạn (All Catalogue)</option>' +
+      cachedFetchedReleases.map(r => `<option value="Chỉ bài hát: ${esc(r.title)}">Chỉ bài hát: ${esc(r.title)}</option>`).join('');
+  }
+}
+
+openCopyrightReportBtn?.addEventListener('click', () => {
+  populateReleaseOptionsInDialogs();
+  if (copyrightDialogNotice) copyrightDialogNotice.style.display = 'none';
+  copyrightReportForm?.reset();
+  copyrightDialog?.showModal();
 });
+
+closeCopyrightDialogBtn?.addEventListener('click', () => copyrightDialog?.close());
+closeCopyrightDialogBtn2?.addEventListener('click', () => copyrightDialog?.close());
+
+copyrightReportForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const track = document.querySelector('#cr-release-select')?.value;
+  const platform = document.querySelector('#cr-platform')?.value;
+  const violationType = document.querySelector('#cr-violation-type')?.value;
+  const targetUrl = document.querySelector('#cr-target-url')?.value.trim();
+  const actionPreference = document.querySelector('#cr-action-preference')?.value;
+  const notes = document.querySelector('#cr-notes')?.value.trim();
+
+  if (submitCopyrightBtn) {
+    submitCopyrightBtn.disabled = true;
+    submitCopyrightBtn.textContent = 'Đang gửi...';
+  }
+
+  const newReport = {
+    id: 'cr-' + Date.now(),
+    artist_id: currentArtistId,
+    artist_name: artist?.name || 'Nghệ sĩ',
+    type: 'copyright_report',
+    title: `Báo cáo vi phạm: ${track}`,
+    track,
+    platform,
+    violation_type: violationType,
+    target_url: targetUrl,
+    action_preference: actionPreference,
+    notes,
+    status: 'Đang tiếp nhận',
+    admin_notes: '',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    if (isSupabaseConfigured()) {
+      const { data: inserted, error } = await supabase.from('copyright_reports').insert({
+        artist_id: currentArtistId,
+        artist_name: artist?.name || 'Nghệ sĩ',
+        track_title: track,
+        platform,
+        violation_type: violationType,
+        target_url: targetUrl,
+        action_preference: actionPreference,
+        notes,
+        status: 'Đang tiếp nhận',
+        admin_notes: ''
+      }).select().single();
+
+      if (!error && inserted) {
+        newReport.id = inserted.id;
+      }
+    }
+
+    const localCR = JSON.parse(localStorage.getItem('uniflows-copyright-reports') || '[]');
+    localStorage.setItem('uniflows-copyright-reports', JSON.stringify([newReport, ...localCR]));
+
+    alert('✓ Đã gửi Báo cáo Vi phạm Bản quyền tới Đội ngũ Kỹ thuật & A&R UniFLOWs! Bạn có thể theo dõi tiến độ xử lý bên dưới.');
+    copyrightDialog?.close();
+    copyrightReportForm.reset();
+    loadArtistServiceRequests();
+  } catch (err) {
+    alert('Lỗi: ' + (err.message || 'Không thể gửi báo cáo.'));
+  } finally {
+    if (submitCopyrightBtn) {
+      submitCopyrightBtn.disabled = false;
+      submitCopyrightBtn.textContent = 'Gửi Báo cáo vi phạm';
+    }
+  }
+});
+
+// Greenlist Handlers
+openGreenlistBtn?.addEventListener('click', () => {
+  populateReleaseOptionsInDialogs();
+  if (greenlistDialogNotice) greenlistDialogNotice.style.display = 'none';
+  greenlistRequestForm?.reset();
+  greenlistDialog?.showModal();
+});
+
+closeGreenlistDialogBtn?.addEventListener('click', () => greenlistDialog?.close());
+closeGreenlistDialogBtn2?.addEventListener('click', () => greenlistDialog?.close());
+
+greenlistRequestForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const platform = document.querySelector('#gl-platform')?.value;
+  const channelId = document.querySelector('#gl-channel-id')?.value.trim();
+  const trackScope = document.querySelector('#gl-track-scope')?.value;
+  const purpose = document.querySelector('#gl-purpose')?.value;
+  const notes = document.querySelector('#gl-notes')?.value.trim();
+
+  if (submitGreenlistBtn) {
+    submitGreenlistBtn.disabled = true;
+    submitGreenlistBtn.textContent = 'Đang lưu...';
+  }
+
+  const newGL = {
+    id: 'gl-' + Date.now(),
+    artist_id: currentArtistId,
+    artist_name: artist?.name || 'Nghệ sĩ',
+    type: 'greenlist_request',
+    title: `Cấp quyền Green-list: ${channelId} (${platform})`,
+    platform,
+    channel_id: channelId,
+    track_scope: trackScope,
+    purpose,
+    notes,
+    status: 'Đang tiếp nhận',
+    admin_notes: '',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    if (isSupabaseConfigured()) {
+      const { data: inserted, error } = await supabase.from('greenlist_requests').insert({
+        artist_id: currentArtistId,
+        artist_name: artist?.name || 'Nghệ sĩ',
+        platform,
+        channel_id: channelId,
+        track_scope: trackScope,
+        purpose,
+        notes,
+        status: 'Đang tiếp nhận',
+        admin_notes: ''
+      }).select().single();
+
+      if (!error && inserted) {
+        newGL.id = inserted.id;
+      }
+    }
+
+    const localGL = JSON.parse(localStorage.getItem('uniflows-greenlist-requests') || '[]');
+    localStorage.setItem('uniflows-greenlist-requests', JSON.stringify([newGL, ...localGL]));
+
+    alert('✓ Đã gửi yêu cầu cấp quyền Green-list tới Admin! Hệ thống Content ID sẽ cập nhật sau khi Admin phê duyệt.');
+    greenlistDialog?.close();
+    greenlistRequestForm.reset();
+    loadArtistServiceRequests();
+  } catch (err) {
+    alert('Lỗi: ' + (err.message || 'Không thể gửi yêu cầu cấp quyền.'));
+  } finally {
+    if (submitGreenlistBtn) {
+      submitGreenlistBtn.disabled = false;
+      submitGreenlistBtn.textContent = 'Xác nhận cấp Green-list';
+    }
+  }
+});
+
+refreshServiceRequestsBtn?.addEventListener('click', () => {
+  loadArtistServiceRequests();
+});
+
+async function loadArtistServiceRequests() {
+  if (!serviceRequestsList) return;
+
+  let crList = [];
+  let glList = [];
+
+  try {
+    crList = JSON.parse(localStorage.getItem('uniflows-copyright-reports') || '[]').filter(x => x.artist_id === currentArtistId);
+  } catch {}
+  try {
+    glList = JSON.parse(localStorage.getItem('uniflows-greenlist-requests') || '[]').filter(x => x.artist_id === currentArtistId);
+  } catch {}
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbCR } = await supabase.from('copyright_reports').select('*').eq('artist_id', currentArtistId).order('created_at', { ascending: false });
+      if (dbCR) crList = dbCR;
+      const { data: dbGL } = await supabase.from('greenlist_requests').select('*').eq('artist_id', currentArtistId).order('created_at', { ascending: false });
+      if (dbGL) glList = dbGL;
+    } catch {}
+  }
+
+  const combined = [
+    ...crList.map(x => ({ ...x, reqKind: 'copyright' })),
+    ...glList.map(x => ({ ...x, reqKind: 'greenlist' }))
+  ].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+  if (combined.length === 0) {
+    serviceRequestsList.innerHTML = `
+      <div style="padding:26px;background:#fafafa;border:1px dashed #cbd5e1;border-radius:12px;text-align:center;">
+        <p style="font-size:13px;color:#64748b;margin:0;">Bạn chưa có yêu cầu Bản quyền hoặc Cấp phép Green-list nào. Khi bạn gửi báo cáo vi phạm hoặc thêm kênh whitelist, tiến độ xử lý từ Admin sẽ hiển thị tại đây.</p>
+      </div>
+    `;
+    return;
+  }
+
+  serviceRequestsList.innerHTML = `
+    <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+      <div style="display:grid;grid-template-columns:140px 1fr 160px;background:#f8fafc;padding:12px 18px;font-weight:bold;font-size:11px;text-transform:uppercase;color:#475569;border-bottom:1px solid #e2e8f0;">
+        <span>Loại yêu cầu</span>
+        <span>Chi tiết tác phẩm & Link</span>
+        <span>Trạng thái xử lý</span>
+      </div>
+      ${combined.map(item => {
+        const isCR = item.reqKind === 'copyright';
+        const st = item.status || 'Đang tiếp nhận';
+        let pillClass = 'status-pill-receiving';
+        if (st === 'Đang xử lý') pillClass = 'status-pill-processing';
+        else if (st === 'Đã gửi yêu cầu') pillClass = 'status-pill-submitted';
+        else if (st === 'Đã xử lý' || st.includes('Đã cấp') || st === 'Đã giải quyết') pillClass = 'status-pill-resolved';
+        else if (st.includes('Từ chối') || st.includes('gỡ bỏ')) pillClass = 'status-pill-rejected';
+
+        const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : 'Vừa xong';
+
+        return `
+          <div style="border-bottom:1px solid #f1f5f9;padding:14px 18px;font-size:13px;">
+            <div style="display:grid;grid-template-columns:140px 1fr 160px;align-items:start;gap:12px;">
+              <div>
+                <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;font-weight:bold;display:inline-block;padding:2px 8px;border-radius:6px;background:${isCR ? '#fee2e2' : '#dcfce7'};color:${isCR ? '#b91c1c' : '#15803d'};">
+                  ${isCR ? '🚨 Báo cáo vi phạm' : '🟢 Kênh Green-list'}
+                </span>
+                <small style="display:block;margin-top:4px;color:#94a3b8;font-size:11px;">${esc(dateStr)}</small>
+              </div>
+
+              <div>
+                <strong style="font-size:14px;display:block;margin-bottom:3px;">
+                  ${isCR ? esc(item.track_title || item.track || item.title) : esc(item.channel_id || item.title)}
+                </strong>
+                <div style="font-size:12px;color:#475569;margin-bottom:4px;">
+                  Nền tảng: <b>${esc(item.platform)}</b> ${isCR ? `· Vi phạm: <b>${esc(item.violation_type || '')}</b>` : `· Phạm vi: <b>${esc(item.track_scope || '')}</b>`}
+                </div>
+                ${item.target_url ? `<a href="${esc(item.target_url)}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:underline;word-break:break-all;">${esc(item.target_url)} ↗</a>` : ''}
+                ${item.admin_notes ? `<div style="margin-top:6px;background:#f8fafc;border-left:3px solid #3b82f6;padding:6px 10px;font-size:11px;color:#1e293b;border-radius:0 6px 6px 0;"><strong>Phản hồi từ Admin UniFLOWs:</strong> ${esc(item.admin_notes)}</div>` : ''}
+              </div>
+
+              <div>
+                <span class="${pillClass}">● ${esc(st)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
 
 renderReleases();
 loadArtistPayouts();
+loadArtistServiceRequests();

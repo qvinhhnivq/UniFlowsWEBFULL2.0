@@ -19,8 +19,9 @@
       <button type="button" class="admin-tab-btn active" data-tab="admin-tab-releases">💿 01 / Duyệt phát hành & SmartLink</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">👥 02 / Quản lý Nghệ sĩ & Tài khoản Portal</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-payouts">💳 03 / Quản lý Rút tiền</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 04 / Bài viết & Tạp chí</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-settings">⚙️ 05 / Cấu hình Trang & Email</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-copyright">🛡️ 04 / Bản quyền & Green-list</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 05 / Bài viết & Tạp chí</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-settings">⚙️ 06 / Cấu hình Trang & Email</button>
     </nav>
 
     <div id="notice" class="notice"></div>
@@ -157,7 +158,48 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 4: BÀI VIẾT & TẠP CHÍ -->
+      <!-- TAB 4: QUẢN LÝ BẢN QUYỀN & GREEN-LIST -->
+      <!-- ========================================== -->
+      <section id="admin-tab-copyright" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Bản quyền, DMCA & Cấp quyền Green-list</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Tiếp nhận báo cáo vi phạm bản quyền (Reup/Beat), quét Content ID và phê duyệt danh sách kênh được cấp quyền (Green-list).</p>
+          </div>
+          <span class="kicker">Rights Management</span>
+        </div>
+
+        <!-- 01: Copyright & DMCA Reports Reviewer -->
+        <div style="background: #fff; border: 1px solid var(--ink); padding: 22px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--line); padding-bottom:12px;">
+            <div>
+              <h3 style="font-size: 16px; margin: 0;">🚨 01 / Danh sách Báo cáo Vi phạm Bản quyền</h3>
+              <p style="font-size: 12px; color: #64748b; margin: 2px 0 0;">Xử lý báo cáo từ nghệ sĩ: Đang tiếp nhận ➔ Đang xử lý ➔ Đã gửi yêu cầu ➔ Đã xử lý / Từ chối.</p>
+            </div>
+            <button type="button" id="admin-refresh-copyright-btn" class="button alt" style="padding: 6px 12px; font-size: 11px; border-radius: 6px;">🔄 Làm mới</button>
+          </div>
+          <div id="admin-copyright-reports-list">
+            <p class="empty">Đang tải danh sách báo cáo bản quyền...</p>
+          </div>
+        </div>
+
+        <!-- 02: Green-list Channels Management -->
+        <div style="background: #fff; border: 1px solid var(--ink); padding: 22px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--line); padding-bottom:12px;">
+            <div>
+              <h3 style="font-size: 16px; margin: 0;">🟢 02 / Kênh được Cấp quyền Sử dụng Nhạc (Green-list Engine)</h3>
+              <p style="font-size: 12px; color: #64748b; margin: 2px 0 0;">Danh sách kênh YouTube, TikTok, Facebook đối tác được miễn trừ bản quyền Content ID.</p>
+            </div>
+            <button type="button" id="admin-refresh-greenlist-btn" class="button alt" style="padding: 6px 12px; font-size: 11px; border-radius: 6px;">🔄 Làm mới</button>
+          </div>
+          <div id="admin-greenlist-requests-list">
+            <p class="empty">Đang tải danh sách kênh Green-list...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 5: BÀI VIẾT & TẠP CHÍ -->
       <!-- ========================================== -->
       <section id="admin-tab-articles" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
         <div class="section-head" style="padding-left: 0; padding-right: 0;">

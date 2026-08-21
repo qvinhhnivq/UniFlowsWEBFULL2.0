@@ -686,6 +686,280 @@ document.querySelector('#admin-refresh-payouts-btn')?.addEventListener('click', 
 });
 
 // ----------------------------------------------------
+// COPYRIGHT & DMCA REPORTS MANAGEMENT (ADMIN)
+// ----------------------------------------------------
+const copyrightBox = document.querySelector('#admin-copyright-reports-list');
+const greenlistBox = document.querySelector('#admin-greenlist-requests-list');
+
+async function loadAdminCopyrightReports() {
+  if (!copyrightBox) return;
+
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem('uniflows-copyright-reports') || '[]');
+  } catch {}
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbList, error } = await supabase.from('copyright_reports').select('*').order('created_at', { ascending: false });
+      if (!error && dbList) {
+        list = dbList;
+        localStorage.setItem('uniflows-copyright-reports', JSON.stringify(list));
+      }
+    } catch {}
+  }
+
+  if (list.length === 0) {
+    copyrightBox.innerHTML = '<p class="empty" style="padding:15px;background:#fff;border:1px solid var(--line);">Chưa có báo cáo vi phạm bản quyền nào từ nghệ sĩ.</p>';
+    return;
+  }
+
+  copyrightBox.innerHTML = list.map(req => {
+    const st = req.status || 'Đang tiếp nhận';
+    const dateStr = req.created_at ? new Date(req.created_at).toLocaleString('vi-VN') : 'Mới';
+    const isReceiving = st === 'Đang tiếp nhận';
+    const isProcessing = st === 'Đang xử lý';
+    const isSubmitted = st === 'Đã gửi yêu cầu';
+    const isResolved = st === 'Đã xử lý';
+    const isRejected = st === 'Từ chối';
+
+    return `
+      <div class="item-editor" data-copyright-id="${esc(req.id)}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:14px;border-radius:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;">
+          <div>
+            <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;background:#fee2e2;color:#b91c1c;">
+              🚨 ${esc(st)}
+            </span>
+            <strong style="font-size:16px;margin-left:8px;color:#111;">${esc(req.track_title || req.track || req.title)}</strong>
+          </div>
+          <span style="font-size:12px;opacity:0.7;">Gửi lúc: ${esc(dateStr)}</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin:12px 0;font-size:13px;background:#f9f9f9;padding:12px;border:1px solid #eee;border-radius:6px;">
+          <div>
+            <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;">Nghệ sĩ báo cáo:</span>
+            <strong>${esc(req.artist_name || req.artist_id || 'Nghệ sĩ')}</strong>
+          </div>
+          <div>
+            <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;">Nền tảng & Hình thức:</span>
+            <b>${esc(req.platform)}</b> · <span style="color:#b91c1c;">${esc(req.violation_type || '')}</span>
+          </div>
+          <div>
+            <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;">Hướng xử lý yêu cầu:</span>
+            <b>${esc(req.action_preference || 'Takedown')}</b>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px;font-size:13px;">
+          <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;margin-bottom:2px;">Link video / bài đăng vi phạm:</span>
+          <a href="${esc(req.target_url)}" target="_blank" style="color:#2563eb;word-break:break-all;font-weight:bold;">${esc(req.target_url)} ↗</a>
+          ${req.notes ? `<div style="margin-top:6px;font-size:12px;color:#475569;background:#fff;padding:8px;border:1px solid #e2e8f0;border-radius:4px;"><b>Ghi chú từ nghệ sĩ:</b> ${esc(req.notes)}</div>` : ''}
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;border-top:1px solid #f1f5f9;padding-top:12px;">
+          <div style="flex:1;min-width:220px;">
+            <label style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Chuyển đổi trạng thái:</label>
+            <select class="copyright-status-select" style="width:100%;padding:8px;border:1px solid var(--ink);font-weight:bold;background:#fff;border-radius:4px;">
+              <option value="Đang tiếp nhận" ${isReceiving ? 'selected' : ''}>📥 Đang tiếp nhận</option>
+              <option value="Đang xử lý" ${isProcessing ? 'selected' : ''}>⚙️ Đang xử lý (Quét Content ID)</option>
+              <option value="Đã gửi yêu cầu" ${isSubmitted ? 'selected' : ''}>📨 Đã gửi yêu cầu (Đã khiếu nại DSP)</option>
+              <option value="Đã xử lý" ${isResolved ? 'selected' : ''}>✅ Đã xử lý (Gỡ bài / Thu hồi thành công)</option>
+              <option value="Từ chối" ${isRejected ? 'selected' : ''}>❌ Từ chối (Không đủ bằng chứng)</option>
+            </select>
+          </div>
+
+          <div style="flex:2;min-width:280px;">
+            <label style="font-size:11px;font-weight:bold;text-transform:uppercase;color:#2563eb;display:block;margin-bottom:4px;">Phản hồi gửi về Portal Nghệ sĩ:</label>
+            <input class="copyright-admin-notes" value="${esc(req.admin_notes || '')}" placeholder="Ví dụ: Đã gửi strike takedown YouTube, video đã bị hạ..." style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:4px;">
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <button class="button" type="button" data-save-copyright="${esc(req.id)}" style="padding:9px 16px;font-size:11px;">Lưu trạng thái</button>
+            <button class="button alt remove" type="button" data-delete-copyright="${esc(req.id)}" style="padding:9px 12px;font-size:11px;">✕ Xóa</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  copyrightBox.querySelectorAll('[data-save-copyright]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.dataset.saveCopyright;
+      const card = e.target.closest('[data-copyright-id]');
+      const status = card?.querySelector('.copyright-status-select')?.value;
+      const admin_notes = card?.querySelector('.copyright-admin-notes')?.value.trim() || '';
+
+      btn.disabled = true; btn.textContent = 'Đang lưu...';
+
+      if (isSupabaseConfigured()) {
+        await supabase.from('copyright_reports').update({ status, admin_notes }).eq('id', id);
+      }
+
+      try {
+        const cached = JSON.parse(localStorage.getItem('uniflows-copyright-reports') || '[]');
+        const idx = cached.findIndex(x => x.id === id);
+        if (idx >= 0) {
+          cached[idx].status = status;
+          cached[idx].admin_notes = admin_notes;
+          localStorage.setItem('uniflows-copyright-reports', JSON.stringify(cached));
+        }
+      } catch {}
+
+      btn.disabled = false; btn.textContent = 'Lưu trạng thái';
+      showNotice(`✓ Đã cập nhật trạng thái báo cáo bản quyền: "${status}"`);
+      loadAdminCopyrightReports();
+    });
+  });
+
+  copyrightBox.querySelectorAll('[data-delete-copyright]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      if (!confirm('Xóa báo cáo bản quyền này?')) return;
+      const id = e.target.dataset.deleteCopyright;
+      if (isSupabaseConfigured()) {
+        await supabase.from('copyright_reports').delete().eq('id', id);
+      }
+      try {
+        const cached = JSON.parse(localStorage.getItem('uniflows-copyright-reports') || '[]');
+        localStorage.setItem('uniflows-copyright-reports', JSON.stringify(cached.filter(x => x.id !== id)));
+      } catch {}
+      showNotice('✓ Đã xóa báo cáo!');
+      loadAdminCopyrightReports();
+    });
+  });
+}
+
+// Greenlist Management (Admin)
+async function loadAdminGreenlistRequests() {
+  if (!greenlistBox) return;
+
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem('uniflows-greenlist-requests') || '[]');
+  } catch {}
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbList, error } = await supabase.from('greenlist_requests').select('*').order('created_at', { ascending: false });
+      if (!error && dbList) {
+        list = dbList;
+        localStorage.setItem('uniflows-greenlist-requests', JSON.stringify(list));
+      }
+    } catch {}
+  }
+
+  if (list.length === 0) {
+    greenlistBox.innerHTML = '<p class="empty" style="padding:15px;background:#fff;border:1px solid var(--line);">Chưa có yêu cầu cấp quyền Green-list nào.</p>';
+    return;
+  }
+
+  greenlistBox.innerHTML = list.map(req => {
+    const st = req.status || 'Đang tiếp nhận';
+    const dateStr = req.created_at ? new Date(req.created_at).toLocaleString('vi-VN') : 'Mới';
+    const isReceiving = st === 'Đang tiếp nhận';
+    const isApproved = st === '🟢 Đã cấp quyền (Whitelisted)' || st === 'Đã cấp quyền';
+    const isRevoked = st === '🔴 Đã thu hồi quyền' || st === 'Đã thu hồi';
+
+    return `
+      <div class="item-editor" data-greenlist-id="${esc(req.id)}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:14px;border-radius:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;">
+          <div>
+            <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;background:#dcfce7;color:#15803d;">
+              🟢 ${esc(st)}
+            </span>
+            <strong style="font-size:16px;margin-left:8px;color:#111;">${esc(req.channel_id || req.title)} (${esc(req.platform)})</strong>
+          </div>
+          <span style="font-size:12px;opacity:0.7;">Gửi lúc: ${esc(dateStr)}</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin:12px 0;font-size:13px;background:#f9f9f9;padding:12px;border:1px solid #eee;border-radius:6px;">
+          <div>
+            <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;">Nghệ sĩ yêu cầu:</span>
+            <strong>${esc(req.artist_name || req.artist_id || 'Nghệ sĩ')}</strong>
+          </div>
+          <div>
+            <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;">Phạm vi cấp quyền:</span>
+            <b>${esc(req.track_scope || 'Toàn bộ bài hát')}</b>
+          </div>
+          <div>
+            <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;">Mục đích / Đối tác:</span>
+            <b>${esc(req.purpose || 'Kênh cá nhân / Đối tác')}</b>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;border-top:1px solid #f1f5f9;padding-top:12px;">
+          <div style="flex:1;min-width:240px;">
+            <label style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Trạng thái Whitelist:</label>
+            <select class="greenlist-status-select" style="width:100%;padding:8px;border:1px solid var(--ink);font-weight:bold;background:#fff;border-radius:4px;">
+              <option value="Đang tiếp nhận" ${isReceiving ? 'selected' : ''}>📥 Đang tiếp nhận</option>
+              <option value="🟢 Đã cấp quyền (Whitelisted)" ${isApproved ? 'selected' : ''}>🟢 Đã cấp quyền (Whitelisted)</option>
+              <option value="🔴 Đã thu hồi quyền" ${isRevoked ? 'selected' : ''}>🔴 Đã thu hồi quyền</option>
+            </select>
+          </div>
+
+          <div style="flex:2;min-width:280px;">
+            <label style="font-size:11px;font-weight:bold;text-transform:uppercase;color:#16a34a;display:block;margin-bottom:4px;">Phản hồi gửi về Nghệ sĩ:</label>
+            <input class="greenlist-admin-notes" value="${esc(req.admin_notes || '')}" placeholder="Ví dụ: Kênh đã được đưa vào whitelist Content ID..." style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:4px;">
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <button class="button" type="button" data-save-greenlist="${esc(req.id)}" style="padding:9px 16px;font-size:11px;background:#16a34a;border-color:#16a34a;">Lưu cập nhật</button>
+            <button class="button alt remove" type="button" data-delete-greenlist="${esc(req.id)}" style="padding:9px 12px;font-size:11px;">✕ Xóa</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  greenlistBox.querySelectorAll('[data-save-greenlist]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.dataset.saveGreenlist;
+      const card = e.target.closest('[data-greenlist-id]');
+      const status = card?.querySelector('.greenlist-status-select')?.value;
+      const admin_notes = card?.querySelector('.greenlist-admin-notes')?.value.trim() || '';
+
+      btn.disabled = true; btn.textContent = 'Đang lưu...';
+
+      if (isSupabaseConfigured()) {
+        await supabase.from('greenlist_requests').update({ status, admin_notes }).eq('id', id);
+      }
+
+      try {
+        const cached = JSON.parse(localStorage.getItem('uniflows-greenlist-requests') || '[]');
+        const idx = cached.findIndex(x => x.id === id);
+        if (idx >= 0) {
+          cached[idx].status = status;
+          cached[idx].admin_notes = admin_notes;
+          localStorage.setItem('uniflows-greenlist-requests', JSON.stringify(cached));
+        }
+      } catch {}
+
+      btn.disabled = false; btn.textContent = 'Lưu cập nhật';
+      showNotice(`✓ Đã cập nhật trạng thái Green-list: "${status}"`);
+      loadAdminGreenlistRequests();
+    });
+  });
+
+  greenlistBox.querySelectorAll('[data-delete-greenlist]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      if (!confirm('Xóa yêu cầu Green-list này?')) return;
+      const id = e.target.dataset.deleteGreenlist;
+      if (isSupabaseConfigured()) {
+        await supabase.from('greenlist_requests').delete().eq('id', id);
+      }
+      try {
+        const cached = JSON.parse(localStorage.getItem('uniflows-greenlist-requests') || '[]');
+        localStorage.setItem('uniflows-greenlist-requests', JSON.stringify(cached.filter(x => x.id !== id)));
+      } catch {}
+      showNotice('✓ Đã xóa yêu cầu Green-list!');
+      loadAdminGreenlistRequests();
+    });
+  });
+}
+
+document.querySelector('#admin-refresh-copyright-btn')?.addEventListener('click', () => loadAdminCopyrightReports());
+document.querySelector('#admin-refresh-greenlist-btn')?.addEventListener('click', () => loadAdminGreenlistRequests());
+
+// ----------------------------------------------------
 // RELEASE REVIEWER & SMARTLINK MANAGER (WITH DIRECT ARTWORK URL)
 // ----------------------------------------------------
 async function loadReleasesQueue() {
@@ -1068,6 +1342,8 @@ function render() {
   attachArticleUploadEvents();
   loadReleasesQueue();
   loadPayoutRequests();
+  loadAdminCopyrightReports();
+  loadAdminGreenlistRequests();
 }
 
 function readItems(selector, kind) {
