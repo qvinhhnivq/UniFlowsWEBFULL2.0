@@ -365,9 +365,6 @@ function attachArticleUploadEvents() {
 const payoutBox = document.querySelector('#payout-requests-reviewer');
 let payoutRequests = [];
 
-const payoutBox = document.querySelector('#payout-requests-reviewer');
-let payoutRequests = [];
-
 async function loadPayoutRequests() {
   if (!payoutBox) return;
   
