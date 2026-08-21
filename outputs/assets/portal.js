@@ -22,6 +22,12 @@ const monthlyStreamsEl = document.querySelector('#artist-monthly-streams');
 const estimatedRevenueEl = document.querySelector('#artist-estimated-revenue');
 const payableBalanceEl = document.querySelector('#artist-payable-balance');
 const requestPayoutBtn = document.querySelector('#request-payout-btn');
+const quickPayoutBtn = document.querySelector('#quick-open-payout-modal-btn');
+const releaseDialog = document.querySelector('#release-dialog');
+const openReleaseModalBtn = document.querySelector('#open-release-modal-btn');
+const quickOpenReleaseModalBtn = document.querySelector('#quick-open-release-modal-btn');
+const closeReleaseDialogBtn = document.querySelector('#close-release-dialog-btn');
+const cancelReleaseBtn = document.querySelector('#cancel-release-btn');
 
 let data = await getData();
 const currentArtistId = sessionStorage.getItem('uniflows-artist-id') || 'lumi';
@@ -42,6 +48,80 @@ if (artist) {
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${artist.estimatedRevenue || '0'}`;
   if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${artist.payableBalance || '0'}`;
 }
+
+// ----------------------------------------------------
+// TAB NAVIGATION LOGIC
+// ----------------------------------------------------
+function switchTab(tabId) {
+  if (!tabId) tabId = 'tab-overview';
+  
+  // Update nav link active state
+  document.querySelectorAll('#portal-nav a[data-tab]').forEach(link => {
+    if (link.dataset.tab === tabId) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+
+  // Update tab pane active state
+  document.querySelectorAll('.tab-pane').forEach(pane => {
+    if (pane.id === tabId) {
+      pane.classList.add('active');
+    } else {
+      pane.classList.remove('active');
+    }
+  });
+}
+
+document.querySelectorAll('#portal-nav a[data-tab]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const targetTab = link.dataset.tab;
+    const hash = link.getAttribute('href');
+    if (hash) history.pushState(null, null, hash);
+    switchTab(targetTab);
+  });
+});
+
+// Support URL Hash direct navigation (e.g. portal#releases)
+function handleHash() {
+  const hash = location.hash.replace('#', '');
+  const hashMap = {
+    overview: 'tab-overview',
+    releases: 'tab-releases',
+    earnings: 'tab-earnings',
+    insights: 'tab-insights',
+    support: 'tab-support'
+  };
+  if (hashMap[hash]) {
+    switchTab(hashMap[hash]);
+  }
+}
+
+window.addEventListener('hashchange', handleHash);
+handleHash();
+
+// ----------------------------------------------------
+// MODAL DIALOGS (RELEASE & PAYOUT)
+// ----------------------------------------------------
+openReleaseModalBtn?.addEventListener('click', () => {
+  if (primaryArtistInput) primaryArtistInput.value = artist.name;
+  releaseDialog?.showModal();
+});
+
+quickOpenReleaseModalBtn?.addEventListener('click', () => {
+  if (primaryArtistInput) primaryArtistInput.value = artist.name;
+  releaseDialog?.showModal();
+});
+
+closeReleaseDialogBtn?.addEventListener('click', () => {
+  releaseDialog?.close();
+});
+
+cancelReleaseBtn?.addEventListener('click', () => {
+  releaseDialog?.close();
+});
 
 // File name change indicators
 audioFileInput?.addEventListener('change', (e) => {
@@ -72,6 +152,112 @@ function showNotice(msg, isError = false) {
   notice.style.display = 'block';
   notice.style.borderColor = isError ? 'var(--red, #ff4d4f)' : 'var(--accent, #66bb6a)';
   scrollTo({ top: notice.offsetTop - 80, behavior: 'smooth' });
+}
+
+let currentReleaseFilter = 'all';
+let cachedFetchedReleases = [];
+
+// Filter chips
+document.querySelectorAll('[data-release-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-release-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentReleaseFilter = btn.dataset.releaseFilter;
+    renderReleaseListItems();
+  });
+});
+
+function renderReleaseListItems() {
+  if (!list) return;
+  let filtered = cachedFetchedReleases;
+
+  if (currentReleaseFilter === 'live') {
+    filtered = cachedFetchedReleases.filter(r => !r.submissionStatus || r.submissionStatus === 'Đã phát hành');
+  } else if (currentReleaseFilter === 'pending') {
+    filtered = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('chờ'));
+  } else if (currentReleaseFilter === 'takedown') {
+    filtered = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('gỡ'));
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<p class="empty" style="padding:15px;background:#fff;border:1px solid var(--line);">Không tìm thấy bản phát hành nào theo bộ lọc này.</p>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
+    const isTakedownRequested = p.submissionStatus === 'Yêu cầu gỡ / xóa bản phát hành';
+    const isPending = p.submissionStatus?.includes('chờ');
+    const isApproved = !p.submissionStatus || p.submissionStatus === 'Đã phát hành';
+    const releaseSlug = p.slug || slug(p.title);
+    const playlistsHtml = (p.playlists && p.playlists.length > 0)
+      ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${p.playlists.map(pl => `<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:bold;">🌟 ${pl}</span>`).join('')}</div>`
+      : '';
+
+    const statusBadge = isPending
+      ? `<span style="display:inline-block;padding:2px 8px;background:#fef3c7;color:#b45309;border-radius:10px;font-size:11px;font-weight:bold;">⏳ Đang chờ UniFLOWs duyệt</span>`
+      : (isTakedownRequested
+        ? `<span style="display:inline-block;padding:2px 8px;background:#fee2e2;color:#b91c1c;border-radius:10px;font-size:11px;font-weight:bold;">🔴 Yêu cầu gỡ</span>`
+        : `<span style="display:inline-block;padding:2px 8px;background:#dcfce7;color:#15803d;border-radius:10px;font-size:11px;font-weight:bold;">🟢 Đã phát hành (Live)</span>`);
+
+    return `
+      <div class="queue-item" style="border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:110px 1fr auto auto;gap:15px;align-items:center;">
+        <span>${esc(p.type || 'Single')}</span>
+        <div>
+          <strong style="font-size: 16px;">${esc(p.title)}</strong>
+          <div style="font-size:12px;opacity:0.8;margin:4px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            ${statusBadge}
+            · <span style="background:#f3f3f3;padding:1px 6px;border-radius:3px;">Streams: <b>${p.streams || 0}</b></span>
+            · <span style="background:#e6f4ea;color:#137333;padding:1px 6px;border-radius:3px;font-weight:bold;">₫ ${p.revenue || 0}</span>
+          </div>
+          ${playlistsHtml}
+        </div>
+        <div style="display:flex;gap:0.8rem;align-items:center;font-size:12px;">
+          ${p.audioUrl ? `<a href="${esc(p.audioUrl)}" target="_blank" title="Nghe file Master" style="border-bottom:1px solid;">🎵 Master</a>` : ''}
+          ${p.artworkUrl ? `<a href="${esc(p.artworkUrl)}" target="_blank" title="Xem Artwork" style="border-bottom:1px solid;">🖼 Artwork</a>` : ''}
+          <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank" style="border-bottom:1px solid;font-weight:bold;">SmartLink ↗</a>
+        </div>
+        <div>
+          ${p.id ? (
+            isTakedownRequested
+              ? `<span style="font-size:11px;color:#d9534f;font-weight:bold;">⏳ Đang chờ duyệt gỡ</span>`
+              : `<button class="button alt remove" type="button" data-request-takedown="${esc(p.id)}" style="padding:6px 10px;font-size:10px;">Yêu cầu gỡ bài</button>`
+          ) : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach takedown request events
+  list.querySelectorAll('[data-request-takedown]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const releaseId = e.target.dataset.requestTakedown;
+      if (!confirm('Bạn có chắc chắn muốn gửi yêu cầu gỡ / xóa bản phát hành này tới Admin của UniFLOWs?')) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Đang gửi...';
+
+      if (isSupabaseConfigured()) {
+        const { error: updateErr } = await supabase
+          .from('releases')
+          .update({ submission_status: 'Yêu cầu gỡ / xóa bản phát hành' })
+          .eq('id', releaseId);
+
+        if (updateErr) {
+          alert('Lỗi: ' + updateErr.message);
+          btn.disabled = false;
+          btn.textContent = 'Yêu cầu gỡ bài';
+          return;
+        }
+      }
+
+      const item = (artist.products || []).find(p => p.id === releaseId);
+      if (item) item.submissionStatus = 'Yêu cầu gỡ / xóa bản phát hành';
+      await saveData(data);
+
+      showNotice('✓ Đã gửi yêu cầu gỡ / xóa bản phát hành tới Admin thành công!');
+      await renderReleases();
+    });
+  });
 }
 
 async function renderReleases() {
@@ -108,58 +294,23 @@ async function renderReleases() {
     }
   }
 
+  cachedFetchedReleases = releases;
+
   const pending = releases.filter(r => r.submissionStatus?.includes('chờ') || r.submissionStatus?.includes('Duyệt') || r.submissionStatus?.includes('gỡ')).length;
   if (pendingCountEl) pendingCountEl.textContent = String(pending).padStart(2, '0');
 
-  // 1. Render Catalogue list with badges
-  if (releases.length === 0) {
-    list.innerHTML = '<p class="empty">Chưa có bản phát hành nào trong catalogue.</p>';
-  } else {
-    list.innerHTML = releases.map(p => {
-      const isTakedownRequested = p.submissionStatus === 'Yêu cầu gỡ / xóa bản phát hành';
-      const releaseSlug = p.slug || slug(p.title);
-      const playlistsHtml = (p.playlists && p.playlists.length > 0)
-        ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${p.playlists.map(pl => `<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:bold;">🌟 ${pl}</span>`).join('')}</div>`
-        : '';
-
-      return `
-        <div class="queue-item" style="border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:100px 1fr auto auto;gap:15px;align-items:center;">
-          <span>${p.type || 'Single'}</span>
-          <div>
-            <strong>${p.title}</strong>
-            <div style="font-size:12px;opacity:0.8;margin:3px 0;">
-              Trạng thái: <b style="color:${isTakedownRequested ? '#d9534f' : 'inherit'};">${p.submissionStatus || 'Đã phát hành'}</b>
-              · <span style="background:#f3f3f3;padding:1px 6px;border-radius:3px;">Streams: <b>${p.streams || 0}</b></span>
-              · <span style="background:#e6f4ea;color:#137333;padding:1px 6px;border-radius:3px;font-weight:bold;">₫ ${p.revenue || 0}</span>
-            </div>
-            ${playlistsHtml}
-          </div>
-          <div style="display:flex;gap:0.8rem;align-items:center;">
-            ${p.audioUrl ? `<a href="${p.audioUrl}" target="_blank" title="Nghe file Master">🎵 Audio</a>` : ''}
-            ${p.artworkUrl ? `<a href="${p.artworkUrl}" target="_blank" title="Xem Artwork">🖼 Artwork</a>` : ''}
-            <a href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank">Smart Link (/listen/${releaseSlug}) ↗</a>
-          </div>
-          <div>
-            ${p.id ? (
-              isTakedownRequested
-                ? `<span style="font-size:11px;color:#d9534f;font-weight:bold;">⏳ Đang chờ duyệt gỡ</span>`
-                : `<button class="button alt remove" type="button" data-request-takedown="${p.id}" style="padding:6px 10px;font-size:10px;">Yêu cầu gỡ bài</button>`
-            ) : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
+  // Render filter items
+  renderReleaseListItems();
 
   // 2. Render Track Earnings Breakdown table
   const trackEarningsList = document.querySelector('#track-earnings-list');
   if (trackEarningsList) {
     if (releases.length === 0) {
-      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có dữ liệu doanh thu chi tiết.</p>';
+      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#fff;border:1px solid var(--line);">Chưa có dữ liệu doanh thu chi tiết.</p>';
     } else {
       trackEarningsList.innerHTML = `
-        <div style="border:1px solid var(--line);border-radius:4px;overflow:hidden;">
-          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;">
+        <div style="border:1px solid var(--line);background:#fff;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--line);">
             <span>Tên bản phát hành</span>
             <span>Lượt Streams</span>
             <span>Doanh thu ước tính</span>
@@ -167,10 +318,10 @@ async function renderReleases() {
           </div>
           ${releases.map(p => `
             <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:12px 14px;border-top:1px solid var(--line);font-size:13px;align-items:center;">
-              <strong>${p.title}</strong>
-              <span>${p.streams || '0'}</span>
-              <b style="color:#137333;">₫ ${p.revenue || '0'}</b>
-              <span style="font-size:11px;color:#008800;font-weight:600;">✓ Đã xác nhận</span>
+              <strong>${esc(p.title)}</strong>
+              <span>${esc(p.streams || '0')}</span>
+              <b style="color:#137333;">₫ ${esc(p.revenue || '0')}</b>
+              <span style="font-size:11px;color:#008800;font-weight:600;">✓ Đã đối soát</span>
             </div>
           `).join('')}
         </div>
@@ -189,21 +340,22 @@ async function renderReleases() {
     });
 
     if (allPlaylists.length === 0) {
-      playlistShowcase.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>';
+      playlistShowcase.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#fff;border:1px solid var(--line);">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>';
     } else {
       playlistShowcase.innerHTML = `
         <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;">
           ${allPlaylists.map(item => `
-            <div style="background:#fff;border:1px solid #fed7aa;padding:12px;border-radius:6px;">
+            <div style="background:#fff;border:1px solid #fed7aa;padding:14px;border-radius:4px;">
               <div style="font-size:10px;color:#c2410c;font-weight:bold;text-transform:uppercase;margin-bottom:4px;">🌟 Editorial Playlist</div>
-              <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${item.playlist}</div>
-              <div style="font-size:12px;opacity:0.8;">Bản phát hành: <em>${item.track}</em></div>
+              <div style="font-weight:bold;font-size:15px;margin-bottom:4px;">${esc(item.playlist)}</div>
+              <div style="font-size:12px;opacity:0.8;">Bản phát hành: <em>${esc(item.track)}</em></div>
             </div>
           `).join('')}
         </div>
       `;
     }
   }
+
   // 4. Update Summary Stats & Platform Breakdown with real %
   const spRev = parseInt(String(artist.spotifyRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
   const apRev = parseInt(String(artist.appleRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
@@ -244,13 +396,8 @@ async function renderReleases() {
     ? artist.monthlyStreams
     : (finalStreamsNum > 0 ? finalStreamsNum.toLocaleString('vi-VN') : '0');
 
-  const displayBalance = (artist.payableBalance && artist.payableBalance !== '0')
-    ? artist.payableBalance
-    : displayRevenue;
-
   if (monthlyStreamsEl) monthlyStreamsEl.textContent = displayStreams;
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${displayRevenue}`;
-  // payableBalance will be updated accurately with pending deductions in loadArtistPayouts()
 
   // Calculate percentage between platforms
   const denom = totalDspRev > 0 ? totalDspRev : (finalRevNum > 0 ? finalRevNum : 1);
@@ -260,20 +407,23 @@ async function renderReleases() {
   const otPct = totalDspRev > 0 ? Math.max(0, 100 - spPct - apPct - ytPct) : 5;
 
   const platformsList = [
-    { id: 'earn-spotify', name: 'Spotify', rev: (totalDspRev > 0 ? spRev : Math.round(finalRevNum * 0.55)), pct: spPct },
-    { id: 'earn-apple', name: 'Apple Music', rev: (totalDspRev > 0 ? apRev : Math.round(finalRevNum * 0.25)), pct: apPct },
-    { id: 'earn-youtube', name: 'YouTube Music', rev: (totalDspRev > 0 ? ytRev : Math.round(finalRevNum * 0.15)), pct: ytPct },
-    { id: 'earn-other', name: 'NCT / Zing / khác', rev: (totalDspRev > 0 ? otRev : Math.round(finalRevNum * 0.05)), pct: otPct }
+    { id: 'earn-spotify', ovId: 'overview-spotify', name: 'Spotify', rev: (totalDspRev > 0 ? spRev : Math.round(finalRevNum * 0.55)), pct: spPct },
+    { id: 'earn-apple', ovId: 'overview-apple', name: 'Apple Music', rev: (totalDspRev > 0 ? apRev : Math.round(finalRevNum * 0.25)), pct: apPct },
+    { id: 'earn-youtube', ovId: 'overview-youtube', name: 'YouTube Music', rev: (totalDspRev > 0 ? ytRev : Math.round(finalRevNum * 0.15)), pct: ytPct },
+    { id: 'earn-other', ovId: 'overview-other', name: 'NCT / Zing / khác', rev: (totalDspRev > 0 ? otRev : Math.round(finalRevNum * 0.05)), pct: otPct }
   ];
 
   const maxPct = Math.max(...platformsList.map(p => p.pct));
 
   platformsList.forEach(p => {
+    const isTop = (p.pct === maxPct && maxPct > 0);
+    const htmlContent = `₫ ${p.rev.toLocaleString('vi-VN')} <small style="display:block;font-size:11px;color:${isTop ? '#b45309' : 'inherit'};font-weight:${isTop ? 'bold' : 'normal'};margin-top:4px;">${p.pct}% thị phần ${isTop ? '🔥 (Dẫn đầu)' : ''}</small>`;
+    
     const el = document.querySelector(`#${p.id}`);
-    if (el) {
-      const isTop = (p.pct === maxPct && maxPct > 0);
-      el.innerHTML = `₫ ${p.rev.toLocaleString('vi-VN')} <small style="display:block;font-size:11px;color:${isTop ? '#b45309' : 'inherit'};font-weight:${isTop ? 'bold' : 'normal'};margin-top:4px;">${p.pct}% thị phần ${isTop ? '🔥 (Dẫn đầu)' : ''}</small>`;
-    }
+    if (el) el.innerHTML = htmlContent;
+
+    const ovEl = document.querySelector(`#${p.ovId}`);
+    if (ovEl) ovEl.innerHTML = htmlContent;
   });
 
   // Insights Geography & Top Sources
@@ -303,40 +453,11 @@ async function renderReleases() {
       <i style="--h:${Math.max(35, spPct + 20)}%"></i>
     `;
   }
-
-  // Attach takedown request events
-  list.querySelectorAll('[data-request-takedown]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const releaseId = e.target.dataset.requestTakedown;
-      if (!confirm('Bạn có chắc chắn muốn gửi yêu cầu gỡ / xóa bản phát hành này tới Admin của UniFLOWs?')) return;
-
-      btn.disabled = true;
-      btn.textContent = 'Đang gửi yêu cầu...';
-
-      if (isSupabaseConfigured()) {
-        const { error: updateErr } = await supabase
-          .from('releases')
-          .update({ submission_status: 'Yêu cầu gỡ / xóa bản phát hành' })
-          .eq('id', releaseId);
-
-        if (updateErr) {
-          alert('Lỗi: ' + updateErr.message);
-          btn.disabled = false;
-          btn.textContent = 'Yêu cầu gỡ bài';
-          return;
-        }
-      }
-
-      const item = (artist.products || []).find(p => p.id === releaseId);
-      if (item) item.submissionStatus = 'Yêu cầu gỡ / xóa bản phát hành';
-      await saveData(data);
-
-      showNotice('✓ Đã gửi yêu cầu gỡ / xóa bản phát hành tới Admin thành công!');
-      await renderReleases();
-    });
-  });
 }
 
+// ----------------------------------------------------
+// FORM SUBMISSION (WITH DIRECT ARTWORK URL OPTION)
+// ----------------------------------------------------
 form?.addEventListener('submit', async (e) => {
   e.preventDefault();
   submitBtn.disabled = true;
@@ -352,7 +473,7 @@ form?.addEventListener('submit', async (e) => {
     let audioUrl = '';
     let artworkUrl = '';
 
-    // 1. Upload Master Audio hoặc dùng Link ngoài
+    // 1. Upload Master Audio hoặc dùng Link ngoài (Google Drive/Dropbox)
     if (audioFile) {
       submitBtn.textContent = 'Đang tải Audio...';
       audioUrl = await uploadAudioFile(audioFile, `${artist.id}_${slug(v.title)}`);
@@ -360,7 +481,7 @@ form?.addEventListener('submit', async (e) => {
       audioUrl = v.audioExternalUrl.trim();
     }
 
-    // 2. Upload Artwork hoặc dùng Link ngoài
+    // 2. Upload Artwork hoặc dùng Link ngoài (URL ảnh trực tiếp)
     if (artworkFile) {
       submitBtn.textContent = 'Đang tải Artwork...';
       artworkUrl = await uploadArtworkFile(artworkFile, `${artist.id}_${slug(v.title)}_art`);
@@ -447,18 +568,22 @@ form?.addEventListener('submit', async (e) => {
     if (artworkFilename) artworkFilename.textContent = 'Artwork 3000 × 3000 px';
     if (primaryArtistInput) primaryArtistInput.value = artist.name;
 
+    releaseDialog?.close();
     showNotice(`✓ Đã gửi bản phát hành "${v.title}" thành công. Đang chờ UniFLOWs duyệt!`);
     await renderReleases();
+    switchTab('tab-releases');
   } catch (err) {
     console.error(err);
     showNotice('Lỗi khi gửi phát hành: ' + (err.message || 'Không xác định'), true);
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Gửi phát hành';
+    submitBtn.textContent = 'Gửi bản phát hành tới UniFLOWs';
   }
 });
 
-// Payout Dialog & History Logic
+// ----------------------------------------------------
+// PAYOUT DIALOG & HISTORY LOGIC
+// ----------------------------------------------------
 const payoutDialog = document.querySelector('#payout-dialog');
 const closePayoutDialogBtn = document.querySelector('#close-payout-dialog-btn');
 const payoutRequestForm = document.querySelector('#payout-request-form');
@@ -572,35 +697,33 @@ async function loadArtistPayouts() {
   }
 }
 
-// Subscribe to Live Supabase Changes on Payouts
+// Real-time listener for Payout Request changes
 if (isSupabaseConfigured()) {
-  try {
-    supabase
-      .channel('public:payout_requests')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payout_requests' }, () => {
-        loadArtistPayouts();
-      })
-      .subscribe();
-  } catch (err) {
-    console.warn('Realtime subscription error:', err);
-  }
+  supabase
+    .channel('public:payout_requests')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'payout_requests' }, () => {
+      loadArtistPayouts();
+    })
+    .subscribe();
 }
 
-// Open Payout Dialog
 requestPayoutBtn?.addEventListener('click', () => {
   if (availableBalanceNumber < 1000000) {
-    alert(`Số dư khả dụng hiện tại (₫ ${availableBalanceNumber.toLocaleString('vi-VN')}) chưa đạt ngưỡng tối thiểu ₫ 1,000,000 để yêu cầu thanh toán.`);
+    alert(`Số dư khả dụng hiện tại của bạn là ₫ ${availableBalanceNumber.toLocaleString('vi-VN')}, chưa đạt mức rút tối thiểu (₫ 1,000,000).`);
     return;
   }
   if (payoutDialogNotice) payoutDialogNotice.style.display = 'none';
   payoutRequestForm?.reset();
-
-  const amountInput = document.querySelector('#payout-amount');
-  if (amountInput) {
-    amountInput.value = availableBalanceNumber;
-    amountInput.max = availableBalanceNumber;
+  const amtInput = document.querySelector('#payout-amount');
+  if (amtInput) {
+    amtInput.max = availableBalanceNumber;
+    amtInput.value = availableBalanceNumber;
   }
   payoutDialog?.showModal();
+});
+
+quickPayoutBtn?.addEventListener('click', () => {
+  requestPayoutBtn?.click();
 });
 
 closePayoutDialogBtn?.addEventListener('click', () => {
@@ -609,34 +732,28 @@ closePayoutDialogBtn?.addEventListener('click', () => {
 
 payoutRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const amountVal = parseInt(document.querySelector('#payout-amount')?.value, 10) || 0;
+  const amountVal = parseInt(document.querySelector('#payout-amount')?.value, 10);
   const bank = document.querySelector('#payout-bank')?.value.trim();
   const accountNumber = document.querySelector('#payout-account-number')?.value.trim();
-  const accountName = document.querySelector('#payout-account-name')?.value.trim();
+  const accountName = document.querySelector('#payout-account-name')?.value.trim().toUpperCase();
 
   if (amountVal < 1000000) {
-    if (payoutDialogNotice) {
-      payoutDialogNotice.textContent = 'Số tiền rút tối thiểu là ₫ 1,000,000.';
-      payoutDialogNotice.style.display = 'block';
-    }
+    alert('Số tiền rút tối thiểu là ₫ 1,000,000');
     return;
   }
 
   if (amountVal > availableBalanceNumber) {
-    if (payoutDialogNotice) {
-      payoutDialogNotice.textContent = `Số tiền rút vượt quá số dư khả dụng (₫ ${availableBalanceNumber.toLocaleString('vi-VN')}).`;
-      payoutDialogNotice.style.display = 'block';
-    }
+    alert(`Số tiền yêu cầu vượt quá số dư khả dụng (₫ ${availableBalanceNumber.toLocaleString('vi-VN')})`);
     return;
   }
 
   if (submitPayoutBtn) {
     submitPayoutBtn.disabled = true;
-    submitPayoutBtn.textContent = 'Đang gửi yêu cầu...';
+    submitPayoutBtn.textContent = 'Đang gửi...';
   }
 
   const newPayoutItem = {
-    id: 'payout-' + Date.now().toString(36),
+    id: 'payout-' + Date.now(),
     artist_id: currentArtistId,
     amount: String(amountVal),
     bank_info: { bank, accountNumber, accountName },

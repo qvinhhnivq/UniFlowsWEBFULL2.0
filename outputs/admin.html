@@ -9,96 +9,107 @@
   <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
-  <main class="admin" style="max-width: 950px;">
-    <span class="eyebrow">UniFLOWs / Content & Distribution Manager</span>
-    <h1>Quản trị<br>hệ thống.</h1>
-    
-    <p class="notice" id="notice" style="display: none;">Đã lưu thay đổi vào cơ sở dữ liệu Supabase.</p>
+  <main class="admin" style="max-width: 1050px; padding-top: 4vw;">
+    <span class="eyebrow">Control Center / UniFLOWs Label</span>
+    <h1 style="font-size: clamp(36px, 5vw, 64px); margin: 8px 0 24px;">Admin Dashboard.</h1>
+    <p style="margin-top: -10px; margin-bottom: 25px; opacity: 0.8;">Quản lý toàn bộ hệ thống phát hành, đối soát doanh thu, thông tin nghệ sĩ và bài viết trên website.</p>
+
+    <!-- Admin Navigation Tabs -->
+    <nav class="admin-nav-tabs" id="admin-tabs">
+      <button type="button" class="admin-tab-btn active" data-tab="admin-tab-releases">💿 01 / Duyệt phát hành & SmartLink</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">👥 02 / Quản lý Nghệ sĩ</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-payouts">💳 03 / Quản lý Rút tiền</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 04 / Bài viết & Tạp chí</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-settings">⚙️ 05 / Cấu hình Trang & Email</button>
+    </nav>
+
+    <div id="notice" class="notice"></div>
 
     <form id="site-form">
-      <!-- Section 1: Thông tin chung & Email -->
-      <section class="admin-section">
-        <h2>01 / Thông tin chung & Email liên hệ</h2>
-        <div class="field">
-          <label>Tiêu đề trang chủ (Tagline)</label>
-          <input name="tagline">
-        </div>
-        <div class="field">
-          <label>Mô tả đầu trang (Hero text)</label>
-          <textarea name="heroText" rows="2"></textarea>
-        </div>
-        <div class="field">
-          <label>Tiêu đề giới thiệu (About title)</label>
-          <textarea name="aboutTitle" rows="2"></textarea>
-        </div>
-        <div class="field">
-          <label>Nội dung giới thiệu (About text)</label>
-          <textarea name="aboutText" rows="3"></textarea>
-        </div>
-        <div class="field">
-          <label>Thành phố</label>
-          <input name="city">
-        </div>
-
-        <h3 style="font-size: 18px; margin-top: 25px; letter-spacing: -0.04em;">Hệ thống Email phòng ban (Tự đặt tên & thêm bớt tùy ý)</h3>
-        <p class="portal-note" style="margin-top:4px;">Bạn có thể tự do đặt tên phòng ban (ví dụ: Liên hệ chung, Gửi Demo, Booking, Hợp tác, Tuyển dụng...) và địa chỉ email tương ứng.</p>
-        <div id="emails-editor-container" style="display:grid;gap:10px;margin:15px 0;"></div>
-        <button class="button alt" type="button" id="add-email-row-btn" style="padding:8px 14px;font-size:11px;">+ Thêm email phòng ban mới</button>
-      </section>
-
-      <!-- Section 2: Duyệt bản phát hành từ nghệ sĩ -->
-      <section class="admin-section">
-        <h2>02 / Duyệt bản phát hành & Cập nhật link SmartLink</h2>
-        <p class="portal-note">Xem bản phát hành nghệ sĩ đã nộp, nghe Master audio, xem Artwork gốc, cập nhật link nền tảng (Spotify, Apple Music,...) và phê duyệt.</p>
-        <div id="releases-reviewer">
-          <p class="empty">Đang tải danh sách release...</p>
-        </div>
-      </section>
-
-      <!-- Section 3: Nghệ sĩ -->
-      <section class="admin-section">
-        <h2>03 / Quản lý Nghệ sĩ & Cập nhật Doanh thu</h2>
-        <div id="artists-editor"></div>
-        <button class="button alt" type="button" id="add-artist">+ Thêm nghệ sĩ mới</button>
-      </section>
-
-      <!-- Section 4: Bài viết / Tạp chí -->
-      <section class="admin-section">
-        <h2>04 / Bài viết & Tạp chí (Có Upload Ảnh Bìa)</h2>
-        <div id="articles-editor"></div>
-        <button class="button alt" type="button" id="add-article">+ Đăng bài viết mới</button>
-      </section>
-
-      <!-- Section 5: Quản lý & Lịch sử Yêu cầu rút tiền -->
-      <section class="admin-section">
-        <h2>05 / Quản lý & Lịch sử Yêu cầu rút tiền (Payout Manager)</h2>
-        <p class="portal-note">Duyệt các yêu cầu rút tiền đang chờ, xem thông tin ngân hàng và tra cứu toàn bộ lịch sử thanh toán / từ chối.</p>
-        
-        <!-- Summary Stats Banner -->
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #fff; border: 1px solid var(--ink);">
+      <!-- ========================================== -->
+      <!-- TAB 1: DUYỆT PHÁT HÀNH & SMARTLINKS -->
+      <!-- ========================================== -->
+      <section id="admin-tab-releases" class="tab-pane active admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
           <div>
-            <span style="font-size: 11px; text-transform: uppercase; font-weight: bold; opacity: 0.7; display: block;">Đang chờ duyệt</span>
-            <strong id="admin-pending-payout-count" style="font-size: 20px; color: #d97706;">0 yêu cầu</strong>
-            <small id="admin-pending-payout-total" style="display: block; font-size: 12px; opacity: 0.8;">₫ 0</small>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Duyệt phát hành & SmartLink</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Kiểm tra Master WAV/FLAC, cập nhật link nền tảng và gán số liệu stream / doanh thu / playlist.</p>
           </div>
-          <div style="border-left: 1px solid var(--line); padding-left: 20px;">
-            <span style="font-size: 11px; text-transform: uppercase; font-weight: bold; opacity: 0.7; display: block;">Tổng tiền đã thanh toán</span>
-            <strong id="admin-total-paid-out" style="font-size: 20px; color: #15803d;">₫ 0</strong>
-            <small id="admin-paid-payout-count" style="display: block; font-size: 12px; opacity: 0.8;">0 giao dịch hoàn tất</small>
+          <span class="kicker">Catalogue queue</span>
+        </div>
+
+        <div style="display:flex; gap:10px; margin: 15px 0; align-items: center; flex-wrap: wrap;">
+          <label style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Bộ lọc trạng thái:</label>
+          <select id="admin-release-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+            <option value="all">Tất cả bản phát hành</option>
+            <option value="pending">⏳ Đang chờ UniFLOWs duyệt</option>
+            <option value="live">🟢 Đã phát hành (Live)</option>
+            <option value="takedown">🔴 Yêu cầu gỡ / xóa</option>
+          </select>
+          <button type="button" id="admin-refresh-releases-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Làm mới</button>
+        </div>
+
+        <div id="releases-reviewer">
+          <p class="empty">Đang tải danh sách bản phát hành...</p>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: QUẢN LÝ NGHỆ SĨ & DSP STATS -->
+      <!-- ========================================== -->
+      <section id="admin-tab-artists" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Quản lý Nghệ sĩ & Thống kê DSP</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Chọn nghệ sĩ để chỉnh sửa chi tiết, phân bổ doanh thu Spotify / Apple / YouTube và thị phần địa lý.</p>
           </div>
-          <div style="border-left: 1px solid var(--line); padding-left: 20px;">
-            <span style="font-size: 11px; text-transform: uppercase; font-weight: bold; opacity: 0.7; display: block;">Yêu cầu bị từ chối</span>
-            <strong id="admin-rejected-payout-count" style="font-size: 20px; color: #cf1322;">0 yêu cầu</strong>
+          <button class="button" type="button" id="add-artist">+ Thêm nghệ sĩ mới</button>
+        </div>
+
+        <!-- Quick Artist Selector to avoid clutter -->
+        <div style="margin: 15px 0;">
+          <label style="font-size: 12px; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 8px;">Danh sách nghệ sĩ (Bấm để mở form chỉnh sửa):</label>
+          <div id="artist-selector-grid" class="artist-picker-grid"></div>
+        </div>
+
+        <div id="artists-editor"></div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: QUẢN LÝ RÚT TIỀN (PAYOUT QUEUE) -->
+      <!-- ========================================== -->
+      <section id="admin-tab-payouts" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Quản lý & Lịch sử Yêu cầu rút tiền</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Xem thông tin ngân hàng thụ hưởng, phê duyệt đã thanh toán hoặc từ chối kèm lý do phản hồi cho nghệ sĩ.</p>
+          </div>
+          <span class="kicker">Payout Transactions</span>
+        </div>
+
+        <!-- Summary Statistics Bar -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0;">
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 14px;">
+            <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #b45309;">⏳ Đang chờ duyệt</span>
+            <strong id="stat-pending-payout" style="display: block; font-size: 20px; margin-top: 4px; color: #b45309;">0 (₫ 0)</strong>
+          </div>
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 14px;">
+            <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #15803d;">🟢 Tổng tiền đã thanh toán</span>
+            <strong id="stat-paid-payout" style="display: block; font-size: 20px; margin-top: 4px; color: #15803d;">₫ 0</strong>
+          </div>
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 14px;">
+            <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #cf1322;">🔴 Yêu cầu bị từ chối</span>
+            <strong id="stat-rejected-payout" style="display: block; font-size: 20px; margin-top: 4px; color: #cf1322;">0</strong>
           </div>
         </div>
 
-        <!-- Filter & Search Bar -->
-        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
-          <label style="font-size: 12px; font-weight: bold;">Lọc theo trạng thái:</label>
-          <select id="admin-payout-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-weight: 600; font-size: 13px;">
-            <option value="all">Tất cả yêu cầu (Toàn bộ lịch sử)</option>
+        <!-- Filter and Refresh Controls -->
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+          <label style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Lọc yêu cầu:</label>
+          <select id="admin-payout-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+            <option value="all">Tất cả yêu cầu</option>
             <option value="pending">⏳ Đang chờ xem xét</option>
-            <option value="approved">✅ Đã thanh toán (Hoàn tất)</option>
+            <option value="paid">✅ Đã thanh toán (Hoàn tất)</option>
             <option value="rejected">❌ Từ chối thanh toán</option>
           </select>
           <button type="button" id="admin-refresh-payouts-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Làm mới danh sách</button>
@@ -109,7 +120,52 @@
         </div>
       </section>
 
-      <!-- Actions -->
+      <!-- ========================================== -->
+      <!-- TAB 4: BÀI VIẾT & TẠP CHÍ -->
+      <!-- ========================================== -->
+      <section id="admin-tab-articles" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Bài viết & Tạp chí Flow Report</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý tin tức, bài viết chuyên sâu và thông cáo báo chí của UniFLOWs.</p>
+          </div>
+          <button class="button" type="button" id="add-article">+ Thêm bài viết mới</button>
+        </div>
+        <div id="articles-editor" style="margin-top: 15px;"></div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 5: CẤU HÌNH TRANG CHỦ & EMAIL PHÒNG BAN -->
+      <!-- ========================================== -->
+      <section id="admin-tab-settings" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Cấu hình Website & Email phòng ban</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Điều chỉnh tiêu đề trang chủ, văn bản giới thiệu và danh sách email liên hệ.</p>
+          </div>
+          <span class="kicker">General Settings</span>
+        </div>
+
+        <div style="background: #fff; border: 1px solid var(--ink); padding: 20px; margin-top: 15px;">
+          <h3 style="font-size: 16px; margin-top: 0;">01 / Nội dung trang chủ</h3>
+          <div class="field"><label>Tagline trang chủ</label><input name="tagline"></div>
+          <div class="field"><label>Văn bản Hero</label><textarea name="heroText" rows="3"></textarea></div>
+          <div class="field"><label>Tiêu đề Giới thiệu</label><input name="aboutTitle"></div>
+          <div class="field"><label>Văn bản Giới thiệu</label><textarea name="aboutText" rows="4"></textarea></div>
+          <div class="field"><label>Thành phố trụ sở</label><input name="city"></div>
+        </div>
+
+        <div style="background: #fff; border: 1px solid var(--ink); padding: 20px; margin-top: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 16px; margin: 0;">02 / Quản lý Email Phòng ban & Liên hệ</h3>
+            <button type="button" id="add-email-row-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">+ Thêm Email</button>
+          </div>
+          <p style="font-size: 12px; opacity: 0.7; margin-top: 0;">Các email này sẽ hiển thị tại trang Liên hệ (contact.html).</p>
+          <div id="emails-editor-container" style="display: grid; gap: 10px; margin-top: 15px;"></div>
+        </div>
+      </section>
+
+      <!-- Sticky Actions Bar -->
       <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10; display: flex; gap: 12px; align-items: center;">
         <button class="button" type="submit" id="save-all-btn" style="padding: 12px 24px; font-weight: bold;">Lưu toàn bộ lên Supabase</button>
         <button class="button alt" type="button" id="logout" style="background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; font-weight: 700; padding: 12px 20px; margin-left: auto;">
