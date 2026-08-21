@@ -793,11 +793,11 @@ async function renderReleases() {
   const trackEarningsList = document.querySelector('#track-earnings-list');
   if (trackEarningsList) {
     if (participatingReleases.length === 0) {
-      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#fff;border:1px solid var(--line);">Chưa có dữ liệu doanh thu chi tiết từ các tác phẩm.</p>';
+      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;padding:20px;background:var(--um-card);border:1px solid var(--um-card-border);border-radius:14px;color:var(--um-text-muted);">Chưa có dữ liệu doanh thu chi tiết từ các tác phẩm.</p>';
     } else {
       trackEarningsList.innerHTML = `
-        <div style="border:1px solid var(--line);background:#fff;overflow:hidden;">
-          <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1fr 1.2fr;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--line);">
+        <div style="border:1px solid var(--um-card-border);background:var(--um-card);border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1fr 1.2fr;background:rgba(255,255,255,0.03);padding:14px 18px;font-weight:800;font-size:11px;text-transform:uppercase;color:var(--um-text-muted);border-bottom:1px solid var(--um-card-border);font-family:'DM Mono',monospace;">
             <span>Tên bản phát hành</span>
             <span>Lượt Streams</span>
             <span>Tổng doanh thu</span>
@@ -805,15 +805,15 @@ async function renderReleases() {
             <span>Thực nhận</span>
           </div>
           ${participatingReleases.map(p => `
-            <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1fr 1.2fr;padding:12px 14px;border-top:1px solid var(--line);font-size:13px;align-items:center;">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1fr 1.2fr;padding:16px 18px;border-top:1px solid rgba(255,255,255,0.04);font-size:13px;align-items:center;color:#fff;">
               <div>
-                <strong>${esc(p.title)}</strong>
-                <span style="display:block;font-size:11px;opacity:0.7;">${esc(p.primaryArtistName)} · ${esc(p.userRole)}</span>
+                <strong style="color:#fff;font-size:14px;">${esc(p.title)}</strong>
+                <span style="display:block;font-size:11px;color:var(--um-text-muted);margin-top:2px;">${esc(p.primaryArtistName)} · ${esc(p.userRole)}</span>
               </div>
-              <span>${p.totalStreams.toLocaleString('vi-VN')}</span>
-              <span style="opacity:0.8;">₫ ${p.totalRevenue.toLocaleString('vi-VN')}</span>
-              <b style="color:#2563eb;">${p.percentage}%</b>
-              <b style="color:#137333;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</b>
+              <span style="font-family:'DM Mono',monospace;">${p.totalStreams.toLocaleString('vi-VN')}</span>
+              <span style="color:var(--um-text-muted);font-family:'DM Mono',monospace;">₫ ${p.totalRevenue.toLocaleString('vi-VN')}</span>
+              <b style="color:#60a5fa;font-family:'DM Mono',monospace;">${p.percentage}%</b>
+              <b style="color:var(--um-volt);font-family:'DM Mono',monospace;font-size:14px;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</b>
             </div>
           `).join('')}
         </div>
@@ -832,15 +832,15 @@ async function renderReleases() {
     });
 
     if (allPlaylists.length === 0) {
-      playlistShowcase.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#fff;border:1px solid var(--line);">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>';
+      playlistShowcase.innerHTML = '<p class="empty" style="font-size:13px;padding:20px;background:var(--um-card);border:1px solid var(--um-card-border);border-radius:14px;color:var(--um-text-muted);">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>';
     } else {
       playlistShowcase.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:16px;">
           ${allPlaylists.map(item => `
-            <div style="background:#fff;border:1px solid #fed7aa;padding:14px;border-radius:4px;">
-              <div style="font-size:10px;color:#c2410c;font-weight:bold;text-transform:uppercase;margin-bottom:4px;">🌟 Editorial Playlist</div>
-              <div style="font-weight:bold;font-size:15px;margin-bottom:4px;">${esc(item.playlist)}</div>
-              <div style="font-size:12px;opacity:0.8;">Bản phát hành: <em>${esc(item.track)}</em></div>
+            <div style="background:var(--um-card);border:1px solid rgba(216,255,72,0.3);padding:18px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+              <div style="font-size:10px;color:var(--um-volt);font-weight:800;text-transform:uppercase;margin-bottom:6px;font-family:'DM Mono',monospace;">🌟 Editorial Playlist</div>
+              <div style="font-weight:800;font-size:16px;margin-bottom:6px;color:#fff;">${esc(item.playlist)}</div>
+              <div style="font-size:12px;color:var(--um-text-muted);">Bản phát hành: <em style="color:#fff;">${esc(item.track)}</em></div>
             </div>
           `).join('')}
         </div>
@@ -1288,11 +1288,11 @@ async function loadArtistPayouts() {
   // Render Payout History Table
   if (payoutHistoryList) {
     if (artistPayoutRequests.length === 0) {
-      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#f9f9f9;border:1px solid var(--line);">Chưa có yêu cầu rút tiền nào được tạo.</p>';
+      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;padding:20px;background:var(--um-card);border:1px solid var(--um-card-border);border-radius:14px;color:var(--um-text-muted);">Chưa có yêu cầu rút tiền nào được tạo.</p>';
     } else {
       payoutHistoryList.innerHTML = `
-        <div style="border:1px solid var(--ink);overflow:hidden;background:#fff;margin-top:10px;">
-          <div style="display:grid;grid-template-columns:110px 130px 1fr 140px;background:#f5f4f0;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--ink);">
+        <div style="border:1px solid var(--um-card-border);background:var(--um-card);border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.3);margin-top:14px;">
+          <div style="display:grid;grid-template-columns:120px 140px 1fr 160px;background:rgba(255,255,255,0.03);padding:14px 18px;font-weight:800;font-size:11px;text-transform:uppercase;color:var(--um-text-muted);border-bottom:1px solid var(--um-card-border);font-family:'DM Mono',monospace;">
             <span>Ngày yêu cầu</span>
             <span>Số tiền rút</span>
             <span>Tài khoản nhận tiền</span>
@@ -1306,25 +1306,25 @@ async function loadArtistPayouts() {
             const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('vi-VN') : 'Vừa xong';
 
             return `
-              <div style="border-bottom:1px solid var(--line);padding:12px 14px;font-size:13px;">
-                <div style="display:grid;grid-template-columns:110px 130px 1fr 140px;align-items:center;">
-                  <span style="font-size:12px;opacity:0.8;">${esc(dateStr)}</span>
-                  <strong style="font-size:15px;color:${isPending ? '#b45309' : (isApproved ? '#15803d' : '#cf1322')};">
+              <div style="border-bottom:1px solid rgba(255,255,255,0.04);padding:16px 18px;font-size:13px;color:#fff;">
+                <div style="display:grid;grid-template-columns:120px 140px 1fr 160px;align-items:center;">
+                  <span style="font-size:12px;color:var(--um-text-dim);font-family:'DM Mono',monospace;">${esc(dateStr)}</span>
+                  <strong style="font-size:16px;font-family:'DM Mono',monospace;color:${isPending ? '#f59e0b' : (isApproved ? 'var(--um-volt)' : '#f43f5e')};">
                     ₫ ${parseInt(req.amount || 0).toLocaleString('vi-VN')}
                   </strong>
                   <span>
-                    <b>${esc(bank.bank || 'Ngân hàng')}</b> · <span style="font-family:monospace;font-weight:bold;">${esc(bank.accountNumber || '')}</span> (${esc(bank.accountName || '')})
+                    <b style="color:#fff;">${esc(bank.bank || 'Ngân hàng')}</b> · <span style="font-family:monospace;color:var(--um-text-muted);">${esc(bank.accountNumber || '')}</span> (${esc(bank.accountName || '')})
                   </span>
                   <span>
-                    <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;background:${isPending ? '#fef3c7' : (isApproved ? '#dcfce7' : '#fee2e2')};color:${isPending ? '#b45309' : (isApproved ? '#15803d' : '#cf1322')};">
+                    <span style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;background:${isPending ? 'rgba(245,158,11,0.12)' : (isApproved ? 'rgba(216,255,72,0.15)' : 'rgba(244,63,94,0.12)')};color:${isPending ? '#f59e0b' : (isApproved ? 'var(--um-volt)' : '#f43f5e')};border:1px solid ${isPending ? 'rgba(245,158,11,0.3)' : (isApproved ? 'rgba(216,255,72,0.4)' : 'rgba(244,63,94,0.3)')};">
                       ${isPending ? '⏳ Đang chờ xem xét' : (isApproved ? '✅ Đã thanh toán' : '❌ Bị từ chối')}
                     </span>
                   </span>
                 </div>
                 ${(isRejected && req.rejection_reason) ? `
-                  <div style="margin-top:10px;background:#fff2f0;border:1px solid #ffccc7;padding:8px 12px;font-size:12px;color:#cf1322;border-radius:2px;">
+                  <div style="margin-top:12px;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);padding:10px 14px;font-size:12px;color:#fca5a5;border-radius:8px;">
                     <b>Lý do từ chối từ Admin:</b> ${esc(req.rejection_reason)} <br>
-                    <small style="color:#666;">(Số tiền này đã được hoàn trả lại về Số dư khả dụng của bạn).</small>
+                    <small style="color:var(--um-text-dim);">(Số tiền này đã được hoàn trả lại về Số dư khả dụng của bạn).</small>
                   </div>
                 ` : ''}
               </div>
@@ -1747,16 +1747,16 @@ async function loadArtistServiceRequests() {
 
   if (combined.length === 0) {
     serviceRequestsList.innerHTML = `
-      <div style="padding:26px;background:#fafafa;border:1px dashed #cbd5e1;border-radius:12px;text-align:center;">
-        <p style="font-size:13px;color:#64748b;margin:0;">Bạn chưa có yêu cầu Bản quyền hoặc Cấp phép Green-list nào. Khi bạn gửi báo cáo vi phạm hoặc thêm kênh whitelist, tiến độ xử lý từ Admin sẽ hiển thị tại đây.</p>
+      <div style="padding:28px;background:var(--um-card);border:1px dashed rgba(255,255,255,0.12);border-radius:16px;text-align:center;">
+        <p style="font-size:13px;color:var(--um-text-muted);margin:0;">Bạn chưa có yêu cầu Bản quyền hoặc Cấp phép Green-list nào. Khi bạn gửi báo cáo vi phạm hoặc thêm kênh whitelist, tiến độ xử lý từ Admin sẽ hiển thị tại đây.</p>
       </div>
     `;
     return;
   }
 
   serviceRequestsList.innerHTML = `
-    <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-      <div style="display:grid;grid-template-columns:140px 1fr 160px;background:#f8fafc;padding:12px 18px;font-weight:bold;font-size:11px;text-transform:uppercase;color:#475569;border-bottom:1px solid #e2e8f0;">
+    <div style="border:1px solid var(--um-card-border);border-radius:16px;overflow:hidden;background:var(--um-card);box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+      <div style="display:grid;grid-template-columns:150px 1fr 180px;background:rgba(255,255,255,0.03);padding:14px 20px;font-weight:800;font-size:11px;text-transform:uppercase;color:var(--um-text-muted);border-bottom:1px solid var(--um-card-border);font-family:'DM Mono',monospace;">
         <span>Loại yêu cầu</span>
         <span>Chi tiết tác phẩm & Link</span>
         <span>Trạng thái xử lý</span>
@@ -1773,24 +1773,24 @@ async function loadArtistServiceRequests() {
         const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : 'Vừa xong';
 
         return `
-          <div style="border-bottom:1px solid #f1f5f9;padding:14px 18px;font-size:13px;">
-            <div style="display:grid;grid-template-columns:140px 1fr 160px;align-items:start;gap:12px;">
+          <div style="border-bottom:1px solid rgba(255,255,255,0.04);padding:16px 20px;font-size:13px;color:#fff;">
+            <div style="display:grid;grid-template-columns:150px 1fr 180px;align-items:start;gap:14px;">
               <div>
-                <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;font-weight:bold;display:inline-block;padding:2px 8px;border-radius:6px;background:${isCR ? '#fee2e2' : '#dcfce7'};color:${isCR ? '#b91c1c' : '#15803d'};">
+                <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;font-weight:800;display:inline-block;padding:3px 10px;border-radius:20px;background:${isCR ? 'rgba(239,68,68,0.15)' : 'rgba(216,255,72,0.15)'};color:${isCR ? '#f87171' : 'var(--um-volt)'};border:1px solid ${isCR ? 'rgba(239,68,68,0.3)' : 'rgba(216,255,72,0.3)'};">
                   ${isCR ? '🚨 Báo cáo vi phạm' : '🟢 Kênh Green-list'}
                 </span>
-                <small style="display:block;margin-top:4px;color:#94a3b8;font-size:11px;">${esc(dateStr)}</small>
+                <small style="display:block;margin-top:6px;color:var(--um-text-dim);font-size:11px;font-family:'DM Mono',monospace;">${esc(dateStr)}</small>
               </div>
 
               <div>
-                <strong style="font-size:14px;display:block;margin-bottom:3px;">
+                <strong style="font-size:15px;display:block;margin-bottom:4px;color:#fff;">
                   ${isCR ? esc(item.track_title || item.track || item.title) : esc(item.channel_id || item.title)}
                 </strong>
-                <div style="font-size:12px;color:#475569;margin-bottom:4px;">
-                  Nền tảng: <b>${esc(item.platform)}</b> ${isCR ? `· Vi phạm: <b>${esc(item.violation_type || '')}</b>` : `· Phạm vi: <b>${esc(item.track_scope || '')}</b>`}
+                <div style="font-size:12px;color:var(--um-text-muted);margin-bottom:6px;">
+                  Nền tảng: <b style="color:#fff;">${esc(item.platform)}</b> ${isCR ? `· Vi phạm: <b style="color:#f87171;">${esc(item.violation_type || '')}</b>` : `· Phạm vi: <b style="color:var(--um-volt);">${esc(item.track_scope || '')}</b>`}
                 </div>
-                ${item.target_url ? `<a href="${esc(item.target_url)}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:underline;word-break:break-all;">${esc(item.target_url)} ↗</a>` : ''}
-                ${item.admin_notes ? `<div style="margin-top:6px;background:#f8fafc;border-left:3px solid #3b82f6;padding:6px 10px;font-size:11px;color:#1e293b;border-radius:0 6px 6px 0;"><strong>Phản hồi từ Admin UniFLOWs:</strong> ${esc(item.admin_notes)}</div>` : ''}
+                ${item.target_url ? `<a href="${esc(item.target_url)}" target="_blank" style="font-size:11px;color:#60a5fa;text-decoration:underline;word-break:break-all;font-family:'DM Mono',monospace;">${esc(item.target_url)} ↗</a>` : ''}
+                ${item.admin_notes ? `<div style="margin-top:8px;background:rgba(59,130,246,0.08);border-left:3px solid #60a5fa;padding:8px 12px;font-size:12px;color:#bfdbfe;border-radius:0 8px 8px 0;"><strong>Phản hồi từ Admin UniFLOWs:</strong> ${esc(item.admin_notes)}</div>` : ''}
               </div>
 
               <div>

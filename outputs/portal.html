@@ -53,25 +53,25 @@
 
     <!-- Main Content Workspace -->
     <section class="portal-main">
-      <!-- Artist Profile Header Bar -->
+      <!-- Artist Profile Header Bar (UnitedMasters Signature Hero) -->
       <div class="portal-profile-bar">
         <div class="portal-avatar-wrap">
           <img id="portal-artist-avatar" src="https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80" alt="Avatar">
           <div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
               <span class="portal-verified-pill">✓ OFFICIAL ARTIST</span>
-              <span id="portal-role-badge" style="display:none; font-family: 'DM Mono', monospace, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; line-height: 1.4; padding: 3px 10px; border-radius: 12px; text-transform: uppercase;"></span>
+              <span id="portal-role-badge" style="display:none; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.4; padding: 4px 12px; border-radius: 20px; text-transform: uppercase;"></span>
             </div>
-            <h1 style="margin:0;font-size:clamp(28px,3.5vw,46px);letter-spacing:-0.05em;line-height:1.1;">Xin chào, <em id="artist-display-name">Nghệ sĩ.</em></h1>
-            <p id="portal-welcome-desc" style="margin:4px 0 0;font-size:13px;opacity:0.75;">Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP.</p>
+            <h1 style="margin:0;font-size:clamp(28px,3.6vw,48px);letter-spacing:-0.05em;line-height:1.1;color:#fff;">Xin chào, <em id="artist-display-name" style="color:var(--um-volt);">Nghệ sĩ.</em></h1>
+            <p id="portal-welcome-desc" style="margin:6px 0 0;font-size:13px;color:var(--um-text-muted);">Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP toàn cầu.</p>
           </div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="button release-action-btn" id="quick-open-release-modal-btn" style="padding:12px 20px;font-weight:bold;background:#000;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-            💿 + Gửi bản phát hành mới
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="button release-action-btn" id="quick-open-release-modal-btn">
+            <span>💿</span> + Gửi bản phát hành mới
           </button>
-          <button class="button alt" id="quick-open-payout-modal-btn" style="padding:12px 20px;font-weight:bold;background:#fff;">
-            💳 Rút tiền
+          <button class="button alt" id="quick-open-payout-modal-btn">
+            <span>💳</span> Rút tiền
           </button>
         </div>
       </div>
@@ -83,32 +83,32 @@
       <!-- ========================================== -->
       <section id="tab-overview" class="tab-pane active">
         <!-- Studio Certified Distribution Status Bar -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <span style="font:11px 'DM Mono',monospace;color:#059669;background:#ecfdf5;border:1px solid #a7f3d0;padding:2px 8px;border-radius:10px;font-weight:700;">● DSP CONNECTED</span>
-            <span style="color:#475569;">Phân phối tới <b>150+ Nền tảng Âm nhạc Toàn cầu</b></span>
-            <span style="opacity:0.4;">|</span>
-            <span style="color:#475569;">Chất lượng Master: <b>24-bit Lossless Studio</b></span>
+        <div style="background:var(--um-card);border:1px solid var(--um-card-border);border-radius:16px;padding:16px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <span style="font:11px 'DM Mono',monospace;color:#000;background:var(--um-volt);padding:3px 10px;border-radius:20px;font-weight:800;box-shadow:0 0 10px var(--um-volt-glow);">● DSP CONNECTED</span>
+            <span style="color:var(--um-text-main);">Phân phối tới <b>150+ Nền tảng Âm nhạc Toàn cầu</b></span>
+            <span style="opacity:0.3;color:#fff;">|</span>
+            <span style="color:var(--um-text-muted);">Chất lượng Master: <b style="color:#fff;">24-bit Lossless Studio</b></span>
           </div>
-          <div style="font:11px 'DM Mono',monospace;color:#64748b;">
-            EST. 2024 · UniFLOWs Music Group
+          <div style="font:11px 'DM Mono',monospace;color:var(--um-text-dim);">
+            EST. 2024 · UniFLOWs x UnitedMasters Roster
           </div>
         </div>
 
         <!-- Role Information Banner (For Partner & Collab) -->
-        <div id="portal-role-banner" style="display:none; margin-bottom: 20px; padding: 14px 18px; border-radius: 8px; font-size: 13px; line-height: 1.5;"></div>
+        <div id="portal-role-banner" style="display:none; margin-bottom: 24px; padding: 16px 20px; border-radius: 14px; font-size: 13px; line-height: 1.5; border: 1px solid var(--um-card-border);"></div>
 
         <!-- 4-Card Modern Metrics Grid -->
         <div class="portal-grid-stats">
-          <div class="portal-card-metric" style="border-top:3px solid #10b981;">
-            <div class="metric-label"><span>🎧 Streams tháng này</span><span style="color:#10b981;font-weight:bold;">Toàn cầu</span></div>
+          <div class="portal-card-metric" style="border-top:3px solid var(--um-volt);">
+            <div class="metric-label"><span>🎧 Streams tháng này</span><span style="color:var(--um-volt);font-weight:bold;">Toàn cầu</span></div>
             <div class="metric-val" id="artist-monthly-streams">0</div>
             <div class="metric-foot" id="streams-status">Dữ liệu đối soát DSP toàn cầu</div>
           </div>
 
-          <div class="portal-card-metric" style="border-top:3px solid #3b82f6;">
-            <div class="metric-label"><span>💵 Doanh thu ước tính</span><span style="color:#3b82f6;font-weight:bold;">VNĐ</span></div>
-            <div class="metric-val" id="artist-estimated-revenue" style="color:#1e40af;">₫ 0</div>
+          <div class="portal-card-metric" style="border-top:3px solid #60a5fa;">
+            <div class="metric-label"><span>💵 Doanh thu ước tính</span><span style="color:#60a5fa;font-weight:bold;">VNĐ</span></div>
+            <div class="metric-val" id="artist-estimated-revenue" style="color:#93c5fd;">₫ 0</div>
             <div class="metric-foot" id="overview-payout-cycle">Kỳ đối soát: Hàng tháng</div>
           </div>
 
@@ -118,40 +118,40 @@
             <div class="metric-foot">Kiểm duyệt Audio Master & Artwork</div>
           </div>
 
-          <div class="portal-card-metric" style="border-top:3px solid #8b5cf6;">
-            <div class="metric-label"><span>💳 Số dư khả dụng</span><span style="color:#8b5cf6;font-weight:bold;">Wallet</span></div>
-            <div class="metric-val" id="overview-payable-balance" style="color:#6d28d9;">₫ 0</div>
+          <div class="portal-card-metric" style="border-top:3px solid #c084fc;">
+            <div class="metric-label"><span>💳 Số dư khả dụng</span><span style="color:#c084fc;font-weight:bold;">Wallet</span></div>
+            <div class="metric-val" id="overview-payable-balance" style="color:#e9d5ff;">₫ 0</div>
             <div class="metric-foot">Sẵn sàng gửi yêu cầu rút tiền</div>
           </div>
         </div>
 
         <!-- Label Official Announcements / Bảng tin Hãng Đĩa UniFLOWs -->
-        <div id="portal-announcements-section" style="margin-bottom: 25px;">
-          <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+        <div id="portal-announcements-section" style="margin-bottom: 28px;">
+          <div style="background: var(--um-card); border: 1px solid var(--um-card-border); border-radius: 18px; padding: 22px 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--um-card-border); padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 18px;">📢</span>
-                <h3 style="font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: -0.02em; font-weight: bold;">Thông báo từ Hãng Đĩa UniFLOWs</h3>
+                <span style="font-size: 20px;">📢</span>
+                <h3 style="font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: -0.02em; font-weight: 800; color:#fff;">Thông báo từ Hãng Đĩa UniFLOWs</h3>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <button type="button" id="toggle-announcements-btn" class="button alt" style="padding: 4px 10px; font-size: 11px; cursor: pointer;">Thu gọn ▲</button>
-                <button type="button" id="dismiss-announcements-btn" class="button alt" style="padding: 4px 8px; font-size: 11px; cursor: pointer;" title="Tạm ẩn bảng thông báo">✕</button>
+                <button type="button" id="toggle-announcements-btn" class="button alt" style="padding: 6px 14px; font-size: 11px; cursor: pointer;">Thu gọn ▲</button>
+                <button type="button" id="dismiss-announcements-btn" class="button alt" style="padding: 6px 10px; font-size: 11px; cursor: pointer;" title="Tạm ẩn bảng thông báo">✕</button>
               </div>
             </div>
             <div id="portal-announcements-list" style="display: grid; gap: 12px;">
-              <p class="empty" style="font-size: 13px; opacity: 0.7;">Đang tải thông báo từ Label...</p>
+              <p class="empty" style="font-size: 13px; color: var(--um-text-muted);">Đang tải thông báo từ Label...</p>
             </div>
           </div>
         </div>
 
         <!-- Premium DSP Platform Distribution Breakdown -->
-        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
-          <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--line);">
+        <div style="background: var(--um-card); border: 1px solid var(--um-card-border); border-radius: 18px; padding: 26px; margin-top: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+          <div class="section-head" style="padding: 0 0 16px; border-bottom: 1px solid var(--um-card-border);">
             <div>
-              <h2 style="font-size:16px;margin:0;font-weight:bold;">Thị phần Doanh thu theo Nền tảng Streaming</h2>
-              <p style="font-size:12px;opacity:0.75;margin:3px 0 0;">Phân bổ dòng tiền từ các DSPs hàng đầu toàn cầu.</p>
+              <h2 style="font-size:16px;margin:0;font-weight:800;color:#fff;">Thị phần Doanh thu theo Nền tảng Streaming</h2>
+              <p style="font-size:12px;color:var(--um-text-muted);margin:4px 0 0;">Phân bổ dòng tiền từ các DSPs hàng đầu toàn cầu.</p>
             </div>
-            <span class="kicker">Top DSPs</span>
+            <span class="kicker" style="color:var(--um-volt);">Top DSPs</span>
           </div>
 
           <div class="portal-dsp-grid">
@@ -160,7 +160,7 @@
                 <strong><span style="color:#1db954;">●</span> Spotify</strong>
                 <span id="dsp-badge-spotify" style="font-size:11px;font-weight:bold;color:#1db954;">0%</span>
               </div>
-              <b id="overview-spotify" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <b id="overview-spotify" style="font-size:24px;letter-spacing:-0.04em;display:block;">₫ 0</b>
               <div class="portal-dsp-bar-wrap"><div id="dsp-bar-spotify" class="portal-dsp-bar-fill" style="background:#1db954;width:0%;"></div></div>
             </div>
 
@@ -169,7 +169,7 @@
                 <strong><span style="color:#fc3c44;">●</span> Apple Music</strong>
                 <span id="dsp-badge-apple" style="font-size:11px;font-weight:bold;color:#fc3c44;">0%</span>
               </div>
-              <b id="overview-apple" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <b id="overview-apple" style="font-size:24px;letter-spacing:-0.04em;display:block;">₫ 0</b>
               <div class="portal-dsp-bar-wrap"><div id="dsp-bar-apple" class="portal-dsp-bar-fill" style="background:#fc3c44;width:0%;"></div></div>
             </div>
 
@@ -178,17 +178,17 @@
                 <strong><span style="color:#ff0000;">●</span> YouTube Music</strong>
                 <span id="dsp-badge-youtube" style="font-size:11px;font-weight:bold;color:#ff0000;">0%</span>
               </div>
-              <b id="overview-youtube" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <b id="overview-youtube" style="font-size:24px;letter-spacing:-0.04em;display:block;">₫ 0</b>
               <div class="portal-dsp-bar-wrap"><div id="dsp-bar-youtube" class="portal-dsp-bar-fill" style="background:#ff0000;width:0%;"></div></div>
             </div>
 
-            <div class="portal-dsp-box" style="border-top:3px solid #8b5cf6;">
+            <div class="portal-dsp-box" style="border-top:3px solid #a855f7;">
               <div class="portal-dsp-head">
-                <strong><span style="color:#8b5cf6;">●</span> NCT / Zing / Khác</strong>
-                <span id="dsp-badge-other" style="font-size:11px;font-weight:bold;color:#8b5cf6;">0%</span>
+                <strong><span style="color:#a855f7;">●</span> NCT / Zing / Khác</strong>
+                <span id="dsp-badge-other" style="font-size:11px;font-weight:bold;color:#a855f7;">0%</span>
               </div>
-              <b id="overview-other" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
-              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-other" class="portal-dsp-bar-fill" style="background:#8b5cf6;width:0%;"></div></div>
+              <b id="overview-other" style="font-size:24px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-other" class="portal-dsp-bar-fill" style="background:#a855f7;width:0%;"></div></div>
             </div>
           </div>
         </div>
@@ -199,17 +199,17 @@
       <!-- ========================================== -->
       <section id="tab-releases" class="tab-pane">
         <!-- Collab Restricted Notice -->
-        <div id="collab-release-notice" style="display:none; background:#fdf4ff; border:1px solid #f0abfc; padding:16px 20px; margin-bottom:20px; border-radius:8px; font-size:13px; line-height:1.5; color:#86198f;">
+        <div id="collab-release-notice" style="display:none; background:rgba(217, 70, 239, 0.1); border:1px solid rgba(217, 70, 239, 0.3); padding:16px 20px; margin-bottom:20px; border-radius:12px; font-size:13px; line-height:1.5; color:#f0abfc;">
           <strong>✨ Quyền hạn Tài khoản Nghệ sĩ Collab:</strong> Bạn có quyền xem thống kê phân tích và nhận phân bổ doanh thu (Royalty Splits) từ các bài hát có tham gia. Quyền nộp bản phát hành mới do <b>Nghệ sĩ chính (Primary Artist)</b> hoặc <b>Quản lý</b> thực hiện.
         </div>
 
-        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--line);">
+        <div class="section-head" style="padding: 0 0 16px; border-bottom: 1px solid var(--um-card-border);">
           <div>
-            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;">Catalogue Bản phát hành</h2>
-            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý kho nhạc, theo dõi trạng thái kiểm duyệt và SmartLinks.</p>
+            <h2 style="font-size: 26px; letter-spacing: -0.04em; margin: 0; color:#fff;">Catalogue Bản phát hành</h2>
+            <p style="font-size: 13px; color: var(--um-text-muted); margin: 4px 0 0;">Quản lý kho nhạc, theo dõi trạng thái kiểm duyệt và SmartLinks.</p>
           </div>
-          <button class="button release-action-btn" id="open-release-modal-btn" style="padding: 10px 18px; font-weight: bold; background: #000; color: #fff;">
-            💿 + Gửi bản phát hành mới
+          <button class="button release-action-btn" id="open-release-modal-btn">
+            <span>💿</span> + Gửi bản phát hành mới
           </button>
         </div>
 
@@ -250,33 +250,33 @@
         </div>
 
         <!-- Contract & Accounting Policy Card -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+        <div style="background:var(--um-card);border:1px solid var(--um-card-border);border-radius:16px;padding:18px 24px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
           <div>
-            <span class="eyebrow" style="color:#2563eb;margin:0;">Hợp đồng phân phối âm nhạc</span>
-            <strong id="portal-contract-term" style="font-size:14px;display:block;margin-top:2px;">Hợp đồng độc quyền phân phối 2024 - 2027</strong>
+            <span class="eyebrow" style="color:var(--um-volt);margin:0;letter-spacing:1.5px;">UnitedMasters x UniFLOWs Deal</span>
+            <strong id="portal-contract-term" style="font-size:15px;display:block;margin-top:4px;color:#fff;">Hợp đồng phân phối âm nhạc độc quyền</strong>
           </div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;">
-            <div><span style="opacity:0.6;display:block;font-size:10px;text-transform:uppercase;">Kỳ đối soát:</span> <strong id="portal-payout-cycle">Hàng tháng (Monthly)</strong></div>
-            <div><span style="opacity:0.6;display:block;font-size:10px;text-transform:uppercase;">Tỷ lệ Royalty:</span> <strong id="portal-royalty-rate">80% Master</strong></div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px;">
+            <div><span style="color:var(--um-text-dim);display:block;font-size:10px;text-transform:uppercase;font-family:'DM Mono',monospace;">Kỳ đối soát:</span> <strong id="portal-payout-cycle" style="color:#fff;">Hàng tháng (Monthly)</strong></div>
+            <div><span style="color:var(--um-text-dim);display:block;font-size:10px;text-transform:uppercase;font-family:'DM Mono',monospace;">Tỷ lệ Royalty:</span> <strong id="portal-royalty-rate" style="color:var(--um-volt);">80% Master</strong></div>
           </div>
         </div>
 
         <!-- Executive Financial Statement Card -->
         <div class="financial-statement-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
-            <div style="display:flex;gap:35px;flex-wrap:wrap;align-items:center;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;">
+            <div style="display:flex;gap:40px;flex-wrap:wrap;align-items:center;">
               <div>
-                <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;color:#64748b;">Số dư khả dụng</span>
-                <strong id="artist-payable-balance" style="font-size:36px;letter-spacing:-0.05em;display:block;margin-top:4px;">₫ 0</strong>
+                <span style="font:11px 'DM Mono',monospace;text-transform:uppercase;color:var(--um-text-muted);letter-spacing:1px;">Số dư khả dụng</span>
+                <strong id="artist-payable-balance" style="font-size:42px;letter-spacing:-0.05em;display:block;margin-top:4px;color:#fff;">₫ 0</strong>
               </div>
               <div>
-                <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;color:#64748b;">Đang xử lý rút</span>
-                <strong id="artist-pending-payout" style="font-size:36px;letter-spacing:-0.05em;display:block;color:#d97706;margin-top:4px;">₫ 0</strong>
+                <span style="font:11px 'DM Mono',monospace;text-transform:uppercase;color:var(--um-text-muted);letter-spacing:1px;">Đang xử lý rút</span>
+                <strong id="artist-pending-payout" style="font-size:42px;letter-spacing:-0.05em;display:block;color:#f59e0b;margin-top:4px;">₫ 0</strong>
               </div>
             </div>
             <div>
-              <button class="button" id="request-payout-btn" style="padding:14px 28px;font-weight:bold;background:#000;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:8px;">
-                💳 Yêu cầu rút tiền
+              <button class="button" id="request-payout-btn">
+                <span>💳</span> Yêu cầu rút tiền
               </button>
             </div>
           </div>
@@ -296,23 +296,23 @@
               <span>3. Giải ngân 24/7</span>
             </div>
           </div>
-          <small id="contract-payout-note" style="display:block;margin-top:10px;font:11px 'DM Mono',monospace;color:#64748b;">Ngưỡng thanh toán tối thiểu: ₫ 1,000,000 · Kỳ đối soát: Hàng tháng</small>
+          <small id="contract-payout-note" style="display:block;margin-top:12px;font:11px 'DM Mono',monospace;color:var(--um-text-dim);">Ngưỡng thanh toán tối thiểu: ₫ 1,000,000 · Hỗ trợ chuyển khoản toàn bộ ngân hàng VN 24/7</small>
         </div>
 
         <div class="earnings-table">
-          <div><span>Spotify</span><b id="earn-spotify">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
+          <div><span>Spotify Master</span><b id="earn-spotify">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
           <div><span>Apple Music</span><b id="earn-apple">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
-          <div><span>YouTube Music</span><b id="earn-youtube">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
-          <div><span>NCT / Zing / khác</span><b id="earn-other">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
+          <div><span>YouTube Content ID</span><b id="earn-youtube">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
+          <div><span>TikTok / Sync / Khác</span><b id="earn-other">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
         </div>
 
-        <div style="margin-top:30px;">
-          <h3 style="font-size:18px;letter-spacing:-0.03em;margin-bottom:12px;">Báo cáo chi tiết theo từng bài hát (Royalty Ledger)</h3>
+        <div style="margin-top:35px;">
+          <h3 style="font-size:20px;letter-spacing:-0.03em;margin-bottom:14px;color:#fff;">Báo cáo chi tiết theo từng bài hát (Royalty Ledger)</h3>
           <div id="track-earnings-list"></div>
         </div>
 
-        <div style="margin-top:30px;">
-          <h3 style="font-size:18px;letter-spacing:-0.03em;margin-bottom:12px;">Lịch sử & Trạng thái yêu cầu rút tiền</h3>
+        <div style="margin-top:35px;">
+          <h3 style="font-size:20px;letter-spacing:-0.03em;margin-bottom:14px;color:#fff;">Lịch sử & Trạng thái yêu cầu rút tiền</h3>
           <div id="payout-history-list"></div>
         </div>
       </section>
@@ -321,24 +321,24 @@
       <!-- TAB 4: THỐNG KÊ & PLAYLISTS (INSIGHTS) -->
       <!-- ========================================== -->
       <section id="tab-insights" class="tab-pane">
-        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--line);">
+        <div class="section-head" style="padding: 0 0 16px; border-bottom: 1px solid var(--um-card-border);">
           <div>
-            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">Thống kê Người nghe & Editorial Insights</h2>
-            <p style="font-size:13px;opacity:0.8;margin:4px 0 0;">Phân tích lượt stream, phân bố địa lý người nghe và thành tích playlist.</p>
+            <h2 style="font-size:26px;margin:0;letter-spacing:-0.04em;color:#fff;">Thống kê Người nghe & Editorial Insights</h2>
+            <p style="font-size:13px;color:var(--um-text-muted);margin:4px 0 0;">Phân tích lượt stream, phân bố địa lý người nghe và thành tích playlist.</p>
           </div>
-          <span class="kicker">Real-time Analytics</span>
+          <span class="kicker" style="color:var(--um-volt);">Real-time Telemetry</span>
         </div>
 
         <!-- Dynamic Stream Analytics Chart Box -->
         <div class="portal-chart-card">
           <div class="portal-chart-head">
             <div>
-              <span class="eyebrow" style="margin:0;color:#2563eb;">Stream Trajectory</span>
-              <strong style="display:block;font-size:26px;letter-spacing:-0.05em;margin-top:4px;" id="insight-total-streams-display">0 Streams</strong>
-              <small style="color:#64748b;font-family:'DM Mono',monospace;">Tổng hợp toàn bộ catalogue trên 150+ nền tảng</small>
+              <span class="eyebrow" style="margin:0;color:var(--um-volt);">Stream Trajectory</span>
+              <strong style="display:block;font-size:28px;letter-spacing:-0.05em;margin-top:4px;color:#fff;" id="insight-total-streams-display">0 Streams</strong>
+              <small style="color:var(--um-text-dim);font-family:'DM Mono',monospace;">Tổng hợp toàn bộ catalogue trên 150+ nền tảng</small>
             </div>
             <div style="display:flex;gap:6px;">
-              <button class="filter-chip active" style="padding:4px 10px;font-size:10px;">6 Tháng gần nhất</button>
+              <button class="filter-chip active" style="padding:5px 14px;font-size:11px;">6 Tháng gần nhất</button>
             </div>
           </div>
 
@@ -348,35 +348,35 @@
         </div>
 
         <!-- Geographic & Audience Insights Grid -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:24px;">
           <div class="portal-territory-card">
-            <h4 style="margin:0 0 12px;font-size:13px;text-transform:uppercase;color:#475569;font-family:'DM Mono',monospace;">🌍 Phân bố Quốc gia (Top Territories)</h4>
+            <h4 style="margin:0 0 14px;font-size:13px;text-transform:uppercase;color:var(--um-text-muted);font-family:'DM Mono',monospace;">🌍 Phân bố Quốc gia (Top Territories)</h4>
             <div id="portal-country-list">
-              <p class="empty" style="font-size:12px;opacity:0.7;">Đang tải dữ liệu địa lý...</p>
+              <p class="empty" style="font-size:12px;color:var(--um-text-dim);">Đang tải dữ liệu địa lý...</p>
             </div>
           </div>
 
           <div class="portal-territory-card">
-            <h4 style="margin:0 0 12px;font-size:13px;text-transform:uppercase;color:#475569;font-family:'DM Mono',monospace;">🏙️ Thành phố hàng đầu (Top Cities)</h4>
+            <h4 style="margin:0 0 14px;font-size:13px;text-transform:uppercase;color:var(--um-text-muted);font-family:'DM Mono',monospace;">🏙️ Thành phố hàng đầu (Top Cities)</h4>
             <div id="portal-city-list">
-              <p class="empty" style="font-size:12px;opacity:0.7;">Đang tải dữ liệu thành phố...</p>
+              <p class="empty" style="font-size:12px;color:var(--um-text-dim);">Đang tải dữ liệu thành phố...</p>
             </div>
           </div>
 
           <div class="portal-territory-card">
-            <h4 style="margin:0 0 12px;font-size:13px;text-transform:uppercase;color:#475569;font-family:'DM Mono',monospace;">📡 Kênh khám phá (Top Source)</h4>
+            <h4 style="margin:0 0 14px;font-size:13px;text-transform:uppercase;color:var(--um-text-muted);font-family:'DM Mono',monospace;">📡 Kênh khám phá (Top Source)</h4>
             <div id="portal-source-list">
-              <p class="empty" style="font-size:12px;opacity:0.7;">Đang tải nguồn tiếp cận...</p>
+              <p class="empty" style="font-size:12px;color:var(--um-text-dim);">Đang tải nguồn tiếp cận...</p>
             </div>
           </div>
         </div>
 
         <!-- Audience Demographics (Authentic State) -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;margin-top:20px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
-          <h4 style="margin:0 0 12px;font-size:14px;text-transform:uppercase;color:#475569;font-family:'DM Mono',monospace;">👥 Nhân khẩu học Người nghe (Audience Demographics)</h4>
+        <div style="background:var(--um-card);border:1px solid var(--um-card-border);border-radius:18px;padding:26px;margin-top:24px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+          <h4 style="margin:0 0 14px;font-size:14px;text-transform:uppercase;color:var(--um-text-muted);font-family:'DM Mono',monospace;">👥 Nhân khẩu học Người nghe (Audience Demographics)</h4>
           <div id="portal-demographics-container">
-            <div style="padding:20px;background:#fafafa;border:1px dashed #cbd5e1;border-radius:10px;text-align:center;">
-              <p style="font-size:13px;color:#64748b;margin:0;line-height:1.5;">
+            <div style="padding:24px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.12);border-radius:14px;text-align:center;">
+              <p style="font-size:13px;color:var(--um-text-muted);margin:0;line-height:1.6;">
                 📊 <em>Chưa đủ dữ liệu mẫu nhân khẩu học. Báo cáo độ tuổi, giới tính và thiết bị của người nghe sẽ tự động tổng hợp khi catalogue đạt ngưỡng tối thiểu theo tiêu chuẩn DSP Telemetry (Spotify for Artists / Apple Music).</em>
               </p>
             </div>
@@ -384,8 +384,8 @@
         </div>
 
         <!-- Editorial Placements Showcase -->
-        <div style="margin-top:30px;">
-          <h3 style="font-size:18px;letter-spacing:-0.03em;margin-bottom:12px;">🌟 Thành tích Playlist (Editorial Placements)</h3>
+        <div style="margin-top:35px;">
+          <h3 style="font-size:20px;letter-spacing:-0.03em;margin-bottom:14px;color:#fff;">🌟 Thành tích Playlist (Editorial Placements)</h3>
           <div id="artist-playlists-showcase"></div>
         </div>
       </section>
@@ -394,68 +394,68 @@
       <!-- TAB 5: BẢN QUYỀN, GREEN-LIST & DỊCH VỤ A&R -->
       <!-- ========================================== -->
       <section id="tab-support" class="tab-pane">
-        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--line);">
+        <div class="section-head" style="padding: 0 0 16px; border-bottom: 1px solid var(--um-card-border);">
           <div>
-            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">Bản quyền, Cấp quyền Green-list & Hỗ trợ A&R</h2>
-            <p style="font-size:13px;opacity:0.8;margin:4px 0 0;">Quản lý Content ID, cấp phép kênh YouTube/TikTok sử dụng nhạc và theo dõi tiến độ xử lý từ Admin.</p>
+            <h2 style="font-size:26px;margin:0;letter-spacing:-0.04em;color:#fff;">Bản quyền, Cấp quyền Green-list & Hỗ trợ A&R</h2>
+            <p style="font-size:13px;color:var(--um-text-muted);margin:4px 0 0;">Quản lý Content ID, cấp phép kênh YouTube/TikTok sử dụng nhạc và theo dõi tiến độ xử lý từ Admin.</p>
           </div>
-          <span class="kicker">Rights & Services</span>
+          <span class="kicker" style="color:var(--um-volt);">Rights & Studio Hub</span>
         </div>
 
         <!-- 4 Action Hub Cards -->
         <div class="service-card-grid">
-          <div class="service-card" style="border-top:3px solid #dc2626;">
+          <div class="service-card" style="border-top:3px solid #ef4444;">
             <div>
-              <span style="font-size:28px;">🛡️</span>
+              <span style="font-size:32px;">🛡️</span>
               <h3>Báo cáo vi phạm Bản quyền</h3>
               <p>Phát hiện video reup trái phép, sử dụng beat không xin phép? Gửi báo cáo để Admin quét Content ID hoặc gửi Strike gỡ bài.</p>
             </div>
-            <button type="button" id="open-copyright-report-btn" class="button" style="text-align:center;padding:12px;background:#dc2626;color:#fff;border-color:#dc2626;font-size:11px;font-weight:bold;border-radius:8px;">
+            <button type="button" id="open-copyright-report-btn" class="button" style="text-align:center;padding:12px;background:#ef4444;color:#fff;border-color:#ef4444;font-size:11px;font-weight:bold;border-radius:9999px;">
               🚨 + Báo cáo vi phạm mới
             </button>
           </div>
 
-          <div class="service-card" style="border-top:3px solid #16a34a;">
+          <div class="service-card" style="border-top:3px solid var(--um-volt);">
             <div>
-              <span style="font-size:28px;">🟢</span>
+              <span style="font-size:32px;">🟢</span>
               <h3>Cấp quyền Kênh (Green-list)</h3>
               <p>Ủy quyền cho kênh YouTube, tài khoản TikTok hoặc đối tác sử dụng nhạc mà không bị Content ID quét gậy bản quyền.</p>
             </div>
-            <button type="button" id="open-greenlist-btn" class="button" style="text-align:center;padding:12px;background:#16a34a;color:#fff;border-color:#16a34a;font-size:11px;font-weight:bold;border-radius:8px;">
+            <button type="button" id="open-greenlist-btn" class="button" style="text-align:center;padding:12px;font-size:11px;font-weight:bold;">
               ✨ + Thêm kênh Green-list
             </button>
           </div>
 
-          <div class="service-card" style="border-top:3px solid #3b82f6;">
+          <div class="service-card" style="border-top:3px solid #60a5fa;">
             <div>
-              <span style="font-size:28px;">🎯</span>
+              <span style="font-size:32px;">🎯</span>
               <h3>A&R Editorial Pitching</h3>
               <p>Pitching trực tiếp tới Tổng biên tập Spotify & Apple Music để đưa ca khúc mới vào các playlist chính thức.</p>
             </div>
-            <a href="mailto:demos@uniflowslabel.com?subject=Pitching%20Playlist%20Request" class="button" style="text-align:center;padding:12px;background:#000;color:#fff;font-size:11px;border-radius:8px;">Gửi bài Pitching A&R</a>
+            <a href="mailto:demos@uniflowslabel.com?subject=Pitching%20Playlist%20Request" class="button alt" style="text-align:center;padding:12px;font-size:11px;">Gửi bài Pitching A&R</a>
           </div>
 
-          <div class="service-card" style="border-top:3px solid #8b5cf6;">
+          <div class="service-card" style="border-top:3px solid #c084fc;">
             <div>
-              <span style="font-size:28px;">🏷️</span>
+              <span style="font-size:32px;">🏷️</span>
               <h3>Cấp mã ISRC & Bản quyền ℗</h3>
               <p>Đăng ký định danh ISRC chuẩn quốc tế và chứng nhận bản quyền ghi âm độc quyền cho bài hát.</p>
             </div>
-            <a href="mailto:distribution@uniflowslabel.com?subject=ISRC%20Assignment%20Request" class="button alt" style="text-align:center;padding:12px;font-size:11px;border-radius:8px;">Yêu cầu cấp mã ISRC</a>
+            <a href="mailto:distribution@uniflowslabel.com?subject=ISRC%20Assignment%20Request" class="button alt" style="text-align:center;padding:12px;font-size:11px;">Yêu cầu cấp mã ISRC</a>
           </div>
         </div>
 
         <!-- Submitted Requests Live Tracker -->
-        <div style="margin-top:35px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <div style="margin-top:40px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
             <div>
-              <h3 style="font-size:18px;letter-spacing:-0.03em;margin:0;">Lịch sử Yêu cầu Dịch vụ & Xử lý Bản quyền</h3>
-              <p style="font-size:12px;color:#64748b;margin:3px 0 0;">Theo dõi tình trạng xử lý các yêu cầu bản quyền và cấp quyền Green-list đã gửi tới Admin.</p>
+              <h3 style="font-size:20px;letter-spacing:-0.03em;margin:0;color:#fff;">Lịch sử Yêu cầu Dịch vụ & Xử lý Bản quyền</h3>
+              <p style="font-size:13px;color:var(--um-text-muted);margin:4px 0 0;">Theo dõi tình trạng xử lý các yêu cầu bản quyền và cấp quyền Green-list đã gửi tới Admin.</p>
             </div>
-            <button type="button" id="refresh-service-requests-btn" class="button alt" style="padding:6px 12px;font-size:11px;border-radius:6px;">🔄 Làm mới</button>
+            <button type="button" id="refresh-service-requests-btn" class="button alt" style="padding:6px 14px;font-size:11px;">🔄 Làm mới</button>
           </div>
           <div id="service-requests-list">
-            <p class="empty" style="padding:20px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;">Đang tải danh sách yêu cầu...</p>
+            <p class="empty" style="padding:20px;background:var(--um-card);border:1px solid var(--um-card-border);border-radius:14px;color:var(--um-text-muted);">Đang tải danh sách yêu cầu...</p>
           </div>
         </div>
       </section>
