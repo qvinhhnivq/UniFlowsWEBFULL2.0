@@ -1811,31 +1811,34 @@ function initPortalTheme() {
   const savedTheme = localStorage.getItem('uniflows-theme') || 'light';
   applyPortalTheme(savedTheme);
 
-  const toggleBtn = document.querySelector('#theme-toggle-btn');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
+  const toggleButtons = document.querySelectorAll('#theme-toggle-btn, #theme-toggle-header-btn');
+  toggleButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       const newTheme = isDark ? 'light' : 'dark';
       applyPortalTheme(newTheme);
       localStorage.setItem('uniflows-theme', newTheme);
     });
-  }
+  });
 }
 
 function applyPortalTheme(theme) {
-  const iconEl = document.querySelector('#theme-toggle-icon');
-  const textEl = document.querySelector('#theme-toggle-text');
-  if (theme === 'dark') {
+  const isDark = (theme === 'dark');
+  if (isDark) {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.body.classList.add('dark-mode');
-    if (iconEl) iconEl.textContent = '☀️';
-    if (textEl) textEl.textContent = 'Giao diện Sáng';
   } else {
     document.documentElement.removeAttribute('data-theme');
     document.body.classList.remove('dark-mode');
-    if (iconEl) iconEl.textContent = '🌙';
-    if (textEl) textEl.textContent = 'Giao diện Tối';
   }
+
+  // Update all icons and text labels across header & sidebar
+  document.querySelectorAll('.theme-mode-icon').forEach(el => {
+    el.textContent = isDark ? '☀️' : '🌙';
+  });
+  document.querySelectorAll('.theme-mode-text').forEach(el => {
+    el.textContent = isDark ? 'Chế độ Sáng' : 'Chế độ Tối';
+  });
 }
 
 initPortalTheme();

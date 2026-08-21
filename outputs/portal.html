@@ -31,16 +31,16 @@
           <span>🛡️ Bản quyền, Green-list & A&R</span>
         </a>
         
-        <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 8px;">
-          <!-- Dark Mode Toggle Button -->
-          <button id="theme-toggle-btn" type="button" class="theme-toggle-btn" style="width: 100%;">
-            <span id="theme-toggle-icon">🌙</span> <span id="theme-toggle-text">Giao diện Tối</span>
+        <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 10px;">
+          <!-- Sidebar Dark Mode Toggle Button -->
+          <button id="theme-toggle-btn" type="button" class="portal-theme-pill" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); box-shadow: none;">
+            <span class="theme-mode-icon">🌙</span> <span class="theme-mode-text">Chế độ Tối</span>
           </button>
           
-          <button id="open-password-dialog-btn" class="button" style="width: 100%; font-size: 0.75rem; padding: 0.65rem; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+          <button id="open-password-dialog-btn" class="button" style="width: 100%; font-size: 0.75rem; padding: 0.7rem; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: none;">
             <span>🔒</span> ĐỔI MẬT KHẨU
           </button>
-          <button id="artist-logout" class="button alt" style="width: 100%; font-size: 0.75rem; padding: 0.65rem; background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+          <button id="artist-logout" class="button alt" style="width: 100%; font-size: 0.75rem; padding: 0.7rem; background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: none;">
             <span>⏻</span> ĐĂNG XUẤT
           </button>
         </div>
@@ -65,13 +65,17 @@
           <div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
               <span class="portal-verified-pill">✓ OFFICIAL ARTIST</span>
-              <span id="portal-role-badge" style="display:none; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; line-height: 1.4; padding: 3px 10px; border-radius: 12px; text-transform: uppercase;"></span>
+              <span id="portal-role-badge" style="display:none; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.4; padding: 3px 10px; border-radius: 4px; text-transform: uppercase;"></span>
             </div>
-            <h1 style="margin:0;font-size:clamp(28px,3.5vw,46px);letter-spacing:-0.05em;line-height:1.1;">Xin chào, <em id="artist-display-name">Nghệ sĩ.</em></h1>
-            <p id="portal-welcome-desc" style="margin:6px 0 0;font-size:13px;color:var(--portal-text-muted);">Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP.</p>
+            <h1 style="margin:0;font-size:clamp(30px,3.8vw,48px);letter-spacing:-0.05em;line-height:1.1;font-weight:800;">Xin chào, <em id="artist-display-name">Nghệ sĩ.</em></h1>
+            <p id="portal-welcome-desc" style="margin:8px 0 0;font-size:14px;color:var(--portal-text-muted);font-weight:500;">Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP toàn cầu.</p>
           </div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <!-- Prominent Theme Switch Button in Header Bar -->
+          <button id="theme-toggle-header-btn" type="button" class="portal-theme-pill" title="Chuyển đổi giao diện Sáng / Tối">
+            <span class="theme-mode-icon">🌙</span> <span class="theme-mode-text">Chế độ Tối</span>
+          </button>
           <button class="button release-action-btn" id="quick-open-release-modal-btn">
             💿 + Gửi bản phát hành mới
           </button>
