@@ -114,3 +114,40 @@
 
 .release-modal-footer{padding:16px 28px;background:#fafafa;border-top:1px solid #e4e4e7;display:flex;justify-content:space-between;align-items:center;}
 
+/* Comprehensive Artist Dashboard Upgrades */
+.sidebar-artist-footer{margin-top:auto;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:12px;}
+.sidebar-artist-footer img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid #3b82f6;}
+.sidebar-artist-info strong{font-size:13px;color:#fff;display:block;line-height:1.2;}
+.sidebar-artist-info small{font:10px 'DM Mono',monospace;color:#10b981;display:flex;align-items:center;gap:4px;}
+
+.portal-nav-badge{font:9px 'DM Mono',monospace;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,0.15);margin-left:auto;}
+.portal-side nav a.active .portal-nav-badge{background:#3b82f6;color:#fff;}
+
+.portal-search-bar-wrap{position:relative;margin-bottom:15px;}
+.portal-search-bar{width:100%;padding:12px 16px 12px 42px;border:1px solid #cbd5e1;background:#fff;border-radius:4px;font-size:14px;transition:border-color 0.2s;}
+.portal-search-bar:focus{outline:none;border-color:var(--ink);}
+.portal-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#64748b;}
+
+.financial-statement-card{background:#fff;border:1px solid var(--ink);padding:24px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin-bottom:20px;}
+.payout-flow-track{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;background:#f8fafc;padding:14px;border-radius:4px;border:1px solid #e2e8f0;}
+.payout-flow-step{display:flex;align-items:center;gap:8px;font:11px 'DM Mono',monospace;color:#64748b;}
+.payout-flow-step.active{color:#0f172a;font-weight:700;}
+.payout-flow-step .step-dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;}
+.payout-flow-step.active .step-dot{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);}
+
+.percentage-pills{display:flex;gap:6px;margin-top:8px;}
+.percent-pill-btn{padding:4px 10px;font:10px 'DM Mono',monospace;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;transition:all 0.2s;}
+.percent-pill-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+.ledger-table{width:100%;border-collapse:collapse;margin-top:15px;background:#fff;border:1px solid #e2e8f0;border-radius:4px;overflow:hidden;}
+.ledger-table th{background:#f8fafc;padding:12px 16px;font:11px 'DM Mono',monospace;text-transform:uppercase;color:#475569;border-bottom:1px solid #e2e8f0;text-align:left;}
+.ledger-table td{padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:13px;}
+.ledger-table tr:hover td{background:#fafafa;}
+
+.service-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:20px;}
+.service-card{background:#fff;border:1px solid #cbd5e1;padding:24px;border-radius:4px;transition:all 0.2s;display:flex;flex-direction:column;justify-content:space-between;}
+.service-card:hover{border-color:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,0.06);transform:translateY(-2px);}
+.service-card h3{font-size:17px;margin:10px 0 6px;}
+.service-card p{font-size:13px;color:#64748b;line-height:1.5;margin:0 0 16px;}
+
+

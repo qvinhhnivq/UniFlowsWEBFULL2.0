@@ -74,6 +74,11 @@ if (artist) {
   const avatarEl = document.querySelector('#portal-artist-avatar');
   if (avatarEl && artist.image) avatarEl.src = artist.image;
 
+  const sidebarNameEl = document.querySelector('#sidebar-artist-name');
+  if (sidebarNameEl) sidebarNameEl.textContent = artist.name;
+  const sidebarAvatarEl = document.querySelector('#sidebar-artist-avatar');
+  if (sidebarAvatarEl && artist.image) sidebarAvatarEl.src = artist.image;
+
   // Role Badge & Banner Setup
   const roleBadgeEl = document.querySelector('#portal-role-badge');
   const roleBannerEl = document.querySelector('#portal-role-banner');
@@ -512,7 +517,15 @@ function showNotice(msg, isError = false) {
 }
 
 let currentReleaseFilter = 'all';
+let currentSearchQuery = '';
 let cachedFetchedReleases = [];
+
+// Search bar
+const releaseSearchInput = document.querySelector('#release-search-input');
+releaseSearchInput?.addEventListener('input', (e) => {
+  currentSearchQuery = e.target.value.trim().toLowerCase();
+  renderReleaseListItems();
+});
 
 // Filter chips
 document.querySelectorAll('[data-release-filter]').forEach(btn => {
@@ -524,8 +537,29 @@ document.querySelectorAll('[data-release-filter]').forEach(btn => {
   });
 });
 
+function updateFilterCounters() {
+  const countAll = cachedFetchedReleases.length;
+  const countLive = cachedFetchedReleases.filter(r => !r.submissionStatus || r.submissionStatus === 'Đã phát hành').length;
+  const countPending = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('chờ')).length;
+  const countTakedown = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('gỡ')).length;
+
+  const elAll = document.querySelector('#filter-count-all');
+  const elLive = document.querySelector('#filter-count-live');
+  const elPending = document.querySelector('#filter-count-pending');
+  const elTakedown = document.querySelector('#filter-count-takedown');
+  const elNavCount = document.querySelector('#nav-releases-count');
+
+  if (elAll) elAll.textContent = countAll;
+  if (elLive) elLive.textContent = countLive;
+  if (elPending) elPending.textContent = countPending;
+  if (elTakedown) elTakedown.textContent = countTakedown;
+  if (elNavCount) elNavCount.textContent = countAll;
+}
+
 function renderReleaseListItems() {
   if (!list) return;
+  updateFilterCounters();
+
   let filtered = cachedFetchedReleases;
 
   if (currentReleaseFilter === 'live') {
@@ -534,6 +568,16 @@ function renderReleaseListItems() {
     filtered = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('chờ'));
   } else if (currentReleaseFilter === 'takedown') {
     filtered = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('gỡ'));
+  }
+
+  if (currentSearchQuery) {
+    filtered = filtered.filter(r => {
+      const t = (r.title || '').toLowerCase();
+      const format = (r.type || '').toLowerCase();
+      const artistName = (r.primaryArtistName || '').toLowerCase();
+      const isrc = (r.isrc || '').toLowerCase();
+      return t.includes(currentSearchQuery) || format.includes(currentSearchQuery) || artistName.includes(currentSearchQuery) || isrc.includes(currentSearchQuery);
+    });
   }
 
   if (filtered.length === 0) {
@@ -1315,6 +1359,20 @@ requestPayoutBtn?.addEventListener('click', () => {
     amtInput.value = availableBalanceNumber;
   }
   payoutDialog?.showModal();
+});
+
+// Quick percentage buttons in Payout Dialog
+document.querySelectorAll('.percent-pill-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const pct = parseFloat(btn.dataset.percent || '1.0');
+    if (availableBalanceNumber > 0) {
+      const calculatedAmt = Math.floor((availableBalanceNumber * pct) / 10000) * 10000;
+      const amtInput = document.querySelector('#payout-amount');
+      if (amtInput) {
+        amtInput.value = calculatedAmt;
+      }
+    }
+  });
 });
 
 quickPayoutBtn?.addEventListener('click', () => {
