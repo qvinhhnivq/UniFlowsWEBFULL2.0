@@ -1521,6 +1521,8 @@ changePasswordForm?.addEventListener('submit', async (e) => {
       savePasswordSubmitBtn.textContent = 'Lưu mật khẩu';
     }
   }
+});
+
 // ====================================================
 // COPYRIGHT & GREEN-LIST REQUESTS SYSTEM (MAJOR LABEL)
 // ====================================================
