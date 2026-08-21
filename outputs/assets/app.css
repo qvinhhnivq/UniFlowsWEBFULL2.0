@@ -54,3 +54,25 @@
   .portal-release-thumb{width:100%;height:180px;}
 }
 
+/* Major Label Analytics & Chart UI */
+.portal-chart-card{background:#fff;border:1px solid var(--ink);padding:24px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin-top:20px;}
+.portal-chart-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:20px;}
+.portal-chart-bars-wrap{display:flex;align-items:flex-end;gap:12px;height:200px;padding:20px 10px 0;border-bottom:2px solid var(--ink);position:relative;}
+.portal-chart-col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative;}
+.portal-chart-bar{width:100%;max-width:42px;background:var(--ink);border-radius:2px 2px 0 0;transition:all 0.3s ease;cursor:pointer;position:relative;}
+.portal-chart-bar:hover{background:#3b82f6;}
+.portal-chart-bar .chart-tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#000;color:#fff;font:10px 'DM Mono',monospace;padding:4px 8px;border-radius:3px;white-space:nowrap;margin-bottom:6px;z-index:10;}
+.portal-chart-bar:hover .chart-tooltip{display:block;}
+.portal-chart-month{font:10px 'DM Mono',monospace;color:#64748b;margin-top:8px;text-transform:uppercase;}
+
+.portal-empty-chart{text-align:center;padding:50px 20px;background:#fafafa;border:1px dashed #cbd5e1;border-radius:4px;}
+.portal-empty-chart .empty-icon{font-size:32px;margin-bottom:10px;}
+.portal-empty-chart h4{font-size:16px;margin:0 0 6px;color:#1e293b;}
+.portal-empty-chart p{font-size:13px;color:#64748b;max-width:480px;margin:0 auto;line-height:1.5;}
+
+.portal-territory-card{background:#fff;border:1px solid #cbd5e1;padding:20px;border-radius:4px;}
+.portal-territory-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px;}
+.portal-territory-row:last-child{border-bottom:none;}
+.portal-territory-progress{width:100px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-left:12px;}
+.portal-territory-progress-fill{height:100%;background:#3b82f6;border-radius:3px;}
+

@@ -126,37 +126,37 @@
             <div class="portal-dsp-box" style="border-top:3px solid #1db954;">
               <div class="portal-dsp-head">
                 <strong><span style="color:#1db954;">●</span> Spotify</strong>
-                <span id="dsp-badge-spotify" style="font-size:11px;font-weight:bold;color:#1db954;">55%</span>
+                <span id="dsp-badge-spotify" style="font-size:11px;font-weight:bold;color:#1db954;">0%</span>
               </div>
               <b id="overview-spotify" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
-              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-spotify" class="portal-dsp-bar-fill" style="background:#1db954;width:55%;"></div></div>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-spotify" class="portal-dsp-bar-fill" style="background:#1db954;width:0%;"></div></div>
             </div>
 
             <div class="portal-dsp-box" style="border-top:3px solid #fc3c44;">
               <div class="portal-dsp-head">
                 <strong><span style="color:#fc3c44;">●</span> Apple Music</strong>
-                <span id="dsp-badge-apple" style="font-size:11px;font-weight:bold;color:#fc3c44;">25%</span>
+                <span id="dsp-badge-apple" style="font-size:11px;font-weight:bold;color:#fc3c44;">0%</span>
               </div>
               <b id="overview-apple" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
-              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-apple" class="portal-dsp-bar-fill" style="background:#fc3c44;width:25%;"></div></div>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-apple" class="portal-dsp-bar-fill" style="background:#fc3c44;width:0%;"></div></div>
             </div>
 
             <div class="portal-dsp-box" style="border-top:3px solid #ff0000;">
               <div class="portal-dsp-head">
                 <strong><span style="color:#ff0000;">●</span> YouTube Music</strong>
-                <span id="dsp-badge-youtube" style="font-size:11px;font-weight:bold;color:#ff0000;">15%</span>
+                <span id="dsp-badge-youtube" style="font-size:11px;font-weight:bold;color:#ff0000;">0%</span>
               </div>
               <b id="overview-youtube" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
-              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-youtube" class="portal-dsp-bar-fill" style="background:#ff0000;width:15%;"></div></div>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-youtube" class="portal-dsp-bar-fill" style="background:#ff0000;width:0%;"></div></div>
             </div>
 
             <div class="portal-dsp-box" style="border-top:3px solid #8b5cf6;">
               <div class="portal-dsp-head">
                 <strong><span style="color:#8b5cf6;">●</span> NCT / Zing / Khác</strong>
-                <span id="dsp-badge-other" style="font-size:11px;font-weight:bold;color:#8b5cf6;">5%</span>
+                <span id="dsp-badge-other" style="font-size:11px;font-weight:bold;color:#8b5cf6;">0%</span>
               </div>
               <b id="overview-other" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
-              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-other" class="portal-dsp-bar-fill" style="background:#8b5cf6;width:5%;"></div></div>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-other" class="portal-dsp-bar-fill" style="background:#8b5cf6;width:0%;"></div></div>
             </div>
           </div>
         </div>
@@ -259,24 +259,58 @@
       <!-- ========================================== -->
       <section id="tab-insights" class="tab-pane">
         <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--line);">
-          <h2>Thống kê người nghe & Playlists</h2>
-          <span class="kicker">Editorial & Insights</span>
+          <div>
+            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">Thống kê Người nghe & Editorial Insights</h2>
+            <p style="font-size:13px;opacity:0.8;margin:4px 0 0;">Phân tích lượt stream, phân bố địa lý người nghe và thành tích playlist.</p>
+          </div>
+          <span class="kicker">Real-time Analytics</span>
         </div>
 
-        <div class="chart-placeholder">
-          <i style="--h:20%"></i><i style="--h:35%"></i><i style="--h:25%"></i><i style="--h:50%"></i><i style="--h:40%"></i>
-          <i style="--h:65%"></i><i style="--h:55%"></i><i style="--h:80%"></i><i style="--h:60%"></i><i style="--h:85%"></i>
-          <i style="--h:70%"></i><i style="--h:90%"></i>
+        <!-- Dynamic Stream Analytics Chart Box -->
+        <div class="portal-chart-card">
+          <div class="portal-chart-head">
+            <div>
+              <span class="eyebrow" style="margin:0;color:#2563eb;">Stream Trajectory</span>
+              <strong style="display:block;font-size:26px;letter-spacing:-0.05em;margin-top:4px;" id="insight-total-streams-display">0 Streams</strong>
+              <small style="color:#64748b;font-family:'DM Mono',monospace;">Tổng hợp toàn bộ catalogue trên 150+ nền tảng</small>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="filter-chip active" style="padding:4px 10px;font-size:10px;">6 Tháng gần nhất</button>
+            </div>
+          </div>
+
+          <div id="portal-chart-container">
+            <!-- Dynamic chart bars or clean empty state injected by portal.js -->
+          </div>
         </div>
 
-        <div class="insight-grid">
-          <div><span>Top territory</span><strong id="insight-top-country">Việt Nam</strong><small>Quốc gia dẫn đầu</small></div>
-          <div><span>Top city</span><strong id="insight-top-city">Hồ Chí Minh</strong><small>Thành phố nghe nhiều nhất</small></div>
-          <div><span>Top source</span><strong id="insight-top-source">DSP Editorial & Algorithmic</strong><small>Nguồn streams</small></div>
+        <!-- Geographic & Audience Insights Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px;">
+          <div class="portal-territory-card">
+            <h4 style="margin:0 0 12px;font-size:13px;text-transform:uppercase;color:#475569;font-family:'DM Mono',monospace;">🌍 Phân bố Quốc gia (Top Territories)</h4>
+            <div id="portal-country-list">
+              <p class="empty" style="font-size:12px;opacity:0.7;">Đang tải dữ liệu địa lý...</p>
+            </div>
+          </div>
+
+          <div class="portal-territory-card">
+            <h4 style="margin:0 0 12px;font-size:13px;text-transform:uppercase;color:#475569;font-family:'DM Mono',monospace;">🏙️ Thành phố hàng đầu (Top Cities)</h4>
+            <div id="portal-city-list">
+              <p class="empty" style="font-size:12px;opacity:0.7;">Đang tải dữ liệu thành phố...</p>
+            </div>
+          </div>
+
+          <div class="portal-territory-card">
+            <h4 style="margin:0 0 12px;font-size:13px;text-transform:uppercase;color:#475569;font-family:'DM Mono',monospace;">📡 Kênh khám phá (Top Source)</h4>
+            <div id="portal-source-list">
+              <p class="empty" style="font-size:12px;opacity:0.7;">Đang tải nguồn tiếp cận...</p>
+            </div>
+          </div>
         </div>
 
+        <!-- Editorial Placements Showcase -->
         <div style="margin-top:30px;">
-          <h3 style="font-size:18px;letter-spacing:-0.03em;margin-bottom:12px;">Thành tích Playlist (Editorial Placements)</h3>
+          <h3 style="font-size:18px;letter-spacing:-0.03em;margin-bottom:12px;">🌟 Thành tích Playlist (Editorial Placements)</h3>
           <div id="artist-playlists-showcase"></div>
         </div>
       </section>

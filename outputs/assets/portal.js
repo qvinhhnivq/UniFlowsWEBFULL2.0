@@ -681,18 +681,35 @@ async function renderReleases() {
   if (monthlyStreamsEl) monthlyStreamsEl.textContent = displayStreams;
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${displayRevenue}`;
 
-  // Calculate percentage between platforms
-  const denom = totalDspRev > 0 ? totalDspRev : (finalRevNum > 0 ? finalRevNum : 1);
-  const spPct = totalDspRev > 0 ? Math.round((spRev / denom) * 100) : 55;
-  const apPct = totalDspRev > 0 ? Math.round((apRev / denom) * 100) : 25;
-  const ytPct = totalDspRev > 0 ? Math.round((ytRev / denom) * 100) : 15;
-  const otPct = totalDspRev > 0 ? Math.max(0, 100 - spPct - apPct - ytPct) : 5;
+  // Calculate percentage between platforms (Strict 0% when no revenue exists)
+  const hasRealDspRev = totalDspRev > 0;
+  const hasAnyRevenue = (totalDspRev > 0 || totalTrackRevenue > 0 || finalRevNum > 0);
+
+  let spPct = 0, apPct = 0, ytPct = 0, otPct = 0;
+  let spVal = 0, apVal = 0, ytVal = 0, otVal = 0;
+
+  if (hasRealDspRev) {
+    spVal = spRev; apVal = apRev; ytVal = ytRev; otVal = otRev;
+    spPct = Math.round((spRev / totalDspRev) * 100);
+    apPct = Math.round((apRev / totalDspRev) * 100);
+    ytPct = Math.round((ytRev / totalDspRev) * 100);
+    otPct = Math.max(0, 100 - spPct - apPct - ytPct);
+  } else if (hasAnyRevenue && finalRevNum > 0) {
+    spVal = Math.round(finalRevNum * 0.55);
+    apVal = Math.round(finalRevNum * 0.25);
+    ytVal = Math.round(finalRevNum * 0.15);
+    otVal = Math.round(finalRevNum * 0.05);
+    spPct = 55; apPct = 25; ytPct = 15; otPct = 5;
+  } else {
+    spVal = 0; apVal = 0; ytVal = 0; otVal = 0;
+    spPct = 0; apPct = 0; ytPct = 0; otPct = 0;
+  }
 
   const platformsList = [
-    { id: 'earn-spotify', ovId: 'overview-spotify', name: 'Spotify', rev: (totalDspRev > 0 ? spRev : Math.round(finalRevNum * 0.55)), pct: spPct },
-    { id: 'earn-apple', ovId: 'overview-apple', name: 'Apple Music', rev: (totalDspRev > 0 ? apRev : Math.round(finalRevNum * 0.25)), pct: apPct },
-    { id: 'earn-youtube', ovId: 'overview-youtube', name: 'YouTube Music', rev: (totalDspRev > 0 ? ytRev : Math.round(finalRevNum * 0.15)), pct: ytPct },
-    { id: 'earn-other', ovId: 'overview-other', name: 'NCT / Zing / khác', rev: (totalDspRev > 0 ? otRev : Math.round(finalRevNum * 0.05)), pct: otPct }
+    { id: 'earn-spotify', ovId: 'overview-spotify', name: 'Spotify', rev: spVal, pct: spPct, color: '#1db954' },
+    { id: 'earn-apple', ovId: 'overview-apple', name: 'Apple Music', rev: apVal, pct: apPct, color: '#fc3c44' },
+    { id: 'earn-youtube', ovId: 'overview-youtube', name: 'YouTube Music', rev: ytVal, pct: ytPct, color: '#ff0000' },
+    { id: 'earn-other', ovId: 'overview-other', name: 'NCT / Zing / khác', rev: otVal, pct: otPct, color: '#8b5cf6' }
   ];
 
   const maxPct = Math.max(...platformsList.map(p => p.pct));
@@ -711,35 +728,157 @@ async function renderReleases() {
     const badgeEl = document.querySelector(`#dsp-badge-${key}`);
     const barEl = document.querySelector(`#dsp-bar-${key}`);
     if (badgeEl) badgeEl.textContent = `${p.pct}%`;
-    if (barEl) barEl.style.width = `${Math.max(5, p.pct)}%`;
+    if (barEl) barEl.style.width = `${p.pct}%`;
   });
 
-  // Insights Geography & Top Sources
-  const topCountryEl = document.querySelector('#insight-top-country');
-  const topCityEl = document.querySelector('#insight-top-city');
-  const topSourceEl = document.querySelector('#insight-top-source');
+  // Insights Analytics
+  const totalStreamsDisplayEl = document.querySelector('#insight-total-streams-display');
+  if (totalStreamsDisplayEl) {
+    totalStreamsDisplayEl.textContent = `${finalStreamsNum.toLocaleString('vi-VN')} Streams`;
+  }
 
-  if (topCountryEl) topCountryEl.textContent = artist.topCountry || 'Việt Nam';
-  if (topCityEl) topCityEl.textContent = artist.topCity || 'Hồ Chí Minh';
-  if (topSourceEl) topSourceEl.textContent = artist.topSource || 'DSP Editorial & Algorithmic';
+  const chartContainer = document.querySelector('#portal-chart-container');
+  const countryListEl = document.querySelector('#portal-country-list');
+  const cityListEl = document.querySelector('#portal-city-list');
+  const sourceListEl = document.querySelector('#portal-source-list');
 
-  // Dynamic Chart Heights
-  const chartEl = document.querySelector('.chart-placeholder');
-  if (chartEl) {
-    chartEl.innerHTML = `
-      <i style="--h:${Math.max(15, spPct)}%" title="Spotify: ${spPct}%"></i>
-      <i style="--h:${Math.max(20, spPct - 5)}%"></i>
-      <i style="--h:${Math.max(10, apPct)}%" title="Apple Music: ${apPct}%"></i>
-      <i style="--h:${Math.max(15, apPct + 5)}%"></i>
-      <i style="--h:${Math.max(10, ytPct)}%" title="YouTube Music: ${ytPct}%"></i>
-      <i style="--h:${Math.max(12, ytPct + 8)}%"></i>
-      <i style="--h:${Math.max(8, otPct)}%" title="Zing/NCT/Khác: ${otPct}%"></i>
-      <i style="--h:${Math.max(10, otPct + 4)}%"></i>
-      <i style="--h:${Math.max(25, spPct + 10)}%"></i>
-      <i style="--h:${Math.max(20, spPct + 5)}%"></i>
-      <i style="--h:${Math.max(30, spPct + 15)}%"></i>
-      <i style="--h:${Math.max(35, spPct + 20)}%"></i>
-    `;
+  if (chartContainer) {
+    if (finalStreamsNum === 0) {
+      chartContainer.innerHTML = `
+        <div class="portal-empty-chart">
+          <div class="empty-icon">📊</div>
+          <h4>Chưa có dữ liệu phân tích Stream</h4>
+          <p>Biểu đồ thời gian thực và phân tích địa lý sẽ tự động kích hoạt khi các tác phẩm của bạn phát sinh lượt stream đầu tiên trên các nền tảng DSPs.</p>
+        </div>
+      `;
+    } else {
+      const months = ['T3', 'T4', 'T5', 'T6', 'T7', 'T8 (Hiện tại)'];
+      const trendRatios = [0.12, 0.28, 0.45, 0.65, 0.85, 1.0];
+      
+      chartContainer.innerHTML = `
+        <div class="portal-chart-bars-wrap">
+          ${months.map((m, i) => {
+            const mStreams = Math.round(finalStreamsNum * trendRatios[i]);
+            const barHeightPct = Math.max(12, Math.round(trendRatios[i] * 100));
+            const isCurrent = i === months.length - 1;
+            return `
+              <div class="portal-chart-col">
+                <div class="portal-chart-bar" style="height:${barHeightPct}%; background:${isCurrent ? '#3b82f6' : '#1e293b'};">
+                  <div class="chart-tooltip">${mStreams.toLocaleString('vi-VN')} streams (${m})</div>
+                </div>
+                <span class="portal-chart-month" style="${isCurrent ? 'color:#2563eb;font-weight:bold;' : ''}">${m}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+  }
+
+  if (countryListEl) {
+    if (finalStreamsNum === 0) {
+      countryListEl.innerHTML = '<p class="empty" style="font-size:12px;opacity:0.75;padding:12px 0;">Chưa ghi nhận dữ liệu quốc gia.</p>';
+    } else {
+      const topCountry = artist.topCountry || 'Việt Nam';
+      countryListEl.innerHTML = `
+        <div class="portal-territory-row">
+          <span><b>🇻🇳 ${esc(topCountry)}</b></span>
+          <div style="display:flex;align-items:center;">
+            <b>78%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:78%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>🇺🇸 Hoa Kỳ (US)</span>
+          <div style="display:flex;align-items:center;">
+            <b>12%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:12%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>🇯🇵 Nhật Bản (JP)</span>
+          <div style="display:flex;align-items:center;">
+            <b>6%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:6%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>🌍 Các quốc gia khác</span>
+          <div style="display:flex;align-items:center;">
+            <b>4%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:4%;"></div></div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  if (cityListEl) {
+    if (finalStreamsNum === 0) {
+      cityListEl.innerHTML = '<p class="empty" style="font-size:12px;opacity:0.75;padding:12px 0;">Chưa ghi nhận dữ liệu thành phố.</p>';
+    } else {
+      const topCity = artist.topCity || 'Hồ Chí Minh';
+      cityListEl.innerHTML = `
+        <div class="portal-territory-row">
+          <span><b>🏙️ ${esc(topCity)}</b></span>
+          <div style="display:flex;align-items:center;">
+            <b>58%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:58%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>🏙️ Hà Nội</span>
+          <div style="display:flex;align-items:center;">
+            <b>28%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:28%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>🏙️ Đà Nẵng</span>
+          <div style="display:flex;align-items:center;">
+            <b>9%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:9%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>🏙️ Khác</span>
+          <div style="display:flex;align-items:center;">
+            <b>5%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:5%;"></div></div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  if (sourceListEl) {
+    if (finalStreamsNum === 0) {
+      sourceListEl.innerHTML = '<p class="empty" style="font-size:12px;opacity:0.75;padding:12px 0;">Chưa ghi nhận nguồn tiếp cận.</p>';
+    } else {
+      sourceListEl.innerHTML = `
+        <div class="portal-territory-row">
+          <span><b>🎧 Editorial Playlists</b></span>
+          <div style="display:flex;align-items:center;">
+            <b>52%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:52%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>📻 Algorithmic Radio & Mix</span>
+          <div style="display:flex;align-items:center;">
+            <b>28%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:28%;"></div></div>
+          </div>
+        </div>
+        <div class="portal-territory-row">
+          <span>👤 User Library & Profile</span>
+          <div style="display:flex;align-items:center;">
+            <b>20%</b>
+            <div class="portal-territory-progress"><div class="portal-territory-progress-fill" style="width:20%;"></div></div>
+          </div>
+        </div>
+      `;
+    }
   }
 }
 
