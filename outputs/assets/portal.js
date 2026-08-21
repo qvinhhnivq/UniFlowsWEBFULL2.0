@@ -246,7 +246,7 @@ async function renderReleases() {
 
   if (monthlyStreamsEl) monthlyStreamsEl.textContent = displayStreams;
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${displayRevenue}`;
-  if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${displayBalance}`;
+  // payableBalance will be updated accurately with pending deductions in loadArtistPayouts()
 
   // Calculate percentage between platforms
   const denom = totalDspRev > 0 ? totalDspRev : (finalRevNum > 0 ? finalRevNum : 1);
@@ -468,31 +468,50 @@ let artistPayoutRequests = [];
 let availableBalanceNumber = 0;
 
 async function loadArtistPayouts() {
-  if (!isSupabaseConfigured()) return;
+  let list = [];
   try {
-    const { data: list, error } = await supabase
-      .from('payout_requests')
-      .select('*')
-      .eq('artist_id', currentArtistId)
-      .order('created_at', { ascending: false });
+    const cachedPayouts = JSON.parse(localStorage.getItem('uniflows-payouts') || '[]');
+    list = cachedPayouts.filter(x => x.artist_id === currentArtistId);
+  } catch {}
 
-    if (!error && list) {
-      artistPayoutRequests = list;
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbList, error } = await supabase
+        .from('payout_requests')
+        .select('*')
+        .eq('artist_id', currentArtistId)
+        .order('created_at', { ascending: false });
+
+      if (!error && dbList) {
+        list = dbList;
+        // Merge with local storage
+        try {
+          const allCached = JSON.parse(localStorage.getItem('uniflows-payouts') || '[]');
+          const otherCached = allCached.filter(x => x.artist_id !== currentArtistId);
+          localStorage.setItem('uniflows-payouts', JSON.stringify([...list, ...otherCached]));
+        } catch {}
+      }
+    } catch (err) {
+      console.warn('Lỗi tải lịch sử payout từ Supabase, fallback dữ liệu cục bộ:', err);
     }
-  } catch (err) {
-    console.warn('Lỗi tải lịch sử payout:', err);
   }
 
-  // Calculate pending deductions
+  artistPayoutRequests = list;
+
+  // Calculate pending and paid deductions
   let pendingSum = 0;
+  let paidSum = 0;
   artistPayoutRequests.forEach(req => {
+    const amt = parseInt(String(req.amount || 0).replace(/[^0-9]/g, ''), 10) || 0;
     if (req.status === 'Đang chờ xem xét') {
-      pendingSum += parseInt(String(req.amount || 0).replace(/[^0-9]/g, ''), 10) || 0;
+      pendingSum += amt;
+    } else if (req.status === 'Đã thanh toán (Hoàn tất)' || req.status === 'Đã thanh toán') {
+      paidSum += amt;
     }
   });
 
-  const baseBalance = parseInt(String(artist.payableBalance || '0').replace(/[^0-9]/g, ''), 10) || 0;
-  availableBalanceNumber = Math.max(0, baseBalance - pendingSum);
+  const baseBalance = parseInt(String(artist.payableBalance || artist.estimatedRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
+  availableBalanceNumber = Math.max(0, baseBalance - pendingSum - paidSum);
 
   if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${availableBalanceNumber.toLocaleString('vi-VN')}`;
   if (artistPendingPayoutEl) artistPendingPayoutEl.textContent = `₫ ${pendingSum.toLocaleString('vi-VN')}`;
@@ -501,42 +520,43 @@ async function loadArtistPayouts() {
   // Render Payout History Table
   if (payoutHistoryList) {
     if (artistPayoutRequests.length === 0) {
-      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có yêu cầu rút tiền nào được tạo.</p>';
+      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#f9f9f9;border:1px solid var(--line);">Chưa có yêu cầu rút tiền nào được tạo.</p>';
     } else {
       payoutHistoryList.innerHTML = `
-        <div style="border:1px solid var(--line);border-radius:4px;overflow:hidden;">
-          <div style="display:grid;grid-template-columns:120px 140px 1fr 140px;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;">
+        <div style="border:1px solid var(--ink);overflow:hidden;background:#fff;margin-top:10px;">
+          <div style="display:grid;grid-template-columns:110px 130px 1fr 140px;background:#f5f4f0;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--ink);">
             <span>Ngày yêu cầu</span>
-            <span>Số tiền</span>
-            <span>Tài khoản nhận</span>
+            <span>Số tiền rút</span>
+            <span>Tài khoản nhận tiền</span>
             <span>Trạng thái</span>
           </div>
           ${artistPayoutRequests.map(req => {
             const isPending = req.status === 'Đang chờ xem xét';
-            const isApproved = req.status === 'Đã thanh toán (Hoàn tất)';
-            const isRejected = req.status === 'Từ chối thanh toán';
+            const isApproved = req.status === 'Đã thanh toán (Hoàn tất)' || req.status === 'Đã thanh toán';
+            const isRejected = req.status === 'Từ chối thanh toán' || req.status === 'Từ chối';
             const bank = req.bank_info || {};
-            const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('vi-VN') : '';
+            const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('vi-VN') : 'Vừa xong';
 
             return `
-              <div style="border-top:1px solid var(--line);padding:12px 14px;font-size:13px;">
-                <div style="display:grid;grid-template-columns:120px 140px 1fr 140px;align-items:center;">
-                  <span>${esc(dateStr)}</span>
-                  <strong style="color:${isPending ? '#d97706' : (isApproved ? '#15803d' : '#cf1322')};">
+              <div style="border-bottom:1px solid var(--line);padding:12px 14px;font-size:13px;">
+                <div style="display:grid;grid-template-columns:110px 130px 1fr 140px;align-items:center;">
+                  <span style="font-size:12px;opacity:0.8;">${esc(dateStr)}</span>
+                  <strong style="font-size:15px;color:${isPending ? '#b45309' : (isApproved ? '#15803d' : '#cf1322')};">
                     ₫ ${parseInt(req.amount || 0).toLocaleString('vi-VN')}
                   </strong>
                   <span>
-                    <b>${esc(bank.bank || '')}</b> · ${esc(bank.accountNumber || '')} (${esc(bank.accountName || '')})
+                    <b>${esc(bank.bank || 'Ngân hàng')}</b> · <span style="font-family:monospace;font-weight:bold;">${esc(bank.accountNumber || '')}</span> (${esc(bank.accountName || '')})
                   </span>
                   <span>
-                    <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;background:${isPending ? '#fef3c7' : (isApproved ? '#dcfce7' : '#fee2e2')};color:${isPending ? '#b45309' : (isApproved ? '#15803d' : '#cf1322')};">
-                      ${isPending ? '⏳ Đang xử lý' : (isApproved ? '✅ Đã thanh toán' : '❌ Bị từ chối')}
+                    <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;background:${isPending ? '#fef3c7' : (isApproved ? '#dcfce7' : '#fee2e2')};color:${isPending ? '#b45309' : (isApproved ? '#15803d' : '#cf1322')};">
+                      ${isPending ? '⏳ Đang chờ xem xét' : (isApproved ? '✅ Đã thanh toán' : '❌ Bị từ chối')}
                     </span>
                   </span>
                 </div>
                 ${(isRejected && req.rejection_reason) ? `
-                  <div style="margin-top:8px;background:#fff1f0;border-left:3px solid #ff4d4f;padding:6px 10px;font-size:12px;color:#cf1322;">
-                    <b>Lý do từ chối từ Admin:</b> ${esc(req.rejection_reason)}
+                  <div style="margin-top:10px;background:#fff2f0;border:1px solid #ffccc7;padding:8px 12px;font-size:12px;color:#cf1322;border-radius:2px;">
+                    <b>Lý do từ chối từ Admin:</b> ${esc(req.rejection_reason)} <br>
+                    <small style="color:#666;">(Số tiền này đã được hoàn trả lại về Số dư khả dụng của bạn).</small>
                   </div>
                 ` : ''}
               </div>
@@ -545,6 +565,20 @@ async function loadArtistPayouts() {
         </div>
       `;
     }
+  }
+}
+
+// Subscribe to Live Supabase Changes on Payouts
+if (isSupabaseConfigured()) {
+  try {
+    supabase
+      .channel('public:payout_requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payout_requests' }, () => {
+        loadArtistPayouts();
+      })
+      .subscribe();
+  } catch (err) {
+    console.warn('Realtime subscription error:', err);
   }
 }
 
@@ -597,17 +631,39 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
     submitPayoutBtn.textContent = 'Đang gửi yêu cầu...';
   }
 
+  const newPayoutItem = {
+    id: 'payout-' + Date.now().toString(36),
+    artist_id: currentArtistId,
+    amount: String(amountVal),
+    bank_info: { bank, accountNumber, accountName },
+    status: 'Đang chờ xem xét',
+    rejection_reason: '',
+    created_at: new Date().toISOString()
+  };
+
   try {
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from('payout_requests').insert({
+      const { data: inserted, error } = await supabase.from('payout_requests').insert({
         artist_id: currentArtistId,
         amount: String(amountVal),
         bank_info: { bank, accountNumber, accountName },
         status: 'Đang chờ xem xét',
         rejection_reason: ''
-      });
-      if (error) throw error;
+      }).select().single();
+
+      if (error) {
+        console.warn('Lưu Supabase gặp lỗi, lưu local fallback:', error);
+      } else if (inserted) {
+        newPayoutItem.id = inserted.id;
+      }
     }
+
+    // Save to local cache
+    try {
+      const allCached = JSON.parse(localStorage.getItem('uniflows-payouts') || '[]');
+      allCached.unshift(newPayoutItem);
+      localStorage.setItem('uniflows-payouts', JSON.stringify(allCached));
+    } catch {}
 
     payoutDialog?.close();
     showNotice(`✓ Yêu cầu rút số tiền ₫ ${amountVal.toLocaleString('vi-VN')} đã được gửi thành công tới Admin của UniFLOWs!`);

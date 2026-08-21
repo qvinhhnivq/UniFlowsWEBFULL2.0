@@ -67,10 +67,41 @@
         <button class="button alt" type="button" id="add-article">+ Đăng bài viết mới</button>
       </section>
 
-      <!-- Section 5: Yêu cầu rút tiền từ nghệ sĩ -->
+      <!-- Section 5: Quản lý & Lịch sử Yêu cầu rút tiền -->
       <section class="admin-section">
-        <h2>05 / Quản lý yêu cầu rút tiền từ Nghệ sĩ (Payout Queue)</h2>
-        <p class="portal-note">Xem các yêu cầu rút doanh thu từ nghệ sĩ, thông tin tài khoản ngân hàng, duyệt thanh toán hoặc từ chối kèm lý do.</p>
+        <h2>05 / Quản lý & Lịch sử Yêu cầu rút tiền (Payout Manager)</h2>
+        <p class="portal-note">Duyệt các yêu cầu rút tiền đang chờ, xem thông tin ngân hàng và tra cứu toàn bộ lịch sử thanh toán / từ chối.</p>
+        
+        <!-- Summary Stats Banner -->
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #fff; border: 1px solid var(--ink);">
+          <div>
+            <span style="font-size: 11px; text-transform: uppercase; font-weight: bold; opacity: 0.7; display: block;">Đang chờ duyệt</span>
+            <strong id="admin-pending-payout-count" style="font-size: 20px; color: #d97706;">0 yêu cầu</strong>
+            <small id="admin-pending-payout-total" style="display: block; font-size: 12px; opacity: 0.8;">₫ 0</small>
+          </div>
+          <div style="border-left: 1px solid var(--line); padding-left: 20px;">
+            <span style="font-size: 11px; text-transform: uppercase; font-weight: bold; opacity: 0.7; display: block;">Tổng tiền đã thanh toán</span>
+            <strong id="admin-total-paid-out" style="font-size: 20px; color: #15803d;">₫ 0</strong>
+            <small id="admin-paid-payout-count" style="display: block; font-size: 12px; opacity: 0.8;">0 giao dịch hoàn tất</small>
+          </div>
+          <div style="border-left: 1px solid var(--line); padding-left: 20px;">
+            <span style="font-size: 11px; text-transform: uppercase; font-weight: bold; opacity: 0.7; display: block;">Yêu cầu bị từ chối</span>
+            <strong id="admin-rejected-payout-count" style="font-size: 20px; color: #cf1322;">0 yêu cầu</strong>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
+          <label style="font-size: 12px; font-weight: bold;">Lọc theo trạng thái:</label>
+          <select id="admin-payout-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-weight: 600; font-size: 13px;">
+            <option value="all">Tất cả yêu cầu (Toàn bộ lịch sử)</option>
+            <option value="pending">⏳ Đang chờ xem xét</option>
+            <option value="approved">✅ Đã thanh toán (Hoàn tất)</option>
+            <option value="rejected">❌ Từ chối thanh toán</option>
+          </select>
+          <button type="button" id="admin-refresh-payouts-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Làm mới danh sách</button>
+        </div>
+
         <div id="payout-requests-reviewer">
           <p class="empty">Đang tải danh sách yêu cầu rút tiền...</p>
         </div>
