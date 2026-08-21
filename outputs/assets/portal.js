@@ -60,13 +60,52 @@ const currentArtistId = artist.id;
 sessionStorage.setItem('uniflows-artist-id', currentArtistId);
 sessionStorage.setItem('uniflows-artist-name', artist.name);
 
-// Render Artist Info, Stats & Contract Terms
+// Render Artist Info, Stats, Role & Contract Terms
 if (artist) {
   if (artistDisplayName) artistDisplayName.textContent = artist.name + '.';
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
   if (monthlyStreamsEl) monthlyStreamsEl.textContent = artist.monthlyStreams || '0';
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${artist.estimatedRevenue || '0'}`;
   if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${artist.payableBalance || '0'}`;
+
+  // Role Badge & Banner Setup
+  const roleBadgeEl = document.querySelector('#portal-role-badge');
+  const roleBannerEl = document.querySelector('#portal-role-banner');
+  const welcomeDescEl = document.querySelector('#portal-welcome-desc');
+
+  const roleMap = {
+    partner: { text: '🤝 ĐỐI TÁC CHIẾN LƯỢC (PARTNER)', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', desc: 'Bảng điều khiển đối tác: Xem số liệu thống kê & nhận doanh thu chia sẻ (Split Royalty) từ các bản phát hành có tham gia.' },
+    collab: { text: '✨ NGHỆ SĨ COLLAB (FEATURED)', bg: '#fdf4ff', color: '#86198f', border: '#f0abfc', desc: 'Bảng điều khiển nghệ sĩ Collab: Theo dõi stats và doanh thu từ các tác phẩm hợp tác theo thỏa thuận Split Royalty.' },
+    producer: { text: '🎛️ PRODUCER / NHẠC SĨ', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe', desc: 'Bảng điều khiển Producer: Theo dõi tác quyền beat, master và doanh thu phân bổ từ các bản phát hành.' },
+    manager: { text: '👔 QUẢN LÝ / ĐẠI DIỆN', bg: '#f1f5f9', color: '#334155', border: '#cbd5e1', desc: 'Bảng điều khiển quản lý: Theo dõi dòng tiền, đối soát và lịch sử phát hành của nghệ sĩ.' },
+    exclusive: { text: '⭐ NGHỆ SĨ ĐỘC QUYỀN', bg: '#fef3c7', color: '#b45309', border: '#fde68a', desc: 'Hồ sơ nghệ sĩ độc quyền UniFLOWs: Toàn quyền quản lý phát hành, catalogue và đối soát tài chính.' },
+    distribution: { text: '💿 NGHỆ SĨ PHÂN PHỐI', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', desc: 'Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP.' }
+  };
+
+  const currentRole = roleMap[artist.roleType] || roleMap.distribution;
+  if (roleBadgeEl) {
+    roleBadgeEl.style.display = 'inline-block';
+    roleBadgeEl.textContent = currentRole.text;
+    roleBadgeEl.style.background = currentRole.bg;
+    roleBadgeEl.style.color = currentRole.color;
+    roleBadgeEl.style.border = `1px solid ${currentRole.border}`;
+  }
+
+  if (roleBannerEl) {
+    if (artist.roleType === 'partner' || artist.roleType === 'collab' || artist.roleType === 'producer') {
+      roleBannerEl.style.display = 'block';
+      roleBannerEl.style.background = currentRole.bg;
+      roleBannerEl.style.color = currentRole.color;
+      roleBannerEl.style.border = `1px solid ${currentRole.border}`;
+      roleBannerEl.innerHTML = `<strong>${currentRole.text}:</strong> ${currentRole.desc}`;
+    } else {
+      roleBannerEl.style.display = 'none';
+    }
+  }
+
+  if (welcomeDescEl && currentRole.desc) {
+    welcomeDescEl.textContent = currentRole.desc;
+  }
 
   // Contract & Payout Cycle fields
   const overviewCycleEl = document.querySelector('#overview-payout-cycle');
@@ -76,8 +115,8 @@ if (artist) {
   const payoutNoteEl = document.querySelector('#contract-payout-note');
 
   const cycleText = artist.payoutCycle || 'Hàng tháng (Monthly)';
-  const royaltyText = artist.royaltyRate || '80% Master';
-  const contractText = artist.contractTerm || 'Hợp đồng độc quyền phân phối 2024 - 2027';
+  const royaltyText = artist.royaltyRate || (artist.roleType === 'partner' || artist.roleType === 'collab' ? 'Theo thỏa thuận Split từng bài' : '80% Master');
+  const contractText = artist.contractTerm || 'Hợp đồng phân phối âm nhạc 2024 - 2027';
 
   if (overviewCycleEl) overviewCycleEl.textContent = `Kỳ đối soát: ${cycleText}`;
   if (contractTermEl) contractTermEl.textContent = contractText;
@@ -323,6 +362,10 @@ function renderReleaseListItems() {
         ? `<span style="display:inline-block;padding:2px 8px;background:#fee2e2;color:#b91c1c;border-radius:10px;font-size:11px;font-weight:bold;">🔴 Yêu cầu gỡ</span>`
         : `<span style="display:inline-block;padding:2px 8px;background:#dcfce7;color:#15803d;border-radius:10px;font-size:11px;font-weight:bold;">🟢 Đã phát hành (Live)</span>`);
 
+    const splitBadge = p.isSplit
+      ? `<span style="display:inline-block;padding:2px 8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:10px;font-size:10px;font-weight:bold;">🤝 Split ${p.percentage}% (${esc(p.userRole)})</span>`
+      : '';
+
     return `
       <div class="queue-item" style="border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:110px 1fr auto auto;gap:15px;align-items:center;">
         <span>${esc(p.type || 'Single')}</span>
@@ -330,8 +373,9 @@ function renderReleaseListItems() {
           <strong style="font-size: 16px;">${esc(p.title)}</strong>
           <div style="font-size:12px;opacity:0.8;margin:4px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             ${statusBadge}
-            · <span style="background:#f3f3f3;padding:1px 6px;border-radius:3px;">Streams: <b>${p.streams || 0}</b></span>
-            · <span style="background:#e6f4ea;color:#137333;padding:1px 6px;border-radius:3px;font-weight:bold;">₫ ${p.revenue || 0}</span>
+            ${splitBadge}
+            · <span style="background:#f3f3f3;padding:1px 6px;border-radius:3px;">Streams bạn nhận: <b>${p.userStreams.toLocaleString('vi-VN')}</b></span>
+            · <span style="background:#e6f4ea;color:#137333;padding:1px 6px;border-radius:3px;font-weight:bold;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</span>
           </div>
           ${playlistsHtml}
         </div>
@@ -385,67 +429,145 @@ function renderReleaseListItems() {
 }
 
 async function renderReleases() {
-  let releases = artist.products || [];
+  let allRawReleases = [];
 
   if (isSupabaseConfigured()) {
     try {
       const { data: dbReleases, error } = await supabase
         .from('releases')
-        .select('*')
-        .eq('artist_id', currentArtistId)
+        .select('*, artists(name)')
         .order('created_at', { ascending: false });
 
       if (!error && dbReleases) {
-        releases = dbReleases.map(r => {
-          const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
-          return {
-            id: r.id,
-            title: r.title,
-            type: r.type,
-            slug: r.slug,
-            submissionStatus: r.submission_status || 'Đã phát hành',
-            audioUrl: r.audio_url,
-            artworkUrl: r.artwork_url,
-            links: r.links || {},
-            streams: meta.streams || '0',
-            revenue: meta.revenue || '0',
-            playlists: Array.isArray(meta.playlists) ? meta.playlists : []
-          };
-        });
+        allRawReleases = dbReleases;
       }
     } catch (e) {
-      console.warn('Lỗi tải release:', e);
+      console.warn('Lỗi tải releases từ Supabase:', e);
     }
   }
 
-  cachedFetchedReleases = releases;
+  // Fallback to cached local releases across artists if empty
+  if (allRawReleases.length === 0) {
+    (data.artists || []).forEach(art => {
+      (art.products || []).forEach(p => {
+        allRawReleases.push({
+          ...p,
+          artist_id: art.id,
+          artists: { name: art.name }
+        });
+      });
+    });
+  }
 
-  const pending = releases.filter(r => r.submissionStatus?.includes('chờ') || r.submissionStatus?.includes('Duyệt') || r.submissionStatus?.includes('gỡ')).length;
+  // Filter releases that the current artist participates in (as primary artist or in splits)
+  const participatingReleases = [];
+  let totalUserCalculatedRevenue = 0;
+  let totalUserCalculatedStreams = 0;
+
+  allRawReleases.forEach(r => {
+    const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+    const splits = Array.isArray(meta.splits) ? meta.splits : [];
+    
+    let isParticipant = false;
+    let percentage = 0;
+    let role = 'Nghệ sĩ';
+
+    const isPrimaryArtist = r.artist_id === currentArtistId;
+
+    if (isPrimaryArtist) {
+      isParticipant = true;
+      if (splits.length > 0) {
+        const mySplit = splits.find(s => s.artistId === currentArtistId);
+        percentage = mySplit ? (parseFloat(mySplit.percentage) || 0) : 100;
+        role = mySplit?.role || 'Nghệ sĩ chính';
+      } else {
+        percentage = 100;
+        role = 'Nghệ sĩ chính';
+      }
+    } else if (splits.length > 0) {
+      const mySplit = splits.find(s => s.artistId === currentArtistId || (s.artistName && s.artistName.toLowerCase() === artist.name.toLowerCase()));
+      if (mySplit && (parseFloat(mySplit.percentage) || 0) > 0) {
+        isParticipant = true;
+        percentage = parseFloat(mySplit.percentage) || 0;
+        role = mySplit.role || (artist.roleType === 'partner' ? 'Đối tác' : 'Collab / Feat');
+      }
+    }
+
+    if (isParticipant) {
+      const rawStreams = parseInt(String(meta.streams || r.streams || '0').replace(/[^0-9]/g, ''), 10) || 0;
+      const rawRevenue = parseInt(String(meta.revenue || r.revenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
+
+      const userStreams = Math.round(rawStreams * (percentage / 100));
+      const userRevenue = Math.round(rawRevenue * (percentage / 100));
+
+      totalUserCalculatedRevenue += userRevenue;
+      totalUserCalculatedStreams += userStreams;
+
+      participatingReleases.push({
+        id: r.id,
+        title: r.title,
+        type: r.type || 'Single',
+        slug: r.slug,
+        primaryArtistName: r.artists?.name || r.artist_id,
+        submissionStatus: r.submission_status || r.submissionStatus || 'Đã phát hành',
+        audioUrl: r.audio_url || r.audioUrl,
+        artworkUrl: r.artwork_url || r.artworkUrl,
+        links: r.links || {},
+        totalStreams: rawStreams,
+        totalRevenue: rawRevenue,
+        userStreams: userStreams,
+        userRevenue: userRevenue,
+        percentage: percentage,
+        userRole: role,
+        isSplit: percentage < 100 || !isPrimaryArtist,
+        playlists: Array.isArray(meta.playlists) ? meta.playlists : []
+      });
+    }
+  });
+
+  cachedFetchedReleases = participatingReleases;
+
+  // Update Overview stats for Collab / Partner automatically
+  if (artist.roleType === 'partner' || artist.roleType === 'collab' || artist.roleType === 'producer') {
+    if (monthlyStreamsEl && totalUserCalculatedStreams > 0) {
+      monthlyStreamsEl.textContent = totalUserCalculatedStreams.toLocaleString('vi-VN');
+    }
+    if (estimatedRevenueEl && totalUserCalculatedRevenue > 0) {
+      estimatedRevenueEl.textContent = `₫ ${totalUserCalculatedRevenue.toLocaleString('vi-VN')}`;
+    }
+  }
+
+  const pending = participatingReleases.filter(r => r.submissionStatus?.includes('chờ') || r.submissionStatus?.includes('Duyệt') || r.submissionStatus?.includes('gỡ')).length;
   if (pendingCountEl) pendingCountEl.textContent = String(pending).padStart(2, '0');
 
   // Render filter items
   renderReleaseListItems();
 
-  // 2. Render Track Earnings Breakdown table
+  // 2. Render Track Earnings Breakdown table with Split percentage
   const trackEarningsList = document.querySelector('#track-earnings-list');
   if (trackEarningsList) {
-    if (releases.length === 0) {
-      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#fff;border:1px solid var(--line);">Chưa có dữ liệu doanh thu chi tiết.</p>';
+    if (participatingReleases.length === 0) {
+      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;padding:12px;background:#fff;border:1px solid var(--line);">Chưa có dữ liệu doanh thu chi tiết từ các tác phẩm.</p>';
     } else {
       trackEarningsList.innerHTML = `
         <div style="border:1px solid var(--line);background:#fff;overflow:hidden;">
-          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--line);">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1fr 1.2fr;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--line);">
             <span>Tên bản phát hành</span>
             <span>Lượt Streams</span>
-            <span>Doanh thu ước tính</span>
-            <span>Đối soát</span>
+            <span>Tổng doanh thu</span>
+            <span>Tỷ lệ Split</span>
+            <span>Thực nhận</span>
           </div>
-          ${releases.map(p => `
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:12px 14px;border-top:1px solid var(--line);font-size:13px;align-items:center;">
-              <strong>${esc(p.title)}</strong>
-              <span>${esc(p.streams || '0')}</span>
-              <b style="color:#137333;">₫ ${esc(p.revenue || '0')}</b>
-              <span style="font-size:11px;color:#008800;font-weight:600;">✓ Đã đối soát</span>
+          ${participatingReleases.map(p => `
+            <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1fr 1.2fr;padding:12px 14px;border-top:1px solid var(--line);font-size:13px;align-items:center;">
+              <div>
+                <strong>${esc(p.title)}</strong>
+                <span style="display:block;font-size:11px;opacity:0.7;">${esc(p.primaryArtistName)} · ${esc(p.userRole)}</span>
+              </div>
+              <span>${p.totalStreams.toLocaleString('vi-VN')}</span>
+              <span style="opacity:0.8;">₫ ${p.totalRevenue.toLocaleString('vi-VN')}</span>
+              <b style="color:#2563eb;">${p.percentage}%</b>
+              <b style="color:#137333;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</b>
             </div>
           `).join('')}
         </div>
@@ -457,7 +579,7 @@ async function renderReleases() {
   const playlistShowcase = document.querySelector('#artist-playlists-showcase');
   if (playlistShowcase) {
     const allPlaylists = [];
-    releases.forEach(p => {
+    participatingReleases.forEach(p => {
       (p.playlists || []).forEach(pl => {
         allPlaylists.push({ track: p.title, playlist: pl });
       });
@@ -497,26 +619,24 @@ async function renderReleases() {
   // Track-based totals as fallback
   let totalTrackRevenue = 0;
   let totalTrackStreams = 0;
-  releases.forEach(r => {
-    const revNum = parseInt(String(r.revenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
-    const streamNum = parseInt(String(r.streams || '0').replace(/[^0-9]/g, ''), 10) || 0;
-    totalTrackRevenue += revNum;
-    totalTrackStreams += streamNum;
+  participatingReleases.forEach(r => {
+    totalTrackRevenue += (r.userRevenue || 0);
+    totalTrackStreams += (r.userStreams || 0);
   });
 
-  const finalRevNum = totalDspRev > 0
-    ? totalDspRev
-    : (totalTrackRevenue > 0 ? totalTrackRevenue : (parseInt(String(artist.estimatedRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0));
+  const finalRevNum = (artist.roleType === 'partner' || artist.roleType === 'collab' || artist.roleType === 'producer')
+    ? (totalTrackRevenue > 0 ? totalTrackRevenue : (parseInt(String(artist.estimatedRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0))
+    : (totalDspRev > 0 ? totalDspRev : (totalTrackRevenue > 0 ? totalTrackRevenue : (parseInt(String(artist.estimatedRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0)));
 
-  const finalStreamsNum = totalDspStreams > 0
-    ? totalDspStreams
-    : (totalTrackStreams > 0 ? totalTrackStreams : (parseInt(String(artist.monthlyStreams || '0').replace(/[^0-9]/g, ''), 10) || 0));
+  const finalStreamsNum = (artist.roleType === 'partner' || artist.roleType === 'collab' || artist.roleType === 'producer')
+    ? (totalTrackStreams > 0 ? totalTrackStreams : (parseInt(String(artist.monthlyStreams || '0').replace(/[^0-9]/g, ''), 10) || 0))
+    : (totalDspStreams > 0 ? totalDspStreams : (totalTrackStreams > 0 ? totalTrackStreams : (parseInt(String(artist.monthlyStreams || '0').replace(/[^0-9]/g, ''), 10) || 0)));
 
-  const displayRevenue = (artist.estimatedRevenue && artist.estimatedRevenue !== '0' && totalDspRev === 0)
+  const displayRevenue = (artist.estimatedRevenue && artist.estimatedRevenue !== '0' && totalDspRev === 0 && artist.roleType !== 'partner' && artist.roleType !== 'collab')
     ? artist.estimatedRevenue
     : (finalRevNum > 0 ? finalRevNum.toLocaleString('vi-VN') : '0');
 
-  const displayStreams = (artist.monthlyStreams && artist.monthlyStreams !== '0' && totalDspStreams === 0)
+  const displayStreams = (artist.monthlyStreams && artist.monthlyStreams !== '0' && totalDspStreams === 0 && artist.roleType !== 'partner' && artist.roleType !== 'collab')
     ? artist.monthlyStreams
     : (finalStreamsNum > 0 ? finalStreamsNum.toLocaleString('vi-VN') : '0');
 

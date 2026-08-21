@@ -253,7 +253,8 @@ export async function getData() {
               streams: meta.streams || '0',
               revenue: meta.revenue || '0',
               playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
-              metadata: r.metadata
+              splits: Array.isArray(meta.splits) ? meta.splits : [],
+              metadata: meta
             };
           })
         };

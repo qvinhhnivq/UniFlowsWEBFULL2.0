@@ -35,9 +35,9 @@
     <!-- Main Content Workspace -->
     <section class="portal-main">
       <header>
-        <span class="eyebrow">Distribution / Artist workspace</span>
-        <h1>Xin chào, <em id="artist-display-name">Nghệ sĩ.</em></h1>
-        <p>Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP.</p>
+        <span class="eyebrow">Distribution / Portal Workspace</span>
+        <h1>Xin chào, <em id="artist-display-name">Nghệ sĩ.</em> <span id="portal-role-badge" style="display:none; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 12px; vertical-align: middle; margin-left: 8px;"></span></h1>
+        <p id="portal-welcome-desc">Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP.</p>
       </header>
 
       <p id="portal-notice" class="notice" style="display: none;"></p>
@@ -46,6 +46,8 @@
       <!-- TAB 1: TỔNG QUAN (OVERVIEW) -->
       <!-- ========================================== -->
       <section id="tab-overview" class="tab-pane active">
+        <!-- Role Information Banner (For Partner & Collab) -->
+        <div id="portal-role-banner" style="display:none; margin-bottom: 20px; padding: 14px 18px; border-radius: 4px; font-size: 13px; line-height: 1.5;"></div>
         <div class="portal-stats">
           <div>
             <span>Streams tháng này</span>

@@ -208,6 +208,10 @@ function renderArtistSelector() {
     filteredArtists = data.artists.filter(a => a.showOnWeb !== false && a.showOnWeb !== 'false');
   } else if (typeFilter === 'private') {
     filteredArtists = data.artists.filter(a => a.showOnWeb === false || a.showOnWeb === 'false');
+  } else if (typeFilter === 'partner') {
+    filteredArtists = data.artists.filter(a => a.roleType === 'partner');
+  } else if (typeFilter === 'collab') {
+    filteredArtists = data.artists.filter(a => a.roleType === 'collab');
   }
 
   if (filteredArtists.length === 0) {
@@ -221,9 +225,17 @@ function renderArtistSelector() {
 
   artistSelectorGrid.innerHTML = filteredArtists.map((a) => {
     const isPublic = a.showOnWeb !== false && a.showOnWeb !== 'false';
-    const roleBadge = a.roleType === 'distribution' ? '💿 Phân phối' :
+    const roleBadge = a.roleType === 'partner' ? '🤝 Đối tác' :
+      (a.roleType === 'collab' ? '✨ Collab' :
       (a.roleType === 'producer' ? '🎛️ Producer' :
-      (a.roleType === 'manager' ? '👔 Quản lý' : '⭐ Độc quyền'));
+      (a.roleType === 'manager' ? '👔 Quản lý' :
+      (a.roleType === 'exclusive' ? '⭐ Độc quyền' : '💿 Phân phối'))));
+
+    const roleBg = a.roleType === 'partner' ? '#eff6ff; color:#1d4ed8' :
+      (a.roleType === 'collab' ? '#fdf4ff; color:#86198f' :
+      (a.roleType === 'producer' ? '#f5f3ff; color:#6d28d9' :
+      (a.roleType === 'manager' ? '#f1f5f9; color:#334155' :
+      (a.roleType === 'exclusive' ? '#fef3c7; color:#b45309' : '#f0fdf4; color:#15803d'))));
 
     return `
       <div class="artist-picker-card ${a.id === selectedArtistId ? 'active' : ''}" data-select-artist-id="${esc(a.id)}" style="position:relative;">
@@ -231,10 +243,12 @@ function renderArtistSelector() {
         <div style="flex:1;min-width:0;">
           <strong style="font-size: 13px; display: block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(a.name || 'Người dùng')}</strong>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;">
-            <span style="font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; background:${isPublic ? '#dbeafe' : '#fef3c7'}; color:${isPublic ? '#1e40af' : '#92400e'};">
+            <span style="font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; background:${isPublic ? '#dbeafe; color:#1e40af' : '#fef3c7; color:#92400e'};">
               ${isPublic ? '🌐 Web' : '🔒 Portal'}
             </span>
-            <span style="font-size: 9px; opacity: 0.75;">${esc(roleBadge)}</span>
+            <span style="font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; background:${roleBg};">
+              ${esc(roleBadge)}
+            </span>
           </div>
         </div>
       </div>
@@ -299,12 +313,15 @@ const artistEditor = (a, idx) => {
 
         <div class="field">
           <label style="font-weight:bold;color:#0369a1;">Phân loại tài khoản / Vai trò</label>
-          <select data-key="roleType" style="padding:10px;border:1px solid var(--ink);background:#fff;">
-            <option value="distribution" ${a.roleType === 'distribution' ? 'selected' : ''}>💿 Nghệ sĩ Phân phối (Distribution Client)</option>
+          <select data-key="roleType" style="padding:10px;border:1px solid var(--ink);background:#fff;font-weight:bold;">
+            <option value="partner" ${a.roleType === 'partner' ? 'selected' : ''}>🤝 Đối tác quan trọng (Strategic Partner)</option>
+            <option value="collab" ${a.roleType === 'collab' ? 'selected' : ''}>✨ Nghệ sĩ Collab / Khách mời (Collab / Featured Artist)</option>
             <option value="exclusive" ${a.roleType === 'exclusive' ? 'selected' : ''}>⭐ Nghệ sĩ Độc quyền (Exclusive Artist)</option>
-            <option value="producer" ${a.roleType === 'producer' ? 'selected' : ''}>🎛️ Producer / Nhạc sĩ (Producer Account)</option>
+            <option value="distribution" ${a.roleType === 'distribution' ? 'selected' : ''}>💿 Nghệ sĩ Phân phối (Distribution Client)</option>
+            <option value="producer" ${a.roleType === 'producer' ? 'selected' : ''}>🎛️ Producer / Beatmaker (Music Producer)</option>
             <option value="manager" ${a.roleType === 'manager' ? 'selected' : ''}>👔 Quản lý / Đại diện (Manager Account)</option>
           </select>
+          <small style="margin-top:4px;display:block;opacity:0.8;">Tài khoản Collab/Đối tác sẽ chỉ xem stats các bài mình có tham gia và hưởng doanh thu theo thỏa thuận Split.</small>
         </div>
       </div>
     </div>
@@ -776,6 +793,20 @@ async function loadReleasesQueue() {
           </div>
         </div>
 
+        <!-- Royalty Splits Section -->
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;margin:14px 0;border-radius:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h4 style="margin:0;font-size:12px;text-transform:uppercase;color:#166534;">🤝 Phân chia Doanh thu & Tác quyền (Royalty Splits)</h4>
+              <p style="margin:2px 0 0;font-size:11px;color:#15803d;">Cài đặt % chia doanh thu cho các nghệ sĩ tham gia (Collab) hoặc đối tác (Partner). Tài khoản được gán sẽ chỉ xem stats bài này theo đúng %.</p>
+            </div>
+            <button type="button" class="button alt add-split-btn" style="padding:4px 10px;font-size:11px;background:#fff;border:1px solid #166534;color:#166534;font-weight:bold;">+ Thêm đối tác / Collab</button>
+          </div>
+          <div class="splits-container" style="display:grid;gap:8px;">
+            ${renderSplitsList(r, meta.splits || [])}
+          </div>
+        </div>
+
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:10px;">
             <label style="font-size:12px;font-weight:bold;text-transform:uppercase;">Trạng thái:</label>
@@ -790,6 +821,85 @@ async function loadReleasesQueue() {
       </div>
     `;
   }).join('');
+
+  // Helper to render splits list
+  function renderSplitsList(releaseItem, splitsList = []) {
+    if (!Array.isArray(splitsList) || splitsList.length === 0) {
+      const mainA = data.artists.find(a => a.id === releaseItem.artist_id);
+      splitsList = [
+        {
+          artistId: releaseItem.artist_id,
+          artistName: mainA?.name || releaseItem.artist_id,
+          percentage: 100,
+          role: 'Nghệ sĩ chính (Main Artist)'
+        }
+      ];
+    }
+
+    return splitsList.map((s) => `
+      <div class="split-row" style="display:grid;grid-template-columns:2fr 1fr 1.5fr auto;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #cbd5e1;border-radius:3px;">
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Nghệ sĩ / Đối tác nhận tiền</label>
+          <select class="split-artist-select" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);background:#fff;">
+            <option value="">-- Chọn tài khoản --</option>
+            ${data.artists.map(a => `<option value="${esc(a.id)}" ${a.id === s.artistId ? 'selected' : ''}>${esc(a.name)} (${esc(a.id)})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Tỷ lệ Split (%)</label>
+          <input type="number" min="0" max="100" class="split-percent-input" value="${s.percentage !== undefined ? s.percentage : 0}" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="%">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Vai trò tham gia</label>
+          <input class="split-role-input" value="${esc(s.role || 'Collab / Feature')}" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="vd: Feat, Producer, Partner">
+        </div>
+        <div style="padding-top:16px;">
+          <button type="button" class="button alt remove-split-row-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Attach add split row handlers
+  releasesBox.querySelectorAll('.add-split-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('[data-release-id]');
+      const container = card?.querySelector('.splits-container');
+      if (!container) return;
+
+      const newRow = document.createElement('div');
+      newRow.className = 'split-row';
+      newRow.style = 'display:grid;grid-template-columns:2fr 1fr 1.5fr auto;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #cbd5e1;border-radius:3px;';
+      newRow.innerHTML = `
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Nghệ sĩ / Đối tác nhận tiền</label>
+          <select class="split-artist-select" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);background:#fff;">
+            <option value="">-- Chọn tài khoản --</option>
+            ${data.artists.map(a => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.id)})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Tỷ lệ Split (%)</label>
+          <input type="number" min="0" max="100" class="split-percent-input" value="20" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="%">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Vai trò tham gia</label>
+          <input class="split-role-input" value="Collab / Feature" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="vd: Feat, Producer, Partner">
+        </div>
+        <div style="padding-top:16px;">
+          <button type="button" class="button alt remove-split-row-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+        </div>
+      `;
+      newRow.querySelector('.remove-split-row-btn').onclick = () => newRow.remove();
+      container.appendChild(newRow);
+    });
+  });
+
+  releasesBox.querySelectorAll('.remove-split-row-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.target.closest('.split-row')?.remove();
+    });
+  });
 
   // Attach Artwork & Audio file upload handlers
   releasesBox.querySelectorAll('.rel-artwork-file-input').forEach(input => {
@@ -854,6 +964,19 @@ async function loadReleasesQueue() {
         zingmp3: card.querySelector('.rel-link-zing')?.value.trim() || ''
       };
 
+      // Read Splits
+      const splits = [];
+      card.querySelectorAll('.split-row').forEach(row => {
+        const sel = row.querySelector('.split-artist-select');
+        const artistId = sel?.value;
+        const artistName = sel?.selectedOptions[0]?.text?.split(' (')[0] || artistId;
+        const percentage = parseFloat(row.querySelector('.split-percent-input')?.value) || 0;
+        const role = row.querySelector('.split-role-input')?.value.trim() || 'Collab';
+        if (artistId && percentage > 0) {
+          splits.push({ artistId, artistName, percentage, role });
+        }
+      });
+
       btn.disabled = true; btn.textContent = 'Đang lưu...';
 
       if (isSupabaseConfigured()) {
@@ -862,7 +985,7 @@ async function loadReleasesQueue() {
           audio_url,
           submission_status: status,
           links,
-          metadata: { streams, revenue, playlists }
+          metadata: { streams, revenue, playlists, splits }
         }).eq('id', relId);
 
         if (error) {
@@ -1010,6 +1133,32 @@ document.querySelector('#add-portal-user')?.addEventListener('click', () => {
     payableBalance: '0',
     payoutCycle: 'Hàng tháng (Monthly)',
     royaltyRate: '80% Master',
+    contractTerm: '2024 - 2027'
+  });
+  selectedArtistId = newId;
+  render();
+});
+
+document.querySelector('#add-partner-user')?.addEventListener('click', () => {
+  const newId = 'partner-' + Date.now().toString(36);
+  data.artists.push({
+    id: newId,
+    name: 'Đối tác / Collab mới',
+    email: '',
+    showOnWeb: false,
+    roleType: 'partner',
+    genre: 'Partner / Collab',
+    image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
+    bio: 'Tài khoản đối tác / collab nhận chia doanh thu theo thỏa thuận Split từng bài hát.',
+    products: [],
+    instagram: '',
+    youtube: '',
+    tiktok: '',
+    monthlyStreams: '0',
+    estimatedRevenue: '0',
+    payableBalance: '0',
+    payoutCycle: 'Hàng tháng (Monthly)',
+    royaltyRate: 'Theo thỏa thuận Split từng bài',
     contractTerm: '2024 - 2027'
   });
   selectedArtistId = newId;
