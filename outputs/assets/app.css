@@ -26,29 +26,55 @@
 .artist-picker-card img{width:40px;height:40px;border-radius:50%;object-fit:cover;}
 
 /* ====================================================
-   UNIFLOWS x UNITEDMASTERS ELITE ARTIST PORTAL THEME
-   Dark Obsidian · Electric Volt Lime · Glassmorphism
+   UNIFLOWS EDITORIAL ARTIST PORTAL THEME
+   Classic Swiss Minimalism + Dynamic Dark Mode
    ==================================================== */
 :root {
-  --um-bg: #09090c;
-  --um-card: #12131a;
-  --um-card-hover: #181a24;
-  --um-card-border: rgba(255, 255, 255, 0.08);
-  --um-card-border-hover: rgba(216, 255, 72, 0.4);
-  --um-volt: #d8ff48;
-  --um-volt-hover: #e5ff70;
-  --um-volt-glow: rgba(216, 255, 72, 0.25);
-  --um-text-main: #f4f4f6;
-  --um-text-muted: #94a3b8;
-  --um-text-dim: #64748b;
-  --um-glass: rgba(18, 19, 26, 0.85);
+  --portal-bg: #f5f4f0;
+  --portal-card-bg: #ffffff;
+  --portal-card-border: #e5e4de;
+  --portal-card-border-hover: #0b0b0b;
+  --portal-text-main: #0b0b0b;
+  --portal-text-muted: #555555;
+  --portal-text-dim: #888888;
+  --portal-side-bg: #0e0e0e;
+  --portal-side-text: #ffffff;
+  --portal-side-muted: rgba(255, 255, 255, 0.65);
+  --portal-hover-bg: #eae9e3;
+  --portal-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  --portal-btn-bg: #0b0b0b;
+  --portal-btn-text: #ffffff;
+  --portal-btn-alt-bg: #ffffff;
+  --portal-btn-alt-text: #0b0b0b;
+  --portal-btn-alt-border: #d4d3cc;
+}
+
+[data-theme="dark"],
+.portal-body.dark-mode {
+  --portal-bg: #0f1015;
+  --portal-card-bg: #161720;
+  --portal-card-border: rgba(255, 255, 255, 0.09);
+  --portal-card-border-hover: rgba(216, 255, 72, 0.5);
+  --portal-text-main: #f4f4f6;
+  --portal-text-muted: #a1a1aa;
+  --portal-text-dim: #71717a;
+  --portal-side-bg: #0a0a0e;
+  --portal-side-text: #ffffff;
+  --portal-side-muted: rgba(255, 255, 255, 0.5);
+  --portal-hover-bg: #1f202b;
+  --portal-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --portal-btn-bg: #ffffff;
+  --portal-btn-text: #0b0b0b;
+  --portal-btn-alt-bg: #1c1d27;
+  --portal-btn-alt-text: #ffffff;
+  --portal-btn-alt-border: rgba(255, 255, 255, 0.15);
 }
 
 .portal-body {
-  background: var(--um-bg);
-  color: var(--um-text-main);
-  font-family: Manrope, -apple-system, BlinkMacSystemFont, sans-serif;
-  letter-spacing: -0.01em;
+  background: var(--portal-bg);
+  color: var(--portal-text-main);
+  font-family: Manrope, Arial, sans-serif;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 .portal {
@@ -57,104 +83,94 @@
   min-height: 100vh;
 }
 
-/* Sleek Obsidian Sidebar */
+/* Sidebar */
 .portal-side {
   position: sticky;
   top: 0;
   height: 100vh;
-  padding: 28px 20px;
-  background: #0c0d12;
-  border-right: 1px solid var(--um-card-border);
-  color: #fff;
+  padding: 26px 20px;
+  background: var(--portal-side-bg);
+  color: var(--portal-side-text);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .portal-side .brand {
-  font-size: 19px;
-  font-weight: 900;
-  letter-spacing: -0.05em;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   color: #fff;
-  display: block;
 }
 
 .portal-side .brand small {
-  display: block;
   font: 10px 'DM Mono', monospace;
   letter-spacing: 2px;
-  color: var(--um-volt);
+  color: var(--lime);
   margin-top: 4px;
 }
 
 .portal-side nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 25px 0 auto;
+  gap: 6px;
+  margin: 20px 0 auto;
 }
 
 .portal-side nav a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  color: var(--um-text-muted);
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--portal-side-muted);
   font-size: 13px;
   font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .portal-side nav a:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  transform: translateX(3px);
 }
 
 .portal-side nav a.active {
-  background: rgba(216, 255, 72, 0.08);
-  color: var(--um-volt);
-  border-left: 3px solid var(--um-volt);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
   font-weight: 700;
 }
 
 .portal-nav-badge {
-  font: 9px 'DM Mono', monospace;
-  padding: 3px 8px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  font: 10px 'DM Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
   margin-left: auto;
 }
 
 .portal-side nav a.active .portal-nav-badge {
-  background: var(--um-volt);
-  color: #000;
+  background: var(--lime);
+  color: #0b0b0b;
   font-weight: 800;
 }
 
 .sidebar-artist-footer {
   margin-top: auto;
-  padding-top: 18px;
-  border-top: 1px solid var(--um-card-border);
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 12px;
-  border-radius: 12px;
 }
 
 .sidebar-artist-footer img {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1.5px solid var(--um-volt);
-  box-shadow: 0 0 10px var(--um-volt-glow);
+  border: 1.5px solid var(--lime);
 }
 
 .sidebar-artist-info strong {
@@ -166,7 +182,7 @@
 
 .sidebar-artist-info small {
   font: 10px 'DM Mono', monospace;
-  color: var(--um-volt);
+  color: var(--lime);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -175,78 +191,74 @@
 /* Main Workspace */
 .portal-main {
   padding: 40px 4vw;
-  max-width: 1350px;
-  background: var(--um-bg);
+  max-width: 1300px;
+  background: var(--portal-bg);
 }
 
-/* UnitedMasters Signature Hero & Profile Bar */
+/* Artist Header Profile Bar */
 .portal-profile-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
   flex-wrap: wrap;
-  background: linear-gradient(135deg, #13141c 0%, #0d0e14 100%);
-  border: 1px solid var(--um-card-border);
-  border-radius: 20px;
-  padding: 28px 32px;
-  margin-bottom: 28px;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-  position: relative;
-  overflow: hidden;
-}
-
-.portal-profile-bar::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--um-volt), transparent);
-  opacity: 0.8;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--portal-shadow);
+  color: var(--portal-text-main);
+  transition: all 0.2s ease;
 }
 
 .portal-avatar-wrap {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 18px;
 }
 
 .portal-avatar-wrap img {
-  width: 76px;
-  height: 76px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--um-volt);
-  box-shadow: 0 0 20px var(--um-volt-glow);
+  border: 2px solid var(--ink);
+}
+
+[data-theme="dark"] .portal-avatar-wrap img {
+  border-color: var(--lime);
 }
 
 .portal-verified-pill {
   font: 10px 'DM Mono', monospace;
-  font-weight: 800;
-  color: #000;
-  background: var(--um-volt);
-  padding: 4px 12px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 3px 10px;
   border-radius: 20px;
   letter-spacing: 0.5px;
-  box-shadow: 0 0 12px var(--um-volt-glow);
 }
 
-/* Buttons (UnitedMasters Capsule Style) */
+[data-theme="dark"] .portal-verified-pill {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Standard Buttons */
 .button {
-  border: none;
-  background: var(--um-volt);
-  color: #000;
-  padding: 12px 24px;
-  font: 12px 'DM Mono', monospace;
-  font-weight: 800;
+  border: 1px solid var(--ink);
+  background: var(--portal-btn-bg);
+  color: var(--portal-btn-text);
+  padding: 12px 20px;
+  font: 11px 'DM Mono', monospace;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-radius: 9999px;
+  font-weight: 700;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px var(--um-volt-glow);
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -254,279 +266,267 @@
 }
 
 .button:hover {
-  background: var(--um-volt-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 26px rgba(216, 255, 72, 0.4);
+  background: var(--lime);
+  color: #0b0b0b;
+  border-color: var(--ink);
 }
 
 .button.alt {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: none;
+  background: var(--portal-btn-alt-bg);
+  color: var(--portal-btn-alt-text);
+  border: 1px solid var(--portal-btn-alt-border);
 }
 
 .button.alt:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-  color: #fff;
+  background: var(--portal-hover-bg);
 }
 
-/* 4-Card Performance Metrics (UnitedMasters Dark Glass) */
+/* 4 Metric Cards */
 .portal-grid-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px;
-  margin-bottom: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .portal-card-metric {
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
-  border-radius: 18px;
-  padding: 24px;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  border-radius: 14px;
+  padding: 22px 20px;
   position: relative;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 135px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  min-height: 125px;
+  box-shadow: var(--portal-shadow);
 }
 
 .portal-card-metric:hover {
-  transform: translateY(-3px);
-  border-color: var(--um-card-border-hover);
-  box-shadow: 0 14px 35px -5px rgba(0, 0, 0, 0.6);
-  background: var(--um-card-hover);
+  transform: translateY(-2px);
+  border-color: var(--portal-card-border-hover);
 }
 
 .portal-card-metric .metric-label {
   font: 11px 'DM Mono', monospace;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--um-text-muted);
+  color: var(--portal-text-muted);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .portal-card-metric .metric-val {
-  font-size: clamp(30px, 2.6vw, 42px);
-  font-weight: 900;
+  font-size: clamp(28px, 2.5vw, 38px);
+  font-weight: 800;
   letter-spacing: -0.05em;
-  margin: 12px 0 6px;
+  margin: 10px 0 4px;
   line-height: 1;
-  color: #fff;
+  color: var(--portal-text-main);
 }
 
 .portal-card-metric .metric-foot {
   font: 11px 'DM Mono', monospace;
-  color: var(--um-text-dim);
+  color: var(--portal-text-dim);
 }
 
-/* DSP Platform Distribution */
+/* DSP Platform Breakdown */
 .portal-dsp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .portal-dsp-box {
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
-  padding: 22px;
-  border-radius: 16px;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  padding: 20px;
+  border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--portal-shadow);
 }
 
 .portal-dsp-box:hover {
-  border-color: var(--um-volt);
   transform: translateY(-2px);
-  background: var(--um-card-hover);
 }
 
 .portal-dsp-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .portal-dsp-head strong {
   font-size: 14px;
-  color: #fff;
+  color: var(--portal-text-main);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .portal-dsp-box b {
-  color: #fff;
+  color: var(--portal-text-main);
 }
 
 .portal-dsp-bar-wrap {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.06);
   border-radius: 3px;
   overflow: hidden;
-  margin-top: 12px;
+  margin-top: 10px;
+}
+
+[data-theme="dark"] .portal-dsp-bar-wrap {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .portal-dsp-bar-fill {
   height: 100%;
   border-radius: 3px;
-  transition: width 0.5s ease;
+  transition: width 0.4s ease;
 }
 
-/* Release Cards & Catalogue Studio */
+/* Search Bar & Chips */
 .portal-search-bar-wrap {
   position: relative;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .portal-search-bar {
   width: 100%;
-  padding: 14px 18px 14px 44px;
-  border: 1px solid var(--um-card-border);
-  background: var(--um-card);
-  color: #fff;
-  border-radius: 12px;
+  padding: 12px 16px 12px 42px;
+  border: 1px solid var(--portal-card-border);
+  background: var(--portal-card-bg);
+  color: var(--portal-text-main);
+  border-radius: 10px;
   font-size: 14px;
   transition: all 0.2s ease;
 }
 
 .portal-search-bar:focus {
   outline: none;
-  border-color: var(--um-volt);
-  box-shadow: 0 0 0 3px var(--um-volt-glow);
-  background: var(--um-card-hover);
+  border-color: var(--ink);
+}
+
+[data-theme="dark"] .portal-search-bar:focus {
+  border-color: var(--lime);
 }
 
 .portal-search-icon {
   position: absolute;
-  left: 16px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 16px;
-  color: var(--um-text-dim);
+  color: var(--portal-text-dim);
 }
 
 .filter-chips {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin: 18px 0;
+  margin: 16px 0;
 }
 
 .filter-chip {
-  padding: 8px 18px;
-  border: 1px solid var(--um-card-border);
-  background: var(--um-card);
-  color: var(--um-text-muted);
+  padding: 7px 16px;
+  border: 1px solid var(--portal-card-border);
+  background: var(--portal-card-bg);
+  color: var(--portal-text-muted);
   font: 11px 'DM Mono', monospace;
   text-transform: uppercase;
-  border-radius: 9999px;
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .filter-chip:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--portal-hover-bg);
+  color: var(--portal-text-main);
 }
 
 .filter-chip.active {
-  background: var(--um-volt);
-  color: #000;
-  border-color: var(--um-volt);
-  font-weight: 800;
-  box-shadow: 0 0 16px var(--um-volt-glow);
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+  font-weight: 700;
 }
 
+[data-theme="dark"] .filter-chip.active {
+  background: #ffffff;
+  color: #0b0b0b;
+  border-color: #ffffff;
+}
+
+/* Release Cards */
 .portal-release-card {
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
-  padding: 20px 24px;
-  margin-bottom: 14px;
-  border-radius: 16px;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  padding: 18px 22px;
+  margin-bottom: 12px;
+  border-radius: 14px;
   display: grid;
-  grid-template-columns: 80px 1fr auto auto;
-  gap: 22px;
+  grid-template-columns: 72px 1fr auto auto;
+  gap: 20px;
   align-items: center;
-  transition: all 0.25s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  box-shadow: var(--portal-shadow);
 }
 
 .portal-release-card:hover {
-  border-color: var(--um-card-border-hover);
-  background: var(--um-card-hover);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  border-color: var(--portal-card-border-hover);
   transform: translateY(-2px);
 }
 
 .portal-release-thumb {
-  width: 80px;
-  height: 80px;
-  border-radius: 10px;
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
   object-fit: cover;
-  background: #1e1e24;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .portal-release-card strong {
-  color: #fff;
+  color: var(--portal-text-main);
 }
 
-/* Executive Financial Statement Card */
+/* Financial Statement Card */
 .financial-statement-card {
-  background: linear-gradient(135deg, #151620 0%, #0d0e14 100%);
-  border: 1px solid var(--um-card-border);
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  margin-bottom: 24px;
-  position: relative;
-  overflow: hidden;
-}
-
-.financial-statement-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  padding: 26px;
+  border-radius: 16px;
+  box-shadow: var(--portal-shadow);
+  margin-bottom: 22px;
 }
 
 .payout-flow-track {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-top: 22px;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--um-card-border);
+  margin-top: 18px;
+  background: var(--portal-hover-bg);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--portal-card-border);
 }
 
 .payout-flow-step {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font: 11px 'DM Mono', monospace;
-  color: var(--um-text-dim);
+  color: var(--portal-text-muted);
 }
 
 .payout-flow-step.active {
-  color: #fff;
+  color: var(--portal-text-main);
   font-weight: 700;
 }
 
@@ -534,110 +534,77 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #334155;
+  background: #cbd5e1;
 }
 
 .payout-flow-step.active .step-dot {
-  background: var(--um-volt);
-  box-shadow: 0 0 10px var(--um-volt);
+  background: #10b981;
 }
 
 .percentage-pills {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .percent-pill-btn {
-  padding: 6px 14px;
+  padding: 5px 12px;
   font: 11px 'DM Mono', monospace;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
+  background: var(--portal-hover-bg);
+  color: var(--portal-text-main);
+  border: 1px solid var(--portal-card-border);
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .percent-pill-btn:hover {
-  background: var(--um-volt);
-  color: #000;
-  border-color: var(--um-volt);
-  font-weight: 800;
-}
-
-.ledger-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.ledger-table th {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 14px 18px;
-  font: 11px 'DM Mono', monospace;
-  text-transform: uppercase;
-  color: var(--um-text-muted);
-  border-bottom: 1px solid var(--um-card-border);
-  text-align: left;
-}
-
-.ledger-table td {
-  padding: 16px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  font-size: 13px;
+  background: var(--ink);
   color: #fff;
-}
-
-.ledger-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
 }
 
 .earnings-table {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .earnings-table > div {
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
   padding: 22px;
-  border-radius: 16px;
+  border-radius: 14px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  box-shadow: var(--portal-shadow);
 }
 
 .earnings-table span {
   font: 11px 'DM Mono', monospace;
   text-transform: uppercase;
-  color: var(--um-text-muted);
+  color: var(--portal-text-muted);
 }
 
 .earnings-table b {
   font-size: 26px;
   letter-spacing: -0.05em;
-  color: #fff;
+  color: var(--portal-text-main);
 }
 
 .earnings-table small {
   font: 10px 'DM Mono', monospace;
-  color: var(--um-text-dim);
+  color: var(--portal-text-dim);
 }
 
-/* Analytics & Chart Card */
+/* Analytics Chart Card */
 .portal-chart-card {
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
-  padding: 28px;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  margin-top: 24px;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  padding: 26px;
+  border-radius: 16px;
+  box-shadow: var(--portal-shadow);
+  margin-top: 20px;
 }
 
 .portal-chart-head {
@@ -646,9 +613,9 @@
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 14px;
-  border-bottom: 1px solid var(--um-card-border);
-  padding-bottom: 18px;
-  margin-bottom: 22px;
+  border-bottom: 1px solid var(--portal-card-border);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .portal-chart-bars-wrap {
@@ -657,41 +624,57 @@
   gap: 12px;
   height: 200px;
   padding: 20px 10px 0;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--portal-text-main);
+  position: relative;
+}
+
+.portal-chart-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
   position: relative;
 }
 
 .portal-chart-bar {
   width: 100%;
-  max-width: 44px;
-  background: linear-gradient(180deg, var(--um-volt) 0%, rgba(216, 255, 72, 0.3) 100%);
+  max-width: 42px;
+  background: var(--ink);
   border-radius: 6px 6px 0 0;
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
 }
 
-.portal-chart-bar:hover {
-  background: #fff;
-  box-shadow: 0 0 15px #fff;
+[data-theme="dark"] .portal-chart-bar {
+  background: var(--lime);
+}
+
+.portal-chart-month {
+  font: 10px 'DM Mono', monospace;
+  color: var(--portal-text-dim);
+  margin-top: 8px;
+  text-transform: uppercase;
 }
 
 .portal-territory-card {
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: var(--portal-shadow);
 }
 
 .portal-territory-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--portal-card-border);
   font-size: 13px;
-  color: #fff;
+  color: var(--portal-text-main);
 }
 
 .portal-territory-row:last-child {
@@ -701,185 +684,305 @@
 .portal-territory-progress {
   width: 100px;
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.06);
   border-radius: 3px;
   overflow: hidden;
   margin-left: 12px;
 }
 
+[data-theme="dark"] .portal-territory-progress {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .portal-territory-progress-fill {
   height: 100%;
-  background: var(--um-volt);
+  background: #3b82f6;
   border-radius: 3px;
 }
 
-/* Service Cards (UnitedMasters Sync / A&R Desk) */
+/* Service Cards */
 .service-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-  margin-top: 22px;
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .service-card {
-  background: var(--um-card);
-  border: 1px solid var(--um-card-border);
-  padding: 26px;
-  border-radius: 18px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-card-border);
+  padding: 24px;
+  border-radius: 16px;
+  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--portal-shadow);
 }
 
 .service-card:hover {
-  border-color: var(--um-card-border-hover);
-  background: var(--um-card-hover);
-  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
+  border-color: var(--portal-card-border-hover);
 }
 
 .service-card h3 {
-  font-size: 18px;
-  color: #fff;
-  margin: 12px 0 6px;
+  font-size: 17px;
+  color: var(--portal-text-main);
+  margin: 10px 0 6px;
 }
 
 .service-card p {
   font-size: 13px;
-  color: var(--um-text-muted);
+  color: var(--portal-text-muted);
   line-height: 1.5;
-  margin: 0 0 18px;
+  margin: 0 0 16px;
 }
 
-/* Dialogs & Modals (Dark Obsidian Studio) */
+/* Modals & Dialogs */
+.release-dialog-shell {
+  border: 1px solid var(--portal-card-border);
+  padding: 0;
+  max-width: 880px;
+  width: 95%;
+  max-height: 92vh;
+  border-radius: 16px;
+  background: var(--portal-card-bg);
+  color: var(--portal-text-main);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.release-modal-header {
+  background: #0b0b0b;
+  color: #fff;
+  padding: 22px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.release-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #18181b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stepper-item {
+  padding: 14px 10px;
+  text-align: center;
+  font: 11px 'DM Mono', monospace;
+  text-transform: uppercase;
+  color: #71717a;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.stepper-item.active {
+  color: #fff;
+  border-bottom-color: #3b82f6;
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: bold;
+}
+
+.stepper-item.completed {
+  color: #10b981;
+}
+
+.stepper-item .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 10px;
+}
+
+.stepper-item.active .step-num {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.release-step-panel {
+  display: none;
+  padding: 28px;
+  max-height: calc(92vh - 190px);
+  overflow-y: auto;
+}
+
+.release-step-panel.active {
+  display: block;
+}
+
+.studio-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media(max-width: 768px) {
+  .studio-upload-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.studio-dropzone {
+  border: 2px dashed var(--portal-card-border);
+  background: var(--portal-hover-bg);
+  border-radius: 12px;
+  padding: 25px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: var(--portal-text-main);
+}
+
+.studio-dropzone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+.release-live-preview-card {
+  background: #0b0b0b;
+  color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-top: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.preview-art {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #222;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.release-modal-footer {
+  padding: 16px 28px;
+  background: var(--portal-hover-bg);
+  border-top: 1px solid var(--portal-card-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 dialog {
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  background: #0f1016 !important;
-  color: #fff !important;
-  border-radius: 20px !important;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8) !important;
+  border: 1px solid var(--portal-card-border) !important;
+  background: var(--portal-card-bg) !important;
+  color: var(--portal-text-main) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
 }
 
 dialog input,
 dialog select,
 dialog textarea {
-  background: #171822 !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #fff !important;
-  border-radius: 10px !important;
-}
-
-dialog input:focus,
-dialog select:focus,
-dialog textarea:focus {
-  outline: none;
-  border-color: var(--um-volt) !important;
-  box-shadow: 0 0 0 3px var(--um-volt-glow) !important;
+  background: var(--portal-card-bg) !important;
+  border: 1px solid var(--portal-card-border) !important;
+  color: var(--portal-text-main) !important;
+  border-radius: 8px !important;
 }
 
 /* Status Badges */
 .status-pill-receiving {
-  background: rgba(148, 163, 184, 0.12);
-  color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  padding: 4px 12px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 3px 10px;
   border-radius: 20px;
   font: 10px 'DM Mono', monospace;
   font-weight: 700;
 }
 
 .status-pill-processing {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  padding: 4px 12px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 3px 10px;
   border-radius: 20px;
   font: 10px 'DM Mono', monospace;
   font-weight: 700;
 }
 
 .status-pill-submitted {
-  background: rgba(59, 130, 246, 0.12);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  padding: 4px 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 3px 10px;
   border-radius: 20px;
   font: 10px 'DM Mono', monospace;
   font-weight: 700;
 }
 
 .status-pill-resolved {
-  background: rgba(216, 255, 72, 0.15);
-  color: var(--um-volt);
-  border: 1px solid rgba(216, 255, 72, 0.4);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font: 10px 'DM Mono', monospace;
-  font-weight: 800;
-}
-
-.status-pill-rejected {
-  background: rgba(244, 63, 94, 0.12);
-  color: #f43f5e;
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  padding: 4px 12px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 3px 10px;
   border-radius: 20px;
   font: 10px 'DM Mono', monospace;
   font-weight: 700;
 }
 
-/* AWAL / Stem / UnitedMasters Release Builder Dropzone */
-.release-dialog-shell {
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  background: #0d0e14 !important;
-  color: #fff !important;
-  border-radius: 20px !important;
+.status-pill-rejected {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font: 10px 'DM Mono', monospace;
+  font-weight: 700;
 }
 
-.release-modal-header {
-  background: #08080a;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.release-stepper {
-  background: #111218;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.stepper-item.active {
-  color: var(--um-volt);
-  border-bottom-color: var(--um-volt);
-  background: rgba(216, 255, 72, 0.04);
-}
-
-.stepper-item.active .step-num {
-  background: var(--um-volt);
-  color: #000;
-  font-weight: 800;
-}
-
-.studio-dropzone {
-  border: 2px dashed rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 16px;
+/* Theme Toggle Button in Sidebar */
+.theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: 11px 'DM Mono', monospace;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
 }
 
-.studio-dropzone:hover {
-  border-color: var(--um-volt);
-  background: rgba(216, 255, 72, 0.03);
-}
-
-.release-modal-footer {
-  background: #08080a;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 
