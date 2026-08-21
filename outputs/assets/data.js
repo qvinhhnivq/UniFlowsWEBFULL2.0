@@ -331,7 +331,6 @@ export async function saveData(data) {
       const artistPayload = {
         id: a.id,
         name: a.name,
-        email: a.email || '',
         genre: a.genre,
         image: a.image,
         bio: a.bio,
@@ -347,11 +346,13 @@ export async function saveData(data) {
 
       const { error: artistError } = await supabase.from('artists').upsert(artistPayload);
       if (artistError) {
+        console.warn('Lỗi upsert artist đầy đủ, thử lại với payload cơ bản:', artistError.message);
         delete artistPayload.stats;
         delete artistPayload.monthly_streams;
         delete artistPayload.estimated_revenue;
         delete artistPayload.payable_balance;
-        await supabase.from('artists').upsert(artistPayload);
+        const { error: retryError } = await supabase.from('artists').upsert(artistPayload);
+        if (retryError) console.error('Lỗi khi lưu nghệ sĩ lên Supabase:', retryError.message);
       }
     }
 

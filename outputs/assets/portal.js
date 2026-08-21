@@ -87,11 +87,13 @@ if (artist) {
 }
 
 // ----------------------------------------------------
-// OFFICIAL ANNOUNCEMENTS FROM LABEL BROADCAST
+// OFFICIAL ANNOUNCEMENTS FROM LABEL BROADCAST (COLLAPSIBLE)
 // ----------------------------------------------------
 function renderPortalAnnouncements(announcements = []) {
   const container = document.querySelector('#portal-announcements-list');
   const section = document.querySelector('#portal-announcements-section');
+  const toggleBtn = document.querySelector('#toggle-announcements-btn');
+  const dismissBtn = document.querySelector('#dismiss-announcements-btn');
   if (!container) return;
 
   const activeAnnouncements = (announcements || []).filter(a => a.active !== false);
@@ -100,6 +102,13 @@ function renderPortalAnnouncements(announcements = []) {
     if (section) section.style.display = 'none';
     return;
   }
+
+  // Check if dismissed in this session
+  if (sessionStorage.getItem('uniflows-announcements-dismissed') === 'true') {
+    if (section) section.style.display = 'none';
+    return;
+  }
+
   if (section) section.style.display = 'block';
 
   container.innerHTML = activeAnnouncements.map(ann => {
@@ -132,6 +141,34 @@ function renderPortalAnnouncements(announcements = []) {
       </div>
     `;
   }).join('');
+
+  // Handle Collapsed state
+  const isCollapsed = localStorage.getItem('uniflows-announcements-collapsed') === 'true';
+  if (isCollapsed) {
+    container.style.display = 'none';
+    if (toggleBtn) toggleBtn.textContent = 'Mở rộng ▼';
+  } else {
+    container.style.display = 'grid';
+    if (toggleBtn) toggleBtn.textContent = 'Thu gọn ▲';
+  }
+
+  toggleBtn?.addEventListener('click', () => {
+    const currentlyHidden = container.style.display === 'none';
+    if (currentlyHidden) {
+      container.style.display = 'grid';
+      toggleBtn.textContent = 'Thu gọn ▲';
+      localStorage.setItem('uniflows-announcements-collapsed', 'false');
+    } else {
+      container.style.display = 'none';
+      toggleBtn.textContent = 'Mở rộng ▼';
+      localStorage.setItem('uniflows-announcements-collapsed', 'true');
+    }
+  });
+
+  dismissBtn?.addEventListener('click', () => {
+    if (section) section.style.display = 'none';
+    sessionStorage.setItem('uniflows-announcements-dismissed', 'true');
+  });
 }
 
 renderPortalAnnouncements(data.announcements || defaultData?.announcements || []);

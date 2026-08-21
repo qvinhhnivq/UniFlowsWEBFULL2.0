@@ -238,7 +238,7 @@ function renderSelectedArtistEditor() {
 }
 
 const artistEditor = (a, idx) => `
-  <div class="item-editor" data-artist data-artist-id="${esc(a.id)}" style="background:#fff;border:2px solid var(--ink);padding:24px;margin-top:10px;">
+  <div class="item-editor" data-artist data-artist-id="${esc(a.id)}" data-artist-idx="${idx}" style="background:#fff;border:2px solid var(--ink);padding:24px;margin-top:10px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:12px;">
       <div>
         <span class="eyebrow" style="color:#2563eb;">Đang chỉnh sửa nghệ sĩ</span>
@@ -999,11 +999,29 @@ form.addEventListener('submit', async (e) => {
   data.announcements = customAnnouncements;
 
   // Update current edited artist data into state
+  const artistContainer = document.querySelector('[data-artist]');
+  const origArtistId = artistContainer?.dataset.artistId;
+  const artistIdxStr = artistContainer?.dataset.artistIdx;
   const editedArtistData = readItems('[data-artist]', 'artist')[0];
-  if (editedArtistData && editedArtistData.id) {
-    const existingIdx = data.artists.findIndex(a => a.id === editedArtistData.id);
-    if (existingIdx >= 0) {
-      data.artists[existingIdx] = { ...data.artists[existingIdx], ...editedArtistData };
+
+  if (editedArtistData) {
+    let targetIdx = -1;
+    if (artistIdxStr !== undefined && artistIdxStr !== '') {
+      targetIdx = parseInt(artistIdxStr, 10);
+    }
+    if ((targetIdx < 0 || targetIdx >= data.artists.length) && origArtistId) {
+      targetIdx = data.artists.findIndex(a => a.id === origArtistId);
+    }
+    if (targetIdx < 0 && selectedArtistId) {
+      targetIdx = data.artists.findIndex(a => a.id === selectedArtistId);
+    }
+
+    if (targetIdx >= 0 && targetIdx < data.artists.length) {
+      data.artists[targetIdx] = { ...data.artists[targetIdx], ...editedArtistData };
+      selectedArtistId = editedArtistData.id || data.artists[targetIdx].id;
+    } else if (editedArtistData.id || editedArtistData.name) {
+      data.artists.push(editedArtistData);
+      selectedArtistId = editedArtistData.id;
     }
   }
 

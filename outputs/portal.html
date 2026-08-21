@@ -75,13 +75,16 @@
 
         <!-- Label Official Announcements / Bảng tin Hãng Đĩa UniFLOWs -->
         <div id="portal-announcements-section" style="margin-bottom: 25px;">
-          <div style="background: #fff; border: 2px solid var(--ink); padding: 22px;">
+          <div style="background: #fff; border: 2px solid var(--ink); padding: 18px 22px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 18px;">📢</span>
                 <h3 style="font-size: 16px; margin: 0; text-transform: uppercase; letter-spacing: -0.02em; font-weight: bold;">Thông báo từ Hãng Đĩa UniFLOWs</h3>
               </div>
-              <span class="eyebrow" style="margin: 0; color: #b45309; font-weight: bold;">Label Broadcast</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" id="toggle-announcements-btn" class="button alt" style="padding: 4px 10px; font-size: 11px; cursor: pointer;">Thu gọn ▲</button>
+                <button type="button" id="dismiss-announcements-btn" class="button alt" style="padding: 4px 8px; font-size: 11px; cursor: pointer;" title="Tạm ẩn bảng thông báo">✕</button>
+              </div>
             </div>
             <div id="portal-announcements-list" style="display: grid; gap: 12px;">
               <p class="empty" style="font-size: 13px; opacity: 0.7;">Đang tải thông báo từ Label...</p>
