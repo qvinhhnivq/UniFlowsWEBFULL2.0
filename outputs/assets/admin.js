@@ -524,6 +524,12 @@ async function loadReleasesQueue() {
     return;
   }
 
+  releasesBox.innerHTML = filtered.map(r => {
+    const artistName = r.artists?.name || data.artists.find(a => a.id === r.artist_id)?.name || r.artist_id || 'Nghệ sĩ';
+    const status = r.submission_status || 'Đã phát hành';
+    const links = r.links || {};
+    const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+    const releaseSlug = r.slug || slug(r.title);
     const artworkPreview = r.artwork_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
 
     return `
@@ -678,12 +684,6 @@ async function loadReleasesQueue() {
           return;
         }
       }
-
-      btn.disabled = false; btn.textContent = 'Lưu bản phát hành';
-      showNotice('✓ Đã cập nhật bản phát hành & SmartLink thành công!');
-      loadReleasesQueue();
-    });
-  });
 
       btn.disabled = false; btn.textContent = 'Lưu bản phát hành';
       showNotice('✓ Đã cập nhật bản phát hành & SmartLink thành công!');
