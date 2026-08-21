@@ -108,10 +108,12 @@
       </section>
 
       <!-- Actions -->
-      <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10;">
-        <button class="button" type="submit" id="save-all-btn">Lưu toàn bộ lên Supabase</button>
-        <button class="button alt" type="button" id="logout">Đăng xuất</button>
-        <a class="button alt" href="/" target="_blank">Xem website ↗</a>
+      <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10; display: flex; gap: 12px; align-items: center;">
+        <button class="button" type="submit" id="save-all-btn" style="padding: 12px 24px; font-weight: bold;">Lưu toàn bộ lên Supabase</button>
+        <button class="button alt" type="button" id="logout" style="background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; font-weight: 700; padding: 12px 20px; margin-left: auto;">
+          <span>⏻</span> Đăng xuất
+        </button>
+        <a class="button alt" href="/" target="_blank" style="padding: 12px 20px;">Xem website ↗</a>
       </div>
     </form>
   </main>
