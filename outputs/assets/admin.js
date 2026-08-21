@@ -362,6 +362,132 @@ function attachArticleUploadEvents() {
   });
 }
 
+const payoutBox = document.querySelector('#payout-requests-reviewer');
+let payoutRequests = [];
+
+async function loadPayoutRequests() {
+  if (!payoutBox) return;
+  if (!isSupabaseConfigured()) {
+    payoutBox.innerHTML = '<p class="empty">Chế độ Demo.</p>';
+    return;
+  }
+  try {
+    const { data: dbPayouts, error } = await supabase
+      .from('payout_requests')
+      .select('*, artists(name)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    payoutRequests = dbPayouts || [];
+    if (payoutRequests.length === 0) {
+      payoutBox.innerHTML = '<p class="empty">Chưa có yêu cầu rút tiền nào từ nghệ sĩ.</p>';
+      return;
+    }
+
+    payoutBox.innerHTML = payoutRequests.map(req => {
+      const bank = req.bank_info || {};
+      const isPending = req.status === 'Đang chờ xem xét';
+      const isApproved = req.status === 'Đã thanh toán (Hoàn tất)';
+      const isRejected = req.status === 'Từ chối thanh toán';
+      const createdDate = req.created_at ? new Date(req.created_at).toLocaleString('vi-VN') : '';
+
+      return `
+        <div class="item-editor" data-payout-card="${req.id}" style="border:1px solid ${isPending ? '#d97706' : (isRejected ? '#ff4d4f' : '#16a34a')};padding:18px;margin-bottom:20px;background:${isPending ? '#fffbeb' : (isRejected ? '#fff2f0' : '#f0fdf4')};">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h3 style="margin:0 0 5px;font-size:22px;color:${isPending ? '#b45309' : (isRejected ? '#cf1322' : '#15803d')};">
+                ₫ ${parseInt(req.amount || 0).toLocaleString('vi-VN')}
+              </h3>
+              <strong>Nghệ sĩ: ${esc(req.artists?.name || req.artist_id)}</strong>
+              <br><small style="opacity:0.8">Thời gian yêu cầu: ${esc(createdDate)}</small>
+            </div>
+            <div>
+              <label style="font-size:11px;text-transform:uppercase;display:block;margin-bottom:4px;font-weight:bold;">Trạng thái xử lý:</label>
+              <select data-payout-status="${req.id}" style="padding:8px;border:1px solid #000;font-weight:600;">
+                <option value="Đang chờ xem xét" ${isPending ? 'selected' : ''}>⏳ Đang chờ xem xét</option>
+                <option value="Đã thanh toán (Hoàn tất)" ${isApproved ? 'selected' : ''}>✅ Đã thanh toán (Hoàn tất)</option>
+                <option value="Từ chối thanh toán" ${isRejected ? 'selected' : ''}>❌ Từ chối thanh toán</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background:#fff;padding:12px;margin:12px 0;border:1px solid #ddd;border-radius:4px;">
+            <div style="font-size:11px;text-transform:uppercase;font-weight:bold;color:#666;margin-bottom:6px;">Thông tin tài khoản nhận tiền:</div>
+            <div style="font-size:14px;line-height:1.6;">
+              🏦 <b>Ngân hàng:</b> ${esc(bank.bank || 'N/A')}<br>
+              💳 <b>Số tài khoản:</b> <span style="font-family:monospace;font-size:15px;font-weight:bold;letter-spacing:1px;">${esc(bank.accountNumber || 'N/A')}</span><br>
+              👤 <b>Chủ tài khoản:</b> <span style="text-transform:uppercase;font-weight:bold;">${esc(bank.accountName || 'N/A')}</span>
+            </div>
+          </div>
+
+          <div class="field" data-rejection-box="${req.id}" style="margin-top:10px;${isRejected ? 'display:block;' : 'display:none;'}">
+            <label style="color:#cf1322;font-weight:bold;">Lý do từ chối (Nghệ sĩ sẽ nhìn thấy lý do này trên Portal):</label>
+            <input data-payout-reason="${req.id}" value="${esc(req.rejection_reason || '')}" placeholder="Ví dụ: Sai số tài khoản, chưa đủ kỳ đối soát..." style="border:1px solid #ff4d4f;">
+          </div>
+
+          <div style="display:flex;justify-content:space-between;margin-top:14px;align-items:center;border-top:1px solid rgba(0,0,0,0.1);padding-top:12px;">
+            <button class="button" type="button" data-save-payout="${req.id}" style="padding:8px 14px;font-size:11px;">Lưu cập nhật</button>
+            <button class="button alt remove" type="button" data-delete-payout="${req.id}" style="padding:8px 14px;font-size:11px;">Xóa yêu cầu</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    attachPayoutEvents();
+  } catch (err) {
+    payoutBox.innerHTML = `<p class="empty">Lỗi tải yêu cầu rút tiền: ${err.message}</p>`;
+  }
+}
+
+function attachPayoutEvents() {
+  payoutBox.querySelectorAll('[data-payout-status]').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const payoutId = e.target.dataset.payoutStatus;
+      const reasonBox = payoutBox.querySelector(`[data-rejection-box="${payoutId}"]`);
+      if (reasonBox) {
+        reasonBox.style.display = (e.target.value === 'Từ chối thanh toán') ? 'block' : 'none';
+      }
+    });
+  });
+
+  payoutBox.querySelectorAll('[data-save-payout]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const payoutId = e.target.dataset.savePayout;
+      const card = payoutBox.querySelector(`[data-payout-card="${payoutId}"]`);
+      if (!card) return;
+
+      const status = card.querySelector(`[data-payout-status="${payoutId}"]`)?.value;
+      const rejection_reason = card.querySelector(`[data-payout-reason="${payoutId}"]`)?.value.trim() || '';
+
+      btn.disabled = true; btn.textContent = 'Đang lưu...';
+      const { error } = await supabase.from('payout_requests').update({
+        status,
+        rejection_reason
+      }).eq('id', payoutId);
+
+      btn.disabled = false; btn.textContent = 'Lưu cập nhật';
+      if (error) alert('Lỗi: ' + error.message);
+      else {
+        showNotice(`✓ Đã cập nhật trạng thái yêu cầu rút tiền: "${status}"`);
+        loadPayoutRequests();
+      }
+    });
+  });
+
+  payoutBox.querySelectorAll('[data-delete-payout]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      if (!confirm('Xóa yêu cầu rút tiền này?')) return;
+      btn.disabled = true;
+      const { error } = await supabase.from('payout_requests').delete().eq('id', e.target.dataset.deletePayout);
+      if (error) alert('Lỗi: ' + error.message);
+      else {
+        showNotice('✓ Đã xóa yêu cầu rút tiền!');
+        loadPayoutRequests();
+      }
+    });
+  });
+}
+
 function render() {
   ['tagline', 'heroText', 'aboutTitle', 'aboutText', 'city'].forEach(k => {
     if (form.elements[k]) form.elements[k].value = data[k] || '';
@@ -371,6 +497,7 @@ function render() {
   articlesBox.innerHTML = data.articles.map(articleEditor).join('');
   attachArticleUploadEvents();
   loadReleasesQueue();
+  loadPayoutRequests();
 }
 
 function readItems(selector, kind) {

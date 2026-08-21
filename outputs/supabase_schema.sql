@@ -108,6 +108,17 @@ create table public.articles (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 1.6. BẢNG PAYOUT_REQUESTS (YÊU CẦU RÚT TIỀN TỪ NGHỆ SĨ)
+create table public.payout_requests (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  amount text not null,
+  bank_info jsonb default '{}'::jsonb,
+  status text default 'Đang chờ xem xét',
+  rejection_reason text default '',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- ==============================================================================
 -- 2. STORAGE BUCKETS (LƯU TRỮ AUDIO & ARTWORK)
 -- ==============================================================================
@@ -146,18 +157,21 @@ alter table public.site_settings enable row level security;
 alter table public.artists enable row level security;
 alter table public.releases enable row level security;
 alter table public.articles enable row level security;
+alter table public.payout_requests enable row level security;
 
 create policy "Cho phép đọc công khai site_settings" on public.site_settings for select using (true);
 create policy "Cho phép đọc công khai artists" on public.artists for select using (true);
 create policy "Cho phép đọc công khai releases" on public.releases for select using (true);
 create policy "Cho phép đọc công khai articles" on public.articles for select using (true);
 create policy "Cho phép đọc profile" on public.profiles for select using (true);
+create policy "Cho phép đọc payout_requests" on public.payout_requests for select using (true);
 
 create policy "Toàn quyền quản trị site_settings" on public.site_settings for all using (true) with check (true);
 create policy "Toàn quyền quản trị artists" on public.artists for all using (true) with check (true);
 create policy "Toàn quyền quản trị releases" on public.releases for all using (true) with check (true);
 create policy "Toàn quyền quản trị articles" on public.articles for all using (true) with check (true);
 create policy "Toàn quyền quản trị profiles" on public.profiles for all using (true) with check (true);
+create policy "Toàn quyền quản trị payout_requests" on public.payout_requests for all using (true) with check (true);
 
 -- ==============================================================================
 -- 4. SEED DATA MẪU BAN ĐẦU

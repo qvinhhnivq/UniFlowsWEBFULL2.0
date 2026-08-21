@@ -16,7 +16,8 @@
         <a href="#earnings">Doanh thu</a>
         <a href="#insights">Thống kê</a>
         <a href="#support">Hỗ trợ</a>
-        <button id="artist-logout" class="button alt" style="margin-top:2rem;width:100%;font-size:0.8rem;padding:0.6rem;">Đăng xuất ⏻</button>
+        <button id="open-password-dialog-btn" class="button alt" style="margin-top:1.5rem;width:100%;font-size:0.75rem;padding:0.5rem;">🔒 Đổi mật khẩu</button>
+        <button id="artist-logout" class="button alt" style="margin-top:0.5rem;width:100%;font-size:0.75rem;padding:0.5rem;">Đăng xuất ⏻</button>
       </nav>
       <small>Artist workspace<br>Connected to UniFLOWs Server</small>
     </aside>
@@ -136,8 +137,16 @@
       <section id="earnings" class="portal-section">
         <div class="section-head"><h2>Doanh thu</h2><span class="kicker">Estimated / tháng này</span></div>
         <div class="payout-banner">
-          <span>Số dư có thể thanh toán</span>
-          <strong id="artist-payable-balance">₫ 0</strong>
+          <div style="display:flex;gap:30px;flex-wrap:wrap;align-items:center;">
+            <div>
+              <span>Số dư khả dụng</span>
+              <strong id="artist-payable-balance">₫ 0</strong>
+            </div>
+            <div>
+              <span>Đang xử lý rút</span>
+              <strong id="artist-pending-payout" style="color:#d97706;">₫ 0</strong>
+            </div>
+          </div>
           <button class="button" id="request-payout-btn">Yêu cầu thanh toán</button>
           <small>Ngưỡng thanh toán tối thiểu: ₫ 1,000,000 · Kỳ đối soát: Cuối mỗi tháng</small>
         </div>
@@ -146,6 +155,10 @@
           <div><span>Apple Music</span><b id="earn-apple">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
           <div><span>YouTube Music</span><b id="earn-youtube">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
           <div><span>NCT / Zing / khác</span><b id="earn-other">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
+        </div>
+        <div style="margin-top:25px;">
+          <h3 style="font-size:16px;letter-spacing:-0.03em;margin-bottom:10px;">Lịch sử & Trạng thái yêu cầu rút tiền</h3>
+          <div id="payout-history-list"></div>
         </div>
         <div style="margin-top:25px;">
           <h3 style="font-size:16px;letter-spacing:-0.03em;margin-bottom:10px;">Báo cáo chi tiết theo từng bài hát</h3>
@@ -178,10 +191,61 @@
         <span class="eyebrow">Need help?</span>
         <h2>Hãy nói với đội ngũ UniFLOWs.</h2>
         <p>Metadata, pitching, quyền sở hữu, báo cáo hoặc thanh toán — gửi yêu cầu để team hỗ trợ.</p>
-        <a href="mailto:demos@uniflowslabel.com" class="button">Liên hệ Distribution team</a>
+        <a href="mailto:distribution@uniflowslabel.com" class="button">Liên hệ Distribution team</a>
       </section>
     </section>
   </main>
+
+  <!-- Modal Đổi Mật Khẩu -->
+  <dialog id="password-dialog" style="border:1px solid var(--ink);padding:24px;max-width:380px;width:90%;background:#fff;box-shadow:0 12px 36px rgba(0,0,0,0.18);">
+    <h3 style="margin-top:0;font-size:18px;text-transform:uppercase;letter-spacing:-0.02em;">Đổi mật khẩu mới</h3>
+    <p style="font-size:12px;opacity:0.8;margin-bottom:15px;">Mật khẩu mới sẽ áp dụng ngay cho tài khoản nghệ sĩ của bạn.</p>
+    <p id="password-notice" class="notice" style="display:none;margin-bottom:12px;"></p>
+    <form id="change-password-form">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="new-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mật khẩu mới</label>
+        <input id="new-password" type="password" required minlength="6" placeholder="Tối thiểu 6 ký tự" style="width:100%;padding:10px;border:1px solid var(--ink);">
+      </div>
+      <div class="field" style="margin-bottom:18px;">
+        <label for="confirm-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Xác nhận mật khẩu</label>
+        <input id="confirm-password" type="password" required minlength="6" placeholder="Nhập lại mật khẩu mới" style="width:100%;padding:10px;border:1px solid var(--ink);">
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" id="close-password-dialog-btn" class="button alt" style="padding:8px 14px;font-size:11px;">Hủy</button>
+        <button type="submit" id="save-password-submit-btn" class="button" style="padding:8px 14px;font-size:11px;">Lưu mật khẩu</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal Yêu Cầu Rút Tiền -->
+  <dialog id="payout-dialog" style="border:1px solid var(--ink);padding:26px;max-width:440px;width:90%;background:#fff;box-shadow:0 14px 40px rgba(0,0,0,0.2);">
+    <h3 style="margin-top:0;font-size:18px;text-transform:uppercase;letter-spacing:-0.02em;">Yêu cầu thanh toán doanh thu</h3>
+    <p style="font-size:12px;opacity:0.8;margin-bottom:15px;">Số tiền yêu cầu rút sẽ được chuyển sang trạng thái <em>"Đang xử lý"</em> và gửi thông báo tới Admin.</p>
+    <p id="payout-dialog-notice" class="notice" style="display:none;margin-bottom:12px;"></p>
+    <form id="payout-request-form">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="payout-amount" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Số tiền muốn rút (₫)</label>
+        <input id="payout-amount" type="number" min="1000000" step="10000" required placeholder="Tối thiểu 1,000,000" style="width:100%;padding:10px;border:1px solid var(--ink);font-weight:bold;">
+        <small style="font-size:11px;opacity:0.7;display:block;margin-top:4px;">Số dư khả dụng hiện tại: <b id="dialog-available-balance">₫ 0</b></small>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label for="payout-bank" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Ngân hàng nhận tiền</label>
+        <input id="payout-bank" required placeholder="Ví dụ: Vietcombank, Techcombank, MB Bank..." style="width:100%;padding:10px;border:1px solid var(--ink);">
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label for="payout-account-number" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Số tài khoản</label>
+        <input id="payout-account-number" required placeholder="Ví dụ: 1029384756..." style="width:100%;padding:10px;border:1px solid var(--ink);">
+      </div>
+      <div class="field" style="margin-bottom:18px;">
+        <label for="payout-account-name" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Tên chủ tài khoản (In hoa không dấu)</label>
+        <input id="payout-account-name" required placeholder="Ví dụ: NGUYEN VAN A" style="width:100%;padding:10px;border:1px solid var(--ink);text-transform:uppercase;">
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" id="close-payout-dialog-btn" class="button alt" style="padding:8px 14px;font-size:11px;">Hủy</button>
+        <button type="submit" id="submit-payout-btn" class="button" style="padding:8px 14px;font-size:11px;">Gửi yêu cầu rút tiền</button>
+      </div>
+    </form>
+  </dialog>
 
   <script type="module" src="assets/portal.js"></script>
 </body>

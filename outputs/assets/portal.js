@@ -454,13 +454,174 @@ form?.addEventListener('submit', async (e) => {
   }
 });
 
-// Payout button handler
+// Payout Dialog & History Logic
+const payoutDialog = document.querySelector('#payout-dialog');
+const closePayoutDialogBtn = document.querySelector('#close-payout-dialog-btn');
+const payoutRequestForm = document.querySelector('#payout-request-form');
+const payoutDialogNotice = document.querySelector('#payout-dialog-notice');
+const submitPayoutBtn = document.querySelector('#submit-payout-btn');
+const artistPendingPayoutEl = document.querySelector('#artist-pending-payout');
+const dialogAvailableBalanceEl = document.querySelector('#dialog-available-balance');
+const payoutHistoryList = document.querySelector('#payout-history-list');
+
+let artistPayoutRequests = [];
+let availableBalanceNumber = 0;
+
+async function loadArtistPayouts() {
+  if (!isSupabaseConfigured()) return;
+  try {
+    const { data: list, error } = await supabase
+      .from('payout_requests')
+      .select('*')
+      .eq('artist_id', currentArtistId)
+      .order('created_at', { ascending: false });
+
+    if (!error && list) {
+      artistPayoutRequests = list;
+    }
+  } catch (err) {
+    console.warn('Lỗi tải lịch sử payout:', err);
+  }
+
+  // Calculate pending deductions
+  let pendingSum = 0;
+  artistPayoutRequests.forEach(req => {
+    if (req.status === 'Đang chờ xem xét') {
+      pendingSum += parseInt(String(req.amount || 0).replace(/[^0-9]/g, ''), 10) || 0;
+    }
+  });
+
+  const baseBalance = parseInt(String(artist.payableBalance || '0').replace(/[^0-9]/g, ''), 10) || 0;
+  availableBalanceNumber = Math.max(0, baseBalance - pendingSum);
+
+  if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${availableBalanceNumber.toLocaleString('vi-VN')}`;
+  if (artistPendingPayoutEl) artistPendingPayoutEl.textContent = `₫ ${pendingSum.toLocaleString('vi-VN')}`;
+  if (dialogAvailableBalanceEl) dialogAvailableBalanceEl.textContent = `₫ ${availableBalanceNumber.toLocaleString('vi-VN')}`;
+
+  // Render Payout History Table
+  if (payoutHistoryList) {
+    if (artistPayoutRequests.length === 0) {
+      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có yêu cầu rút tiền nào được tạo.</p>';
+    } else {
+      payoutHistoryList.innerHTML = `
+        <div style="border:1px solid var(--line);border-radius:4px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:120px 140px 1fr 140px;background:#f5f5f5;padding:10px 14px;font-weight:bold;font-size:11px;text-transform:uppercase;">
+            <span>Ngày yêu cầu</span>
+            <span>Số tiền</span>
+            <span>Tài khoản nhận</span>
+            <span>Trạng thái</span>
+          </div>
+          ${artistPayoutRequests.map(req => {
+            const isPending = req.status === 'Đang chờ xem xét';
+            const isApproved = req.status === 'Đã thanh toán (Hoàn tất)';
+            const isRejected = req.status === 'Từ chối thanh toán';
+            const bank = req.bank_info || {};
+            const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('vi-VN') : '';
+
+            return `
+              <div style="border-top:1px solid var(--line);padding:12px 14px;font-size:13px;">
+                <div style="display:grid;grid-template-columns:120px 140px 1fr 140px;align-items:center;">
+                  <span>${esc(dateStr)}</span>
+                  <strong style="color:${isPending ? '#d97706' : (isApproved ? '#15803d' : '#cf1322')};">
+                    ₫ ${parseInt(req.amount || 0).toLocaleString('vi-VN')}
+                  </strong>
+                  <span>
+                    <b>${esc(bank.bank || '')}</b> · ${esc(bank.accountNumber || '')} (${esc(bank.accountName || '')})
+                  </span>
+                  <span>
+                    <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;background:${isPending ? '#fef3c7' : (isApproved ? '#dcfce7' : '#fee2e2')};color:${isPending ? '#b45309' : (isApproved ? '#15803d' : '#cf1322')};">
+                      ${isPending ? '⏳ Đang xử lý' : (isApproved ? '✅ Đã thanh toán' : '❌ Bị từ chối')}
+                    </span>
+                  </span>
+                </div>
+                ${(isRejected && req.rejection_reason) ? `
+                  <div style="margin-top:8px;background:#fff1f0;border-left:3px solid #ff4d4f;padding:6px 10px;font-size:12px;color:#cf1322;">
+                    <b>Lý do từ chối từ Admin:</b> ${esc(req.rejection_reason)}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+  }
+}
+
+// Open Payout Dialog
 requestPayoutBtn?.addEventListener('click', () => {
-  const balanceRaw = parseInt(String(artist.payableBalance || '0').replace(/[^0-9]/g, ''), 10) || 0;
-  if (balanceRaw < 1000000) {
-    alert(`Số dư khả dụng hiện tại (₫ ${artist.payableBalance || 0}) chưa đạt ngưỡng tối thiểu ₫ 1,000,000 để yêu cầu rút tiền.`);
-  } else {
-    alert(`Yêu cầu rút số tiền ₫ ${artist.payableBalance} đã được gửi thành công đến bộ phận Tài chính của UniFLOWs.`);
+  if (availableBalanceNumber < 1000000) {
+    alert(`Số dư khả dụng hiện tại (₫ ${availableBalanceNumber.toLocaleString('vi-VN')}) chưa đạt ngưỡng tối thiểu ₫ 1,000,000 để yêu cầu thanh toán.`);
+    return;
+  }
+  if (payoutDialogNotice) payoutDialogNotice.style.display = 'none';
+  payoutRequestForm?.reset();
+
+  const amountInput = document.querySelector('#payout-amount');
+  if (amountInput) {
+    amountInput.value = availableBalanceNumber;
+    amountInput.max = availableBalanceNumber;
+  }
+  payoutDialog?.showModal();
+});
+
+closePayoutDialogBtn?.addEventListener('click', () => {
+  payoutDialog?.close();
+});
+
+payoutRequestForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const amountVal = parseInt(document.querySelector('#payout-amount')?.value, 10) || 0;
+  const bank = document.querySelector('#payout-bank')?.value.trim();
+  const accountNumber = document.querySelector('#payout-account-number')?.value.trim();
+  const accountName = document.querySelector('#payout-account-name')?.value.trim();
+
+  if (amountVal < 1000000) {
+    if (payoutDialogNotice) {
+      payoutDialogNotice.textContent = 'Số tiền rút tối thiểu là ₫ 1,000,000.';
+      payoutDialogNotice.style.display = 'block';
+    }
+    return;
+  }
+
+  if (amountVal > availableBalanceNumber) {
+    if (payoutDialogNotice) {
+      payoutDialogNotice.textContent = `Số tiền rút vượt quá số dư khả dụng (₫ ${availableBalanceNumber.toLocaleString('vi-VN')}).`;
+      payoutDialogNotice.style.display = 'block';
+    }
+    return;
+  }
+
+  if (submitPayoutBtn) {
+    submitPayoutBtn.disabled = true;
+    submitPayoutBtn.textContent = 'Đang gửi yêu cầu...';
+  }
+
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('payout_requests').insert({
+        artist_id: currentArtistId,
+        amount: String(amountVal),
+        bank_info: { bank, accountNumber, accountName },
+        status: 'Đang chờ xem xét',
+        rejection_reason: ''
+      });
+      if (error) throw error;
+    }
+
+    payoutDialog?.close();
+    showNotice(`✓ Yêu cầu rút số tiền ₫ ${amountVal.toLocaleString('vi-VN')} đã được gửi thành công tới Admin của UniFLOWs!`);
+    await loadArtistPayouts();
+  } catch (err) {
+    if (payoutDialogNotice) {
+      payoutDialogNotice.textContent = 'Lỗi: ' + (err.message || 'Không thể gửi yêu cầu.');
+      payoutDialogNotice.style.display = 'block';
+    }
+  } finally {
+    if (submitPayoutBtn) {
+      submitPayoutBtn.disabled = false;
+      submitPayoutBtn.textContent = 'Gửi yêu cầu rút tiền';
+    }
   }
 });
 
@@ -475,4 +636,62 @@ logoutBtn?.addEventListener('click', async () => {
   location.href = 'artist-login';
 });
 
+// Change Password Dialog & Submission Handlers
+const openPasswordDialogBtn = document.querySelector('#open-password-dialog-btn');
+const passwordDialog = document.querySelector('#password-dialog');
+const closePasswordDialogBtn = document.querySelector('#close-password-dialog-btn');
+const changePasswordForm = document.querySelector('#change-password-form');
+const passwordNotice = document.querySelector('#password-notice');
+const savePasswordSubmitBtn = document.querySelector('#save-password-submit-btn');
+
+openPasswordDialogBtn?.addEventListener('click', () => {
+  if (passwordNotice) passwordNotice.style.display = 'none';
+  changePasswordForm?.reset();
+  passwordDialog?.showModal();
+});
+
+closePasswordDialogBtn?.addEventListener('click', () => {
+  passwordDialog?.close();
+});
+
+changePasswordForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const newPass = document.querySelector('#new-password')?.value;
+  const confirmPass = document.querySelector('#confirm-password')?.value;
+
+  if (newPass !== confirmPass) {
+    if (passwordNotice) {
+      passwordNotice.textContent = 'Mật khẩu xác nhận không khớp. Vui lòng nhập lại.';
+      passwordNotice.style.display = 'block';
+    }
+    return;
+  }
+
+  if (savePasswordSubmitBtn) {
+    savePasswordSubmitBtn.disabled = true;
+    savePasswordSubmitBtn.textContent = 'Đang lưu...';
+  }
+
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.auth.updateUser({ password: newPass });
+      if (error) throw error;
+    }
+    alert('✓ Đổi mật khẩu thành công! Mật khẩu mới đã được cập nhật.');
+    passwordDialog?.close();
+    changePasswordForm.reset();
+  } catch (err) {
+    if (passwordNotice) {
+      passwordNotice.textContent = 'Lỗi: ' + (err.message || 'Không thể đổi mật khẩu.');
+      passwordNotice.style.display = 'block';
+    }
+  } finally {
+    if (savePasswordSubmitBtn) {
+      savePasswordSubmitBtn.disabled = false;
+      savePasswordSubmitBtn.textContent = 'Lưu mật khẩu';
+    }
+  }
+});
+
 renderReleases();
+loadArtistPayouts();
