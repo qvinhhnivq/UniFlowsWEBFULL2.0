@@ -328,16 +328,21 @@ async function loadPayoutRequests() {
   if (statPaid) statPaid.textContent = `${paidCount} GD (₫ ${paidTotal.toLocaleString('vi-VN')})`;
   if (statRejected) statRejected.textContent = `${rejectedCount} yêu cầu`;
 
-  // Apply Filter
+  // Apply Filter by Status and Artist
   const filterVal = document.querySelector('#admin-payout-filter')?.value || 'all';
+  const artistFilterVal = document.querySelector('#admin-payout-artist-filter')?.value || 'all';
   let filtered = payoutRequests;
 
+  if (artistFilterVal !== 'all') {
+    filtered = filtered.filter(r => r.artist_id === artistFilterVal);
+  }
+
   if (filterVal === 'pending') {
-    filtered = payoutRequests.filter(r => r.status === 'Đang chờ xem xét');
+    filtered = filtered.filter(r => r.status === 'Đang chờ xem xét');
   } else if (filterVal === 'paid') {
-    filtered = payoutRequests.filter(r => r.status === 'Đã thanh toán (Hoàn tất)' || r.status === 'Đã thanh toán');
+    filtered = filtered.filter(r => r.status === 'Đã thanh toán (Hoàn tất)' || r.status === 'Đã thanh toán');
   } else if (filterVal === 'rejected') {
-    filtered = payoutRequests.filter(r => r.status === 'Từ chối thanh toán' || r.status === 'Từ chối');
+    filtered = filtered.filter(r => r.status === 'Từ chối thanh toán' || r.status === 'Từ chối');
   }
 
   if (filtered.length === 0) {
@@ -507,16 +512,21 @@ async function loadReleasesQueue() {
     }
   }
 
-  // Filter Releases
+  // Filter Releases by Status and Artist
   const filterVal = document.querySelector('#admin-release-filter')?.value || 'all';
+  const artistFilterVal = document.querySelector('#admin-release-artist-filter')?.value || 'all';
   let filtered = releases;
 
+  if (artistFilterVal !== 'all') {
+    filtered = filtered.filter(r => r.artist_id === artistFilterVal);
+  }
+
   if (filterVal === 'pending') {
-    filtered = releases.filter(r => r.submission_status && r.submission_status.includes('chờ'));
+    filtered = filtered.filter(r => r.submission_status && r.submission_status.includes('chờ'));
   } else if (filterVal === 'live') {
-    filtered = releases.filter(r => !r.submission_status || r.submission_status === 'Đã phát hành');
+    filtered = filtered.filter(r => !r.submission_status || r.submission_status === 'Đã phát hành');
   } else if (filterVal === 'takedown') {
-    filtered = releases.filter(r => r.submission_status && r.submission_status.includes('gỡ'));
+    filtered = filtered.filter(r => r.submission_status && r.submission_status.includes('gỡ'));
   }
 
   if (filtered.length === 0) {
@@ -711,9 +721,36 @@ document.querySelector('#admin-release-filter')?.addEventListener('change', () =
   loadReleasesQueue();
 });
 
+document.querySelector('#admin-release-artist-filter')?.addEventListener('change', () => {
+  loadReleasesQueue();
+});
+
 document.querySelector('#admin-refresh-releases-btn')?.addEventListener('click', () => {
   loadReleasesQueue();
 });
+
+document.querySelector('#admin-payout-artist-filter')?.addEventListener('change', () => {
+  loadPayoutRequests();
+});
+
+function populateArtistFilters() {
+  const relArtistFilter = document.querySelector('#admin-release-artist-filter');
+  const payArtistFilter = document.querySelector('#admin-payout-artist-filter');
+  const currentRelVal = relArtistFilter?.value || 'all';
+  const currentPayVal = payArtistFilter?.value || 'all';
+
+  const optionsHtml = '<option value="all">Tất cả nghệ sĩ</option>' +
+    (data.artists || []).map(a => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.id)})</option>`).join('');
+
+  if (relArtistFilter) {
+    relArtistFilter.innerHTML = optionsHtml;
+    relArtistFilter.value = currentRelVal;
+  }
+  if (payArtistFilter) {
+    payArtistFilter.innerHTML = optionsHtml;
+    payArtistFilter.value = currentPayVal;
+  }
+}
 
 // ----------------------------------------------------
 // MAIN RENDER & FORM SUBMISSION
@@ -723,6 +760,7 @@ function render() {
     if (form.elements[k]) form.elements[k].value = data[k] || '';
   });
   renderEmailsEditor(data.emails || defaultData.emails);
+  populateArtistFilters();
   renderArtistSelector();
   renderSelectedArtistEditor();
   articlesBox.innerHTML = data.articles.map(articleEditor).join('');

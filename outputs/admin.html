@@ -38,14 +38,24 @@
           <span class="kicker">Catalogue queue</span>
         </div>
 
-        <div style="display:flex; gap:10px; margin: 15px 0; align-items: center; flex-wrap: wrap;">
-          <label style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Bộ lọc trạng thái:</label>
-          <select id="admin-release-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
-            <option value="all">Tất cả bản phát hành</option>
-            <option value="pending">⏳ Đang chờ UniFLOWs duyệt</option>
-            <option value="live">🟢 Đã phát hành (Live)</option>
-            <option value="takedown">🔴 Yêu cầu gỡ / xóa</option>
-          </select>
+        <div style="display:flex; gap:12px; margin: 15px 0; align-items: center; flex-wrap: wrap;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Trạng thái:</label>
+            <select id="admin-release-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+              <option value="all">Tất cả bản phát hành</option>
+              <option value="pending">⏳ Đang chờ UniFLOWs duyệt</option>
+              <option value="live">🟢 Đã phát hành (Live)</option>
+              <option value="takedown">🔴 Yêu cầu gỡ / xóa</option>
+            </select>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Nghệ sĩ:</label>
+            <select id="admin-release-artist-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+              <option value="all">Tất cả nghệ sĩ</option>
+            </select>
+          </div>
+
           <button type="button" id="admin-refresh-releases-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Làm mới</button>
         </div>
 
@@ -104,14 +114,24 @@
         </div>
 
         <!-- Filter and Refresh Controls -->
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
-          <label style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Lọc yêu cầu:</label>
-          <select id="admin-payout-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
-            <option value="all">Tất cả yêu cầu</option>
-            <option value="pending">⏳ Đang chờ xem xét</option>
-            <option value="paid">✅ Đã thanh toán (Hoàn tất)</option>
-            <option value="rejected">❌ Từ chối thanh toán</option>
-          </select>
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Trạng thái:</label>
+            <select id="admin-payout-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+              <option value="all">Tất cả yêu cầu</option>
+              <option value="pending">⏳ Đang chờ xem xét</option>
+              <option value="paid">✅ Đã thanh toán (Hoàn tất)</option>
+              <option value="rejected">❌ Từ chối thanh toán</option>
+            </select>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Nghệ sĩ:</label>
+            <select id="admin-payout-artist-filter" style="padding: 6px 12px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+              <option value="all">Tất cả nghệ sĩ</option>
+            </select>
+          </div>
+
           <button type="button" id="admin-refresh-payouts-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Làm mới danh sách</button>
         </div>
 
