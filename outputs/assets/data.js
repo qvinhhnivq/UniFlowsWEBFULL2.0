@@ -12,6 +12,16 @@ export const defaultData = {
     { label: 'Booking & Sự kiện', email: 'booking@uniflowslabel.com' },
     { label: 'Báo chí & Truyền thông', email: 'press@uniflowslabel.com' }
   ],
+  announcements: [
+    {
+      id: 'ann-1',
+      title: 'Chào mừng các nghệ sĩ đến với UniFLOWs Portal 2.0',
+      type: 'important',
+      date: '21/08/2026',
+      content: 'Hệ thống đã nâng cấp toàn diện giao diện phát hành âm nhạc, đối soát doanh thu đa nền tảng và rút tiền tự động. Vui lòng kiểm tra thông tin tài khoản ngân hàng và hồ sơ nghệ sĩ của bạn.',
+      active: true
+    }
+  ],
   city: 'Hồ Chí Minh · Việt Nam',
   artists: [
     {
@@ -183,6 +193,15 @@ export async function getData() {
         merged.emails = defaultData.emails;
       }
 
+      // Parse announcements for artist portal
+      if (Array.isArray(settings.announcements)) {
+        merged.announcements = settings.announcements;
+      } else if (cached.announcements && Array.isArray(cached.announcements)) {
+        merged.announcements = cached.announcements;
+      } else {
+        merged.announcements = defaultData.announcements;
+      }
+
       merged.city = settings.city || merged.city;
     }
 
@@ -193,6 +212,7 @@ export async function getData() {
         return {
           id: a.id,
           name: a.name,
+          email: a.email || stats.email || localCachedArtist.email || '',
           genre: a.genre,
           image: a.image,
           bio: a.bio,
@@ -203,6 +223,9 @@ export async function getData() {
           monthlyStreams: a.monthly_streams !== undefined ? a.monthly_streams : (localCachedArtist.monthlyStreams || '0'),
           estimatedRevenue: a.estimated_revenue !== undefined ? a.estimated_revenue : (localCachedArtist.estimatedRevenue || '0'),
           payableBalance: a.payable_balance !== undefined ? a.payable_balance : (localCachedArtist.payableBalance || '0'),
+          payoutCycle: a.payout_cycle || stats.payoutCycle || localCachedArtist.payoutCycle || 'Hàng tháng (Monthly)',
+          royaltyRate: a.royalty_rate || stats.royaltyRate || localCachedArtist.royaltyRate || '80% Master',
+          contractTerm: a.contract_term || stats.contractTerm || localCachedArtist.contractTerm || '2024 - 2027',
           spotifyStreams: stats.spotifyStreams || localCachedArtist.spotifyStreams || '0',
           spotifyRevenue: stats.spotifyRevenue || localCachedArtist.spotifyRevenue || '0',
           appleStreams: stats.appleStreams || localCachedArtist.appleStreams || '0',
@@ -219,12 +242,12 @@ export async function getData() {
             return {
               id: r.id,
               title: r.title,
-              type: r.type,
-              slug: r.slug,
-              submissionStatus: r.submission_status,
+              type: r.type || 'Single',
+              slug: r.slug || '',
+              submissionStatus: r.submission_status || 'Đã phát hành',
               links: r.links || {},
-              audioUrl: r.audio_url,
-              artworkUrl: r.artwork_url,
+              audioUrl: r.audio_url || '',
+              artworkUrl: r.artwork_url || '',
               streams: meta.streams || '0',
               revenue: meta.revenue || '0',
               playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
@@ -273,12 +296,14 @@ export async function saveData(data) {
       about_text: data.aboutText,
       email: data.email,
       emails: data.emails || defaultData.emails,
+      announcements: data.announcements || defaultData.announcements,
       city: data.city,
       updated_at: new Date().toISOString()
     };
 
     const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
     if (settingsError) {
+      delete settingsPayload.announcements;
       delete settingsPayload.emails;
       await supabase.from('site_settings').upsert(settingsPayload);
     }
@@ -286,6 +311,10 @@ export async function saveData(data) {
     // 2. Save artists with complete stats json
     for (const a of data.artists) {
       const stats = {
+        email: a.email || '',
+        payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
+        royaltyRate: a.royaltyRate || '80% Master',
+        contractTerm: a.contractTerm || '2024 - 2027',
         spotifyStreams: a.spotifyStreams || '0',
         spotifyRevenue: a.spotifyRevenue || '0',
         appleStreams: a.appleStreams || '0',
@@ -302,6 +331,7 @@ export async function saveData(data) {
       const artistPayload = {
         id: a.id,
         name: a.name,
+        email: a.email || '',
         genre: a.genre,
         image: a.image,
         bio: a.bio,

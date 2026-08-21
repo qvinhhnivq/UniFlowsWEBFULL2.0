@@ -36,6 +36,7 @@
   </main>
 
   <script type="module">
+    import { getData } from './assets/data.js';
     import { supabase, isSupabaseConfigured, getCurrentUserProfile } from './assets/supabase.js';
 
     const form = document.querySelector('#artist-login-form');
@@ -62,26 +63,49 @@
           if (error) throw error;
 
           const profile = await getCurrentUserProfile();
+          const liveData = await getData();
+          const emailUser = email.split('@')[0].toLowerCase();
+
+          // Match artist by profile.artist_id, email, or id/name
+          let matched = (liveData.artists || []).find(a => 
+            (profile?.artist_id && a.id === profile.artist_id) ||
+            (a.email && a.email.toLowerCase() === email.toLowerCase()) ||
+            (a.id && a.id.toLowerCase() === emailUser) ||
+            (a.name && a.name.toLowerCase() === emailUser)
+          );
+
+          const artistId = matched?.id || profile?.artist_id || emailUser;
+          const artistName = matched?.name || (emailUser.charAt(0).toUpperCase() + emailUser.slice(1));
+
           sessionStorage.setItem('uniflows-artist', 'true');
-          sessionStorage.setItem('uniflows-artist-id', profile?.artist_id || 'lumi');
+          sessionStorage.setItem('uniflows-artist-id', artistId);
+          sessionStorage.setItem('uniflows-artist-name', artistName);
           sessionStorage.setItem('uniflows-artist-email', email);
           location.href = 'portal';
         } else {
           // Demo fallback
-          if (email === 'lumi@uniflowslabel.com' && password === 'LumiDemo2026!') {
-            sessionStorage.setItem('uniflows-artist', 'true');
-            sessionStorage.setItem('uniflows-artist-id', 'lumi');
-            sessionStorage.setItem('uniflows-artist-email', email);
-            location.href = 'portal';
-          } else {
-            throw new Error('Email hoặc mật khẩu chưa đúng (Demo: lumi@uniflowslabel.com / LumiDemo2026!).');
-          }
+          const liveData = await getData();
+          const emailUser = email.split('@')[0].toLowerCase();
+          let matched = (liveData.artists || []).find(a => 
+            (a.email && a.email.toLowerCase() === email.toLowerCase()) ||
+            (a.id && a.id.toLowerCase() === emailUser) ||
+            (a.name && a.name.toLowerCase() === emailUser)
+          );
+
+          const artistId = matched?.id || emailUser;
+          const artistName = matched?.name || (emailUser.charAt(0).toUpperCase() + emailUser.slice(1));
+
+          sessionStorage.setItem('uniflows-artist', 'true');
+          sessionStorage.setItem('uniflows-artist-id', artistId);
+          sessionStorage.setItem('uniflows-artist-name', artistName);
+          sessionStorage.setItem('uniflows-artist-email', email);
+          location.href = 'portal';
         }
       } catch (err) {
         showError(err.message || 'Đăng nhập không thành công.');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Đang nhập Portal';
+        submitBtn.textContent = 'Đăng nhập Portal';
       }
     };
   </script>

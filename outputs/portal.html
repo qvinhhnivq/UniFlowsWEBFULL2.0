@@ -55,7 +55,7 @@
           <div>
             <span>Doanh thu ước tính</span>
             <strong id="artist-estimated-revenue">₫ 0</strong>
-            <small>Kỳ đối soát: Hàng tháng</small>
+            <small id="overview-payout-cycle">Kỳ đối soát: Hàng tháng</small>
           </div>
           <div>
             <span>Bản phát hành đang duyệt</span>
@@ -64,13 +64,29 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 30px;">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 25px;">
           <button class="button" id="quick-open-release-modal-btn" style="padding: 14px 22px; font-weight: bold; background: #000; color: #fff;">
             💿 + Gửi bản phát hành mới
           </button>
           <button class="button alt" id="quick-open-payout-modal-btn" style="padding: 14px 22px; font-weight: bold;">
             💳 Yêu cầu rút tiền
           </button>
+        </div>
+
+        <!-- Label Official Announcements / Bảng tin Hãng Đĩa UniFLOWs -->
+        <div id="portal-announcements-section" style="margin-bottom: 25px;">
+          <div style="background: #fff; border: 2px solid var(--ink); padding: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">📢</span>
+                <h3 style="font-size: 16px; margin: 0; text-transform: uppercase; letter-spacing: -0.02em; font-weight: bold;">Thông báo từ Hãng Đĩa UniFLOWs</h3>
+              </div>
+              <span class="eyebrow" style="margin: 0; color: #b45309; font-weight: bold;">Label Broadcast</span>
+            </div>
+            <div id="portal-announcements-list" style="display: grid; gap: 12px;">
+              <p class="empty" style="font-size: 13px; opacity: 0.7;">Đang tải thông báo từ Label...</p>
+            </div>
+          </div>
         </div>
 
         <div style="background: #fff; border: 1px solid var(--ink); padding: 22px; margin-top: 20px;">
@@ -91,13 +107,13 @@
       <!-- TAB 2: QUẢN LÝ PHÁT HÀNH & NHẠC (RELEASES) -->
       <!-- ========================================== -->
       <section id="tab-releases" class="tab-pane">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 15px;">
+        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--line);">
           <div>
-            <h2 style="font-size: 26px; letter-spacing: -0.04em; margin: 0;">Catalogue & Bản phát hành</h2>
-            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý toàn bộ đĩa đơn, EP, Album và theo dõi tình trạng kiểm duyệt.</p>
+            <h2 style="font-size: 26px; letter-spacing: -0.04em; margin: 0;">Quản lý Phát hành</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Danh sách toàn bộ Single, EP, Album đã phát hành và đang chờ duyệt.</p>
           </div>
-          <button class="button" id="open-release-modal-btn" style="padding: 12px 20px; font-weight: bold; background: #000; color: #fff;">
-            + Gửi bản phát hành mới
+          <button class="button" id="open-release-modal-btn" style="padding: 10px 18px; font-weight: bold; background: #000; color: #fff;">
+            💿 + Gửi bản phát hành mới
           </button>
         </div>
 
@@ -122,8 +138,23 @@
       <!-- ========================================== -->
       <section id="tab-earnings" class="tab-pane">
         <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--line);">
-          <h2>Doanh thu & Đối soát tài chính</h2>
-          <span class="kicker">Estimated / Tháng này</span>
+          <div>
+            <h2>Doanh thu & Đối soát tài chính</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Theo dõi số dư khả dụng, lịch sử giao dịch và đối soát hợp đồng theo kỳ.</p>
+          </div>
+          <span class="kicker">Financial statement</span>
+        </div>
+
+        <!-- Contract & Accounting Policy Card -->
+        <div style="background:#fff;border:1px solid var(--ink);padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="eyebrow" style="color:#2563eb;margin:0;">Hợp đồng phân phối âm nhạc</span>
+            <strong id="portal-contract-term" style="font-size:14px;display:block;margin-top:2px;">Hợp đồng độc quyền phân phối 2024 - 2027</strong>
+          </div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;">
+            <div><span style="opacity:0.6;display:block;font-size:10px;text-transform:uppercase;">Kỳ đối soát:</span> <strong id="portal-payout-cycle">Hàng tháng (Monthly)</strong></div>
+            <div><span style="opacity:0.6;display:block;font-size:10px;text-transform:uppercase;">Tỷ lệ Royalty:</span> <strong id="portal-royalty-rate">80% Master</strong></div>
+          </div>
         </div>
 
         <div class="payout-banner">
@@ -138,7 +169,7 @@
             </div>
           </div>
           <button class="button" id="request-payout-btn">Yêu cầu thanh toán</button>
-          <small>Ngưỡng thanh toán tối thiểu: ₫ 1,000,000 · Kỳ đối soát: Cuối mỗi tháng</small>
+          <small id="contract-payout-note">Ngưỡng thanh toán tối thiểu: ₫ 1,000,000 · Kỳ đối soát: Hàng tháng</small>
         </div>
 
         <div class="earnings-table">

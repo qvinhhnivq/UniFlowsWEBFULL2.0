@@ -30,24 +30,111 @@ const closeReleaseDialogBtn = document.querySelector('#close-release-dialog-btn'
 const cancelReleaseBtn = document.querySelector('#cancel-release-btn');
 
 let data = await getData();
-const currentArtistId = sessionStorage.getItem('uniflows-artist-id') || 'lumi';
-let artist = data.artists.find(a => a.id === currentArtistId) || {
-  id: currentArtistId,
-  name: 'Nghệ sĩ',
-  monthlyStreams: '0',
-  estimatedRevenue: '0',
-  payableBalance: '0',
-  products: []
-};
+const sessionArtistId = sessionStorage.getItem('uniflows-artist-id');
+const sessionEmail = sessionStorage.getItem('uniflows-artist-email') || '';
+const sessionArtistName = sessionStorage.getItem('uniflows-artist-name') || '';
+const emailPrefix = sessionEmail ? sessionEmail.split('@')[0].toLowerCase() : '';
 
-// Render Artist Info & Stats
+// Tự động tìm nghệ sĩ theo ID, Email đăng nhập, hoặc Username
+let artist = (data.artists || []).find(a => 
+  (sessionArtistId && a.id === sessionArtistId) ||
+  (sessionEmail && a.email && a.email.toLowerCase() === sessionEmail.toLowerCase()) ||
+  (emailPrefix && a.id && a.id.toLowerCase() === emailPrefix) ||
+  (emailPrefix && a.name && a.name.toLowerCase() === emailPrefix) ||
+  (sessionArtistName && a.name && a.name.toLowerCase() === sessionArtistName.toLowerCase())
+);
+
+if (!artist) {
+  const fallbackName = sessionArtistName || (emailPrefix ? (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)) : 'Nghệ sĩ');
+  artist = {
+    id: sessionArtistId || emailPrefix || 'artist',
+    name: fallbackName,
+    monthlyStreams: '0',
+    estimatedRevenue: '0',
+    payableBalance: '0',
+    products: []
+  };
+}
+
+const currentArtistId = artist.id;
+sessionStorage.setItem('uniflows-artist-id', currentArtistId);
+sessionStorage.setItem('uniflows-artist-name', artist.name);
+
+// Render Artist Info, Stats & Contract Terms
 if (artist) {
   if (artistDisplayName) artistDisplayName.textContent = artist.name + '.';
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
   if (monthlyStreamsEl) monthlyStreamsEl.textContent = artist.monthlyStreams || '0';
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${artist.estimatedRevenue || '0'}`;
   if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${artist.payableBalance || '0'}`;
+
+  // Contract & Payout Cycle fields
+  const overviewCycleEl = document.querySelector('#overview-payout-cycle');
+  const contractTermEl = document.querySelector('#portal-contract-term');
+  const portalCycleEl = document.querySelector('#portal-payout-cycle');
+  const portalRoyaltyEl = document.querySelector('#portal-royalty-rate');
+  const payoutNoteEl = document.querySelector('#contract-payout-note');
+
+  const cycleText = artist.payoutCycle || 'Hàng tháng (Monthly)';
+  const royaltyText = artist.royaltyRate || '80% Master';
+  const contractText = artist.contractTerm || 'Hợp đồng độc quyền phân phối 2024 - 2027';
+
+  if (overviewCycleEl) overviewCycleEl.textContent = `Kỳ đối soát: ${cycleText}`;
+  if (contractTermEl) contractTermEl.textContent = contractText;
+  if (portalCycleEl) portalCycleEl.textContent = cycleText;
+  if (portalRoyaltyEl) portalRoyaltyEl.textContent = royaltyText;
+  if (payoutNoteEl) payoutNoteEl.textContent = `Ngưỡng thanh toán tối thiểu: ₫ 1,000,000 · Kỳ đối soát: ${cycleText}`;
 }
+
+// ----------------------------------------------------
+// OFFICIAL ANNOUNCEMENTS FROM LABEL BROADCAST
+// ----------------------------------------------------
+function renderPortalAnnouncements(announcements = []) {
+  const container = document.querySelector('#portal-announcements-list');
+  const section = document.querySelector('#portal-announcements-section');
+  if (!container) return;
+
+  const activeAnnouncements = (announcements || []).filter(a => a.active !== false);
+
+  if (activeAnnouncements.length === 0) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+  if (section) section.style.display = 'block';
+
+  container.innerHTML = activeAnnouncements.map(ann => {
+    const isImportant = ann.type === 'important';
+    const isUpdate = ann.type === 'update';
+    
+    let badgeStyle = 'background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;';
+    let badgeText = '📢 Thông báo';
+    
+    if (isImportant) {
+      badgeStyle = 'background:#fee2e2;color:#cf1322;border:1px solid #fca5a5;';
+      badgeText = '🔥 Quan trọng';
+    } else if (isUpdate) {
+      badgeStyle = 'background:#dcfce7;color:#15803d;border:1px solid #86efac;';
+      badgeText = '⚡ Cập nhật';
+    }
+
+    return `
+      <div style="background:#fcfcfc;border:1px solid var(--ink);padding:16px;position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;${badgeStyle}">
+              ${badgeText}
+            </span>
+            <strong style="font-size:15px;color:#111;">${esc(ann.title)}</strong>
+          </div>
+          <span style="font-size:11px;color:#666;font-family:monospace;">${esc(ann.date || '')}</span>
+        </div>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:#333;white-space:pre-wrap;">${esc(ann.content)}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+renderPortalAnnouncements(data.announcements || defaultData?.announcements || []);
 
 // ----------------------------------------------------
 // TAB NAVIGATION LOGIC

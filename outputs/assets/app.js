@@ -21,7 +21,7 @@ function formatSocialUrl(u) {
 if (!$('.nav')) {
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="nav">
-      <a href="index" class="brand">UNIFLOWs<small>label / est. 2026</small></a>
+      <a href="index" class="brand">UNIFLOWs<small>label / est. 2024</small></a>
       <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
       <nav class="nav-links">
         <a href="artists">Nghệ sĩ</a>
@@ -47,7 +47,7 @@ if (!$('#smart-modal')) {
       </div>
     </div>
     <footer>
-      <span>© 2026 UniFLOWs Label</span>
+      <span>© 2024 UniFLOWs Label</span>
       <span id="footer-city">${esc(data.city)}</span>
       <span>Independent music company</span>
     </footer>

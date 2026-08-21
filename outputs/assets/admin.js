@@ -12,6 +12,8 @@ const articlesBox = document.querySelector('#articles-editor');
 const releasesBox = document.querySelector('#releases-reviewer');
 const emailsContainer = document.querySelector('#emails-editor-container');
 const addEmailBtn = document.querySelector('#add-email-row-btn');
+const announcementsContainer = document.querySelector('#announcements-editor-container');
+const addAnnouncementBtn = document.querySelector('#add-announcement-btn');
 const notice = document.querySelector('#notice');
 const saveBtn = document.querySelector('#save-all-btn');
 
@@ -91,6 +93,106 @@ addEmailBtn?.addEventListener('click', () => {
 });
 
 // ----------------------------------------------------
+// ANNOUNCEMENTS MANAGER (BROADCAST TO ARTIST PORTAL)
+// ----------------------------------------------------
+function renderAnnouncementsEditor(announcements = []) {
+  if (!announcementsContainer) return;
+  if (!announcements || announcements.length === 0) {
+    announcementsContainer.innerHTML = '<p class="empty" style="background:#f9f9f9;padding:12px;border:1px solid #eee;">Chưa có thông báo nào gửi cho nghệ sĩ.</p>';
+    return;
+  }
+
+  announcementsContainer.innerHTML = announcements.map((ann, idx) => `
+    <div class="custom-announcement-card" data-ann-idx="${idx}" style="background:#fafafa;border:1px solid var(--ink);padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span class="eyebrow" style="color:#b45309;">Thông báo #${idx + 1}</span>
+        <button type="button" class="remove-ann-btn button alt remove" style="padding:4px 10px;font-size:11px;">✕ Xóa thông báo</button>
+      </div>
+      <div class="mini-grid">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Tiêu đề thông báo</label>
+          <input class="ann-title" value="${esc(ann.title || '')}" placeholder="Ví dụ: Lịch đối soát doanh thu quý 3/2026" required>
+        </div>
+        <div class="field">
+          <label>Mức độ / Loại thông báo</label>
+          <select class="ann-type" style="padding:8px;border:1px solid var(--ink);background:#fff;">
+            <option value="important" ${ann.type === 'important' ? 'selected' : ''}>🔥 Quan trọng (Important)</option>
+            <option value="info" ${ann.type === 'info' ? 'selected' : ''}>📢 Tin tức chung (Info)</option>
+            <option value="update" ${ann.type === 'update' ? 'selected' : ''}>⚡ Cập nhật kỹ thuật (Update)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ngày thông báo</label>
+          <input class="ann-date" value="${esc(ann.date || new Date().toLocaleDateString('vi-VN'))}" placeholder="DD/MM/YYYY">
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Nội dung thông báo chi tiết</label>
+          <textarea class="ann-content" rows="3" placeholder="Nhập nội dung thông báo gửi đến toàn thể nghệ sĩ...">${esc(ann.content || '')}</textarea>
+        </div>
+        <div class="field">
+          <label>Trạng thái hiển thị trên Portal</label>
+          <select class="ann-active" style="padding:8px;border:1px solid var(--ink);background:#fff;">
+            <option value="true" ${ann.active !== false ? 'selected' : ''}>🟢 Hiển thị trên Artist Portal</option>
+            <option value="false" ${ann.active === false ? 'selected' : ''}>🔴 Tạm ẩn</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  announcementsContainer.querySelectorAll('.remove-ann-btn').forEach(btn => {
+    btn.onclick = () => btn.closest('.custom-announcement-card')?.remove();
+  });
+}
+
+addAnnouncementBtn?.addEventListener('click', () => {
+  if (!announcementsContainer) return;
+  const emptyP = announcementsContainer.querySelector('.empty');
+  if (emptyP) emptyP.remove();
+
+  const card = document.createElement('div');
+  card.className = 'custom-announcement-card';
+  card.style.cssText = 'background:#fafafa;border:1px solid var(--ink);padding:16px;margin-bottom:12px;';
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span class="eyebrow" style="color:#b45309;">Thông báo mới</span>
+      <button type="button" class="remove-ann-btn button alt remove" style="padding:4px 10px;font-size:11px;">✕ Xóa thông báo</button>
+    </div>
+    <div class="mini-grid">
+      <div class="field" style="grid-column:1/-1;">
+        <label>Tiêu đề thông báo</label>
+        <input class="ann-title" placeholder="Ví dụ: Lịch đối soát quý mới..." required>
+      </div>
+      <div class="field">
+        <label>Mức độ / Loại thông báo</label>
+        <select class="ann-type" style="padding:8px;border:1px solid var(--ink);background:#fff;">
+          <option value="important">🔥 Quan trọng (Important)</option>
+          <option value="info" selected>📢 Tin tức chung (Info)</option>
+          <option value="update">⚡ Cập nhật kỹ thuật (Update)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ngày thông báo</label>
+        <input class="ann-date" value="${new Date().toLocaleDateString('vi-VN')}">
+      </div>
+      <div class="field" style="grid-column:1/-1;">
+        <label>Nội dung thông báo chi tiết</label>
+        <textarea class="ann-content" rows="3" placeholder="Nhập nội dung thông báo gửi đến toàn thể nghệ sĩ..."></textarea>
+      </div>
+      <div class="field">
+        <label>Trạng thái hiển thị trên Portal</label>
+        <select class="ann-active" style="padding:8px;border:1px solid var(--ink);background:#fff;">
+          <option value="true" selected>🟢 Hiển thị trên Artist Portal</option>
+          <option value="false">🔴 Tạm ẩn</option>
+        </select>
+      </div>
+    </div>
+  `;
+  card.querySelector('.remove-ann-btn').onclick = () => card.remove();
+  announcementsContainer.prepend(card);
+});
+
+// ----------------------------------------------------
 // ARTIST MANAGER (SELECTOR + CARD EDITOR)
 // ----------------------------------------------------
 function renderArtistSelector() {
@@ -148,13 +250,31 @@ const artistEditor = (a, idx) => `
     <div class="mini-grid">
       <div class="field"><label>Tên nghệ sĩ</label><input data-key="name" value="${esc(a.name)}" required></div>
       <div class="field"><label>ID hệ thống (Slug cố định)</label><input data-key="id" value="${esc(a.id)}" required></div>
+      <div class="field"><label>Email đăng nhập Portal (để liên kết tài khoản)</label><input data-key="email" value="${esc(a.email || '')}" placeholder="artist@uniflowslabel.com"></div>
       <div class="field"><label>Thể loại chính</label><input data-key="genre" value="${esc(a.genre)}"></div>
-      <div class="field">
+      <div class="field" style="grid-column: 1 / -1;">
         <label>URL Ảnh đại diện (Hoặc dán Link trực tiếp)</label>
         <input data-key="image" id="artist-img-${idx}" value="${esc(a.image)}" placeholder="https://...">
         <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
           <input type="file" accept="image/*" class="artist-file-input" data-target-input="#artist-img-${idx}" data-status-el="#artist-status-${idx}" style="font-size:11px;">
           <span id="artist-status-${idx}" style="font-size:11px;color:#008800;"></span>
+        </div>
+      </div>
+    <!-- Contract & Accounting Cycle Settings -->
+    <div style="background:#fffbe6;border:1px solid #ffe58f;padding:15px;margin:15px 0;">
+      <h4 style="margin:0 0 10px;font-size:13px;text-transform:uppercase;color:#d48806;">📜 Hợp đồng & Kỳ đối soát doanh thu</h4>
+      <div class="mini-grid">
+        <div class="field">
+          <label>Kỳ đối soát doanh thu (Payout Accounting Cycle)</label>
+          <input data-key="payoutCycle" value="${esc(a.payoutCycle || 'Hàng tháng (Monthly)')}" placeholder="Ví dụ: Hàng tháng / Net-45 / Ngày 15 hàng tháng">
+        </div>
+        <div class="field">
+          <label>Tỷ lệ phân chia Royalty (% Nghệ sĩ nhận)</label>
+          <input data-key="royaltyRate" value="${esc(a.royaltyRate || '80% Master')}" placeholder="Ví dụ: 80% Master / 20% Label">
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <label>Thời hạn hợp đồng / Ghi chú hợp đồng</label>
+          <input data-key="contractTerm" value="${esc(a.contractTerm || 'Hợp đồng độc quyền phân phối 2024 - 2027')}" placeholder="Ví dụ: 2024 - 2027 (Thời hạn 3 năm)">
         </div>
       </div>
     </div>
@@ -760,6 +880,7 @@ function render() {
     if (form.elements[k]) form.elements[k].value = data[k] || '';
   });
   renderEmailsEditor(data.emails || defaultData.emails);
+  renderAnnouncementsEditor(data.announcements || defaultData.announcements);
   populateArtistFilters();
   renderArtistSelector();
   renderSelectedArtistEditor();
@@ -787,6 +908,7 @@ document.querySelector('#add-artist')?.addEventListener('click', () => {
   data.artists.push({
     id: newId,
     name: 'Nghệ sĩ mới',
+    email: '',
     genre: 'Pop',
     image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
     bio: '',
@@ -796,7 +918,10 @@ document.querySelector('#add-artist')?.addEventListener('click', () => {
     tiktok: '',
     monthlyStreams: '0',
     estimatedRevenue: '0',
-    payableBalance: '0'
+    payableBalance: '0',
+    payoutCycle: 'Hàng tháng (Monthly)',
+    royaltyRate: '80% Master',
+    contractTerm: '2024 - 2027'
   });
   selectedArtistId = newId;
   render();
@@ -851,6 +976,27 @@ form.addEventListener('submit', async (e) => {
     if (label && email) customEmails.push({ label, email });
   });
   data.emails = customEmails;
+
+  // Read Announcements
+  const customAnnouncements = [];
+  document.querySelectorAll('.custom-announcement-card').forEach((card, i) => {
+    const title = card.querySelector('.ann-title')?.value.trim();
+    const type = card.querySelector('.ann-type')?.value || 'info';
+    const date = card.querySelector('.ann-date')?.value.trim() || new Date().toLocaleDateString('vi-VN');
+    const content = card.querySelector('.ann-content')?.value.trim() || '';
+    const active = card.querySelector('.ann-active')?.value !== 'false';
+    if (title) {
+      customAnnouncements.push({
+        id: 'ann-' + (i + 1) + '-' + Date.now().toString(36),
+        title,
+        type,
+        date,
+        content,
+        active
+      });
+    }
+  });
+  data.announcements = customAnnouncements;
 
   // Update current edited artist data into state
   const editedArtistData = readItems('[data-artist]', 'artist')[0];
