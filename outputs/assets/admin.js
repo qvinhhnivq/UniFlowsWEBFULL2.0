@@ -51,6 +51,10 @@ function switchAdminTab(tabId) {
       pane.classList.remove('active');
     }
   });
+
+  if (tabId === 'admin-tab-overview') {
+    renderDashboard();
+  }
 }
 
 document.querySelectorAll('#admin-tabs .admin-tab-btn').forEach(btn => {
@@ -493,6 +497,7 @@ async function loadPayoutRequests() {
   }
 
   payoutRequests = list;
+  renderDashboard();
 
   // Calculate statistics
   let pendingCount = 0;
@@ -974,6 +979,7 @@ async function loadReleasesQueue() {
 
       if (!error && dbReleases) {
         releases = dbReleases;
+        renderDashboard();
       }
     } catch (e) {
       console.warn('Lỗi tải queue từ Supabase:', e);
@@ -1348,52 +1354,289 @@ function render() {
 }
 
 // ----------------------------------------------------
-// DASHBOARD ANALYTICS RENDER
+// DASHBOARD ANALYTICS & REVENUE SYNC
 // ----------------------------------------------------
+function parseNumber(val) {
+  if (val === null || val === undefined) return 0;
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  let str = String(val).trim().toUpperCase();
+  if (str === '' || str === 'NULL' || str === 'UNDEFINED') return 0;
+  if (str.endsWith('M')) {
+    return Math.round(parseFloat(str.slice(0, -1).replace(/,/g, '.')) * 1000000) || 0;
+  }
+  if (str.endsWith('K')) {
+    return Math.round(parseFloat(str.slice(0, -1).replace(/,/g, '.')) * 1000) || 0;
+  }
+  return parseInt(str.replace(/[^0-9]/g, ''), 10) || 0;
+}
+
 function renderDashboard() {
   const totalRevEl = document.querySelector('#admin-total-revenue');
   const totalStreamsEl = document.querySelector('#admin-total-streams');
   const totalLiveEl = document.querySelector('#admin-total-live-releases');
+  const pendingRelEl = document.querySelector('#admin-pending-releases-count');
+  const pendingPayoutsEl = document.querySelector('#admin-total-pending-payouts');
+  const pendingPayoutsCountEl = document.querySelector('#admin-pending-payouts-count');
   const topArtistsList = document.querySelector('#admin-top-artists-list');
   
   if (!totalRevEl) return;
   
   let totalRev = 0;
   let totalStreams = 0;
-  let liveCount = releases.filter(r => r.submission_status === 'Đã phát hành').length;
+  let spotifyRevTotal = 0;
+  let spotifyStreamsTotal = 0;
+  let appleRevTotal = 0;
+  let appleStreamsTotal = 0;
+  let youtubeRevTotal = 0;
+  let youtubeStreamsTotal = 0;
+  let otherRevTotal = 0;
+  let otherStreamsTotal = 0;
 
-  const sortedArtists = [...(data.artists || [])].sort((a, b) => {
-    const revA = parseInt(String(a.estimatedRevenue).replace(/[^0-9]/g, '')) || 0;
-    const revB = parseInt(String(b.estimatedRevenue).replace(/[^0-9]/g, '')) || 0;
-    return revB - revA;
+  // 1. Calculate releases metrics
+  const liveCount = releases.filter(r => !r.submission_status || r.submission_status === 'Đã phát hành').length;
+  const pendingCount = releases.filter(r => r.submission_status && r.submission_status.includes('chờ')).length;
+
+  if (totalLiveEl) totalLiveEl.textContent = liveCount.toString();
+  if (pendingRelEl) pendingRelEl.textContent = `${pendingCount} bản phát hành chờ duyệt`;
+
+  // 2. Calculate payouts metrics
+  let pendingPayoutAmount = 0;
+  let pendingPayoutCount = 0;
+  (payoutRequests || []).forEach(req => {
+    if (req.status === 'Đang chờ xem xét') {
+      pendingPayoutCount++;
+      pendingPayoutAmount += parseNumber(req.amount);
+    }
   });
 
-  sortedArtists.forEach(a => {
-    totalRev += parseInt(String(a.estimatedRevenue).replace(/[^0-9]/g, '')) || 0;
-    totalStreams += parseInt(String(a.monthlyStreams).replace(/[^0-9]/g, '')) || 0;
+  if (pendingPayoutsEl) pendingPayoutsEl.textContent = `₫ ${pendingPayoutAmount.toLocaleString('vi-VN')}`;
+  if (pendingPayoutsCountEl) pendingPayoutsCountEl.textContent = `${pendingPayoutCount} yêu cầu cần xử lý`;
+
+  // 3. Process Artists Data & Sums
+  const processedArtists = (data.artists || []).map(a => {
+    const spRev = parseNumber(a.spotifyRevenue);
+    const spStr = parseNumber(a.spotifyStreams);
+    const apRev = parseNumber(a.appleRevenue);
+    const apStr = parseNumber(a.appleStreams);
+    const ytRev = parseNumber(a.youtubeRevenue);
+    const ytStr = parseNumber(a.youtubeStreams);
+    const otRev = parseNumber(a.otherRevenue);
+    const otStr = parseNumber(a.otherStreams);
+
+    const dspRevSum = spRev + apRev + ytRev + otRev;
+    const dspStrSum = spStr + apStr + ytStr + otStr;
+
+    const estRev = parseNumber(a.estimatedRevenue);
+    const mStr = parseNumber(a.monthlyStreams);
+
+    // Use the highest available revenue and streams
+    const finalRev = dspRevSum > 0 ? dspRevSum : estRev;
+    const finalStr = dspStrSum > 0 ? dspStrSum : mStr;
+
+    spotifyRevTotal += spRev;
+    spotifyStreamsTotal += spStr;
+    appleRevTotal += apRev;
+    appleStreamsTotal += apStr;
+    youtubeRevTotal += ytRev;
+    youtubeStreamsTotal += ytStr;
+    otherRevTotal += otRev;
+    otherStreamsTotal += otStr;
+
+    totalRev += finalRev;
+    totalStreams += finalStr;
+
+    return {
+      ...a,
+      calculatedRev: finalRev,
+      calculatedStreams: finalStr,
+      spRev,
+      apRev,
+      ytRev,
+      otRev
+    };
   });
 
   totalRevEl.textContent = `₫ ${totalRev.toLocaleString('vi-VN')}`;
-  totalStreamsEl.textContent = totalStreams.toLocaleString('en-US');
-  totalLiveEl.textContent = liveCount.toString();
+  totalStreamsEl.textContent = totalStreams.toLocaleString('vi-VN');
+
+  // 4. Update Platform Breakdown
+  const totalDspRev = (spotifyRevTotal + appleRevTotal + youtubeRevTotal + otherRevTotal) || totalRev || 1;
+  
+  const spPct = Math.round((spotifyRevTotal / totalDspRev) * 100) || 0;
+  const apPct = Math.round((appleRevTotal / totalDspRev) * 100) || 0;
+  const ytPct = Math.round((youtubeRevTotal / totalDspRev) * 100) || 0;
+  const otPct = Math.max(0, 100 - spPct - apPct - ytPct);
+
+  const setEl = (id, val) => {
+    const el = document.querySelector(id);
+    if (el) el.textContent = val;
+  };
+
+  setEl('#admin-dsp-val-spotify', `₫ ${spotifyRevTotal.toLocaleString('vi-VN')}`);
+  setEl('#admin-dsp-pct-spotify', `${spPct}%`);
+  setEl('#admin-dsp-streams-spotify', `${spotifyStreamsTotal.toLocaleString('vi-VN')} streams`);
+
+  setEl('#admin-dsp-val-apple', `₫ ${appleRevTotal.toLocaleString('vi-VN')}`);
+  setEl('#admin-dsp-pct-apple', `${apPct}%`);
+  setEl('#admin-dsp-streams-apple', `${appleStreamsTotal.toLocaleString('vi-VN')} streams`);
+
+  setEl('#admin-dsp-val-youtube', `₫ ${youtubeRevTotal.toLocaleString('vi-VN')}`);
+  setEl('#admin-dsp-pct-youtube', `${ytPct}%`);
+  setEl('#admin-dsp-streams-youtube', `${youtubeStreamsTotal.toLocaleString('vi-VN')} streams`);
+
+  setEl('#admin-dsp-val-other', `₫ ${otherRevTotal.toLocaleString('vi-VN')}`);
+  setEl('#admin-dsp-pct-other', `${otPct}%`);
+  setEl('#admin-dsp-streams-other', `${otherStreamsTotal.toLocaleString('vi-VN')} streams`);
+
+  // 5. Render Artists Table
+  const sortedArtists = [...processedArtists].sort((a, b) => b.calculatedRev - a.calculatedRev);
 
   if (topArtistsList) {
     if (sortedArtists.length === 0) {
-      topArtistsList.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có dữ liệu nghệ sĩ.</p>';
+      topArtistsList.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có dữ liệu nghệ sĩ trong hệ thống.</p>';
     } else {
-      topArtistsList.innerHTML = sortedArtists.slice(0, 5).map((a, i) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom: 1px solid var(--line);">
-          <div style="display:flex; align-items:center; gap: 10px;">
-            <b style="font-size: 14px; color: #64748b;">#${i+1}</b>
-            <img src="${a.image || ''}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-            <span style="font-weight: bold; font-size: 14px;">${a.name}</span>
-          </div>
-          <strong style="color: #2563eb; font-size: 14px;">₫ ${(parseInt(String(a.estimatedRevenue).replace(/[^0-9]/g, '')) || 0).toLocaleString('vi-VN')}</strong>
+      topArtistsList.innerHTML = `
+        <div style="overflow-x: auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--ink); background:#fafafa;">
+                <th style="padding:10px 12px; width:40px;">#</th>
+                <th style="padding:10px 12px;">Nghệ sĩ</th>
+                <th style="padding:10px 12px;">Vai trò & Thể loại</th>
+                <th style="padding:10px 12px; text-align:right;">Lượt Streams</th>
+                <th style="padding:10px 12px; text-align:right;">Doanh thu ước tính</th>
+                <th style="padding:10px 12px; text-align:right;">Royalty Rate</th>
+                <th style="padding:10px 12px; text-align:right;">Số dư khả dụng</th>
+                <th style="padding:10px 12px; text-align:center;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedArtists.map((a, i) => `
+                <tr style="border-bottom: 1px solid var(--line); transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                  <td style="padding:12px; font-weight:bold; color:#64748b;">${i + 1}</td>
+                  <td style="padding:12px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <img src="${a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=80&q=80'}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--ink);">
+                      <div>
+                        <strong style="font-size:14px; display:block;">${esc(a.name)}</strong>
+                        <small style="color:#64748b; font-family:'DM Mono',monospace;">${esc(a.id)}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="padding:12px;">
+                    <span style="display:inline-block; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; background:#eff6ff; color:#1d4ed8; text-transform:uppercase;">${esc(a.roleType || 'Distribution')}</span>
+                    <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(a.genre || 'Music')}</div>
+                  </td>
+                  <td style="padding:12px; text-align:right; font-weight:bold; font-family:'DM Mono',monospace; color:#059669;">
+                    ${a.calculatedStreams.toLocaleString('vi-VN')}
+                  </td>
+                  <td style="padding:12px; text-align:right; font-weight:bold; font-size:14px; color:#2563eb;">
+                    ₫ ${a.calculatedRev.toLocaleString('vi-VN')}
+                  </td>
+                  <td style="padding:12px; text-align:right; font-size:12px;">
+                    <span style="font-family:'DM Mono',monospace; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:bold;">${esc(a.royaltyRate || '80% Master')}</span>
+                  </td>
+                  <td style="padding:12px; text-align:right; font-weight:bold; font-family:'DM Mono',monospace; color:#7c3aed;">
+                    ₫ ${parseNumber(a.payableBalance).toLocaleString('vi-VN')}
+                  </td>
+                  <td style="padding:12px; text-align:center;">
+                    <button type="button" class="button alt" style="padding:4px 8px; font-size:11px;" onclick="window.adminSelectArtist('${esc(a.id)}')">✏️ Sửa</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
         </div>
-      `).join('');
+      `;
     }
   }
 }
+
+// Global helper to switch to artist editor from dashboard
+window.adminSelectArtist = function(artistId) {
+  selectedArtistId = artistId;
+  switchAdminTab('admin-tab-artists');
+  renderArtistSelector();
+  renderSelectedArtistEditor();
+  scrollTo({ top: 300, behavior: 'smooth' });
+};
+
+// Refresh Dashboard Button
+document.querySelector('#admin-refresh-dashboard-btn')?.addEventListener('click', async () => {
+  data = await getData();
+  await loadReleasesQueue();
+  await loadPayoutRequests();
+  renderDashboard();
+  showNotice('✓ Đã cập nhật toàn bộ số liệu thống kê Dashboard mới nhất!');
+});
+
+// CSV Revenue Report Import Handler
+document.querySelector('#admin-csv-upload')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length < 2) {
+      alert('File CSV không đúng định dạng hoặc không có dòng dữ liệu.');
+      return;
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/["']/g, ''));
+    let matchedCount = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i].split(',').map(c => c.trim().replace(/["']/g, ''));
+      if (row.length === 0 || !row.some(Boolean)) continue;
+
+      let artistId = '';
+      let artistName = '';
+      let addRev = 0;
+      let addStreams = 0;
+
+      headers.forEach((h, colIdx) => {
+        const val = row[colIdx] || '';
+        if (h === 'id' || h === 'artist_id' || h === 'artist id' || h === 'slug') artistId = val;
+        if (h === 'name' || h === 'artist' || h === 'artist_name' || h === 'artist name') artistName = val;
+        if (h.includes('revenue') || h.includes('doanh_thu') || h.includes('amount') || h.includes('earnings') || h.includes('usd') || h.includes('vnd')) {
+          addRev += parseNumber(val);
+        }
+        if (h.includes('stream') || h.includes('play') || h.includes('luot_nghe') || h.includes('quantity')) {
+          addStreams += parseNumber(val);
+        }
+      });
+
+      const targetArtist = data.artists.find(a => 
+        (artistId && a.id.toLowerCase() === artistId.toLowerCase()) ||
+        (artistName && a.name.toLowerCase() === artistName.toLowerCase())
+      );
+
+      if (targetArtist) {
+        matchedCount++;
+        const currentRev = parseNumber(targetArtist.estimatedRevenue);
+        const currentPayable = parseNumber(targetArtist.payableBalance);
+        const currentStreams = parseNumber(targetArtist.monthlyStreams);
+
+        targetArtist.estimatedRevenue = (currentRev + addRev).toLocaleString('vi-VN');
+        targetArtist.payableBalance = (currentPayable + addRev).toLocaleString('vi-VN');
+        targetArtist.monthlyStreams = (currentStreams + addStreams).toLocaleString('vi-VN');
+      }
+    }
+
+    if (matchedCount > 0) {
+      await saveData(data);
+      showNotice(`✓ Đã import thành công dữ liệu doanh thu cho ${matchedCount} nghệ sĩ!`);
+      render();
+    } else {
+      alert('Không tìm thấy nghệ sĩ nào khớp trong hệ thống từ file CSV. Vui lòng kiểm tra cột "artist_id" hoặc "artist_name".');
+    }
+  } catch (err) {
+    console.error('Lỗi khi đọc file CSV:', err);
+    alert('Đã xảy ra lỗi khi đọc file CSV: ' + err.message);
+  }
+  e.target.value = '';
+});
 
 function readItems(selector, kind) {
   return [...document.querySelectorAll(selector)].map(el => {

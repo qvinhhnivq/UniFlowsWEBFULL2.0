@@ -29,34 +29,115 @@
 
     <form id="site-form">
       <!-- ========================================== -->
-      <!-- TAB 0: DASHBOARD TỔNG QUAN -->
+      <!-- TAB 0: DASHBOARD TỔNG QUAN HÃNG ĐĨA -->
       <!-- ========================================== -->
       <section id="admin-tab-overview" class="tab-pane active admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
         <div class="section-head" style="padding-left: 0; padding-right: 0;">
           <div>
-            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Dashboard Hãng Đĩa</h2>
-            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Theo dõi tổng quan doanh thu, lượt stream và top nghệ sĩ.</p>
+            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;">Executive Label Dashboard</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Tổng quan toàn diện về doanh thu, lượt stream, đối soát DSP và phân tích toàn bộ Roster nghệ sĩ.</p>
           </div>
-          <span class="kicker">Label Analytics</span>
+          <span class="kicker">Real-time Analytics</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 15px 0;">
-          <div style="background: #fff; border: 1px solid var(--ink); padding: 18px; border-radius: 8px;">
-            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #64748b;">Tổng Doanh Thu Hãng</span>
-            <strong id="admin-total-revenue" style="display: block; font-size: 28px; margin-top: 8px; color: #2563eb;">₫ 0</strong>
+        <!-- 4 Metric Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 18px 0;">
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 18px; border-radius: 10px; border-top: 4px solid #2563eb;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #2563eb;">💰 Tổng Doanh Thu Hãng</span>
+              <span style="font-size: 11px; opacity: 0.6;">VNĐ</span>
+            </div>
+            <strong id="admin-total-revenue" style="display: block; font-size: 28px; margin-top: 6px; letter-spacing: -0.04em; color: #1e3a8a;">₫ 0</strong>
+            <span style="font-size: 11px; opacity: 0.7; margin-top: 4px; display: block;">Tổng hợp từ tất cả DSPs & Nghệ sĩ</span>
           </div>
-          <div style="background: #fff; border: 1px solid var(--ink); padding: 18px; border-radius: 8px;">
-            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #64748b;">Tổng Lượt Stream</span>
-            <strong id="admin-total-streams" style="display: block; font-size: 28px; margin-top: 8px; color: #10b981;">0</strong>
+
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 18px; border-radius: 10px; border-top: 4px solid #10b981;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #10b981;">🎧 Tổng Lượt Stream</span>
+              <span style="font-size: 11px; opacity: 0.6;">Toàn cầu</span>
+            </div>
+            <strong id="admin-total-streams" style="display: block; font-size: 28px; margin-top: 6px; letter-spacing: -0.04em; color: #065f46;">0</strong>
+            <span style="font-size: 11px; opacity: 0.7; margin-top: 4px; display: block;">150+ Nền tảng âm nhạc đối tác</span>
           </div>
-          <div style="background: #fff; border: 1px solid var(--ink); padding: 18px; border-radius: 8px;">
-            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #64748b;">Bản Phát Hành (Live)</span>
-            <strong id="admin-total-live-releases" style="display: block; font-size: 28px; margin-top: 8px; color: #f59e0b;">0</strong>
+
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 18px; border-radius: 10px; border-top: 4px solid #f59e0b;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #f59e0b;">💿 Bản Phát Hành Live</span>
+              <span style="font-size: 11px; opacity: 0.6;">Catalogue</span>
+            </div>
+            <strong id="admin-total-live-releases" style="display: block; font-size: 28px; margin-top: 6px; letter-spacing: -0.04em; color: #92400e;">0</strong>
+            <span id="admin-pending-releases-count" style="font-size: 11px; opacity: 0.7; margin-top: 4px; display: block;">0 bản phát hành chờ duyệt</span>
+          </div>
+
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 18px; border-radius: 10px; border-top: 4px solid #8b5cf6;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #8b5cf6;">💳 Yêu Cầu Rút Đang Chờ</span>
+              <span style="font-size: 11px; opacity: 0.6;">Payouts</span>
+            </div>
+            <strong id="admin-total-pending-payouts" style="display: block; font-size: 28px; margin-top: 6px; letter-spacing: -0.04em; color: #5b21b6;">₫ 0</strong>
+            <span id="admin-pending-payouts-count" style="font-size: 11px; opacity: 0.7; margin-top: 4px; display: block;">0 yêu cầu cần xử lý</span>
           </div>
         </div>
 
-        <div style="background: #fff; border: 1px solid var(--ink); padding: 20px; border-radius: 8px; margin-top: 20px;">
-          <h3 style="font-size: 16px; margin: 0 0 12px;">Top Nghệ Sĩ (Theo Doanh Thu)</h3>
+        <!-- DSP Revenue Breakdown for Total Label -->
+        <div style="background: #fff; border: 1px solid var(--ink); padding: 22px; border-radius: 10px; margin-bottom: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; flex-wrap:wrap; gap:8px;">
+            <div>
+              <h3 style="font-size: 16px; margin: 0;">🌐 Thị phần Doanh thu Theo Nền tảng (DSP Breakdown)</h3>
+              <p style="font-size: 12px; opacity: 0.75; margin: 2px 0 0;">Phân bổ dòng tiền từ các đối tác streaming trên toàn hệ thống UniFLOWs.</p>
+            </div>
+            <span class="kicker">Market Share</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:14px; border-radius:8px; border-top:3px solid #1db954;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:13px; color:#1db954;">● Spotify</strong>
+                <span id="admin-dsp-pct-spotify" style="font-size:12px; font-weight:bold; color:#1db954;">0%</span>
+              </div>
+              <b id="admin-dsp-val-spotify" style="font-size:20px; display:block; margin:6px 0; letter-spacing:-0.03em;">₫ 0</b>
+              <small id="admin-dsp-streams-spotify" style="font-size:11px; color:#64748b;">0 streams</small>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:14px; border-radius:8px; border-top:3px solid #fc3c44;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:13px; color:#fc3c44;">● Apple Music</strong>
+                <span id="admin-dsp-pct-apple" style="font-size:12px; font-weight:bold; color:#fc3c44;">0%</span>
+              </div>
+              <b id="admin-dsp-val-apple" style="font-size:20px; display:block; margin:6px 0; letter-spacing:-0.03em;">₫ 0</b>
+              <small id="admin-dsp-streams-apple" style="font-size:11px; color:#64748b;">0 streams</small>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:14px; border-radius:8px; border-top:3px solid #ff0000;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:13px; color:#ff0000;">● YouTube Music</strong>
+                <span id="admin-dsp-pct-youtube" style="font-size:12px; font-weight:bold; color:#ff0000;">0%</span>
+              </div>
+              <b id="admin-dsp-val-youtube" style="font-size:20px; display:block; margin:6px 0; letter-spacing:-0.03em;">₫ 0</b>
+              <small id="admin-dsp-streams-youtube" style="font-size:11px; color:#64748b;">0 streams</small>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:14px; border-radius:8px; border-top:3px solid #8b5cf6;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:13px; color:#8b5cf6;">● Zing / NCT / Khác</strong>
+                <span id="admin-dsp-pct-other" style="font-size:12px; font-weight:bold; color:#8b5cf6;">0%</span>
+              </div>
+              <b id="admin-dsp-val-other" style="font-size:20px; display:block; margin:6px 0; letter-spacing:-0.03em;">₫ 0</b>
+              <small id="admin-dsp-streams-other" style="font-size:11px; color:#64748b;">0 streams</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Artists Roster Performance Ledger -->
+        <div style="background: #fff; border: 1px solid var(--ink); padding: 22px; border-radius: 10px; margin-top: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h3 style="font-size: 16px; margin: 0;">👥 Bảng Đối Soát Doanh Thu & Lượt Stream Từng Nghệ Sĩ</h3>
+              <p style="font-size: 12px; opacity: 0.75; margin: 2px 0 0;">Danh sách toàn bộ nghệ sĩ trong hệ thống, sắp xếp theo doanh thu cao nhất.</p>
+            </div>
+            <button type="button" id="admin-refresh-dashboard-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Cập nhật số liệu</button>
+          </div>
+
           <div id="admin-top-artists-list">
              <p class="empty" style="font-size: 13px;">Đang tải dữ liệu...</p>
           </div>
