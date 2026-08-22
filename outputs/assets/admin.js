@@ -3015,7 +3015,63 @@ function renderUniHubeAdmin() {
     }
   }
 
-  // 2. Render Producers Roster
+  // 2. Render Services & Technical Solutions
+  const servicesGrid = document.querySelector('#hube-services-admin-grid');
+  if (servicesGrid) {
+    if (!hube.services || !Array.isArray(hube.services)) {
+      hube.services = JSON.parse(JSON.stringify(defaultData.unihube.services));
+    }
+    servicesGrid.innerHTML = hube.services.map((s, idx) => `
+      <div style="background:#fafafa;border:1px solid var(--ink);border-radius:8px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:#d97706;font-weight:bold;text-transform:uppercase;">0${idx+1} / Solution</span>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:#15803d;font-weight:bold;">${esc(s.price || 'Thỏa thuận')}</span>
+          </div>
+          <h4 style="margin:2px 0 6px;font-size:15px;line-height:1.2;">${esc(s.title)}</h4>
+          <p style="font-size:12px;color:#555;line-height:1.4;margin:0 0 10px;">${esc(s.desc)}</p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:6px;border-top:1px solid #eee;padding-top:10px;">
+          <button type="button" class="button alt edit-hube-service-btn" data-id="${s.id}" style="padding:4px 8px;font-size:10px;">✏️ Sửa</button>
+          <button type="button" class="button alt remove delete-hube-service-btn" data-id="${s.id}" style="padding:4px 8px;font-size:10px;">✕ Xóa</button>
+        </div>
+      </div>
+    `).join('');
+
+    servicesGrid.querySelectorAll('.edit-hube-service-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const s = hube.services.find(x => x.id === btn.dataset.id);
+        if (!s) return;
+        const newTitle = prompt('Sửa Tên Gói Dịch Vụ:', s.title);
+        if (newTitle === null) return;
+        const newPrice = prompt('Sửa Mức Giá Niêm Yết:', s.price);
+        if (newPrice === null) return;
+        const newDesc = prompt('Sửa Mô tả dịch vụ:', s.desc);
+        if (newDesc === null) return;
+
+        s.title = newTitle.trim() || s.title;
+        s.price = newPrice.trim() || s.price;
+        s.desc = newDesc.trim() || s.desc;
+
+        await saveData(data);
+        renderUniHubeAdmin();
+        showNotice(`✓ Đã cập nhật gói dịch vụ "${s.title}"!`);
+      };
+    });
+
+    servicesGrid.querySelectorAll('.delete-hube-service-btn').forEach(btn => {
+      btn.onclick = async () => {
+        if (confirm('Xác nhận xóa gói dịch vụ này khỏi Uni-HUBE?')) {
+          hube.services = hube.services.filter(x => x.id !== btn.dataset.id);
+          await saveData(data);
+          renderUniHubeAdmin();
+          showNotice('✓ Đã xóa gói dịch vụ.');
+        }
+      };
+    });
+  }
+
+  // 3. Render Producers Roster
   const grid = document.querySelector('#hube-producers-admin-grid');
   if (grid) {
     const list = hube.producers || [];
@@ -3301,6 +3357,48 @@ document.querySelector('#close-producer-tracks-dialog-btn')?.addEventListener('c
 });
 document.querySelector('#btn-save-close-producer-tracks')?.addEventListener('click', () => {
   document.querySelector('#admin-producer-tracks-dialog')?.close();
+});
+
+// Add Service UI Handlers
+document.querySelector('#btn-show-add-hube-service-form')?.addEventListener('click', () => {
+  const box = document.querySelector('#add-hube-service-box');
+  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+});
+document.querySelector('#btn-cancel-add-hube-service')?.addEventListener('click', () => {
+  const box = document.querySelector('#add-hube-service-box');
+  if (box) box.style.display = 'none';
+});
+document.querySelector('#btn-save-new-hube-service')?.addEventListener('click', async () => {
+  const title = document.querySelector('#new-service-title').value.trim();
+  const price = document.querySelector('#new-service-price').value.trim() || 'Thỏa thuận';
+  const desc = document.querySelector('#new-service-desc').value.trim();
+
+  if (!title || !desc) {
+    alert('Vui lòng nhập Tên gói dịch vụ và Mô tả chi tiết.');
+    return;
+  }
+
+  const newService = {
+    id: `srv-${Date.now()}`,
+    title,
+    price,
+    desc
+  };
+
+  if (!data.unihube) data.unihube = JSON.parse(JSON.stringify(defaultData.unihube));
+  if (!data.unihube.services) data.unihube.services = [];
+  data.unihube.services.push(newService);
+
+  await saveData(data);
+  renderUniHubeAdmin();
+
+  // Clear inputs
+  document.querySelector('#new-service-title').value = '';
+  document.querySelector('#new-service-price').value = '';
+  document.querySelector('#new-service-desc').value = '';
+  document.querySelector('#add-hube-service-box').style.display = 'none';
+
+  showNotice(`✓ Đã thêm gói dịch vụ "${title}" vào Uni-HUBE!`);
 });
 
 // Add Producer UI Handlers

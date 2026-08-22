@@ -714,7 +714,47 @@
           </div>
         </div>
 
-        <!-- 02: Manage Producers Roster -->
+        <!-- 02: Manage Services & Technical Solutions -->
+        <div style="background:#fff;border:1px solid var(--ink);padding:20px;border-radius:10px;margin-bottom:25px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h3 style="margin:0;font-size:16px;">🎛️ Quản Lý Dịch Vụ Sản Xuất & Kỹ Thuật Phòng Thu (Production Solutions)</h3>
+              <p style="font-size:12px;color:#666;margin:2px 0 0;">Hiển thị trực tiếp ở mục các giải pháp sản xuất âm nhạc trên trang Uni-HUBE.</p>
+            </div>
+            <button type="button" id="btn-show-add-hube-service-form" class="button" style="background:#d97706;color:#fff;border-color:#d97706;padding:8px 16px;font-size:11px;font-weight:bold;">
+              + Thêm Gói Dịch Vụ Mới
+            </button>
+          </div>
+
+          <!-- Add Service Inline Box -->
+          <div id="add-hube-service-box" style="display:none;background:#fef3c7;border:1px dashed #d97706;padding:16px;border-radius:8px;margin-bottom:16px;">
+            <h4 style="margin:0 0 10px;font-size:13px;color:#92400e;">✨ Thêm Gói Dịch Vụ Sản Xuất / Kỹ Thuật Mới</h4>
+            <div class="mini-grid">
+              <div class="field">
+                <label style="font-weight:bold;font-size:11px;">Tên Gói Dịch Vụ *</label>
+                <input id="new-service-title" type="text" placeholder="Ví dụ: Sản xuất Ca khúc Trọn gói (Full Production)">
+              </div>
+              <div class="field">
+                <label style="font-weight:bold;font-size:11px;">Mức Giá Niêm Yết *</label>
+                <input id="new-service-price" type="text" placeholder="Ví dụ: Từ ₫ 12,000,000 / bài">
+              </div>
+            </div>
+            <div class="field">
+              <label style="font-weight:bold;font-size:11px;">Mô tả chi tiết giải pháp kỹ thuật *</label>
+              <textarea id="new-service-desc" rows="2" placeholder="Mô tả quy trình, thiết bị, chuẩn âm thanh..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+              <button type="button" id="btn-cancel-add-hube-service" class="button alt" style="padding:6px 14px;font-size:11px;">Hủy</button>
+              <button type="button" id="btn-save-new-hube-service" class="button" style="background:#d97706;color:#fff;border-color:#d97706;padding:6px 16px;font-size:11px;font-weight:bold;">Lưu Dịch Vụ</button>
+            </div>
+          </div>
+
+          <div id="hube-services-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px;">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- 03: Manage Producers Roster -->
         <div style="background:#fff;border:1px solid var(--ink);padding:20px;border-radius:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
             <div>

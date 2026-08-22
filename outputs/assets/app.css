@@ -1112,5 +1112,94 @@ dialog textarea {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ===================================================
+   UNIFLOWS DYNAMIC BREATHING MULTI-RING CURSOR
+   =================================================== */
+@media (hover: hover) and (pointer: fine) {
+  .uniflows-cursor-dot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    background: var(--ink);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
+  }
+  .uniflows-cursor-aura {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    pointer-events: none;
+    z-index: 999998;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* Concentric multi-layer breathing rings */
+  .uniflows-cursor-aura::before,
+  .uniflows-cursor-aura::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  /* Outer soft ring */
+  .uniflows-cursor-aura::before {
+    border: 1.5px solid rgba(11, 11, 11, 0.45);
+    animation: cursorBreathingOuter 3.2s infinite ease-in-out;
+  }
+  /* Inner rotating breathing ring */
+  .uniflows-cursor-aura::after {
+    border: 1px dashed rgba(11, 11, 11, 0.3);
+    transform: scale(0.72);
+    animation: cursorBreathingInner 2.4s infinite alternate ease-in-out;
+  }
+
+  /* Interactive Hover State on links, buttons, cards */
+  body.cursor-hover .uniflows-cursor-dot {
+    width: 8px;
+    height: 8px;
+    background: #d97706;
+  }
+  body.cursor-hover .uniflows-cursor-aura {
+    width: 56px;
+    height: 56px;
+  }
+  body.cursor-hover .uniflows-cursor-aura::before {
+    border-color: rgba(11, 11, 11, 0.85);
+    background: rgba(11, 11, 11, 0.04);
+    box-shadow: 0 0 16px rgba(0,0,0,0.06);
+    animation: cursorBreathingOuter 1.6s infinite ease-in-out;
+  }
+  body.cursor-hover .uniflows-cursor-aura::after {
+    border-color: rgba(217, 119, 6, 0.5);
+    transform: scale(0.85);
+  }
+
+  /* Active Click State */
+  body.cursor-active .uniflows-cursor-aura {
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
+@keyframes cursorBreathingOuter {
+  0% { transform: scale(1); opacity: 0.65; }
+  50% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.65; }
+}
+
+@keyframes cursorBreathingInner {
+  0% { transform: scale(0.68) rotate(0deg); opacity: 0.35; }
+  50% { transform: scale(0.84) rotate(90deg); opacity: 0.85; }
+  100% { transform: scale(0.68) rotate(180deg); opacity: 0.35; }
+}
+
 
 

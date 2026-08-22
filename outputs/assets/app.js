@@ -403,3 +403,73 @@ $('.close-modal')?.addEventListener('click', () => $('#smart-modal')?.classList.
 $('#smart-modal')?.addEventListener('click', e => {
   if (e.target === $('#smart-modal')) $('#smart-modal').classList.remove('show');
 });
+
+// ----------------------------------------------------
+// DYNAMIC BREATHING MULTI-RING CURSOR CONTROLLER
+// ----------------------------------------------------
+function initCustomCursor() {
+  if (window.matchMedia('(hover: none) or (pointer: coarse)').matches) return;
+
+  let dot = document.querySelector('.uniflows-cursor-dot');
+  let aura = document.querySelector('.uniflows-cursor-aura');
+
+  if (!dot) {
+    dot = document.createElement('div');
+    dot.className = 'uniflows-cursor-dot';
+    document.body.appendChild(dot);
+  }
+  if (!aura) {
+    aura = document.createElement('div');
+    aura.className = 'uniflows-cursor-aura';
+    document.body.appendChild(aura);
+  }
+
+  let mouseX = -100, mouseY = -100;
+  let auraX = -100, auraY = -100;
+  let isMoving = false;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    dot.style.left = `${mouseX}px`;
+    dot.style.top = `${mouseY}px`;
+    if (!isMoving) {
+      isMoving = true;
+      auraX = mouseX;
+      auraY = mouseY;
+    }
+  }, { passive: true });
+
+  window.addEventListener('mousedown', () => document.body.classList.add('cursor-active'));
+  window.addEventListener('mouseup', () => document.body.classList.remove('cursor-active'));
+
+  // Smooth fluid lerp interpolation
+  function animateAura() {
+    auraX += (mouseX - auraX) * 0.18;
+    auraY += (mouseY - auraY) * 0.18;
+    aura.style.left = `${auraX}px`;
+    aura.style.top = `${auraY}px`;
+    requestAnimationFrame(animateAura);
+  }
+  requestAnimationFrame(animateAura);
+
+  // Hover detection on interactive elements
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest('a, button, input, select, textarea, .artist, .card, .producer-track-row, .hube-service-card, .release, .track-link-pill');
+    if (target) {
+      document.body.classList.add('cursor-hover');
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target.closest('a, button, input, select, textarea, .artist, .card, .producer-track-row, .hube-service-card, .release, .track-link-pill');
+    if (target) {
+      document.body.classList.remove('cursor-hover');
+    }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCustomCursor);
+} else {
+  initCustomCursor();
+}
