@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Quản trị nội dung & Phân phối — UniFLOWs</title>
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <main class="admin" style="max-width: 950px;">
+    <span class="eyebrow">UniFLOWs / Content & Distribution Manager</span>
+    <h1>Quản trị<br>hệ thống.</h1>
+    
+    <p class="notice" id="notice" style="display: none;">Đã lưu thay đổi vào cơ sở dữ liệu Supabase.</p>
+
+    <form id="site-form">
+      <!-- Section 1: Thông tin chung & Email -->
+      <section class="admin-section">
+        <h2>01 / Thông tin chung & Email liên hệ</h2>
+        <div class="field">
+          <label>Tiêu đề trang chủ (Tagline)</label>
+          <input name="tagline">
+        </div>
+        <div class="field">
+          <label>Mô tả đầu trang (Hero text)</label>
+          <textarea name="heroText" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>Tiêu đề giới thiệu (About title)</label>
+          <textarea name="aboutTitle" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>Nội dung giới thiệu (About text)</label>
+          <textarea name="aboutText" rows="3"></textarea>
+        </div>
+        <div class="field">
+          <label>Thành phố</label>
+          <input name="city">
+        </div>
+
+        <h3 style="font-size: 18px; margin-top: 25px; letter-spacing: -0.04em;">Hệ thống Email phòng ban (Tự đặt tên & thêm bớt tùy ý)</h3>
+        <p class="portal-note" style="margin-top:4px;">Bạn có thể tự do đặt tên phòng ban (ví dụ: Liên hệ chung, Gửi Demo, Booking, Hợp tác, Tuyển dụng...) và địa chỉ email tương ứng.</p>
+        <div id="emails-editor-container" style="display:grid;gap:10px;margin:15px 0;"></div>
+        <button class="button alt" type="button" id="add-email-row-btn" style="padding:8px 14px;font-size:11px;">+ Thêm email phòng ban mới</button>
+      </section>
+
+      <!-- Section 2: Duyệt bản phát hành từ nghệ sĩ -->
+      <section class="admin-section">
+        <h2>02 / Duyệt bản phát hành & Cập nhật link SmartLink</h2>
+        <p class="portal-note">Xem bản phát hành nghệ sĩ đã nộp, nghe Master audio, xem Artwork gốc, cập nhật link nền tảng (Spotify, Apple Music,...) và phê duyệt.</p>
+        <div id="releases-reviewer">
+          <p class="empty">Đang tải danh sách release...</p>
+        </div>
+      </section>
+
+      <!-- Section 3: Nghệ sĩ -->
+      <section class="admin-section">
+        <h2>03 / Quản lý Nghệ sĩ & Cập nhật Doanh thu</h2>
+        <div id="artists-editor"></div>
+        <button class="button alt" type="button" id="add-artist">+ Thêm nghệ sĩ mới</button>
+      </section>
+
+      <!-- Section 4: Bài viết / Tạp chí -->
+      <section class="admin-section">
+        <h2>04 / Bài viết & Tạp chí (Có Upload Ảnh Bìa)</h2>
+        <div id="articles-editor"></div>
+        <button class="button alt" type="button" id="add-article">+ Đăng bài viết mới</button>
+      </section>
+
+      <!-- Actions -->
+      <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10;">
+        <button class="button" type="submit" id="save-all-btn">Lưu toàn bộ lên Supabase</button>
+        <button class="button alt" type="button" id="logout">Đăng xuất</button>
+        <a class="button alt" href="/" target="_blank">Xem website ↗</a>
+      </div>
+    </form>
+  </main>
+
+  <script type="module" src="assets/admin.js"></script>
+</body>
+</html>

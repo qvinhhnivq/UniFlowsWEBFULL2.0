@@ -1,0 +1,10 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/listen/:release", "destination": "/listen.html?release=:release" },
+    { "source": "/listen/:artist/:release", "destination": "/listen.html?artist=:artist&release=:release" },
+    { "source": "/l/:release", "destination": "/listen.html?release=:release" },
+    { "source": "/l/:artist/:release", "destination": "/listen.html?artist=:artist&release=:release" }
+  ]
+}
