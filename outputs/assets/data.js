@@ -161,6 +161,102 @@ export const defaultData = {
       instagram: '',
       youtube: '',
       tiktok: ''
+    },
+    {
+      id: 'maro',
+      username: 'maro',
+      email: 'maro@uniflowslabel.com',
+      password: 'Maro@2026',
+      name: 'Maro',
+      roleType: 'exclusive',
+      genre: 'Neo-Soul / Lo-Fi',
+      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85',
+      bio: 'Maro mang đến âm thanh ấm áp, kết hợp giữa chất giọng tự sự mộc mạc và nhịp điệu neo-soul hiện đại.',
+      gallery: [],
+      monthlyStreams: '112.4K',
+      estimatedRevenue: '9,200,000',
+      payableBalance: '6,400,000',
+      spotifyStreams: '78.2K',
+      spotifyRevenue: '6,400,000',
+      appleStreams: '22.1K',
+      appleRevenue: '1,800,000',
+      youtubeStreams: '12.1K',
+      youtubeRevenue: '1,000,000',
+      otherStreams: '0',
+      otherRevenue: '0',
+      topCountry: 'Việt Nam',
+      topCity: 'Đà Nẵng',
+      topSource: 'Spotify Algorithmic',
+      products: [
+        { title: 'Cơn Mưa Đêm', type: 'Single · 2026', slug: 'con-mua-dem', url: '#' }
+      ],
+      instagram: '',
+      youtube: '',
+      tiktok: ''
+    },
+    {
+      id: 'anvy',
+      username: 'anvy',
+      email: 'anvy@uniflowslabel.com',
+      password: 'Anvy@2026',
+      name: 'An Vy',
+      roleType: 'collab',
+      genre: 'Hyperpop / Electronic',
+      image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85',
+      bio: 'Tiếng nói mới của Hyperpop Việt Nam với nguồn năng lượng bùng nổ và cá tính âm nhạc phá cách.',
+      gallery: [],
+      monthlyStreams: '185.0K',
+      estimatedRevenue: '14,100,000',
+      payableBalance: '9,800,000',
+      spotifyStreams: '120.0K',
+      spotifyRevenue: '9,000,000',
+      appleStreams: '45.0K',
+      appleRevenue: '3,600,000',
+      youtubeStreams: '20.0K',
+      youtubeRevenue: '1,500,000',
+      otherStreams: '0',
+      otherRevenue: '0',
+      topCountry: 'Việt Nam',
+      topCity: 'Hà Nội',
+      topSource: 'TikTok Viral Sound',
+      products: [
+        { title: 'Tia Chớp', type: 'Single · 2026', slug: 'tia-chop', url: '#' }
+      ],
+      instagram: '',
+      youtube: '',
+      tiktok: ''
+    },
+    {
+      id: 'trietle',
+      username: 'trietle',
+      email: 'trietle@uniflowslabel.com',
+      password: 'Triet@2026',
+      name: 'Triết Lê',
+      roleType: 'partner',
+      genre: 'Indie Folk / Acoustic',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=85',
+      bio: 'Sáng tác những giai điệu mộc mạc giàu tính chiêm nghiệm, dẫn lối người nghe qua những miền ký ức.',
+      gallery: [],
+      monthlyStreams: '94.5K',
+      estimatedRevenue: '7,800,000',
+      payableBalance: '5,200,000',
+      spotifyStreams: '60.0K',
+      spotifyRevenue: '5,000,000',
+      appleStreams: '24.5K',
+      appleRevenue: '2,000,000',
+      youtubeStreams: '10.0K',
+      youtubeRevenue: '800,000',
+      otherStreams: '0',
+      otherRevenue: '0',
+      topCountry: 'Việt Nam',
+      topCity: 'Đà Lạt',
+      topSource: 'Spotify Editorial',
+      products: [
+        { title: 'Hoàng Hôn Sau Đồi', type: 'Single · 2026', slug: 'hoang-hon-sau-doi', url: '#' }
+      ],
+      instagram: '',
+      youtube: '',
+      tiktok: ''
     }
   ],
   articles: [
@@ -538,10 +634,22 @@ export const defaultData = {
 
 export function getLocalCachedData() {
   try {
-    const cached = localStorage.getItem('uniflows-content');
-    return cached ? { ...defaultData, ...JSON.parse(cached) } : defaultData;
+    const raw = localStorage.getItem('uniflows-content');
+    if (!raw) return JSON.parse(JSON.stringify(defaultData));
+    const parsed = JSON.parse(raw);
+    const result = { ...defaultData, ...parsed };
+
+    // Merge any missing default artists
+    if (Array.isArray(parsed.artists) && parsed.artists.length > 0) {
+      const existingIds = new Set(parsed.artists.map(a => a.id));
+      const missingDefaultArtists = defaultData.artists.filter(a => !existingIds.has(a.id));
+      result.artists = [...parsed.artists, ...missingDefaultArtists];
+    } else {
+      result.artists = defaultData.artists;
+    }
+    return result;
   } catch {
-    return defaultData;
+    return JSON.parse(JSON.stringify(defaultData));
   }
 }
 
@@ -705,6 +813,17 @@ export async function getData() {
       merged.artists = cached.artists;
     }
 
+    // Apply explicit artist ordering
+    const activeOrder = settingsData?.artist_order || cached.artist_order || cached.artists?.map(a => a.id);
+    if (Array.isArray(activeOrder) && activeOrder.length > 0 && Array.isArray(merged.artists)) {
+      const orderMap = new Map(activeOrder.map((id, index) => [id, index]));
+      merged.artists.sort((a, b) => {
+        const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+        const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+        return idxA - idxB;
+      });
+    }
+
     if (articlesData && articlesData.length > 0) {
       merged.articles = articlesData.map(art => ({
         id: art.id,
@@ -729,6 +848,9 @@ export async function getData() {
 }
 
 export async function saveData(data) {
+  if (Array.isArray(data.artists)) {
+    data.artist_order = data.artists.map(a => a.id);
+  }
   localStorage.setItem('uniflows-content', JSON.stringify(data));
 
   if (!isSupabaseConfigured()) return true;
@@ -748,6 +870,7 @@ export async function saveData(data) {
       unihube: data.unihube || defaultData.unihube,
       collective48k: data.collective48k || defaultData.collective48k,
       admin_accounts: data.adminAccounts || defaultData.adminAccounts,
+      artist_order: data.artist_order || (data.artists || []).map(a => a.id),
       city: data.city,
       updated_at: new Date().toISOString()
     };

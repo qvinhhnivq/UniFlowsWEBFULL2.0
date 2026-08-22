@@ -259,11 +259,14 @@ function renderArtistSelector() {
       (a.roleType === 'exclusive' ? '#fef3c7; color:#b45309' : '#f0fdf4; color:#15803d'))));
 
     return `
-      <div class="artist-picker-card ${a.id === selectedArtistId ? 'active' : ''}" data-select-artist-id="${esc(a.id)}" style="position:relative;display:flex;align-items:center;justify-content:space-between;">
+      <div class="artist-picker-card ${a.id === selectedArtistId ? 'active' : ''}" data-select-artist-id="${esc(a.id)}" style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;">
         <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
           <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80')}" alt="${esc(a.name)}">
           <div style="flex:1;min-width:0;">
-            <strong style="font-size: 13px; display: block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(a.name || 'Người dùng')}</strong>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-family:'DM Mono',monospace;font-size:10px;font-weight:bold;color:#64748b;background:#f1f5f9;padding:1px 4px;border-radius:3px;">#${data.artists.indexOf(a) + 1}</span>
+              <strong style="font-size: 13px; display: block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(a.name || 'Người dùng')}</strong>
+            </div>
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;">
               <span style="font-family:'DM Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;font-weight:bold;letter-spacing:0;line-height:1.2;background:${isPublic ? '#dbeafe; color:#1e40af' : '#fef3c7; color:#92400e'};">
                 ${isPublic ? '🌐 Web' : '🔒 Portal'}
@@ -275,50 +278,12 @@ function renderArtistSelector() {
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:3px;margin-left:8px;" onclick="event.stopPropagation();">
-          <button type="button" class="btn-move-artist-up" data-id="${esc(a.id)}" title="Đưa nghệ sĩ lên trên" style="padding:2px 6px;font-size:9px;background:#fff;border:1px solid #ccc;border-radius:3px;cursor:pointer;line-height:1;font-weight:bold;">▲</button>
-          <button type="button" class="btn-move-artist-down" data-id="${esc(a.id)}" title="Đưa nghệ sĩ xuống dưới" style="padding:2px 6px;font-size:9px;background:#fff;border:1px solid #ccc;border-radius:3px;cursor:pointer;line-height:1;font-weight:bold;">▼</button>
+          <button type="button" class="btn-move-artist-up" data-id="${esc(a.id)}" title="Đưa nghệ sĩ lên trên" style="padding:3px 7px;font-size:10px;background:#fff;border:1px solid #94a3b8;border-radius:3px;cursor:pointer;line-height:1;font-weight:bold;">▲</button>
+          <button type="button" class="btn-move-artist-down" data-id="${esc(a.id)}" title="Đưa nghệ sĩ xuống dưới" style="padding:3px 7px;font-size:10px;background:#fff;border:1px solid #94a3b8;border-radius:3px;cursor:pointer;line-height:1;font-weight:bold;">▼</button>
         </div>
       </div>
     `;
   }).join('');
-
-  // Reorder Up
-  artistSelectorGrid.querySelectorAll('.btn-move-artist-up').forEach(btn => {
-    btn.onclick = async (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const index = data.artists.findIndex(x => x.id === id);
-      if (index > 0) {
-        const temp = data.artists[index];
-        data.artists[index] = data.artists[index - 1];
-        data.artists[index - 1] = temp;
-        selectedArtistId = id;
-        await saveData(data);
-        renderArtistSelector();
-        renderSelectedArtistEditor();
-        showNotice(`✓ Đã đưa nghệ sĩ "${temp.name}" lên vị trí #${index}!`);
-      }
-    };
-  });
-
-  // Reorder Down
-  artistSelectorGrid.querySelectorAll('.btn-move-artist-down').forEach(btn => {
-    btn.onclick = async (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const index = data.artists.findIndex(x => x.id === id);
-      if (index >= 0 && index < data.artists.length - 1) {
-        const temp = data.artists[index];
-        data.artists[index] = data.artists[index + 1];
-        data.artists[index + 1] = temp;
-        selectedArtistId = id;
-        await saveData(data);
-        renderArtistSelector();
-        renderSelectedArtistEditor();
-        showNotice(`✓ Đã đưa nghệ sĩ "${temp.name}" xuống vị trí #${index + 2}!`);
-      }
-    };
-  });
 
   artistSelectorGrid.querySelectorAll('[data-select-artist-id]').forEach(card => {
     card.addEventListener('click', () => {
@@ -326,6 +291,70 @@ function renderArtistSelector() {
       renderArtistSelector();
       renderSelectedArtistEditor();
     });
+  });
+
+  attachArtistReorderEvents();
+}
+
+async function moveArtistPosition(id, direction) {
+  const index = data.artists.findIndex(x => x.id === id);
+  if (index < 0) return;
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= data.artists.length) return;
+
+  const temp = data.artists[index];
+  data.artists[index] = data.artists[newIndex];
+  data.artists[newIndex] = temp;
+  data.artist_order = data.artists.map(a => a.id);
+  selectedArtistId = id;
+
+  await saveData(data);
+  renderArtistSelector();
+  renderSelectedArtistEditor();
+  showNotice(`✓ Đã thay đổi thứ tự: Nghệ sĩ "${temp.name}" chuyển sang vị trí #${newIndex + 1}!`);
+}
+
+async function setArtistExactPosition(id, targetIdx) {
+  const currentIndex = data.artists.findIndex(x => x.id === id);
+  if (currentIndex < 0 || targetIdx < 0 || targetIdx >= data.artists.length) return;
+  if (currentIndex === targetIdx) return;
+
+  const [moved] = data.artists.splice(currentIndex, 1);
+  data.artists.splice(targetIdx, 0, moved);
+  data.artist_order = data.artists.map(a => a.id);
+  selectedArtistId = id;
+
+  await saveData(data);
+  renderArtistSelector();
+  renderSelectedArtistEditor();
+  showNotice(`✓ Đã chuyển nghệ sĩ "${moved.name}" sang vị trí #${targetIdx + 1}!`);
+}
+
+function attachArtistReorderEvents() {
+  document.querySelectorAll('.btn-move-artist-up').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      await moveArtistPosition(id, -1);
+    };
+  });
+
+  document.querySelectorAll('.btn-move-artist-down').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      await moveArtistPosition(id, 1);
+    };
+  });
+
+  document.querySelectorAll('.select-artist-position').forEach(select => {
+    select.onchange = async (e) => {
+      const id = select.dataset.id;
+      const targetIdx = parseInt(select.value, 10);
+      await setArtistExactPosition(id, targetIdx);
+    };
   });
 }
 
@@ -343,6 +372,7 @@ function renderSelectedArtistEditor() {
   const idx = data.artists.indexOf(currentArtist);
   artistsBox.innerHTML = artistEditor(currentArtist, idx);
   attachArtistUploadEvents();
+  attachArtistReorderEvents();
 }
 
 const artistEditor = (a, idx) => {
@@ -359,10 +389,17 @@ const artistEditor = (a, idx) => {
           </span>
         </div>
         <h3 style="margin:4px 0 0;font-size:22px;">${esc(a.name)}</h3>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-          <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;color:#475569;">Thứ tự hiển thị: #${idx + 1} / ${data.artists.length}</span>
-          <button type="button" class="btn-move-artist-up button alt" data-id="${esc(a.id)}" style="padding:2px 8px;font-size:10px;font-weight:bold;">▲ Lên</button>
-          <button type="button" class="btn-move-artist-down button alt" data-id="${esc(a.id)}" style="padding:2px 8px;font-size:10px;font-weight:bold;">▼ Xuống</button>
+        
+        <!-- Interactive Position Ordering Bar -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;background:#f8fafc;padding:6px 12px;border:1px solid #cbd5e1;border-radius:4px;flex-wrap:wrap;">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#1e293b;">⚡ Vị trí hiển thị:</span>
+          <select class="select-artist-position" data-id="${esc(a.id)}" style="padding:4px 8px;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;border:1px solid #94a3b8;background:#fff;cursor:pointer;border-radius:3px;">
+            ${data.artists.map((art, i) => `
+              <option value="${i}" ${i === idx ? 'selected' : ''}>Vị trí #${i + 1} (${esc(art.name)})</option>
+            `).join('')}
+          </select>
+          <button type="button" class="btn-move-artist-up button alt" data-id="${esc(a.id)}" ${idx === 0 ? 'disabled' : ''} style="padding:3px 10px;font-size:10px;font-weight:bold;cursor:${idx === 0 ? 'not-allowed;opacity:0.4' : 'pointer'};">▲ Lên</button>
+          <button type="button" class="btn-move-artist-down button alt" data-id="${esc(a.id)}" ${idx === data.artists.length - 1 ? 'disabled' : ''} style="padding:3px 10px;font-size:10px;font-weight:bold;cursor:${idx === data.artists.length - 1 ? 'not-allowed;opacity:0.4' : 'pointer'};">▼ Xuống</button>
         </div>
       </div>
       <button class="button alt remove" type="button" data-remove-artist="${idx}" style="padding:6px 12px;font-size:11px;">✕ Xóa tài khoản này</button>

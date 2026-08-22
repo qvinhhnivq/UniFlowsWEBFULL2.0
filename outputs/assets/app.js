@@ -123,14 +123,15 @@ function artists() {
   }
 
   const isArtistsPage = document.body.dataset.page === 'artists';
-  const limit = isArtistsPage ? 6 : 4;
+  // On both homepage and roster page, default to showing top 3 artists (1 full row in 3-col grid)
+  const limit = 3;
   const shouldTruncate = publicArtists.length > limit;
   const visibleArtists = (shouldTruncate && !isArtistsExpanded) ? publicArtists.slice(0, limit) : publicArtists;
 
   const exploreText = t('explore_artist');
 
-  const cardsHtml = visibleArtists.map(a => `
-    <a class="artist" href="artist?id=${encodeURIComponent(a.id)}">
+  const cardsHtml = visibleArtists.map((a, i) => `
+    <a class="artist" href="artist?id=${encodeURIComponent(a.id)}" style="animation: fadeIn 0.35s ease ${i * 0.05}s both;">
       <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80')}" alt="${esc(a.name)}">
       <div class="artist-info">
         <span>${esc(a.genre || 'Music')}</span>
@@ -148,7 +149,7 @@ function artists() {
     
     toggleBtnHtml = `
       <div class="artists-toggle-bar" style="grid-column: 1 / -1; margin-top: 24px; text-align: center; width: 100%;">
-        <button type="button" id="btn-toggle-artists-roster" class="button alt" style="padding: 12px 28px; font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; border-radius: 4px; box-shadow: 2px 2px 0 var(--ink);">
+        <button type="button" id="btn-toggle-artists-roster" class="button alt" style="padding: 12px 32px; font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; border-radius: 4px; box-shadow: 2px 2px 0 var(--ink); transition: all 0.2s ease;">
           ${esc(btnLabel)}
         </button>
       </div>
@@ -166,9 +167,13 @@ function artists() {
   // Handle Toggle Click
   const toggleBtn = grid.querySelector('#btn-toggle-artists-roster');
   if (toggleBtn) {
-    toggleBtn.onclick = () => {
+    toggleBtn.onclick = (e) => {
+      e.preventDefault();
       isArtistsExpanded = !isArtistsExpanded;
       artists();
+      if (!isArtistsExpanded) {
+        grid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     };
   }
 }
