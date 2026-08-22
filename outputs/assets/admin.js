@@ -2020,7 +2020,7 @@ function readItems(selector, kind) {
   });
 }
 
-document.querySelector('#add-artist')?.addEventListener('click', () => {
+document.querySelector('#add-user')?.addEventListener('click', async () => {
   const newId = 'artist-' + Date.now().toString(36);
   data.artists.push({
     id: newId,
@@ -2028,9 +2028,9 @@ document.querySelector('#add-artist')?.addEventListener('click', () => {
     email: '',
     showOnWeb: true,
     roleType: 'exclusive',
-    genre: 'Pop / Indie',
+    genre: 'Pop / R&B',
     image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
-    bio: '',
+    bio: 'Thông tin giới thiệu về phong cách âm nhạc...',
     products: [],
     instagram: '',
     youtube: '',
@@ -2042,11 +2042,14 @@ document.querySelector('#add-artist')?.addEventListener('click', () => {
     royaltyRate: '80% Master',
     contractTerm: '2024 - 2027'
   });
+  data.artist_order = data.artists.map(a => a.id);
   selectedArtistId = newId;
+  await saveData(data);
+  showNotice('✓ Đã thêm tài khoản nghệ sĩ mới!');
   render();
 });
 
-document.querySelector('#add-portal-user')?.addEventListener('click', () => {
+document.querySelector('#add-portal-user')?.addEventListener('click', async () => {
   const newId = 'user-' + Date.now().toString(36);
   data.artists.push({
     id: newId,
@@ -2098,33 +2101,58 @@ document.querySelector('#add-partner-user')?.addEventListener('click', () => {
   render();
 });
 
-document.querySelector('#add-article')?.addEventListener('click', () => {
+document.querySelector('#add-article')?.addEventListener('click', async () => {
   data.articles.unshift({ id: 'bai-viet-' + Date.now().toString(36), date: '08.2026', category: 'News', title: 'Bài viết mới', cover: '', excerpt: '', body: '', published: true });
+  await saveData(data);
   render();
 });
 
-// Remove artist handler
+// Remove artist and article handler
 document.addEventListener('click', async e => {
   const removeArtistIdx = e.target.dataset.removeArtist;
   if (removeArtistIdx !== undefined) {
     const artistEl = e.target.closest('[data-artist]');
     const artistId = artistEl?.dataset.artistId;
-    if (!confirm(`Xác nhận xóa nghệ sĩ này khỏi hệ thống?`)) return;
+    const idxNum = parseInt(removeArtistIdx, 10);
+    const artistToRemove = data.artists[idxNum] || data.artists.find(a => a.id === artistId);
+    const artistName = artistToRemove?.name || 'nghệ sĩ này';
 
-    if (isSupabaseConfigured() && artistId) {
-      const { error } = await supabase.from('artists').delete().eq('id', artistId);
+    if (!confirm(`Xác nhận xóa nghệ sĩ "${artistName}" khỏi hệ thống?`)) return;
+
+    if (isSupabaseConfigured() && (artistId || artistToRemove?.id)) {
+      const targetId = artistId || artistToRemove?.id;
+      const { error } = await supabase.from('artists').delete().eq('id', targetId);
       if (error) console.error('Lỗi khi xóa nghệ sĩ trên Supabase:', error);
     }
 
-    data.artists.splice(removeArtistIdx, 1);
+    if (artistToRemove) {
+      const actualIdx = data.artists.indexOf(artistToRemove);
+      if (actualIdx >= 0) {
+        data.artists.splice(actualIdx, 1);
+      }
+    } else if (!isNaN(idxNum) && idxNum >= 0 && idxNum < data.artists.length) {
+      data.artists.splice(idxNum, 1);
+    }
+
+    data.artist_order = data.artists.map(a => a.id);
     selectedArtistId = data.artists[0]?.id || '';
+    await saveData(data);
+    await logAuditEvent('Xóa tài khoản', `Đã xóa nghệ sĩ "${artistName}" khỏi hệ thống.`);
+    showNotice(`✓ Đã xóa nghệ sĩ "${artistName}" khỏi hệ thống và đồng bộ ngay lên Website!`);
     render();
   }
 
   const removeArticleIdx = e.target.dataset.removeArticle;
   if (removeArticleIdx !== undefined) {
-    if (!confirm('Xóa bài viết này?')) return;
-    data.articles.splice(removeArticleIdx, 1);
+    const idxNum = parseInt(removeArticleIdx, 10);
+    const article = data.articles[idxNum];
+    if (!confirm(`Xóa bài viết "${article?.title || ''}"?`)) return;
+    if (isSupabaseConfigured() && article?.id) {
+      await supabase.from('articles').delete().eq('id', article.id);
+    }
+    data.articles.splice(idxNum, 1);
+    await saveData(data);
+    showNotice('✓ Đã xóa bài viết và cập nhật Website!');
     render();
   }
 });
@@ -2799,6 +2827,46 @@ document.querySelector('#btn-add-external-track')?.addEventListener('click', asy
   renderPublishingTracksList();
   showNotice(`✓ Đã thêm tác phẩm ký gửi "${title}" của ${artist} vào UniPUBLISHING thành công!`);
   await logAuditEvent('Thêm tác phẩm UniPUBLISHING', `Tác phẩm: ${title} - Nghệ sĩ: ${artist}`);
+});
+
+// Save UniPUBLISHING Pricing Function
+async function savePublishingPricing(quiet = false) {
+  if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing || {}));
+
+  data.publishing.basePrices = {
+    commercial: parseInt(document.querySelector('#pub-price-commercial')?.value || '15000000', 10),
+    film: parseInt(document.querySelector('#pub-price-film')?.value || '10000000', 10),
+    series: parseInt(document.querySelector('#pub-price-series')?.value || '6000000', 10),
+    gaming: parseInt(document.querySelector('#pub-price-gaming')?.value || '4000000', 10),
+    creator: parseInt(document.querySelector('#pub-price-creator')?.value || '2500000', 10),
+    event: parseInt(document.querySelector('#pub-price-event')?.value || '5000000', 10)
+  };
+
+  data.publishing.bundleDiscounts = {
+    b10: { count: 10, discountPct: parseInt(document.querySelector('#pub-bundle-10')?.value || '15', 10), name: 'Gói Mini Sync (10 bài)' },
+    b15: { count: 15, discountPct: parseInt(document.querySelector('#pub-bundle-15')?.value || '25', 10), name: 'Gói Pro Film (15 bài)' },
+    b20: { count: 20, discountPct: parseInt(document.querySelector('#pub-bundle-20')?.value || '35', 10), name: 'Gói Agency Master (20 bài)' },
+    full: { discountPct: parseInt(document.querySelector('#pub-bundle-full')?.value || '50', 10), name: 'Cấp phép Toàn bộ Catalogue' }
+  };
+
+  data.publishing.terms = document.querySelector('#pub-terms-text')?.value || '';
+
+  await saveData(data);
+  await logAuditEvent('Cập nhật giá UniPUBLISHING', 'Lưu bảng giá cấp phép và tỷ lệ chiết khấu');
+  if (!quiet) {
+    showNotice('✓ Đã lưu bảng giá & chính sách chiết khấu UniPUBLISHING thành công!');
+  }
+}
+
+document.querySelector('#btn-save-publishing-pricing')?.addEventListener('click', async () => {
+  await savePublishingPricing(false);
+});
+
+// Auto-save when changing any pricing field
+document.querySelectorAll('#pub-price-commercial, #pub-price-film, #pub-price-series, #pub-price-gaming, #pub-price-creator, #pub-price-event, #pub-bundle-10, #pub-bundle-15, #pub-bundle-20, #pub-bundle-full, #pub-terms-text').forEach(input => {
+  input?.addEventListener('change', async () => {
+    await savePublishingPricing(true);
+  });
 });
 
 // ====================================================

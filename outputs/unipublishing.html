@@ -321,6 +321,31 @@
       `).join('');
     }
 
+    function populateBundleDiscounts() {
+      const bundles = currentPubData.bundleDiscounts || {};
+      const b10Opt = document.querySelector('#sync-bundle-select option[value="10"]');
+      const b15Opt = document.querySelector('#sync-bundle-select option[value="15"]');
+      const b20Opt = document.querySelector('#sync-bundle-select option[value="20"]');
+      const bFullOpt = document.querySelector('#sync-bundle-select option[value="all"]');
+
+      if (b10Opt && bundles.b10) {
+        b10Opt.dataset.discount = bundles.b10.discountPct;
+        b10Opt.textContent = `📦 Bundle 10 Bài (Mini Sync Package - Ưu đãi Giảm ${bundles.b10.discountPct}%)`;
+      }
+      if (b15Opt && bundles.b15) {
+        b15Opt.dataset.discount = bundles.b15.discountPct;
+        b15Opt.textContent = `🎬 Bundle 15 Bài (Pro Film Package - Ưu đãi Giảm ${bundles.b15.discountPct}%)`;
+      }
+      if (b20Opt && bundles.b20) {
+        b20Opt.dataset.discount = bundles.b20.discountPct;
+        b20Opt.textContent = `🏆 Bundle 20 Bài (Agency Master Package - Ưu đãi Giảm ${bundles.b20.discountPct}%)`;
+      }
+      if (bFullOpt && bundles.full) {
+        bFullOpt.dataset.discount = bundles.full.discountPct;
+        bFullOpt.textContent = `🔥 Cấp Quyền TOÀN BỘ CATALOGUE (Full Catalog Unlimited Access - Ưu đãi Giảm ${bundles.full.discountPct}%)`;
+      }
+    }
+
     // Dynamic Sync Price & Bundle Calculator
     function updateSyncPrice() {
       const basePrices = currentPubData.basePrices || {
@@ -456,12 +481,14 @@
       alert(`✓ Yêu cầu cấp phép bản quyền (${bundle}) của bạn đã được gửi thành công!\n\nTác phẩm/Gói: ${song}\nĐại diện: ${client} (${email})\nPhí dự tính: ${priceText}\n\nĐội ngũ UniPUBLISHING sẽ gửi bản thảo hợp đồng điện tử và hóa đơn tài chính qua email trong vòng 2-4 giờ làm việc.`);
     });
 
+    populateBundleDiscounts();
     renderPublicSyncCatalogue();
     updateSyncPrice();
 
     getData().then(liveData => {
       if (liveData?.publishing) {
         currentPubData = liveData.publishing;
+        populateBundleDiscounts();
         renderPublicSyncCatalogue();
         updateSyncPrice();
       }
