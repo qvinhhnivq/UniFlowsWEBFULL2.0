@@ -1928,49 +1928,105 @@ function applyPortalTheme(theme) {
 }
 
 // ==========================================
-// MARKETING & ONE-CLICK ADS MANAGER
+// NOTIFICATIONS & CALENDAR & EPK
 // ==========================================
-function initMarketingTools() {
-  const releaseSelect = document.querySelector('#ads-release-select');
-  const promoStoryTitle = document.querySelector('#promo-story-title');
-  const promoStoryArtist = document.querySelector('#promo-story-artist');
-  const promoStoryArt = document.querySelector('#promo-story-art');
-
-  const products = artist.products || [];
-
-  if (releaseSelect && products.length > 0) {
-    releaseSelect.innerHTML = products.map(p => `<option value="${esc(p.title)}" data-art="${esc(p.artworkUrl || '')}">${esc(p.title)} (${esc(p.type || 'Single')})</option>`).join('');
-
-    // Set initial promo preview
-    const firstP = products[0];
-    if (promoStoryTitle) promoStoryTitle.textContent = firstP.title;
-    if (promoStoryArtist) promoStoryArtist.textContent = artist.name;
-    if (promoStoryArt && firstP.artworkUrl) promoStoryArt.src = firstP.artworkUrl;
-
-    releaseSelect.addEventListener('change', () => {
-      const opt = releaseSelect.selectedOptions[0];
-      const title = opt.value;
-      const art = opt.dataset.art;
-      if (promoStoryTitle) promoStoryTitle.textContent = title;
-      if (promoStoryArt && art) promoStoryArt.src = art;
+function initNotifications() {
+  const btnNotif = document.querySelector('#btn-notif');
+  const dropdown = document.querySelector('#notif-dropdown');
+  const markRead = document.querySelector('#mark-all-read-btn');
+  const badge = document.querySelector('#notif-badge');
+  if(btnNotif && dropdown) {
+    btnNotif.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      badge.style.display = 'none';
     });
+    document.addEventListener('click', (e) => {
+      if(!dropdown.contains(e.target) && !btnNotif.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+    if(markRead) markRead.addEventListener('click', () => { dropdown.style.display = 'none'; });
+    
+    // Mock 1 notif
+    setTimeout(() => {
+      badge.style.display = 'block';
+      badge.textContent = '1';
+      document.querySelector('#notif-list').innerHTML = `<div style="padding:12px 16px;border-bottom:1px solid var(--portal-card-border);"><strong style="font-size:12px;color:var(--portal-text-main);">Chào mừng trở lại!</strong><p style="font-size:11px;color:var(--portal-text-muted);margin:4px 0 0;">Hệ thống đã cập nhật Lịch phát hành và tính năng EPK mới.</p></div>`;
+    }, 1500);
   }
-
-  document.querySelector('#download-promo-story-btn')?.addEventListener('click', () => {
-    alert('✓ Đang chuẩn bị tệp Story 1080x1920 px chuẩn Instagram/TikTok. Ảnh sẽ được tải xuống thiết bị của bạn!');
-  });
-
-  document.querySelector('#launch-ads-btn')?.addEventListener('click', () => {
-    const budget = document.querySelector('#ads-budget-select')?.value;
-    const budgetFormatted = parseInt(budget || '1000000').toLocaleString('vi-VN');
-    if (confirm(`Bạn có đồng ý trích ₫ ${budgetFormatted} từ số dư khả dụng để khởi chạy chiến dịch quảng cáo đa nền tảng cho ca khúc này không?`)) {
-      showNotice(`🚀 Chiến dịch quảng cáo đã được kích hoạt thành công! Dữ liệu tiếp cận sẽ được cập nhật sau 24h.`);
-    }
-  });
 }
+
+function renderReleaseCalendar() {
+  const container = document.querySelector('#release-calendar-list');
+  if(!container) return;
+  const products = artist.products || [];
+  if(products.length === 0) {
+    container.innerHTML = '<p class="empty" style="padding:20px;">Chưa có lịch phát hành nào.</p>';
+    return;
+  }
+  
+  container.innerHTML = products.map(p => {
+    return `<div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:16px;box-shadow:var(--portal-shadow);">
+      <img src="${esc(p.artworkUrl || '')}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;">
+      <div style="flex:1;">
+        <h4 style="margin:0;font-size:15px;">${esc(p.title)}</h4>
+        <p style="margin:4px 0 0;font-size:12px;color:var(--portal-text-muted);">Phát hành: ${esc(p.releaseDate || 'Đang cập nhật')} &bull; ${esc(p.type || 'Single')}</p>
+      </div>
+      <button class="button alt" onclick="generateEPK('${esc(p.id)}')" style="font-size:11px;padding:8px 14px;"><i class="fa fa-file-invoice"></i> Tạo EPK</button>
+    </div>`;
+  }).join('');
+}
+
+window.generateEPK = function(releaseId) {
+  const release = (artist.products || []).find(r => r.id === releaseId);
+  if(!release) return;
+  const epkDialog = document.querySelector('#epk-dialog');
+  const printArea = document.querySelector('#epk-printable-area');
+  if(epkDialog && printArea) {
+    printArea.innerHTML = `<div style="text-align:center;margin-bottom:30px;">
+        <img src="https://ui-avatars.com/api/?name=UniFLOWs+Records&background=1e293b&color=fff&rounded=true&size=80" style="margin-bottom:10px;">
+        <h1 style="font-size:24px;font-weight:900;letter-spacing:-0.05em;margin:0;">UNIFLOWS RECORDS</h1>
+        <p style="font-size:11px;color:#666;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase;">Official Electronic Press Kit</p>
+      </div>
+      <div style="display:flex;gap:24px;align-items:flex-start;">
+        <img src="${esc(release.artworkUrl)}" style="width:200px;height:200px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.1);">
+        <div style="flex:1;">
+          <h2 style="font-size:28px;margin:0;font-weight:800;">${esc(release.title)}</h2>
+          <h3 style="font-size:18px;margin:8px 0 0;color:#444;">${esc(artist.name)}</h3>
+          <div style="margin-top:20px;font-size:13px;color:#333;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><strong>Ngày phát hành:</strong><br>${esc(release.releaseDate || 'TBA')}</div>
+            <div><strong>Định dạng:</strong><br>${esc(release.type || 'Single')}</div>
+            <div><strong>Thể loại:</strong><br>${esc(release.primaryGenre || 'Pop')}</div>
+            <div><strong>ISRC:</strong><br>${esc(release.isrc || 'Pending')}</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px;">
+        <h4 style="font-size:14px;margin:0 0 10px;">Về ${esc(artist.name)} & Bản phát hành</h4>
+        <p style="font-size:13px;line-height:1.6;color:#444;">${esc(artist.name)} tiếp tục khẳng định phong cách âm nhạc độc đáo với <strong>"${esc(release.title)}"</strong>. Bản thu âm này được đầu tư kỹ lưỡng từ khâu sản xuất đến hình ảnh, đánh dấu cột mốc quan trọng trong sự nghiệp âm nhạc, hướng tới việc mở rộng tệp khán giả trên các nền tảng streaming toàn cầu.</p>
+      </div>
+      <div style="margin-top:30px;text-align:center;font-size:11px;color:#888;">
+        &copy; 2026 UniFLOWs Label. All Rights Reserved.<br>Contact: promo@uniflowslabel.com
+      </div>`;
+    epkDialog.showModal();
+  }
+};
+
+document.querySelector('#close-epk-btn')?.addEventListener('click', () => document.querySelector('#epk-dialog')?.close());
+document.querySelector('#cancel-epk-btn')?.addEventListener('click', () => document.querySelector('#epk-dialog')?.close());
+document.querySelector('#print-epk-btn')?.addEventListener('click', () => {
+  const printContent = document.querySelector('#epk-printable-area').innerHTML;
+  const originalContent = document.body.innerHTML;
+  document.body.innerHTML = printContent;
+  window.print();
+  document.body.innerHTML = originalContent;
+  location.reload();
+});
 
 initPortalTheme();
 renderReleases();
 loadArtistPayouts();
 loadArtistServiceRequests();
-initMarketingTools();
+initNotifications();
+renderReleaseCalendar();

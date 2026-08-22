@@ -29,8 +29,8 @@
         <a href="#insights" data-tab="tab-insights">
           <span>📈 Thống kê & Playlists</span>
         </a>
-        <a href="#marketing" data-tab="tab-marketing">
-          <span>📢 Marketing & Ads</span>
+        <a href="#calendar" data-tab="tab-calendar">
+          <span>📅 Lịch Phát Hành</span>
         </a>
         <a href="#support" data-tab="tab-support">
           <span>🛡️ Bản quyền & A&R</span>
@@ -77,6 +77,24 @@
           </div>
         </div>
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          
+          <!-- Notification Center -->
+          <div class="notifications-wrapper" style="position: relative;">
+            <button id="btn-notif" type="button" class="portal-theme-pill" style="border: none; background: transparent; font-size: 18px; cursor: pointer; color: var(--portal-text-main); position: relative; padding: 6px 12px; box-shadow: none;">
+              <i class="fa fa-bell"></i>
+              <span id="notif-badge" style="position: absolute; top: 0px; right: 4px; background: #ef4444; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 10px; display: none;">0</span>
+            </button>
+            <div id="notif-dropdown" style="display: none; position: absolute; top: 100%; right: 0; width: 320px; background: var(--portal-card-bg); border: 1px solid var(--portal-card-border); border-radius: 12px; box-shadow: var(--portal-shadow); z-index: 1000; margin-top: 10px; overflow: hidden;">
+              <div style="padding: 12px 16px; border-bottom: 1px solid var(--portal-card-border); display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin: 0; font-size: 14px;">Thông báo</h4>
+                <button id="mark-all-read-btn" style="background: none; border: none; color: #3b82f6; font-size: 11px; cursor: pointer; padding: 0;">Đánh dấu đã đọc</button>
+              </div>
+              <div id="notif-list" style="max-height: 350px; overflow-y: auto;">
+                <div style="padding: 20px; text-align: center; color: var(--portal-text-muted); font-size: 12px;">Không có thông báo nào</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Prominent Theme Switch Button in Header Bar -->
           <button id="theme-toggle-header-btn" type="button" class="portal-theme-pill" title="Chuyển đổi giao diện Sáng / Tối">
             <span class="theme-mode-icon">🌙</span> <span class="theme-mode-text">Chế độ Tối</span>
@@ -154,51 +172,6 @@
             </div>
             <div id="portal-announcements-list" style="display: grid; gap: 12px;">
               <p class="empty" style="font-size: 13px; color: var(--portal-text-muted);">Đang tải thông báo từ Label...</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 🏆 Gamification & Milestone Badges -->
-        <div style="background: var(--portal-card-bg); border: 1px solid var(--portal-card-border); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--portal-shadow);">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--portal-card-border); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
-            <div>
-              <h3 style="font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: -0.02em; font-weight: bold;">🏆 Huy Hiệu Thành Tựu Nghệ Sĩ (Milestones)</h3>
-              <p style="font-size: 12px; color: var(--portal-text-muted); margin: 2px 0 0;">Ghi nhận cột mốc phát triển âm nhạc và hoạt động nổi bật trong UniFLOWs.</p>
-            </div>
-            <span class="kicker">Artist Level: Rising Star</span>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-            <div style="background: var(--portal-hover-bg); border: 1px solid var(--portal-card-border); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 32px;">🥇</span>
-              <div>
-                <strong style="font-size: 13px; display: block; color: var(--portal-text-main);">100K Streams Club</strong>
-                <small style="font-size: 11px; color: #16a34a; font-weight: bold;">✓ ĐÃ MỞ KHÓA</small>
-              </div>
-            </div>
-
-            <div style="background: var(--portal-hover-bg); border: 1px solid var(--portal-card-border); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 32px;">🌟</span>
-              <div>
-                <strong style="font-size: 13px; display: block; color: var(--portal-text-main);">Editorial Picked</strong>
-                <small style="font-size: 11px; color: #2563eb; font-weight: bold;">✓ ĐÃ MỞ KHÓA</small>
-              </div>
-            </div>
-
-            <div style="background: var(--portal-hover-bg); border: 1px solid var(--portal-card-border); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 32px;">💎</span>
-              <div>
-                <strong style="font-size: 13px; display: block; color: var(--portal-text-main);">Mastery Producer</strong>
-                <small style="font-size: 11px; color: #7c3aed; font-weight: bold;">✓ ĐÃ MỞ KHÓA</small>
-              </div>
-            </div>
-
-            <div style="background: var(--portal-hover-bg); border: 1px solid var(--portal-card-border); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 32px;">🤝</span>
-              <div>
-                <strong style="font-size: 13px; display: block; color: var(--portal-text-main);">Label Collaborator</strong>
-                <small style="font-size: 11px; color: #d97706; font-weight: bold;">✓ ĐÃ MỞ KHÓA</small>
-              </div>
             </div>
           </div>
         </div>
@@ -524,86 +497,19 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 6: MARKETING, PROMO ASSETS & ADS -->
+      <!-- TAB 6: LỊCH PHÁT HÀNH -->
       <!-- ========================================== -->
-      <section id="tab-marketing" class="tab-pane">
+      <section id="tab-calendar" class="tab-pane">
         <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
           <div>
-            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">Marketing, Promo Assets & One-Click Ads</h2>
-            <p style="font-size:13px;color:var(--portal-text-muted);margin:4px 0 0;">Tạo ảnh Story Instagram tự động và kích hoạt chiến dịch quảng cáo TikTok/Facebook nhanh chóng.</p>
+            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">📅 Lịch Phát Hành</h2>
+            <p style="font-size:13px;color:var(--portal-text-muted);margin:4px 0 0;">Theo dõi lịch ra mắt các đĩa đơn và album sắp tới.</p>
           </div>
-          <span class="kicker">Growth Tools</span>
+          <span class="kicker">Release Calendar</span>
         </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-top:20px;">
-          <!-- 01: PROMO ASSET GENERATOR -->
-          <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:12px;padding:24px;box-shadow:var(--portal-shadow);">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-              <span style="font-size:24px;">🎨</span>
-              <div>
-                <h3 style="margin:0;font-size:16px;">Promo Story Generator</h3>
-                <small style="color:var(--portal-text-muted);">Tạo ảnh bìa tỷ lệ 9:16 để đăng Story Instagram/TikTok</small>
-              </div>
-            </div>
-
-            <!-- Story Preview Box -->
-            <div id="promo-story-preview" style="background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);border-radius:12px;padding:24px;text-align:center;color:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.2);margin-bottom:16px;">
-              <span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;color:#60a5fa;text-transform:uppercase;display:block;margin-bottom:12px;">UNIFLOWS LABEL NEW RELEASE</span>
-              <img id="promo-story-art" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80" style="width:160px;height:160px;object-fit:cover;border-radius:8px;margin:0 auto 14px;display:block;box-shadow:0 8px 20px rgba(0,0,0,0.4);">
-              <h4 id="promo-story-title" style="margin:0 0 4px;font-size:18px;font-weight:800;">Tên bài hát mới</h4>
-              <p id="promo-story-artist" style="margin:0 0 12px;font-size:13px;color:#cbd5e1;">Nghệ sĩ chính</p>
-              <div style="display:inline-block;background:rgba(255,255,255,0.15);padding:6px 14px;border-radius:20px;font-size:11px;font-weight:bold;">
-                🎧 OUT NOW ON SPOTIFY & APPLE MUSIC
-              </div>
-            </div>
-
-            <button type="button" id="download-promo-story-btn" class="button" style="width:100%;padding:10px;text-align:center;font-weight:bold;">
-              📥 Tải Ảnh Story Instagram (PNG)
-            </button>
-          </div>
-
-          <!-- 02: ONE-CLICK ADS MANAGER -->
-          <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:12px;padding:24px;box-shadow:var(--portal-shadow);">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-              <span style="font-size:24px;">🚀</span>
-              <div>
-                <h3 style="margin:0;font-size:16px;">One-Click Ads Manager</h3>
-                <small style="color:var(--portal-text-muted);">Chạy quảng cáo bài hát trên TikTok & Facebook chỉ với 1 click</small>
-              </div>
-            </div>
-
-            <form id="one-click-ads-form" style="display:grid;gap:12px;">
-              <div class="field">
-                <label style="font-size:11px;font-weight:bold;">1. Chọn bài hát cần chạy Ads</label>
-                <select id="ads-release-select" style="padding:10px;border:1px solid var(--ink);background:#fff;border-radius:6px;font-size:13px;width:100%;">
-                  <option value="">-- Đang tải danh sách bài hát --</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label style="font-size:11px;font-weight:bold;">2. Ngân sách chiến dịch (Trừ vào số dư khả dụng)</label>
-                <select id="ads-budget-select" style="padding:10px;border:1px solid var(--ink);background:#fff;border-radius:6px;font-size:13px;width:100%;">
-                  <option value="500000">₫ 500,000 (Khoảng 8,000 - 15,000 lượt xem)</option>
-                  <option value="1000000" selected>₫ 1,000,000 (Khoảng 20,000 - 35,000 lượt xem)</option>
-                  <option value="2000000">₫ 2,000,000 (Khoảng 45,000 - 80,000 lượt xem)</option>
-                  <option value="5000000">₫ 5,000,000 (Đẩy Viral TikTok / Instagram Ads)</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label style="font-size:11px;font-weight:bold;">3. Nền tảng phân phối mục tiêu</label>
-                <div style="display:flex;gap:12px;font-size:12px;padding:8px 0;">
-                  <label><input type="checkbox" checked> TikTok Ads</label>
-                  <label><input type="checkbox" checked> Instagram Reels</label>
-                  <label><input type="checkbox"> Facebook Feed</label>
-                </div>
-              </div>
-
-              <button type="button" id="launch-ads-btn" class="button" style="padding:12px;font-weight:bold;background:#2563eb;color:#fff;border-color:#2563eb;margin-top:6px;">
-                🚀 Kích Hoạt Chiến Dịch Quảng Cáo
-              </button>
-            </form>
-          </div>
+        
+        <div id="release-calendar-list" style="margin-top: 20px; display: grid; gap: 16px;">
+           <p class="empty" style="padding:20px;background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:10px;color:var(--portal-text-muted);">Đang tải lịch phát hành...</p>
         </div>
       </section>
     </section>
@@ -1128,6 +1034,23 @@
         <button type="submit" id="submit-greenlist-btn" class="button" style="padding:10px 22px;font-size:12px;background:#16a34a;color:#fff;border-color:#16a34a;font-weight:bold;border-radius:6px;">Xác nhận cấp Green-list</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ELECTRONIC PRESS KIT (EPK) -->
+  <!-- ========================================== -->
+  <dialog id="epk-dialog" class="release-dialog-shell">
+    <div class="release-modal-header">
+      <h2 style="font-size:18px;margin:0;"><i class="fa fa-file-invoice"></i> Electronic Press Kit (EPK)</h2>
+      <button type="button" class="close-btn" id="close-epk-btn">&times;</button>
+    </div>
+    <div id="epk-printable-area" style="padding: 40px; background: #fff; color: #000; font-family: 'Inter', sans-serif;">
+      <!-- EPK Content injected here -->
+    </div>
+    <div class="release-modal-footer">
+      <button type="button" class="button alt" id="cancel-epk-btn">Đóng</button>
+      <button type="button" id="print-epk-btn" class="button" style="background: #1e293b; color: #fff; border-color: #1e293b;"><i class="fa fa-print"></i> Lưu PDF / In EPK</button>
+    </div>
   </dialog>
 
   <script type="module" src="assets/portal.js"></script>
