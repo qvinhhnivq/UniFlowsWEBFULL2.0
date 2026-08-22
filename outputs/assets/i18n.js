@@ -6,6 +6,8 @@ export const translations = {
   vi: {
     // Navigation & Header
     nav_artists: 'Nghệ sĩ',
+    nav_unihube: 'Uni-HUBE 🎛️',
+    nav_48k: '48K Collective ⚡',
     nav_about: 'Về chúng tôi',
     nav_news: 'Tạp chí',
     nav_publishing: 'UniPUBLISHING 🎬',
@@ -95,6 +97,8 @@ export const translations = {
   en: {
     // Navigation & Header
     nav_artists: 'Artists',
+    nav_unihube: 'Uni-HUBE 🎛️',
+    nav_48k: '48K Collective ⚡',
     nav_about: 'About Us',
     nav_news: 'Journal',
     nav_publishing: 'UniPUBLISHING 🎬',

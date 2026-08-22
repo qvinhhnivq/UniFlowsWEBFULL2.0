@@ -27,7 +27,9 @@
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 06 / Bài viết & Tạp chí</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-settings">⚙️ 07 / Cấu hình Trang & Email</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-audit">🔐 08 / Nhật ký Bảo mật & Audit</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-publishing">🎬 09 / Quản trị UniPUBLISHING & Sync</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-publishing">🎬 09 / UniPUBLISHING & Sync</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-unihube" style="border-left: 2px solid #d97706; background:#fffbeb;">🎛️ 10 / Uni-HUBE (Sản xuất)</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-collective48k" style="border-left: 2px solid #7c3aed; background:#faf5ff;">⚡ 11 / 48K Collective (Agency)</button>
     </nav>
 
     <div id="notice" class="notice"></div>
@@ -667,6 +669,208 @@
                 <!-- Dynamic Sync License Request Rows -->
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 10: QUẢN TRỊ UNI-HUBE (SẢN XUẤT ÂM NHẠC) -->
+      <!-- ========================================== -->
+      <section id="admin-tab-unihube" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">🎛️ Quản trị Uni-HUBE (Tổ Đội Sản Xuất & Kỹ Sư Âm Thanh)</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý danh sách Music Producers, Sound Engineers, bảng giá dịch vụ và xử lý các yêu cầu đặt lịch sản xuất bài hát.</p>
+          </div>
+          <span class="kicker">Sound Foundry CMS</span>
+        </div>
+
+        <!-- 01: Inquiries Queue -->
+        <div style="background:#fff;border:1px solid var(--ink);padding:20px;border-radius:10px;margin-bottom:25px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h3 style="margin:0;font-size:16px;">📥 Hộp Thư Đặt Lịch & Yêu Cầu Hợp Tác Sản Xuất</h3>
+              <p style="font-size:12px;color:#666;margin:2px 0 0;">Các nghệ sĩ, nhãn hàng gửi yêu cầu làm nhạc từ trang Uni-HUBE.</p>
+            </div>
+            <button type="button" id="refresh-hube-inquiries-btn" class="button alt" style="padding:6px 12px;font-size:11px;">🔄 Làm mới</button>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">
+              <thead>
+                <tr style="background:#fffbeb;border-bottom:2px solid #fde68a;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;color:#92400e;">
+                  <th style="padding:10px 14px;">Khách hàng / Liên hệ</th>
+                  <th style="padding:10px 14px;">Nhà sản xuất yêu cầu</th>
+                  <th style="padding:10px 14px;">Dịch vụ & Ngân sách</th>
+                  <th style="padding:10px 14px;">Demo & Ghi chú</th>
+                  <th style="padding:10px 14px;text-align:center;">Trạng thái</th>
+                  <th style="padding:10px 14px;text-align:right;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="hube-inquiries-tbody">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 02: Manage Producers Roster -->
+        <div style="background:#fff;border:1px solid var(--ink);padding:20px;border-radius:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h3 style="margin:0;font-size:16px;">👥 Danh Sách Producers & Sound Engineers (Uni-HUBE Roster)</h3>
+              <p style="font-size:12px;color:#666;margin:2px 0 0;">Hiển thị trực tiếp trên trang Uni-HUBE công khai.</p>
+            </div>
+            <button type="button" id="btn-show-add-producer-form" class="button" style="background:#d97706;color:#fff;border-color:#d97706;padding:8px 16px;font-size:11px;font-weight:bold;">
+              + Thêm Nhà Sản Xuất / Kỹ Sư Mới
+            </button>
+          </div>
+
+          <!-- Add Producer Inline Box (Collapsible) -->
+          <div id="add-producer-box" style="display:none;background:#fef3c7;border:1px dashed #d97706;padding:18px;border-radius:8px;margin-bottom:20px;">
+            <h4 style="margin:0 0 12px;font-size:14px;color:#92400e;">✨ Thêm Thành Viên Sản Xuất Mới</h4>
+            <div class="mini-grid">
+              <div class="field">
+                <label style="font-weight:bold;">Họ tên / Nghệ danh *</label>
+                <input id="new-prod-name" type="text" placeholder="Ví dụ: Alexandre Vũ (K-Nova)">
+              </div>
+              <div class="field">
+                <label style="font-weight:bold;">Vai trò chính *</label>
+                <input id="new-prod-role" type="text" placeholder="Ví dụ: Music Producer & Beatmaker">
+              </div>
+            </div>
+            <div class="mini-grid">
+              <div class="field">
+                <label style="font-weight:bold;">Thể loại sở trường / Chuyên môn *</label>
+                <input id="new-prod-specialty" type="text" placeholder="Ví dụ: R&B / Soul, Future Bass, Synth-Pop">
+              </div>
+              <div class="field">
+                <label style="font-weight:bold;">Mức giá cơ bản (Price Rate)</label>
+                <input id="new-prod-price" type="text" placeholder="Ví dụ: ₫ 15,000,000 / track">
+              </div>
+            </div>
+            <div class="mini-grid">
+              <div class="field">
+                <label style="font-weight:bold;">URL Ảnh đại diện</label>
+                <input id="new-prod-image" type="url" placeholder="https://images.unsplash.com/...">
+              </div>
+              <div class="field">
+                <label style="font-weight:bold;">Link Audio Demo (MP3 preview)</label>
+                <input id="new-prod-audio" type="url" placeholder="https://.../preview.mp3">
+              </div>
+            </div>
+            <div class="field">
+              <label style="font-weight:bold;">Credits tiêu biểu</label>
+              <input id="new-prod-credits" type="text" placeholder="Ví dụ: Lumi - 'Vệt Sáng', MONO//TONE - 'Dải Tần'">
+            </div>
+            <div class="field">
+              <label style="font-weight:bold;">Tiểu sử tóm tắt (Bio)</label>
+              <textarea id="new-prod-bio" rows="2" placeholder="Kinh nghiệm, thành tích, định hình phong cách..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+              <button type="button" id="btn-cancel-add-producer" class="button alt" style="padding:8px 16px;">Hủy</button>
+              <button type="button" id="btn-save-new-producer" class="button" style="background:#d97706;color:#fff;border-color:#d97706;font-weight:bold;padding:8px 18px;">Lưu Thành Viên</button>
+            </div>
+          </div>
+
+          <div id="hube-producers-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:16px;">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 11: QUẢN TRỊ 48K COLLECTIVE (AGENCY & DISTRO) -->
+      <!-- ========================================== -->
+      <section id="admin-tab-collective48k" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">⚡ Quản trị 48K Collective (Media Agency & Phân Phối)</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý các gói chiến dịch truyền thông, case studies tiêu biểu và tiếp nhận các đề xuất media plan từ nghệ sĩ.</p>
+          </div>
+          <span class="kicker">Media & Distro CMS</span>
+        </div>
+
+        <!-- 01: Proposals Queue -->
+        <div style="background:#fff;border:1px solid var(--ink);padding:20px;border-radius:10px;margin-bottom:25px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h3 style="margin:0;font-size:16px;">📥 Hộp Thư Đề Xuất Chiến Dịch Truyền Thông & Phân Phối</h3>
+              <p style="font-size:12px;color:#666;margin:2px 0 0;">Yêu cầu tư vấn media plan, viral TikTok và pitching playlist gửi từ trang 48K Collective.</p>
+            </div>
+            <button type="button" id="refresh-48k-proposals-btn" class="button alt" style="padding:6px 12px;font-size:11px;">🔄 Làm mới</button>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">
+              <thead>
+                <tr style="background:#faf5ff;border-bottom:2px solid #e9d5ff;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;color:#6b21a8;">
+                  <th style="padding:10px 14px;">Khách hàng / Dự án</th>
+                  <th style="padding:10px 14px;">Gói Dịch Vụ</th>
+                  <th style="padding:10px 14px;">Ngày Ra Mắt & Mục Tiêu</th>
+                  <th style="padding:10px 14px;">Ngân sách</th>
+                  <th style="padding:10px 14px;text-align:center;">Trạng thái</th>
+                  <th style="padding:10px 14px;text-align:right;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="collective48k-proposals-tbody">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 02: Manage Case Studies -->
+        <div style="background:#fff;border:1px solid var(--ink);padding:20px;border-radius:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h3 style="margin:0;font-size:16px;">📈 Danh Sách Case Studies Tiêu Biểu</h3>
+              <p style="font-size:12px;color:#666;margin:2px 0 0;">Hiển thị trên trang 48K Collective để chứng minh năng lực truyền thông.</p>
+            </div>
+            <button type="button" id="btn-show-add-casestudy-form" class="button" style="background:#7c3aed;color:#fff;border-color:#7c3aed;padding:8px 16px;font-size:11px;font-weight:bold;">
+              + Thêm Case Study Mới
+            </button>
+          </div>
+
+          <!-- Add Case Study Inline Box -->
+          <div id="add-casestudy-box" style="display:none;background:#f5f3ff;border:1px dashed #7c3aed;padding:18px;border-radius:8px;margin-bottom:20px;">
+            <h4 style="margin:0 0 12px;font-size:14px;color:#5b21b6;">✨ Thêm Case Study Chiến Dịch</h4>
+            <div class="mini-grid">
+              <div class="field">
+                <label style="font-weight:bold;">Tiêu đề chiến dịch *</label>
+                <input id="new-cs-title" type="text" placeholder="Ví dụ: Chiến dịch Ra mắt Single 'Vệt Sáng' — Lumi">
+              </div>
+              <div class="field">
+                <label style="font-weight:bold;">Khách hàng / Nghệ sĩ *</label>
+                <input id="new-cs-client" type="text" placeholder="Ví dụ: Lumi / UniFLOWs Music">
+              </div>
+            </div>
+            <div class="mini-grid">
+              <div class="field">
+                <label style="font-weight:bold;">Thẻ chiến lược (Tags)</label>
+                <input id="new-cs-tags" type="text" placeholder="Ví dụ: TikTok Trend + Editorial Playlist + PR Báo chí">
+              </div>
+              <div class="field">
+                <label style="font-weight:bold;">Số liệu ấn tượng (Reach KPI)</label>
+                <input id="new-cs-reach" type="text" placeholder="Ví dụ: 2.4M Streams · #1 New Music Friday · 35M Views TikTok">
+              </div>
+            </div>
+            <div class="field">
+              <label style="font-weight:bold;">URL Ảnh minh họa</label>
+              <input id="new-cs-image" type="url" placeholder="https://images.unsplash.com/...">
+            </div>
+            <div class="field">
+              <label style="font-weight:bold;">Tóm tắt chiến dịch</label>
+              <textarea id="new-cs-summary" rows="2" placeholder="Mô tả ngắn gọn kết quả và phương pháp triển khai..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+              <button type="button" id="btn-cancel-add-casestudy" class="button alt" style="padding:8px 16px;">Hủy</button>
+              <button type="button" id="btn-save-new-casestudy" class="button" style="background:#7c3aed;color:#fff;border-color:#7c3aed;font-weight:bold;padding:8px 18px;">Lưu Case Study</button>
+            </div>
+          </div>
+
+          <div id="collective48k-casestudies-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;">
+            <!-- Injected dynamically -->
           </div>
         </div>
       </section>

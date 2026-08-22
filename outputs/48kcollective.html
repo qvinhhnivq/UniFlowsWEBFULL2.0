@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>48K Collective — Agency Truyền Thông Âm Nhạc & Phân Phối Toàn Cầu | UniFLOWs</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="assets/app.css">
+  <style>
+    .collective-hero {
+      background: linear-gradient(135deg, #09090b 0%, #1e1035 50%, #2e1065 100%);
+      color: #fff;
+      padding: 8vw 3vw 5vw;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+    .collective-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 75% 25%, rgba(168,85,247,0.2) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .services-grid-48k {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 4vw 3vw 5vw;
+      background: #fafafa;
+    }
+    .service-card-48k {
+      background: #fff;
+      border: 1px solid var(--ink);
+      border-radius: 12px;
+      padding: 26px;
+      box-shadow: 4px 4px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .service-card-48k:hover {
+      transform: translateY(-4px);
+      box-shadow: 8px 8px 0 #7c3aed;
+    }
+    .case-studies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      padding: 3vw;
+    }
+    .case-card {
+      background: #fff;
+      border: 1px solid var(--ink);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 4px 4px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+    }
+    .case-card img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      filter: grayscale(0.5);
+      transition: filter 0.3s;
+    }
+    .case-card:hover img {
+      filter: grayscale(0);
+    }
+    .case-body {
+      padding: 22px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero Section -->
+  <section class="collective-hero">
+    <div style="position:relative;z-index:2;max-width:1100px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
+        <span style="background:#7c3aed;color:#fff;font:11px 'DM Mono',monospace;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase;">
+          ⚡ 48K COLLECTIVE MEDIA & DISTRO
+        </span>
+        <span style="font:11px 'DM Mono',monospace;color:#c084fc;letter-spacing:1px;">
+          ● 150+ GLOBAL DSPS · TIKTOK CREATOR NETWORK
+        </span>
+      </div>
+      <h1 style="font-size:clamp(44px,7vw,110px);line-height:0.9;letter-spacing:-0.07em;margin:0 0 20px;font-weight:800;">
+        48K Collective.<br><em style="font-family:'Playfair Display',serif;font-weight:500;color:#c084fc;">Amplify Your Sound.</em>
+      </h1>
+      <p style="font-size:clamp(16px,2vw,22px);line-height:1.45;max-width:780px;color:#e2e8f0;margin:0 0 30px;">
+        Agency chiến lược truyền thông âm nhạc, Viral TikTok Sound, PR Báo chí và Mạng lưới phân phối nhạc số toàn cầu thuộc UniFLOWs Label.
+      </p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button type="button" id="open-48k-proposal-btn" class="button" style="background:#7c3aed;color:#fff;border-color:#7c3aed;font-weight:800;padding:14px 24px;">
+          🚀 Gửi Yêu Cầu Chiến Dịch Truyền Thông
+        </button>
+        <a href="#case-studies" class="button alt" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.4);padding:14px 24px;">
+          📈 Xem Case Studies Tiêu Biểu
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Services Grid -->
+  <div class="section-head">
+    <div>
+      <h2 style="font-size:clamp(22px,3.5vw,36px);margin:0;letter-spacing:-0.04em;">01 / Dịch Vụ Chiến Lược Âm Nhạc & Phân Phối</h2>
+      <p style="font-size:13px;color:var(--ink);opacity:0.7;margin:4px 0 0;">Giải pháp toàn diện đưa sản phẩm âm nhạc chạm tới hàng triệu người nghe.</p>
+    </div>
+    <span class="kicker">Core Solutions</span>
+  </div>
+
+  <section class="services-grid-48k" id="collective-services-list">
+    <!-- Injected dynamically from data.collective48k.services -->
+  </section>
+
+  <!-- Case Studies Section -->
+  <div class="section-head" id="case-studies">
+    <div>
+      <h2 style="font-size:clamp(22px,3.5vw,36px);margin:0;letter-spacing:-0.04em;">02 / Chiến Dịch Ra Mắt Tiêu Biểu</h2>
+      <p style="font-size:13px;color:var(--ink);opacity:0.7;margin:4px 0 0;">Những dấu ấn truyền thông và số liệu thực tế được chứng minh qua từng chiến dịch.</p>
+    </div>
+    <span class="kicker">Case Studies</span>
+  </div>
+
+  <section class="case-studies-grid" id="collective-case-studies-list">
+    <!-- Injected dynamically from data.collective48k.caseStudies -->
+  </section>
+
+  <!-- CTA Box -->
+  <section style="background:#0f172a;color:#fff;padding:6vw 3vw;text-align:center;border-top:1px solid var(--line);">
+    <div style="max-width:800px;margin:0 auto;">
+      <span style="font:11px 'DM Mono',monospace;color:#a855f7;letter-spacing:2px;text-transform:uppercase;">
+        Ready to Launch Your Next Hit?
+      </span>
+      <h2 style="font-size:clamp(34px,5vw,70px);line-height:0.95;letter-spacing:-0.06em;margin:16px 0 20px;">
+        Đưa ca khúc của bạn lên <em>Top Thịnh Hành.</em>
+      </h2>
+      <p style="font-size:15px;color:#94a3b8;line-height:1.6;margin:0 0 30px;">
+        Từ bước lập kế hoạch Release 4 tuần trước khi ra mắt, pitching playlist DSPs, cho tới kích hoạt mạng lưới TikTok Creators và phủ sóng 50+ đầu báo uy tín.
+      </p>
+      <button type="button" class="button open-proposal-modal-trigger" style="background:#7c3aed;color:#fff;border-color:#7c3aed;font-weight:800;padding:16px 32px;font-size:13px;">
+        ⚡ Bắt Đầu Lên Kế Hoạch Chiến Dịch Ngay
+      </button>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- MODAL: GỬI YÊU CẦU CHIẾN DỊCH TRUYỀN THÔNG (PROPOSAL) -->
+  <!-- ========================================== -->
+  <dialog id="proposal-dialog" class="release-dialog-shell" style="max-width:680px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+    <div style="background:#0f172a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
+      <div>
+        <span class="eyebrow" style="color:#a855f7;margin:0;font-size:10px;">48K Collective Strategy</span>
+        <h2 style="font-size:18px;margin:2px 0 0;letter-spacing:-0.03em;">⚡ Đề Xuất Chiến Dịch Truyền Thông & Phân Phối</h2>
+      </div>
+      <button type="button" class="close-btn" id="close-proposal-dialog-btn" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+
+    <form id="proposal-form" style="padding: 24px; display: grid; gap: 14px;">
+      <div style="background:#f3e8ff;border:1px solid #d8b4fe;padding:12px 16px;border-radius:8px;font-size:12px;color:#6b21a8;line-height:1.5;">
+        💡 <b>Tư vấn chiến lược miễn phí:</b> 48K Collective sẽ đánh giá tiềm năng bài hát, phân tích đối tượng khán giả và gửi bản kế hoạch truyền thông Media Plan chi tiết trong vòng <b>24 giờ</b>.
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;">Tên nghệ sĩ / Đại diện Agency *</label>
+          <input id="prop-client-name" type="text" required placeholder="Ví dụ: Thái Sơn (Independent Artist)">
+        </div>
+        <div class="field">
+          <label style="font-weight:bold;">Tên bài hát / Dự án ra mắt *</label>
+          <input id="prop-song-title" type="text" required placeholder="Ví dụ: Single 'Vệt Sáng' hoặc EP mới">
+        </div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;">Email liên hệ *</label>
+          <input id="prop-client-email" type="email" required placeholder="thaison.music@gmail.com">
+        </div>
+        <div class="field">
+          <label style="font-weight:bold;">Số điện thoại / Zalo *</label>
+          <input id="prop-client-phone" type="tel" required placeholder="0912xxxxxx">
+        </div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;">Gói dịch vụ quan tâm *</label>
+          <select id="prop-package-select" style="padding:10px;border:1px solid var(--ink);background:#fff;font-weight:bold;">
+            <option value="TikTok Viral Sound + Creator Seeding">📱 TikTok Viral Sound & Creator Seeding</option>
+            <option value="Music PR & DSP Playlist Pitching">📈 Music PR & DSP Playlist Editorial Pitching</option>
+            <option value="PR Báo chí & Truyền thông Bùng nổ">📰 PR Báo chí & Truyền thông 360</option>
+            <option value="Phân phối Toàn cầu 150+ DSPs">🌐 Phân phối Toàn cầu 150+ Nền tảng</option>
+            <option value="Gói Chiến dịch 360 Toàn Diện (All-in-One)">🔥 Gói Chiến dịch 360 Toàn Diện (Khuyên dùng)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label style="font-weight:bold;">Ngày dự kiến phát hành *</label>
+          <input id="prop-release-date" type="date" required>
+        </div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;">Mục tiêu Streams / Tiếp cận</label>
+          <input id="prop-target-goal" type="text" placeholder="Ví dụ: 500,000 Streams & Lọt Top Viral Spotify">
+        </div>
+        <div class="field">
+          <label style="font-weight:bold;">Ngân sách dự kiến (Budget)</label>
+          <select id="prop-budget-select" style="padding:10px;border:1px solid var(--ink);background:#fff;">
+            <option value="15 - 30 Triệu VNĐ">15 - 30 Triệu VNĐ</option>
+            <option value="30 - 60 Triệu VNĐ" selected>30 - 60 Triệu VNĐ</option>
+            <option value="60 - 100 Triệu VNĐ">60 - 100 Triệu VNĐ</option>
+            <option value="Trên 100 Triệu VNĐ (Chiến dịch Lớn)">Trên 100 Triệu VNĐ (Chiến dịch Lớn)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;">Ghi chú thêm về định hướng hình ảnh / Target Audience</label>
+        <textarea id="prop-notes" rows="3" placeholder="Mô tả phong cách âm nhạc, đối tượng khán giả mục tiêu (Gen Z / Millennials / Indie lovers)..."></textarea>
+      </div>
+
+      <p id="proposal-notice" class="notice" style="display:none;"></p>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px;border-top:1px solid #e2e8f0;padding-top:14px;">
+        <button type="button" class="button alt" id="cancel-proposal-dialog-btn">Đóng</button>
+        <button type="submit" id="submit-proposal-btn" class="button" style="background:#7c3aed;color:#fff;border-color:#7c3aed;font-weight:bold;">
+          🚀 Gửi Bản Kế Hoạch & Nhận Tư Vấn
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module">
+    import { getData, saveData } from './assets/data.js';
+    import { applyTranslations, t } from './assets/i18n.js';
+    import './assets/security.js';
+    import './assets/app.js';
+
+    const data = await getData();
+    const collective48k = data.collective48k || {};
+
+    // 1. Render Services
+    const servicesEl = document.querySelector('#collective-services-list');
+    if (servicesEl && collective48k.services) {
+      servicesEl.innerHTML = collective48k.services.map((s, idx) => `
+        <div class="service-card-48k">
+          <div>
+            <span style="font:10px 'DM Mono',monospace;color:#7c3aed;font-weight:800;">0${idx+1} / SOLUTION</span>
+            <h3 style="margin:8px 0 6px;font-size:20px;letter-spacing:-0.03em;">${s.title}</h3>
+            <p style="font-size:13px;color:#555;line-height:1.5;margin:0 0 16px;">${s.desc}</p>
+          </div>
+          <div style="background:#f3e8ff;border:1px solid #d8b4fe;padding:8px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;font-weight:bold;color:#6b21a8;">
+            🎯 ${s.stats}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 2. Render Case Studies
+    const caseStudiesEl = document.querySelector('#collective-case-studies-list');
+    if (caseStudiesEl && collective48k.caseStudies) {
+      caseStudiesEl.innerHTML = collective48k.caseStudies.map(cs => `
+        <div class="case-card">
+          <img src="${cs.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80'}" alt="${cs.title}">
+          <div class="case-body">
+            <div>
+              <span style="font:10px 'DM Mono',monospace;color:#7c3aed;font-weight:800;text-transform:uppercase;">
+                ${cs.client}
+              </span>
+              <h3 style="margin:6px 0;font-size:22px;letter-spacing:-0.03em;">${cs.title}</h3>
+              <p style="font-size:12px;color:#059669;font-weight:bold;margin:0 0 8px;font-family:'DM Mono',monospace;">
+                ⚡ ${cs.tags}
+              </p>
+              <p style="font-size:13px;color:#555;line-height:1.5;margin:0 0 14px;">
+                ${cs.summary}
+              </p>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:12px;color:#0f172a;font-weight:bold;">
+              📊 ${cs.reach}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Modal Handlers
+    const proposalDialog = document.querySelector('#proposal-dialog');
+    const openProposalTriggers = document.querySelectorAll('#open-48k-proposal-btn, .open-proposal-modal-trigger');
+    const closeProposalBtn = document.querySelector('#close-proposal-dialog-btn');
+    const cancelProposalBtn = document.querySelector('#cancel-proposal-dialog-btn');
+    const proposalForm = document.querySelector('#proposal-form');
+    const proposalNotice = document.querySelector('#proposal-notice');
+
+    function openProposalModal() {
+      if (proposalNotice) proposalNotice.style.display = 'none';
+      proposalDialog.showModal();
+    }
+
+    openProposalTriggers.forEach(btn => btn.onclick = openProposalModal);
+    if (closeProposalBtn) closeProposalBtn.onclick = () => proposalDialog.close();
+    if (cancelProposalBtn) cancelProposalBtn.onclick = () => proposalDialog.close();
+
+    // Submit Proposal Form
+    if (proposalForm) {
+      proposalForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const submitBtn = document.querySelector('#submit-proposal-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang gửi kế hoạch...';
+
+        const clientName = document.querySelector('#prop-client-name').value.trim();
+        const songTitle = document.querySelector('#prop-song-title').value.trim();
+        const clientEmail = document.querySelector('#prop-client-email').value.trim();
+        const clientPhone = document.querySelector('#prop-client-phone').value.trim();
+        const packageType = document.querySelector('#prop-package-select').value;
+        const releaseDate = document.querySelector('#prop-release-date').value;
+        const targetGoal = document.querySelector('#prop-target-goal').value.trim();
+        const budget = document.querySelector('#prop-budget-select').value;
+        const notes = document.querySelector('#prop-notes').value.trim();
+
+        const newProposal = {
+          id: `prop-${Date.now()}`,
+          clientName,
+          songTitle,
+          clientEmail,
+          clientPhone,
+          packageType,
+          releaseDate,
+          targetGoal,
+          budget,
+          notes,
+          status: 'Chờ phản hồi',
+          createdAt: new Date().toLocaleDateString('vi-VN')
+        };
+
+        const liveData = await getData();
+        if (!liveData.collective48k) liveData.collective48k = JSON.parse(JSON.stringify(collective48k));
+        if (!liveData.collective48k.proposals) liveData.collective48k.proposals = [];
+
+        liveData.collective48k.proposals.unshift(newProposal);
+        await saveData(liveData);
+
+        if (proposalNotice) {
+          proposalNotice.textContent = `✓ Cảm ơn ${clientName}! Yêu cầu chiến dịch cho "${songTitle}" đã được gửi tới 48K Collective. Đội ngũ Media Planner sẽ liên hệ trực tiếp trong vòng 24h.`;
+          proposalNotice.style.display = 'block';
+          proposalNotice.style.background = '#dcfce7';
+          proposalNotice.style.color = '#15803d';
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Gửi Bản Kế Hoạch & Nhận Tư Vấn';
+
+        setTimeout(() => {
+          proposalDialog.close();
+          proposalForm.reset();
+        }, 3000);
+      };
+    }
+  </script>
+</body>
+</html>

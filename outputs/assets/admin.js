@@ -63,6 +63,15 @@ function switchAdminTab(tabId) {
   if (tabId === 'admin-tab-audit') {
     loadAdminAuditLogs();
   }
+  if (tabId === 'admin-tab-publishing') {
+    renderPublishingAdmin();
+  }
+  if (tabId === 'admin-tab-unihube') {
+    renderUniHubeAdmin();
+  }
+  if (tabId === 'admin-tab-collective48k') {
+    renderCollective48kAdmin();
+  }
 }
 
 document.querySelectorAll('#admin-tabs .admin-tab-btn').forEach(btn => {
@@ -1619,6 +1628,8 @@ function render() {
   renderDashboard();
   renderPitchingBoard();
   renderPublishingAdmin();
+  renderUniHubeAdmin();
+  renderCollective48kAdmin();
 }
 
 // ----------------------------------------------------
@@ -2925,5 +2936,320 @@ document.addEventListener('click', (e) => {
   });
 });
 
+// ==============================================================================
+// TAB 10: QUẢN TRỊ UNI-HUBE (SẢN XUẤT ÂM NHẠC & PRODUCERS)
+// ==============================================================================
+function renderUniHubeAdmin() {
+  if (!data.unihube) data.unihube = JSON.parse(JSON.stringify(defaultData.unihube));
+  const hube = data.unihube;
+
+  // 1. Render Inquiries Queue
+  const tbody = document.querySelector('#hube-inquiries-tbody');
+  if (tbody) {
+    const inqs = hube.inquiries || [];
+    if (inqs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:#666;">Chưa có yêu cầu đặt lịch sản xuất nào.</td></tr>`;
+    } else {
+      tbody.innerHTML = inqs.map(inq => {
+        let badgeStyle = 'background:#fef3c7;color:#92400e;';
+        if (inq.status === 'Đã chốt hợp đồng') badgeStyle = 'background:#dcfce7;color:#166534;';
+        if (inq.status === 'Đang thảo luận' || inq.status === 'Đang trao đổi') badgeStyle = 'background:#e0f2fe;color:#075985;';
+        if (inq.status === 'Đã từ chối') badgeStyle = 'background:#fee2e2;color:#991b1b;';
+
+        return `
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:12px 14px;">
+              <strong>${esc(inq.clientName)}</strong><br>
+              <span style="font-size:11px;color:#666;">📧 ${esc(inq.clientEmail)}</span><br>
+              <span style="font-size:11px;color:#16a34a;">📞 ${esc(inq.clientPhone || 'N/A')}</span>
+            </td>
+            <td style="padding:12px 14px;">
+              <strong>${esc(inq.producerName || 'Chưa chỉ định')}</strong><br>
+              <span style="font-size:11px;color:#666;">Ngày gửi: ${esc(inq.createdAt || '')}</span>
+            </td>
+            <td style="padding:12px 14px;">
+              <strong>${esc(inq.serviceType || 'Full Track')}</strong><br>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:#b45309;">💰 ${esc(inq.budget || 'Thỏa thuận')}</span>
+            </td>
+            <td style="padding:12px 14px;max-width:240px;">
+              ${inq.demoUrl ? `<a href="${inq.demoUrl}" target="_blank" style="color:#2563eb;font-size:11px;display:block;margin-bottom:4px;word-break:break-all;">🔗 Link Demo</a>` : ''}
+              <span style="font-size:12px;color:#444;">${esc(inq.notes || 'Không có ghi chú')}</span>
+            </td>
+            <td style="padding:12px 14px;text-align:center;">
+              <select class="hube-inquiry-status-select" data-id="${inq.id}" style="padding:4px 8px;font-size:11px;border-radius:12px;font-weight:bold;${badgeStyle}">
+                <option value="Mới tiếp nhận" ${inq.status === 'Mới tiếp nhận' ? 'selected' : ''}>Mới tiếp nhận</option>
+                <option value="Đang thảo luận" ${inq.status === 'Đang thảo luận' || inq.status === 'Đang trao đổi' ? 'selected' : ''}>Đang thảo luận</option>
+                <option value="Đã chốt hợp đồng" ${inq.status === 'Đã chốt hợp đồng' ? 'selected' : ''}>Đã chốt hợp đồng</option>
+                <option value="Đã từ chối" ${inq.status === 'Đã từ chối' ? 'selected' : ''}>Đã từ chối</option>
+              </select>
+            </td>
+            <td style="padding:12px 14px;text-align:right;">
+              <button type="button" class="button alt remove delete-hube-inquiry-btn" data-id="${inq.id}" style="padding:4px 8px;font-size:11px;">✕ Xóa</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('.hube-inquiry-status-select').forEach(sel => {
+        sel.onchange = () => {
+          const inq = hube.inquiries.find(x => x.id === sel.dataset.id);
+          if (inq) {
+            inq.status = sel.value;
+            showNotice(`✓ Đã cập nhật trạng thái yêu cầu của "${inq.clientName}" thành "${sel.value}".`);
+            renderUniHubeAdmin();
+          }
+        };
+      });
+
+      tbody.querySelectorAll('.delete-hube-inquiry-btn').forEach(btn => {
+        btn.onclick = () => {
+          if (confirm('Xác nhận xóa yêu cầu đặt lịch sản xuất này?')) {
+            hube.inquiries = hube.inquiries.filter(x => x.id !== btn.dataset.id);
+            renderUniHubeAdmin();
+            showNotice('✓ Đã xóa yêu cầu sản xuất.');
+          }
+        };
+      });
+    }
+  }
+
+  // 2. Render Producers Roster
+  const grid = document.querySelector('#hube-producers-admin-grid');
+  if (grid) {
+    const list = hube.producers || [];
+    grid.innerHTML = list.map(p => `
+      <div style="background:#fafafa;border:1px solid var(--ink);border-radius:8px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;gap:12px;margin-bottom:10px;">
+          <img src="${p.image || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80'}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid var(--ink);">
+          <div>
+            <h4 style="margin:0;font-size:15px;">${esc(p.name)}</h4>
+            <span style="font-size:11px;color:#d97706;font-family:'DM Mono',monospace;display:block;">${esc(p.role)}</span>
+          </div>
+        </div>
+        <p style="font-size:12px;color:#555;margin:0 0 8px;line-height:1.4;"><strong>Sở trường:</strong> ${esc(p.specialty)}</p>
+        <p style="font-size:12px;color:#666;margin:0 0 10px;line-height:1.4;"><strong>Credits:</strong> ${esc(p.credits)}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding-top:10px;">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;color:#16a34a;">${esc(p.priceRate || 'Thỏa thuận')}</span>
+          <button type="button" class="button alt remove delete-hube-producer-btn" data-id="${p.id}" style="padding:4px 8px;font-size:11px;">✕ Xóa</button>
+        </div>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('.delete-hube-producer-btn').forEach(btn => {
+      btn.onclick = () => {
+        if (confirm('Xác nhận xóa thành viên này khỏi Uni-HUBE?')) {
+          hube.producers = hube.producers.filter(x => x.id !== btn.dataset.id);
+          renderUniHubeAdmin();
+          showNotice('✓ Đã xóa thành viên khỏi Uni-HUBE.');
+        }
+      };
+    });
+  }
+}
+
+// Add Producer UI Handlers
+document.querySelector('#btn-show-add-producer-form')?.addEventListener('click', () => {
+  const box = document.querySelector('#add-producer-box');
+  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+});
+document.querySelector('#btn-cancel-add-producer')?.addEventListener('click', () => {
+  const box = document.querySelector('#add-producer-box');
+  if (box) box.style.display = 'none';
+});
+document.querySelector('#btn-save-new-producer')?.addEventListener('click', () => {
+  const name = document.querySelector('#new-prod-name').value.trim();
+  const role = document.querySelector('#new-prod-role').value.trim();
+  const specialty = document.querySelector('#new-prod-specialty').value.trim();
+  const priceRate = document.querySelector('#new-prod-price').value.trim() || 'Thỏa thuận';
+  const image = document.querySelector('#new-prod-image').value.trim() || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80';
+  const sampleAudio = document.querySelector('#new-prod-audio').value.trim();
+  const credits = document.querySelector('#new-prod-credits').value.trim();
+  const bio = document.querySelector('#new-prod-bio').value.trim();
+
+  if (!name || !role) {
+    alert('Vui lòng nhập Họ tên và Vai trò chính.');
+    return;
+  }
+
+  const newProd = {
+    id: `prod-${Date.now()}`,
+    name,
+    role,
+    specialty,
+    priceRate,
+    image,
+    sampleAudio,
+    credits,
+    bio,
+    status: 'Sẵn sàng nhận dự án'
+  };
+
+  if (!data.unihube) data.unihube = JSON.parse(JSON.stringify(defaultData.unihube));
+  if (!data.unihube.producers) data.unihube.producers = [];
+  data.unihube.producers.push(newProd);
+
+  renderUniHubeAdmin();
+  document.querySelector('#add-producer-box').style.display = 'none';
+  showNotice(`✓ Đã thêm "${name}" vào tổ đội Uni-HUBE!`);
+});
+
+document.querySelector('#refresh-hube-inquiries-btn')?.addEventListener('click', () => {
+  renderUniHubeAdmin();
+  showNotice('✓ Đã làm mới hộp thư Uni-HUBE.');
+});
+
+// ==============================================================================
+// TAB 11: QUẢN TRỊ 48K COLLECTIVE (MEDIA AGENCY & DISTRO)
+// ==============================================================================
+function renderCollective48kAdmin() {
+  if (!data.collective48k) data.collective48k = JSON.parse(JSON.stringify(defaultData.collective48k));
+  const col48k = data.collective48k;
+
+  // 1. Render Proposals Queue
+  const tbody = document.querySelector('#collective48k-proposals-tbody');
+  if (tbody) {
+    const props = col48k.proposals || [];
+    if (props.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:#666;">Chưa có đề xuất chiến dịch truyền thông nào.</td></tr>`;
+    } else {
+      tbody.innerHTML = props.map(prop => {
+        let badgeStyle = 'background:#faf5ff;color:#6b21a8;';
+        if (prop.status === 'Đang triển khai' || prop.status === 'Hoàn tất') badgeStyle = 'background:#dcfce7;color:#166534;';
+        if (prop.status === 'Đang lập Media Plan') badgeStyle = 'background:#e0f2fe;color:#075985;';
+
+        return `
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:12px 14px;">
+              <strong>${esc(prop.clientName)}</strong><br>
+              <span style="font-size:12px;color:#7c3aed;font-weight:bold;">🎵 "${esc(prop.songTitle || 'Dự án mới')}"</span><br>
+              <span style="font-size:11px;color:#666;">📧 ${esc(prop.clientEmail)} · 📞 ${esc(prop.clientPhone || 'N/A')}</span>
+            </td>
+            <td style="padding:12px 14px;">
+              <strong>${esc(prop.packageType || 'Chiến dịch 360')}</strong>
+            </td>
+            <td style="padding:12px 14px;">
+              <span style="font-size:11px;color:#666;">Ngày ra mắt:</span> <strong>${esc(prop.releaseDate || 'Chưa định')}</strong><br>
+              <span style="font-size:11px;color:#16a34a;">🎯 ${esc(prop.targetGoal || 'Không rõ')}</span>
+            </td>
+            <td style="padding:12px 14px;">
+              <span style="font-family:'DM Mono',monospace;font-size:12px;color:#b45309;font-weight:bold;">${esc(prop.budget || 'Thỏa thuận')}</span>
+            </td>
+            <td style="padding:12px 14px;text-align:center;">
+              <select class="prop-status-select" data-id="${prop.id}" style="padding:4px 8px;font-size:11px;border-radius:12px;font-weight:bold;${badgeStyle}">
+                <option value="Chờ phản hồi" ${prop.status === 'Chờ phản hồi' ? 'selected' : ''}>Chờ phản hồi</option>
+                <option value="Đang lập Media Plan" ${prop.status === 'Đang lập Media Plan' ? 'selected' : ''}>Đang lập Media Plan</option>
+                <option value="Đang triển khai" ${prop.status === 'Đang triển khai' ? 'selected' : ''}>Đang triển khai</option>
+                <option value="Hoàn tất" ${prop.status === 'Hoàn tất' ? 'selected' : ''}>Hoàn tất</option>
+              </select>
+            </td>
+            <td style="padding:12px 14px;text-align:right;">
+              <button type="button" class="button alt remove delete-proposal-btn" data-id="${prop.id}" style="padding:4px 8px;font-size:11px;">✕ Xóa</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('.prop-status-select').forEach(sel => {
+        sel.onchange = () => {
+          const p = col48k.proposals.find(x => x.id === sel.dataset.id);
+          if (p) {
+            p.status = sel.value;
+            showNotice(`✓ Đã cập nhật trạng thái đề xuất "${p.songTitle}" thành "${sel.value}".`);
+            renderCollective48kAdmin();
+          }
+        };
+      });
+
+      tbody.querySelectorAll('.delete-proposal-btn').forEach(btn => {
+        btn.onclick = () => {
+          if (confirm('Xác nhận xóa đề xuất chiến dịch này?')) {
+            col48k.proposals = col48k.proposals.filter(x => x.id !== btn.dataset.id);
+            renderCollective48kAdmin();
+            showNotice('✓ Đã xóa đề xuất chiến dịch.');
+          }
+        };
+      });
+    }
+  }
+
+  // 2. Render Case Studies
+  const grid = document.querySelector('#collective48k-casestudies-admin-grid');
+  if (grid) {
+    const list = col48k.caseStudies || [];
+    grid.innerHTML = list.map(cs => `
+      <div style="background:#fafafa;border:1px solid var(--ink);border-radius:8px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <img src="${cs.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80'}" style="width:100%;height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--ink);margin-bottom:10px;">
+          <span style="font-size:10px;font-family:'DM Mono',monospace;color:#7c3aed;font-weight:bold;text-transform:uppercase;">${esc(cs.client)}</span>
+          <h4 style="margin:4px 0 6px;font-size:16px;">${esc(cs.title)}</h4>
+          <p style="font-size:11px;color:#16a34a;font-weight:bold;margin:0 0 6px;">⚡ ${esc(cs.tags)}</p>
+          <p style="font-size:12px;color:#555;line-height:1.4;margin:0 0 10px;">${esc(cs.summary)}</p>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding-top:10px;">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;color:#0f172a;">📊 ${esc(cs.reach)}</span>
+          <button type="button" class="button alt remove delete-casestudy-btn" data-id="${cs.id}" style="padding:4px 8px;font-size:11px;">✕ Xóa</button>
+        </div>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('.delete-casestudy-btn').forEach(btn => {
+      btn.onclick = () => {
+        if (confirm('Xác nhận xóa Case Study này khỏi 48K Collective?')) {
+          col48k.caseStudies = col48k.caseStudies.filter(x => x.id !== btn.dataset.id);
+          renderCollective48kAdmin();
+          showNotice('✓ Đã xóa Case Study.');
+        }
+      };
+    });
+  }
+}
+
+// Add Case Study UI Handlers
+document.querySelector('#btn-show-add-casestudy-form')?.addEventListener('click', () => {
+  const box = document.querySelector('#add-casestudy-box');
+  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+});
+document.querySelector('#btn-cancel-add-casestudy')?.addEventListener('click', () => {
+  const box = document.querySelector('#add-casestudy-box');
+  if (box) box.style.display = 'none';
+});
+document.querySelector('#btn-save-new-casestudy')?.addEventListener('click', () => {
+  const title = document.querySelector('#new-cs-title').value.trim();
+  const client = document.querySelector('#new-cs-client').value.trim();
+  const tags = document.querySelector('#new-cs-tags').value.trim();
+  const reach = document.querySelector('#new-cs-reach').value.trim();
+  const image = document.querySelector('#new-cs-image').value.trim() || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80';
+  const summary = document.querySelector('#new-cs-summary').value.trim();
+
+  if (!title || !client) {
+    alert('Vui lòng nhập Tiêu đề chiến dịch và Khách hàng/Nghệ sĩ.');
+    return;
+  }
+
+  const newCS = {
+    id: `cs-${Date.now()}`,
+    title,
+    client,
+    tags,
+    reach,
+    image,
+    summary
+  };
+
+  if (!data.collective48k) data.collective48k = JSON.parse(JSON.stringify(defaultData.collective48k));
+  if (!data.collective48k.caseStudies) data.collective48k.caseStudies = [];
+  data.collective48k.caseStudies.push(newCS);
+
+  renderCollective48kAdmin();
+  document.querySelector('#add-casestudy-box').style.display = 'none';
+  showNotice(`✓ Đã thêm Case Study "${title}" vào 48K Collective!`);
+});
+
+document.querySelector('#refresh-48k-proposals-btn')?.addEventListener('click', () => {
+  renderCollective48kAdmin();
+  showNotice('✓ Đã làm mới hộp thư 48K Collective.');
+});
+
 initAccountProvisioning();
 render();
+

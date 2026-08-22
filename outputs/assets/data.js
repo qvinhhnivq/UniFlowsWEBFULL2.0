@@ -283,6 +283,155 @@ export const defaultData = {
         requestedDate: '22/08/2026'
       }
     ]
+  },
+  unihube: {
+    heroTitle: 'Tổ Đội Sản Xuất Âm Nhạc & Kỹ Thuật Âm Thanh Đỉnh Cao',
+    heroSubtitle: 'Tập hợp các Music Producers, Songwriters, Mixing & Mastering Engineers và Beatmakers định hình bản sắc âm thanh hiện đại cho UniFLOWs Label.',
+    services: [
+      {
+        id: 'full-production',
+        title: 'Sản xuất Ca khúc Trọn gói (Full Production)',
+        desc: 'Hòa âm phối khí (Beat & Arrangement), định hướng phong cách âm nhạc, thu âm studio và sản xuất bản Master hoàn chỉnh.',
+        price: 'Từ ₫ 12,000,000 / bài'
+      },
+      {
+        id: 'mixing-mastering',
+        title: 'Mixing & Mastering Studio 24-Bit Lossless',
+        desc: 'Xử lý cân bằng dải tần, chiều sâu âm học stereo và Master đạt chuẩn Loudness DSP (Apple Digital Masters, Spotify, Dolby Atmos).',
+        price: 'Từ ₫ 3,500,000 / bài'
+      },
+      {
+        id: 'songwriting-topline',
+        title: 'Sáng tác Giai điệu & Lời bài hát (Songwriting)',
+        desc: 'Viết Topline, Melody bắt tai và ca từ mang dấu ấn cá nhân phù hợp với giọng hát và thông điệp của nghệ sĩ.',
+        price: 'Từ ₫ 8,000,000 / bài'
+      },
+      {
+        id: 'vocal-production',
+        title: 'Vocal Tuning & Xử lý Thanh nhạc Chuyên sâu',
+        desc: 'Chỉnh phô cao độ Melodyne thủ công, gọt nhịp, bè phối hòa thanh và xử lý không gian vocal bay bổng.',
+        price: 'Từ ₫ 1,500,000 / bài'
+      }
+    ],
+    producers: [
+      {
+        id: 'prod-alexandre',
+        name: 'Alexandre Vũ (K-Nova)',
+        role: 'Head of Production / Music Producer & Beatmaker',
+        specialty: 'R&B / Soul, Future Bass, Synth-Pop',
+        image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80',
+        credits: 'Lumi - "Vệt Sáng", MONO//TONE - "Dải Tần", Sony Music TVC 2025',
+        bio: '10+ năm kinh nghiệm sản xuất âm nhạc cho các nghệ sĩ hàng đầu và các chiến dịch quảng cáo TVC quốc tế.',
+        sampleAudio: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
+        priceRate: '₫ 15,000,000 / track',
+        status: 'Sẵn sàng nhận dự án'
+      },
+      {
+        id: 'prod-minhdang',
+        name: 'Minh Đăng (SoundWizard)',
+        role: 'Chief Sound Engineer / Mixing & Mastering Specialist',
+        specialty: 'Dolby Atmos, 24-bit Studio Mastering, Vocal Tuning',
+        image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80',
+        credits: 'KAII - "Đường Đua", Live at The Flow EP, Showcase Vietnam 2026',
+        bio: 'Kỹ sư âm thanh chứng nhận Apple Digital Masters, chuyên gia xử lý âm học và cân chỉnh không gian stereo sống động.',
+        sampleAudio: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
+        priceRate: '₫ 4,000,000 / mix & master',
+        status: 'Sẵn sàng nhận dự án'
+      },
+      {
+        id: 'prod-hoangyen',
+        name: 'Hoàng Yến (Elena Topline)',
+        role: 'Songwriter / Topline Vocalist & Composer',
+        specialty: 'Ballad, Indie Pop, Contemporary R&B, Vietnamese Lyrics',
+        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+        credits: 'Nhạc phim "Ánh Đèn Đêm", Hợp âm Mơ - Single, TVC Sun Life 2026',
+        bio: 'Nhạc sĩ sáng tác giai điệu bắt tai với chiều sâu cảm xúc và ca từ sâu sắc chạm tới trái tim người nghe.',
+        sampleAudio: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
+        priceRate: '₫ 9,000,000 / song',
+        status: 'Sẵn sàng nhận dự án'
+      }
+    ],
+    inquiries: [
+      {
+        id: 'inq-101',
+        clientName: 'Ca sĩ Tuấn Kiệt',
+        clientEmail: 'tuankiet.vocal@gmail.com',
+        clientPhone: '0908123456',
+        producerId: 'prod-alexandre',
+        producerName: 'Alexandre Vũ (K-Nova)',
+        serviceType: 'Sản xuất Ca khúc Trọn gói (Full Production)',
+        budget: '15 - 20 Triệu VNĐ',
+        deadline: '15/09/2026',
+        notes: 'Cần làm 1 bài Pop R&B giai điệu tươi sáng ra mắt vào mùa thu.',
+        status: 'Đang thảo luận',
+        createdAt: '22/08/2026'
+      }
+    ]
+  },
+  collective48k: {
+    heroTitle: 'Agency Truyền Thông Âm Nhạc & Phân Phối Toàn Cầu',
+    heroSubtitle: 'Đơn vị phát triển chiến dịch ra mắt (Release Campaign), viral TikTok, PR Báo chí và phân phối tới 150+ nền tảng streaming quốc tế thuộc UniFLOWs Label.',
+    services: [
+      {
+        id: 'pr-pitching',
+        title: 'Music PR & DSP Editorial Pitching',
+        desc: 'Pitching ca khúc trực tiếp tới các Editors của Spotify (New Music Friday, Hot Hits Vietnam) và Apple Music.',
+        stats: '92% Tỷ lệ vào Playlist chính thức'
+      },
+      {
+        id: 'tiktok-viral',
+        title: 'TikTok Sound Viral & Creator Seeding',
+        desc: 'Đẩy sound lên xu hướng TikTok, hợp tác với 100+ Top Creators để tạo trend nhảy, biến hình và capcut templates.',
+        stats: '10M+ Lượt tiếp cận trung bình'
+      },
+      {
+        id: 'press-media',
+        title: 'PR Báo chí & Truyền thông Bùng nổ',
+        desc: 'Phát hành thông cáo báo chí, bài viết độc quyền trên Zing News, Kênh14, Vietcetera, Tuổi Trẻ, Billboard VN.',
+        stats: '20+ Đầu báo uy tín'
+      },
+      {
+        id: 'global-distro',
+        title: 'Phân phối Âm nhạc Toàn cầu 150+ DSPs',
+        desc: 'Đưa nhạc lên Spotify, Apple Music, YouTube Music, Amazon, Deezer, Tidal với chứng nhận bản quyền ISRC/UPC.',
+        stats: '150+ Quốc gia'
+      }
+    ],
+    caseStudies: [
+      {
+        id: 'cs-1',
+        title: 'Chiến dịch Ra mắt Single "Vệt Sáng" — Lumi',
+        client: 'Lumi / UniFLOWs Music',
+        tags: 'TikTok Trend + Editorial Playlist + PR Báo chí',
+        reach: '2.4M Streams · #1 New Music Friday · 35M Views TikTok',
+        image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+        summary: 'Chiến dịch kết hợp viral sound trend biến hình cùng 50 bài báo PR trên các trang tin văn hóa giải trí, đưa ca khúc lọt Top Viral 50 Spotify Vietnam.'
+      },
+      {
+        id: 'cs-2',
+        title: 'Chiến dịch EP "Dải Tần" — MONO//TONE',
+        client: 'MONO//TONE x 48K Media',
+        tags: 'Dolby Atmos + Visualizer Showcase + DSP Banner',
+        reach: '1.8M Streams · Hero Banner Apple Music',
+        image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80',
+        summary: 'Định vị âm thanh pop điện tử thế hệ mới, phủ sóng toàn bộ các nền tảng streaming âm nhạc không gian (Spatial Audio).'
+      }
+    ],
+    proposals: [
+      {
+        id: 'prop-201',
+        clientName: 'Thái Sơn (Independent Artist)',
+        clientEmail: 'thaison.music@gmail.com',
+        clientPhone: '0912345678',
+        packageType: 'Gói Viral TikTok + PR Báo chí 360',
+        releaseDate: '01/10/2026',
+        targetGoal: '500,000 Streams & Lọt Top Viral Spotify',
+        budget: '25,000,000 VNĐ',
+        notes: 'Single Pop Ballad đầu tay kết hợp với MV Cinematic.',
+        status: 'Chờ phản hồi',
+        createdAt: '22/08/2026'
+      }
+    ]
   }
 };
 
@@ -353,6 +502,24 @@ export async function getData() {
         merged.publishing = cached.publishing;
       } else {
         merged.publishing = defaultData.publishing;
+      }
+
+      // Parse Uni-HUBE data
+      if (settings.unihube && typeof settings.unihube === 'object') {
+        merged.unihube = settings.unihube;
+      } else if (cached.unihube && typeof cached.unihube === 'object') {
+        merged.unihube = cached.unihube;
+      } else {
+        merged.unihube = defaultData.unihube;
+      }
+
+      // Parse 48K Collective data
+      if (settings.collective48k && typeof settings.collective48k === 'object') {
+        merged.collective48k = settings.collective48k;
+      } else if (cached.collective48k && typeof cached.collective48k === 'object') {
+        merged.collective48k = cached.collective48k;
+      } else {
+        merged.collective48k = defaultData.collective48k;
       }
 
       // Parse admin accounts
@@ -474,6 +641,8 @@ export async function saveData(data) {
       emails: data.emails || defaultData.emails,
       announcements: data.announcements || defaultData.announcements,
       publishing: data.publishing || defaultData.publishing,
+      unihube: data.unihube || defaultData.unihube,
+      collective48k: data.collective48k || defaultData.collective48k,
       admin_accounts: data.adminAccounts || defaultData.adminAccounts,
       city: data.city,
       updated_at: new Date().toISOString()
@@ -484,6 +653,8 @@ export async function saveData(data) {
       delete settingsPayload.announcements;
       delete settingsPayload.emails;
       delete settingsPayload.publishing;
+      delete settingsPayload.unihube;
+      delete settingsPayload.collective48k;
       delete settingsPayload.admin_accounts;
       await supabase.from('site_settings').upsert(settingsPayload);
     }
