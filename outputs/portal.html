@@ -29,15 +29,6 @@
         <a href="#insights" data-tab="tab-insights">
           <span>📈 Thống kê & Playlists</span>
         </a>
-        <a href="#collab" data-tab="tab-collab">
-          <span>🤝 Bảng Tin Collab</span>
-        </a>
-        <a href="#gigs" data-tab="tab-gigs">
-          <span>🎤 Show Diễn & Booking</span>
-        </a>
-        <a href="#contracts" data-tab="tab-contracts">
-          <span>✍️ Hợp Đồng & Ký Số</span>
-        </a>
         <a href="#marketing" data-tab="tab-marketing">
           <span>📢 Marketing & Ads</span>
         </a>
@@ -533,107 +524,7 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 6: BẢNG TIN COLLAB & HỢP TÁC NỘI BỘ -->
-      <!-- ========================================== -->
-      <section id="tab-collab" class="tab-pane">
-        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
-          <div>
-            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">Bảng Tin Collab & Hợp Tác Nội Bộ</h2>
-            <p style="font-size:13px;color:var(--portal-text-muted);margin:4px 0 0;">Kết nối, tìm kiếm Producer, Nhạc sĩ và Rapper trong cùng gia đình UniFLOWs.</p>
-          </div>
-          <button type="button" id="open-collab-modal-btn" class="button" style="padding:8px 16px;font-size:12px;font-weight:bold;">
-            ✨ + Đăng Tin Tìm Collab
-          </button>
-        </div>
-
-        <div id="portal-collab-feed" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:20px;">
-          <!-- Dynamic Collab Posts -->
-        </div>
-      </section>
-
-      <!-- ========================================== -->
-      <!-- TAB 7: LỊCH SHOW DIỄN & BOOKING GIGS -->
-      <!-- ========================================== -->
-      <section id="tab-gigs" class="tab-pane">
-        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
-          <div>
-            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">Lịch Trình Biểu Diễn & Booking</h2>
-            <p style="font-size:13px;color:var(--portal-text-muted);margin:4px 0 0;">Quản lý lịch diễn sự kiện, địa điểm, cát-xê và trạng thái giải ngân từ Label.</p>
-          </div>
-          <span class="kicker">Live Schedule</span>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0;">
-          <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);padding:16px;border-radius:10px;border-top:3px solid #3b82f6;">
-            <span style="font-size:11px;text-transform:uppercase;color:var(--portal-text-muted);font-weight:bold;">🎤 Tổng Show Đã Xác Nhận</span>
-            <strong id="gig-total-count" style="display:block;font-size:24px;margin-top:4px;">3 Show</strong>
-          </div>
-          <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);padding:16px;border-radius:10px;border-top:3px solid #10b981;">
-            <span style="font-size:11px;text-transform:uppercase;color:var(--portal-text-muted);font-weight:bold;">💵 Tổng Cát-Xê Dự Kiến</span>
-            <strong id="gig-total-fee" style="display:block;font-size:24px;margin-top:4px;color:#10b981;">₫ 45,000,000</strong>
-          </div>
-          <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);padding:16px;border-radius:10px;border-top:3px solid #8b5cf6;">
-            <span style="font-size:11px;text-transform:uppercase;color:var(--portal-text-muted);font-weight:bold;">⚡ Đã Giải Ngân Vào Ví</span>
-            <strong id="gig-paid-fee" style="display:block;font-size:24px;margin-top:4px;color:#8b5cf6;">₫ 25,000,000</strong>
-          </div>
-        </div>
-
-        <div id="portal-gigs-list" style="display:grid;gap:12px;margin-top:16px;">
-          <!-- Dynamic Gigs List -->
-        </div>
-      </section>
-
-      <!-- ========================================== -->
-      <!-- TAB 8: HỢP ĐỒNG ĐIỆN TỬ & CHỮ KÝ SỐ -->
-      <!-- ========================================== -->
-      <section id="tab-contracts" class="tab-pane">
-        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
-          <div>
-            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">Hợp Đồng Điện Tử & Chữ Ký Số</h2>
-            <p style="font-size:13px;color:var(--portal-text-muted);margin:4px 0 0;">Xem và ký xác nhận điện tử các văn bản thỏa thuận phân phối âm nhạc độc quyền.</p>
-          </div>
-          <span class="kicker">Legal & E-Sign</span>
-        </div>
-
-        <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:12px;padding:24px;margin-top:18px;box-shadow:var(--portal-shadow);">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--portal-card-border);padding-bottom:16px;margin-bottom:16px;">
-            <div>
-              <span class="eyebrow" style="color:#2563eb;margin:0;">Văn bản thỏa thuận chính thức</span>
-              <h3 style="margin:4px 0 0;font-size:18px;">Hợp Đồng Phân Phối Bản Ghi Âm Độc Quyền (Master Distribution)</h3>
-              <small style="color:var(--portal-text-muted);">Mã số: UF-2026-DIST-089 · Thời hạn: 2024 - 2027</small>
-            </div>
-            <span id="contract-status-badge" style="background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;font-size:12px;font-weight:bold;padding:4px 12px;border-radius:20px;">
-              ✓ ĐÃ KÝ XÁC NHẬN ĐIỆN TỬ
-            </span>
-          </div>
-
-          <div style="background:var(--portal-hover-bg);border:1px solid var(--portal-card-border);border-radius:8px;padding:16px;font-size:13px;line-height:1.6;max-height:220px;overflow-y:auto;margin-bottom:20px;">
-            <p style="margin-top:0;"><b>ĐIỀU 1: PHẠM VI HỢP TÁC</b><br>Bên A (Nghệ sĩ) đồng ý ủy quyền cho Bên B (UniFLOWs Label) toàn quyền phát hành, phân phối các bản ghi âm thuộc quyền sở hữu của Bên A lên hơn 150 nền tảng âm nhạc số toàn cầu (bao gồm Spotify, Apple Music, YouTube Music, Zing MP3, TikTok, Meta...).</p>
-            <p><b>ĐIỀU 2: PHÂN CHIA TÁC QUYỀN (ROYALTY RATE)</b><br>Bên A được hưởng <b>80%</b> tổng doanh thu thực nhận (Net Receipts) từ các nền tảng streaming sau khi khấu trừ thuế và phí kỹ thuật của các DSPs.</p>
-            <p><b>ĐIỀU 3: KỲ ĐỐI SOÁT & THANH TOÁN</b><br>Doanh thu được cập nhật đối soát theo chu kỳ hàng tháng (Monthly). Bên A có quyền rút tiền bất kỳ lúc nào khi số dư khả dụng đạt tối thiểu ₫ 1,000,000.</p>
-          </div>
-
-          <!-- Digital Signature Pad -->
-          <div style="border-top:1px dashed var(--portal-card-border);padding-top:16px;">
-            <h4 style="margin:0 0 8px;font-size:13px;text-transform:uppercase;color:var(--portal-text-muted);">✍️ Chữ Ký Điện Tử Của Nghệ Sĩ</h4>
-            <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-              <div style="background:#fff;border:2px dashed #94a3b8;border-radius:8px;padding:6px;width:320px;height:120px;position:relative;">
-                <canvas id="signature-pad" width="308" height="108" style="cursor:crosshair;width:100%;height:100%;"></canvas>
-                <button type="button" id="clear-signature-btn" style="position:absolute;bottom:6px;right:6px;font-size:10px;padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer;">Xóa chữ ký</button>
-              </div>
-              <div style="flex:1;min-width:240px;">
-                <p style="font-size:12px;color:var(--portal-text-muted);margin:0 0 10px;">Vẽ chữ ký của bạn bằng chuột hoặc màn hình cảm ứng vào khung bên cạnh để hoàn tất ký kết điện tử an toàn.</p>
-                <button type="button" id="save-signature-btn" class="button" style="padding:10px 20px;font-weight:bold;">
-                  ✍️ Xác Nhận & Lưu Chữ Ký
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ========================================== -->
-      <!-- TAB 9: MARKETING, PROMO ASSETS & ADS -->
+      <!-- TAB 6: MARKETING, PROMO ASSETS & ADS -->
       <!-- ========================================== -->
       <section id="tab-marketing" class="tab-pane">
         <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
@@ -1235,56 +1126,6 @@
       <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:15px;">
         <button type="button" id="close-greenlist-dialog-btn-2" class="button alt" style="padding:10px 18px;font-size:12px;border-radius:6px;">Hủy bỏ</button>
         <button type="submit" id="submit-greenlist-btn" class="button" style="padding:10px 22px;font-size:12px;background:#16a34a;color:#fff;border-color:#16a34a;font-weight:bold;border-radius:6px;">Xác nhận cấp Green-list</button>
-      </div>
-    </form>
-  <!-- ========================================== -->
-  <!-- MODAL: ĐĂNG BÀI TÌM COLLAB MỚI -->
-  <!-- ========================================== -->
-  <dialog id="collab-dialog" style="border:1px solid rgba(0,0,0,0.1);padding:28px;max-width:540px;width:90%;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,0.25);border-radius:16px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:12px;">
-      <div>
-        <span class="eyebrow" style="color:#2563eb;margin:0;">UniFLOWs Collab Network</span>
-        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;">Đăng bài tìm đối tác Collab</h3>
-      </div>
-      <button type="button" id="close-collab-dialog-btn" class="button alt" style="padding:4px 10px;font-size:12px;border-radius:6px;">✕</button>
-    </div>
-
-    <form id="collab-post-form">
-      <div class="field" style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Tiêu đề dự án / Yêu cầu hợp tác *</label>
-        <input id="collab-title-input" required placeholder="Ví dụ: Cần 1 đoạn Verse Rap cho bài R&B mới" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-      </div>
-
-      <div class="mini-grid" style="margin-bottom:12px;">
-        <div class="field">
-          <label style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Vai trò cần tìm *</label>
-          <select id="collab-role-input" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
-            <option value="Rapper / Featured">Rapper / Featured Verse</option>
-            <option value="Music Producer">Music Producer / Beatmaker</option>
-            <option value="Vocalist">Vocalist (Nam / Nữ)</option>
-            <option value="Songwriter">Nhạc sĩ viết lời (Topliner)</option>
-            <option value="Mix / Master Engineer">Mix & Master Engineer</option>
-          </select>
-        </div>
-        <div class="field">
-          <label style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Thể loại âm nhạc *</label>
-          <input id="collab-genre-input" required placeholder="R&B, Hip-hop, Pop..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-        </div>
-      </div>
-
-      <div class="field" style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mô tả dự án & Định hướng phong cách *</label>
-        <textarea id="collab-desc-input" rows="3" required placeholder="Mô tả vibe của bài hát, yêu cầu cụ thể đối với người tham gia và kế hoạch phát hành..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;"></textarea>
-      </div>
-
-      <div class="field" style="margin-bottom:18px;">
-        <label style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Link nghe thử Demo (Google Drive / Soundcloud / Dropbox)</label>
-        <input id="collab-demo-input" placeholder="https://drive.google.com/..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-      </div>
-
-      <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:15px;">
-        <button type="button" id="close-collab-dialog-btn-2" class="button alt" style="padding:10px 18px;font-size:12px;border-radius:6px;">Hủy bỏ</button>
-        <button type="submit" class="button" style="padding:10px 22px;font-size:12px;background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;border-radius:6px;">Đăng Lên Bảng Tin</button>
       </div>
     </form>
   </dialog>
