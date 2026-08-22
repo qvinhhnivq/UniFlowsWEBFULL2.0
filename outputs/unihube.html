@@ -377,10 +377,25 @@
       };
     });
 
-    // Populate Booking Modal Select
+    // Populate Booking Modal Selects
     if (producerSelect && unihube.producers) {
       producerSelect.innerHTML = '<option value="any">🎲 Uni-HUBE tự đề xuất Producer phù hợp nhất</option>' +
         unihube.producers.map(p => `<option value="${p.id}">${p.name} (${p.role.split('/')[0].trim()})</option>`).join('');
+    }
+
+    const budgetSelect = document.querySelector('#book-budget-select');
+    if (budgetSelect) {
+      const tiers = unihube.budgetTiers || [
+        'Dưới 5 Triệu VNĐ (Vocal Tuning / Demo / Beat Indie)',
+        '5 - 10 Triệu VNĐ (Sáng tác Topline / Mixing & Mastering)',
+        '10 - 20 Triệu VNĐ (Sản xuất Single Tiêu chuẩn)',
+        '20 - 40 Triệu VNĐ (Sản xuất Single Cao cấp & Dolby Atmos)',
+        '40 - 80 Triệu VNĐ (Sản xuất Trọn gói EP 3 - 5 Bài)',
+        '80 - 150 Triệu VNĐ (Sản xuất Full Album / Live Session)',
+        'Trên 150 Triệu VNĐ (TVC / Quảng Cáo / Dự Án Hãng Đĩa Lớn)',
+        'Thỏa thuận linh hoạt theo khối lượng công việc'
+      ];
+      budgetSelect.innerHTML = tiers.map((tier, i) => `<option value="${tier}" ${i === 2 ? 'selected' : ''}>${tier}</option>`).join('');
     }
 
     // Submit Booking Form
@@ -427,7 +442,7 @@
         await saveData(liveData);
 
         if (bookingNotice) {
-          bookingNotice.textContent = `✓ Cảm ơn ${clientName}! Yêu cầu sản xuất đã được gửi tới Uni-HUBE. Đội ngũ A&R sẽ phản hồi qua Zalo/Email trong vòng 24h.`;
+          bookingNotice.innerHTML = `<strong>✓ Gửi yêu cầu hợp tác thành công!</strong><br>Uni-HUBE đã tiếp nhận thông tin dự án từ <b>${clientName || 'quý khách'}</b>. Đội ngũ sản xuất & A&R sẽ liên hệ phản hồi qua Email/Zalo trong vòng 24 giờ.`;
           bookingNotice.style.display = 'block';
         }
 

@@ -3057,7 +3057,58 @@ function renderUniHubeAdmin() {
       };
     });
   }
+
+  // 3. Render Budget Tiers
+  const tiersContainer = document.querySelector('#hube-budget-tiers-container');
+  if (tiersContainer) {
+    if (!hube.budgetTiers || !Array.isArray(hube.budgetTiers)) {
+      hube.budgetTiers = JSON.parse(JSON.stringify(defaultData.unihube.budgetTiers));
+    }
+    const tiers = hube.budgetTiers;
+    tiersContainer.innerHTML = tiers.map((tier, idx) => `
+      <div style="display:flex;gap:10px;align-items:center;background:#fafafa;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:#92400e;font-weight:bold;min-width:24px;">#${idx+1}</span>
+        <input type="text" class="hube-tier-input" data-idx="${idx}" value="${esc(tier)}" style="flex:1;padding:6px 10px;border:1px solid var(--ink);border-radius:4px;font-size:13px;font-family:'Manrope',sans-serif;">
+        <button type="button" class="button alt remove delete-hube-tier-btn" data-idx="${idx}" style="padding:4px 8px;font-size:10px;">✕ Xóa</button>
+      </div>
+    `).join('');
+
+    tiersContainer.querySelectorAll('.hube-tier-input').forEach(input => {
+      input.onchange = async () => {
+        const idx = parseInt(input.dataset.idx, 10);
+        const val = input.value.trim();
+        if (val) {
+          hube.budgetTiers[idx] = val;
+          await saveData(data);
+          showNotice(`✓ Đã cập nhật mức ngân sách #${idx+1}.`);
+        }
+      };
+    });
+
+    tiersContainer.querySelectorAll('.delete-hube-tier-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        hube.budgetTiers.splice(idx, 1);
+        await saveData(data);
+        renderUniHubeAdmin();
+        showNotice('✓ Đã xóa mức ngân sách.');
+      };
+    });
+  }
 }
+
+document.querySelector('#btn-add-budget-tier')?.addEventListener('click', async () => {
+  if (!data.unihube) data.unihube = JSON.parse(JSON.stringify(defaultData.unihube));
+  if (!data.unihube.budgetTiers) data.unihube.budgetTiers = JSON.parse(JSON.stringify(defaultData.unihube.budgetTiers));
+  
+  const custom = prompt('Nhập tên mức ngân sách mới (ví dụ: 15 - 25 Triệu VNĐ - Sản xuất Beat & Mixing):');
+  if (custom && custom.trim()) {
+    data.unihube.budgetTiers.push(custom.trim());
+    await saveData(data);
+    renderUniHubeAdmin();
+    showNotice(`✓ Đã thêm mức ngân sách: "${custom.trim()}"!`);
+  }
+});
 
 // ----------------------------------------------------
 // PRODUCER TRACKS MODAL CONTROLLER
@@ -3087,26 +3138,41 @@ function renderProducerTracksList() {
     return;
   }
 
-  tbody.innerHTML = tracks.map((tr, idx) => `
-    <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:10px 12px;">
-        <strong>${esc(tr.title)}</strong><br>
-        <span style="font-size:11px;color:#666;">Ca sĩ: ${esc(tr.artist || 'N/A')} (${esc(tr.releaseYear || '2026')})</span>
-      </td>
-      <td style="padding:10px 12px;font-size:12px;color:#d97706;">
-        ${esc(tr.role || 'Producer')}
-      </td>
-      <td style="padding:10px 12px;font-size:12px;color:#16a34a;font-weight:bold;">
-        ${esc(tr.streams || 'Live')}
-      </td>
-      <td style="padding:10px 12px;">
-        ${tr.audioUrl ? `<audio controls src="${tr.audioUrl}" style="height:24px;width:120px;"></audio>` : '<span style="color:#999;font-size:11px;">Không có audio</span>'}
-      </td>
-      <td style="padding:10px 12px;text-align:right;">
-        <button type="button" class="button alt remove delete-single-producer-track-btn" data-idx="${idx}" style="padding:3px 8px;font-size:10px;">✕ Xóa</button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = tracks.map((tr, idx) => {
+    let dspBadge = '';
+    if (tr.dspLink) {
+      let icon = '🔗 DSP Link';
+      if (tr.platform === 'Spotify' || tr.dspLink.includes('spotify')) icon = '🟢 Spotify';
+      else if (tr.platform === 'Apple Music' || tr.dspLink.includes('apple')) icon = '🍎 Apple';
+      else if (tr.platform === 'YouTube' || tr.dspLink.includes('youtu')) icon = '🔴 YouTube';
+      else if (tr.platform === 'SoundCloud' || tr.dspLink.includes('soundcloud')) icon = '🟠 SoundCloud';
+      else if (tr.platform === 'Zing MP3' || tr.dspLink.includes('zing')) icon = '🟣 Zing MP3';
+      else if (tr.platform) icon = `🔗 ${tr.platform}`;
+
+      dspBadge = `<a href="${esc(tr.dspLink)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#2563eb;font-weight:bold;text-decoration:underline;">${icon} ↗</a>`;
+    }
+
+    return `
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:10px 12px;">
+          <strong>${esc(tr.title)}</strong><br>
+          <span style="font-size:11px;color:#666;">Ca sĩ: ${esc(tr.artist || 'N/A')} (${esc(tr.releaseYear || '2026')})</span>
+        </td>
+        <td style="padding:10px 12px;font-size:12px;color:#d97706;">
+          ${esc(tr.role || 'Producer')}
+        </td>
+        <td style="padding:10px 12px;font-size:12px;color:#16a34a;font-weight:bold;">
+          ${esc(tr.streams || 'Live')}
+        </td>
+        <td style="padding:10px 12px;">
+          ${dspBadge || (tr.audioUrl ? `<audio controls src="${tr.audioUrl}" style="height:24px;width:110px;"></audio>` : '<span style="color:#999;font-size:11px;">Chưa gắn link</span>')}
+        </td>
+        <td style="padding:10px 12px;text-align:right;">
+          <button type="button" class="button alt remove delete-single-producer-track-btn" data-idx="${idx}" style="padding:3px 8px;font-size:10px;">✕ Xóa</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 
   tbody.querySelectorAll('.delete-single-producer-track-btn').forEach(btn => {
     btn.onclick = async () => {
@@ -3127,6 +3193,8 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
   const artist = document.querySelector('#modal-track-artist').value.trim();
   const role = document.querySelector('#modal-track-role').value.trim() || 'Music Producer';
   const streams = document.querySelector('#modal-track-streams').value.trim() || 'Live on DSPs';
+  const dspLink = document.querySelector('#modal-track-dsplink')?.value.trim() || '';
+  const platform = document.querySelector('#modal-track-platform')?.value || 'Spotify';
   const audioUrl = document.querySelector('#modal-track-audio').value.trim();
   const releaseYear = document.querySelector('#modal-track-year').value.trim() || '2026';
 
@@ -3140,6 +3208,8 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
     artist,
     role,
     streams,
+    dspLink,
+    platform,
     audioUrl,
     releaseYear
   };
@@ -3152,10 +3222,11 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
   // Clear inputs
   document.querySelector('#modal-track-title').value = '';
   document.querySelector('#modal-track-artist').value = '';
+  if (document.querySelector('#modal-track-dsplink')) document.querySelector('#modal-track-dsplink').value = '';
   document.querySelector('#modal-track-audio').value = '';
   document.querySelector('#modal-track-streams').value = '';
 
-  showNotice(`✓ Đã thêm ca khúc "${title}" cho Producer ${selectedProducerForTracks.name}!`);
+  showNotice(`✓ Đã thêm ca khúc "${title}" (${platform}) cho Producer ${selectedProducerForTracks.name}!`);
 });
 
 document.querySelector('#close-producer-tracks-dialog-btn')?.addEventListener('click', () => {

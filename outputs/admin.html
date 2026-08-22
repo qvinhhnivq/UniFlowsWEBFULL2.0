@@ -777,6 +777,23 @@
             <!-- Injected dynamically -->
           </div>
         </div>
+
+        <!-- 03: Manage Budget Tiers Configuration -->
+        <div style="background:#fff;border:1px solid var(--ink);padding:20px;border-radius:10px;margin-top:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h3 style="margin:0;font-size:16px;">💰 Cấu Hình Các Mức Ngân Sách Dự Trù (Budget Tiers)</h3>
+              <p style="font-size:12px;color:#666;margin:2px 0 0;">Thiết lập các mức ngân sách đa dạng để tiếp cận mọi tệp khách hàng (Indie, Demo, Single, Album, TVC...).</p>
+            </div>
+            <button type="button" id="btn-add-budget-tier" class="button" style="background:#d97706;color:#fff;border-color:#d97706;padding:6px 14px;font-size:11px;font-weight:bold;">
+              + Thêm Mức Ngân Sách Mới
+            </button>
+          </div>
+
+          <div id="hube-budget-tiers-container" style="display:grid;gap:8px;margin-top:12px;">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
       </section>
 
       <!-- ========================================== -->
@@ -1032,7 +1049,24 @@
         </div>
         <div class="mini-grid">
           <div class="field">
-            <label style="font-weight:bold;font-size:11px;">Link Audio Nghe Thử (MP3 URL)</label>
+            <label style="font-weight:bold;font-size:11px;">Link Nghe Trên DSPs (Spotify / Apple Music / YouTube...) *</label>
+            <input id="modal-track-dsplink" type="url" placeholder="https://open.spotify.com/track/... hoặc YouTube">
+          </div>
+          <div class="field">
+            <label style="font-weight:bold;font-size:11px;">Nền tảng DSPs</label>
+            <select id="modal-track-platform" style="padding:10px;border:1px solid var(--ink);border-radius:4px;font-size:13px;background:#fff;">
+              <option value="Spotify">🟢 Spotify</option>
+              <option value="Apple Music">🍎 Apple Music</option>
+              <option value="YouTube">🔴 YouTube / MV</option>
+              <option value="SoundCloud">🟠 SoundCloud</option>
+              <option value="Zing MP3">🟣 Zing MP3</option>
+              <option value="Smart Link">🔗 Smart Link (All DSPs)</option>
+            </select>
+          </div>
+        </div>
+        <div class="mini-grid">
+          <div class="field">
+            <label style="font-weight:bold;font-size:11px;">Link Audio MP3 Nghe Nhanh (Tùy chọn)</label>
             <input id="modal-track-audio" type="url" placeholder="https://.../preview.mp3">
           </div>
           <div class="field">

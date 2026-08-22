@@ -330,6 +330,8 @@ export const defaultData = {
             title: 'Vệt Sáng',
             artist: 'Lumi',
             role: 'Music Producer / Beat & Arrangement',
+            dspLink: 'https://open.spotify.com',
+            platform: 'Spotify',
             audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
             streams: '2.4M Streams',
             releaseYear: '2026'
@@ -338,6 +340,8 @@ export const defaultData = {
             title: 'Dải Tần',
             artist: 'MONO//TONE',
             role: 'Main Beatmaker & Vocal Producer',
+            dspLink: 'https://music.apple.com',
+            platform: 'Apple Music',
             audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
             streams: '1.8M Streams',
             releaseYear: '2025'
@@ -346,6 +350,8 @@ export const defaultData = {
             title: 'City Lights (TVC)',
             artist: 'Sony Vietnam',
             role: 'Composer & Audio Producer',
+            dspLink: 'https://youtube.com',
+            platform: 'YouTube',
             audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
             streams: '5M+ Views',
             releaseYear: '2025'
@@ -368,6 +374,8 @@ export const defaultData = {
             title: 'Đường Đua (Dolby Atmos Master)',
             artist: 'KAII',
             role: 'Mixing & Mastering Engineer (Apple Digital Master)',
+            dspLink: 'https://music.apple.com',
+            platform: 'Apple Music',
             audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
             streams: '950K Streams',
             releaseYear: '2026'
@@ -376,6 +384,8 @@ export const defaultData = {
             title: 'Live at The Flow EP',
             artist: 'UniFLOWs Roster',
             role: 'Stereo Outboard Mastering',
+            dspLink: 'https://open.spotify.com',
+            platform: 'Spotify',
             audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
             streams: '1.2M Streams',
             releaseYear: '2025'
@@ -398,6 +408,8 @@ export const defaultData = {
             title: 'Ánh Đèn Đêm (OST)',
             artist: 'Elena Topline x UniFLOWs',
             role: 'Songwriter & Topline Composer',
+            dspLink: 'https://youtube.com',
+            platform: 'YouTube',
             audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
             streams: '1.5M Streams',
             releaseYear: '2026'
@@ -406,6 +418,8 @@ export const defaultData = {
             title: 'Hợp Âm Mơ',
             artist: 'Lumi ft. Elena',
             role: 'Melody & Lyrics Writer',
+            dspLink: 'https://open.spotify.com',
+            platform: 'Spotify',
             audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
             streams: '800K Streams',
             releaseYear: '2025'
@@ -422,12 +436,22 @@ export const defaultData = {
         producerId: 'prod-alexandre',
         producerName: 'Alexandre Vũ (K-Nova)',
         serviceType: 'Sản xuất Ca khúc Trọn gói (Full Production)',
-        budget: '15 - 20 Triệu VNĐ',
+        budget: '10 - 20 Triệu VNĐ (Sản xuất Single Tiêu chuẩn)',
         deadline: '15/09/2026',
         notes: 'Cần làm 1 bài Pop R&B giai điệu tươi sáng ra mắt vào mùa thu.',
         status: 'Đang thảo luận',
         createdAt: '22/08/2026'
       }
+    ],
+    budgetTiers: [
+      'Dưới 5 Triệu VNĐ (Vocal Tuning / Demo / Beat Indie)',
+      '5 - 10 Triệu VNĐ (Sáng tác Topline / Mixing & Mastering)',
+      '10 - 20 Triệu VNĐ (Sản xuất Single Tiêu chuẩn)',
+      '20 - 40 Triệu VNĐ (Sản xuất Single Cao cấp & Dolby Atmos)',
+      '40 - 80 Triệu VNĐ (Sản xuất Trọn gói EP 3 - 5 Bài)',
+      '80 - 150 Triệu VNĐ (Sản xuất Full Album / Live Session)',
+      'Trên 150 Triệu VNĐ (TVC / Quảng Cáo / Dự Án Hãng Đĩa Lớn)',
+      'Thỏa thuận linh hoạt theo khối lượng công việc'
     ]
   },
   collective48k: {
@@ -573,6 +597,9 @@ export async function getData() {
         merged.unihube = cached.unihube;
       } else {
         merged.unihube = defaultData.unihube;
+      }
+      if (!merged.unihube.budgetTiers || !Array.isArray(merged.unihube.budgetTiers) || merged.unihube.budgetTiers.length === 0) {
+        merged.unihube.budgetTiers = (cached.unihube && cached.unihube.budgetTiers) || defaultData.unihube.budgetTiers;
       }
 
       // Parse 48K Collective data

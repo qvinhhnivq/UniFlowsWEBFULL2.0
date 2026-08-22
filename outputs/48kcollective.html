@@ -397,7 +397,7 @@
         await saveData(liveData);
 
         if (proposalNotice) {
-          proposalNotice.textContent = `✓ Cảm ơn ${clientName}! Yêu cầu chiến dịch cho "${songTitle}" đã được gửi tới 48K Collective. Đội ngũ Media Planner sẽ liên hệ trực tiếp trong vòng 24h.`;
+          proposalNotice.innerHTML = `<strong>✓ Gửi đề xuất chiến dịch thành công!</strong><br>48K Collective đã tiếp nhận yêu cầu cho dự án <b>"${songTitle || 'Dự án mới'}"</b> từ <b>${clientName || 'quý khách'}</b>. Đội ngũ Media Planner sẽ liên hệ trực tiếp trong vòng 24 giờ.`;
           proposalNotice.style.display = 'block';
         }
 

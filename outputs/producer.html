@@ -11,27 +11,93 @@
   <style>
     .producer-track-row {
       display: grid;
-      grid-template-columns: 2fr 1.5fr 1fr 140px;
-      gap: 16px;
+      grid-template-columns: 2.2fr 1.6fr 1.2fr auto;
+      gap: 20px;
       align-items: center;
-      padding: 20px 3vw;
+      padding: 22px 3vw;
       border-bottom: 1px solid var(--line);
       background: transparent;
       transition: background 0.2s;
     }
     .producer-track-row:hover {
-      background: var(--paper);
+      background: rgba(0,0,0,0.02);
     }
-    .producer-track-row strong {
-      font-size: clamp(20px, 3vw, 36px);
-      letter-spacing: -0.06em;
-      line-height: 1;
-      margin: 0;
+    .track-role-pill {
+      font: 10px 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      border-radius: 4px;
+      font-weight: 700;
+      display: inline-block;
+      width: fit-content;
     }
-    @media (max-width: 768px) {
+    .track-title-text {
+      font-size: clamp(22px, 2.8vw, 32px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--ink);
+      margin: 4px 0 2px;
+    }
+    .track-artist-text {
+      font-size: 13px;
+      color: #555;
+      font-family: 'Manrope', sans-serif;
+    }
+    .track-artist-text b {
+      color: var(--ink);
+    }
+    .track-metric-badge {
+      font: 11px 'DM Mono', monospace;
+      font-weight: 700;
+      color: #15803d;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+    .dsp-stream-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font: 12px 'DM Mono', monospace;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fff;
+      transition: 0.2s;
+    }
+    .dsp-stream-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .dsp-stream-btn.spotify {
+      background: #1db954;
+      border-color: #1db954;
+      color: #fff;
+    }
+    .dsp-stream-btn.apple {
+      background: #fa243c;
+      border-color: #fa243c;
+      color: #fff;
+    }
+    .dsp-stream-btn.youtube {
+      background: #ff0000;
+      border-color: #ff0000;
+      color: #fff;
+    }
+    @media (max-width: 850px) {
       .producer-track-row {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 12px;
       }
     }
   </style>
@@ -46,6 +112,27 @@
     import './assets/security.js';
     import './assets/app.js';
 
+    function getPlatformMeta(tr) {
+      const url = (tr.dspLink || '').toLowerCase();
+      const platform = (tr.platform || '').toLowerCase();
+      if (platform.includes('spotify') || url.includes('spotify')) {
+        return { cls: 'spotify', icon: '🟢', name: 'Spotify' };
+      }
+      if (platform.includes('apple') || url.includes('apple')) {
+        return { cls: 'apple', icon: '🍎', name: 'Apple Music' };
+      }
+      if (platform.includes('youtube') || url.includes('youtu')) {
+        return { cls: 'youtube', icon: '🔴', name: 'YouTube' };
+      }
+      if (platform.includes('soundcloud') || url.includes('soundcloud')) {
+        return { cls: 'soundcloud', icon: '🟠', name: 'SoundCloud' };
+      }
+      if (platform.includes('zing') || url.includes('zing')) {
+        return { cls: 'zing', icon: '🟣', name: 'Zing MP3' };
+      }
+      return { cls: '', icon: '🔗', name: tr.platform || 'DSPs' };
+    }
+
     const root = document.querySelector('[data-producer-detail]');
     if (root) {
       const data = await getData();
@@ -59,6 +146,16 @@
         root.innerHTML = '<div style="padding:10vw 3vw;text-align:center;"><h2>Không tìm thấy thông tin nhà sản xuất.</h2><a href="unihube" class="button">← Quay lại Uni-HUBE</a></div>';
       } else {
         const tracks = producer.tracks || [];
+        const budgetTiers = unihube.budgetTiers || [
+          'Dưới 5 Triệu VNĐ (Vocal Tuning / Demo / Beat Indie)',
+          '5 - 10 Triệu VNĐ (Sáng tác Topline / Mixing & Mastering)',
+          '10 - 20 Triệu VNĐ (Sản xuất Single Tiêu chuẩn)',
+          '20 - 40 Triệu VNĐ (Sản xuất Single Cao cấp & Dolby Atmos)',
+          '40 - 80 Triệu VNĐ (Sản xuất Trọn gói EP 3 - 5 Bài)',
+          '80 - 150 Triệu VNĐ (Sản xuất Full Album / Live Session)',
+          'Trên 150 Triệu VNĐ (TVC / Quảng Cáo / Dự Án Hãng Đĩa Lớn)',
+          'Thỏa thuận linh hoạt theo khối lượng công việc'
+        ];
 
         root.innerHTML = `
           <!-- 01: Hero Profile (Identical to artist.html) -->
@@ -100,34 +197,47 @@
           <!-- 02: Featured Discography (Same style as releases on artist.html) -->
           <section class="releases">
             <div class="section-head">
-              <h2>02 / Ca Khúc Tiêu Biểu & Bản Phối (Discography)</h2>
+              <h2>02 / Ca Khúc Tiêu Biểu & Sản Phẩm Đã Thực Hiện</h2>
               <span class="kicker">${tracks.length} Featured Tracks</span>
             </div>
             
-            ${tracks.length > 0 ? tracks.map(tr => `
-              <div class="producer-track-row">
-                <div>
-                  <span class="eyebrow" style="color:#d97706;font-size:10px;">${tr.role || 'Produced by ' + producer.name}</span>
-                  <strong>${tr.title}</strong>
-                  <span style="display:block;font-size:14px;color:#555;margin-top:2px;">Nghệ sĩ thể hiện: <b>${tr.artist}</b> (${tr.releaseYear || '2026'})</span>
+            ${tracks.length > 0 ? tracks.map(tr => {
+              const dsp = getPlatformMeta(tr);
+              return `
+                <div class="producer-track-row">
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="track-role-pill">Vai trò: ${tr.role || 'Music Producer'}</span>
+                      <span style="font: 11px 'DM Mono', monospace; color: #888;">${tr.releaseYear || '2026'}</span>
+                    </div>
+                    <div class="track-title-text">${tr.title}</div>
+                    <div class="track-artist-text">Ca sĩ / Dự án: <b>${tr.artist}</b></div>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    ${tr.dspLink ? `
+                      <a href="${tr.dspLink}" target="_blank" rel="noopener noreferrer" class="dsp-stream-btn ${dsp.cls}">
+                        <span>${dsp.icon}</span> Nghe trên ${dsp.name} ↗
+                      </a>
+                    ` : (tr.audioUrl ? `
+                      <audio controls src="${tr.audioUrl}" style="width: 100%; max-width: 220px; height: 32px;"></audio>
+                    ` : '<span style="font: 11px \'DM Mono\', monospace; color: #888;">Lossless Studio Master</span>')}
+                  </div>
+
+                  <div>
+                    <span class="track-metric-badge">
+                      ${tr.streams || '✓ Live on DSPs'}
+                    </span>
+                  </div>
+
+                  <div style="text-align: right;">
+                    <a href="#booking-section" class="button alt" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;">
+                      Đặt bài tương tự ↗
+                    </a>
+                  </div>
                 </div>
-                <div>
-                  ${tr.audioUrl ? `
-                    <audio controls src="${tr.audioUrl}" style="width: 100%; height: 32px;"></audio>
-                  ` : '<span style="font-size:12px;color:#888;">Lossless Studio Master</span>'}
-                </div>
-                <div>
-                  <span style="font: 12px 'DM Mono', monospace; font-weight: bold; color: #16a34a;">
-                    ${tr.streams || '✓ Live on DSPs'}
-                  </span>
-                </div>
-                <div style="text-align: right;">
-                  <a href="#booking-section" class="kicker" style="color: var(--ink); border-bottom: 1px solid;">
-                    Sản xuất tương tự ↗
-                  </a>
-                </div>
-              </div>
-            `).join('') : '<p class="empty" style="padding:30px 3vw;">Chưa cập nhật danh sách ca khúc tiêu biểu.</p>'}
+              `;
+            }).join('') : '<p class="empty" style="padding:30px 3vw;">Chưa cập nhật danh sách ca khúc tiêu biểu.</p>'}
           </section>
 
           <!-- 03: Direct Booking Form -->
@@ -146,17 +256,17 @@
                       <label>Dịch vụ yêu cầu *</label>
                       <select id="direct-service" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
                         <option value="full-production">Sản xuất Ca khúc Trọn gói (Full Track Production)</option>
-                        <option value="mixing-mastering">Mixing & Mastering 24-bit Lossless</option>
+                        <option value="mixing-mastering">Mixing & Mastering 24-bit Lossless / Dolby Atmos</option>
                         <option value="songwriting-topline">Sáng tác Giai điệu & Lời (Songwriting & Topline)</option>
-                        <option value="vocal-production">Vocal Tuning & Xử lý Thanh nhạc</option>
+                        <option value="vocal-production">Vocal Tuning & Xử lý Thanh nhạc Chuyên sâu</option>
+                        <option value="beat-arrangement">Hòa âm Phối khí & Làm Beat (Beatmaking)</option>
+                        <option value="commercial-tvc">Sản xuất Nhạc Quảng Cáo TVC / Phim Ảnh</option>
                       </select>
                     </div>
                     <div class="field">
-                      <label>Dự toán ngân sách</label>
+                      <label>Dự toán ngân sách *</label>
                       <select id="direct-budget" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
-                        <option value="10 - 20 Triệu VNĐ">10 - 20 Triệu VNĐ</option>
-                        <option value="20 - 40 Triệu VNĐ">20 - 40 Triệu VNĐ</option>
-                        <option value="Trên 40 Triệu VNĐ">Trên 40 Triệu VNĐ</option>
+                        ${budgetTiers.map(tier => `<option value="${tier}">${tier}</option>`).join('')}
                       </select>
                     </div>
                   </div>
@@ -242,7 +352,7 @@
             await saveData(liveData);
 
             if (notice) {
-              notice.textContent = `✓ Cảm ơn ${clientName}! Yêu cầu làm việc với Producer ${producer.name} đã được gửi thành công. Chúng tôi sẽ phản hồi trong vòng 24h.`;
+              notice.innerHTML = `<strong>✓ Gửi yêu cầu làm việc thành công!</strong><br>Uni-HUBE đã tiếp nhận thông tin từ <b>${clientName || 'quý khách'}</b> dành cho Producer <b>${producer.name}</b>. Chúng tôi sẽ phản hồi trong vòng 24 giờ.`;
               notice.style.display = 'block';
             }
 
