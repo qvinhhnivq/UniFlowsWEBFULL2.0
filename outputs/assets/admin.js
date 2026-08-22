@@ -1,7 +1,8 @@
 import { getData, saveData, defaultData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
 
-if (sessionStorage.getItem('uniflows-admin') !== 'true') {
+const isAdminAuth = sessionStorage.getItem('uniflows-admin') === 'true' || localStorage.getItem('uniflows-admin') === 'true';
+if (!isAdminAuth) {
   location.replace('login');
 }
 
@@ -564,7 +565,7 @@ async function loadPayoutRequests() {
     const dateStr = req.created_at ? new Date(req.created_at).toLocaleString('vi-VN') : 'Mới';
 
     return `
-      <div class="item-editor" data-payout-id="${esc(req.id)}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:12px;">
+      <div class="item-editor" data-payout-id="${esc(req.id)}" data-artist-id="${esc(req.artist_id)}" data-payout-amount="${esc(req.amount)}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;">
           <div>
             <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;background:${isPending ? '#fef3c7' : (isPaid ? '#dcfce7' : '#fee2e2')};color:${isPending ? '#b45309' : (isPaid ? '#15803d' : '#cf1322')};">
@@ -636,6 +637,8 @@ async function loadPayoutRequests() {
       const card = e.target.closest('[data-payout-id]');
       const status = card?.querySelector('.payout-status-select')?.value;
       const rejection_reason = card?.querySelector('.payout-rejection-input')?.value.trim() || '';
+      const artistId = card?.dataset.artistId;
+      const amount = card?.dataset.payoutAmount;
 
       btn.disabled = true; btn.textContent = 'Đang lưu...';
 
@@ -650,6 +653,24 @@ async function loadPayoutRequests() {
           btn.disabled = false; btn.textContent = 'Lưu cập nhật';
           return;
         }
+      }
+
+      // Send notification to artist
+      const amtStr = parseInt(amount || 0).toLocaleString('vi-VN');
+      if (status === 'Đã thanh toán (Hoàn tất)') {
+        await sendArtistNotification(
+          artistId,
+          '💳 Yêu cầu rút tiền được duyệt',
+          `Khoản thanh toán ₫ ${amtStr} đã được Quản trị viên duyệt và chuyển khoản hoàn tất vào tài khoản ngân hàng của bạn.`,
+          'payout'
+        );
+      } else if (status === 'Từ chối thanh toán') {
+        await sendArtistNotification(
+          artistId,
+          '❌ Yêu cầu rút tiền bị từ chối',
+          `Yêu cầu rút ₫ ${amtStr} chưa được duyệt.${rejection_reason ? ' Lý do: ' + rejection_reason : ''}`,
+          'payout'
+        );
       }
 
       // Update local storage
@@ -1034,6 +1055,7 @@ async function loadReleasesQueue() {
             </div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="button alt view-admin-epk-btn" data-epk-id="${esc(r.id)}" style="padding:6px 12px;font-size:11px;background:#f8fafc;border-color:var(--ink);font-weight:bold;">📄 Xem EPK</button>
             <a class="button alt" href="/listen/${encodeURIComponent(releaseSlug)}" target="_blank" style="padding:6px 12px;font-size:11px;">SmartLink ↗</a>
             <button class="button alt remove" type="button" data-delete-release="${esc(r.id)}" style="padding:6px 10px;font-size:11px;">✕ Xóa</button>
           </div>
@@ -1328,9 +1350,36 @@ async function loadReleasesQueue() {
         }
       }
 
+      // Notify artist of release status change
+      const relArtistId = targetRel?.artist_id;
+      const relTitle = targetRel?.title || 'Bản phát hành';
+      if (status === 'Đã phát hành') {
+        await sendArtistNotification(
+          relArtistId,
+          '💿 Bản phát hành đã được duyệt',
+          `Sản phẩm "${relTitle}" đã được duyệt phát hành và chính thức phân phối trên các nền tảng streaming!`,
+          'release'
+        );
+      } else if (status && status.includes('chờ')) {
+        await sendArtistNotification(
+          relArtistId,
+          '⏳ Bản phát hành đang được A&R xử lý',
+          `Sản phẩm "${relTitle}" đang được ban biên tập và A&R UniFLOWs xem xét đối soát Master.`,
+          'release'
+        );
+      }
+
       btn.disabled = false; btn.textContent = 'Lưu bản phát hành';
       showNotice('✓ Đã cập nhật bản phát hành, góp ý A&R và SmartLink thành công!');
       loadReleasesQueue();
+    });
+  });
+
+  // Attach EPK view events
+  releasesBox.querySelectorAll('.view-admin-epk-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const relId = btn.dataset.epkId;
+      openAdminEPK(relId);
     });
   });
 
@@ -2024,12 +2073,127 @@ form.addEventListener('submit', async (e) => {
   render();
 });
 
+// Logout handler
 document.querySelector('#logout')?.addEventListener('click', async () => {
-  if (isSupabaseConfigured()) {
-    await supabase.auth.signOut();
+  if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi trang Quản trị?')) {
+    if (isSupabaseConfigured()) {
+      try { await supabase.auth.signOut(); } catch {}
+    }
+    sessionStorage.removeItem('uniflows-admin');
+    sessionStorage.removeItem('uniflows-user-email');
+    localStorage.removeItem('uniflows-admin');
+    localStorage.removeItem('uniflows-user-email');
+    location.href = 'login';
   }
-  sessionStorage.removeItem('uniflows-admin');
-  location.href = 'login';
+});
+
+// ==========================================
+// ARTIST NOTIFICATION DISPATCHER
+// ==========================================
+async function sendArtistNotification(artistId, title, message, type = 'info', link = '') {
+  if (!artistId) return;
+  const newNotif = {
+    id: 'notif-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+    artist_id: artistId,
+    title,
+    message,
+    type,
+    link,
+    is_read: false,
+    created_at: new Date().toISOString()
+  };
+
+  // 1. Update localStorage for target artist
+  try {
+    const key = 'uniflows-notifications-' + artistId;
+    const cached = JSON.parse(localStorage.getItem(key) || '[]');
+    cached.unshift(newNotif);
+    localStorage.setItem(key, JSON.stringify(cached));
+  } catch {}
+
+  // 2. Insert into Supabase if configured
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('notifications').insert({
+        artist_id: artistId,
+        title,
+        message,
+        type,
+        link,
+        is_read: false
+      });
+    } catch (err) {
+      console.warn('Lỗi ghi thông báo vào Supabase:', err);
+    }
+  }
+}
+
+// ==========================================
+// ELECTRONIC PRESS KIT (EPK) FOR ADMIN
+// ==========================================
+window.openAdminEPK = function(releaseId) {
+  const rel = releases.find(r => r.id === releaseId) || 
+    (data.artists || []).flatMap(a => (a.products || []).map(p => ({ ...p, artist_id: a.id }))).find(p => p.id === releaseId || p.slug === releaseId);
+  if (!rel) {
+    alert('Không tìm thấy thông tin bản phát hành để tạo EPK.');
+    return;
+  }
+
+  const artistObj = (data.artists || []).find(a => a.id === rel.artist_id) || { name: rel.primary_artist || rel.artist_id || 'Nghệ sĩ' };
+  const artistName = rel.artists?.name || artistObj.name || rel.primary_artist || 'Nghệ sĩ';
+  const artwork = rel.artwork_url || rel.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
+  const relDate = rel.release_date || rel.releaseDate || 'Đang cập nhật';
+  const relType = rel.type || 'Single';
+  const genre = rel.genre || rel.primaryGenre || artistObj.genre || 'Pop';
+  const isrc = rel.upc || rel.isrc || 'Pending / UniFLOWs Master';
+  const bio = artistObj.bio || `${artistName} là nghệ sĩ trực thuộc hãng đĩa UniFLOWs Records, mang đến phong cách âm nhạc độc đáo và tầm nhìn đương đại.`;
+
+  const dialog = document.querySelector('#admin-epk-dialog');
+  const printArea = document.querySelector('#admin-epk-printable-area');
+  if (dialog && printArea) {
+    printArea.innerHTML = `
+      <div style="text-align:center;margin-bottom:28px;border-bottom:2px solid #0f172a;padding-bottom:18px;">
+        <img src="https://ui-avatars.com/api/?name=UniFLOWs+Records&background=1e293b&color=fff&rounded=true&size=80" style="margin-bottom:8px;border-radius:50%;">
+        <h1 style="font-size:24px;font-weight:900;letter-spacing:-0.05em;margin:0;color:#0f172a;">UNIFLOWs RECORDS</h1>
+        <p style="font-size:11px;color:#64748b;margin:4px 0 0;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Official Electronic Press Kit (EPK)</p>
+      </div>
+      <div style="display:flex;gap:24px;align-items:flex-start;">
+        <img src="${esc(artwork)}" style="width:200px;height:200px;border-radius:8px;object-fit:cover;box-shadow:0 10px 30px rgba(0,0,0,0.15);border:1px solid #e2e8f0;flex-shrink:0;">
+        <div style="flex:1;">
+          <span style="font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#2563eb;display:block;margin-bottom:4px;">Official Release One-Sheet</span>
+          <h2 style="font-size:28px;margin:0;font-weight:900;letter-spacing:-0.03em;color:#0f172a;">${esc(rel.title)}</h2>
+          <h3 style="font-size:18px;margin:6px 0 0;color:#334155;font-weight:700;">${esc(artistName)}</h3>
+          
+          <div style="margin-top:16px;font-size:12.5px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f8fafc;padding:12px 16px;border-radius:8px;border:1px solid #e2e8f0;">
+            <div><strong style="color:#64748b;font-size:10.5px;text-transform:uppercase;display:block;">Ngày phát hành:</strong><span style="font-weight:600;color:#0f172a;">${esc(relDate)}</span></div>
+            <div><strong style="color:#64748b;font-size:10.5px;text-transform:uppercase;display:block;">Định dạng:</strong><span style="font-weight:600;color:#0f172a;">${esc(relType)}</span></div>
+            <div><strong style="color:#64748b;font-size:10.5px;text-transform:uppercase;display:block;">Thể loại:</strong><span style="font-weight:600;color:#0f172a;">${esc(genre)}</span></div>
+            <div><strong style="color:#64748b;font-size:10.5px;text-transform:uppercase;display:block;">ISRC / UPC:</strong><span style="font-weight:600;color:#0f172a;font-family:monospace;">${esc(isrc)}</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:24px;border-top:1px solid #e2e8f0;padding-top:18px;">
+        <h4 style="font-size:14px;margin:0 0 8px;color:#0f172a;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">Tiểu sử nghệ sĩ & Thông cáo báo chí</h4>
+        <p style="font-size:13px;line-height:1.6;color:#334155;">${esc(bio)}</p>
+        <p style="font-size:13px;line-height:1.6;color:#334155;margin-top:6px;">Bản phát hành <strong>"${esc(rel.title)}"</strong> được bảo chứng và phân phối độc quyền bởi <strong>UniFLOWs Records</strong> trên các nền tảng streaming toàn cầu (Spotify, Apple Music, YouTube Music, Zing MP3, TikTok).</p>
+      </div>
+      <div style="margin-top:28px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px dashed #cbd5e1;padding-top:14px;">
+        © 2026 UniFLOWs Label & Distribution. All Rights Reserved.<br>Media / A&R Contact: press@uniflowslabel.com &bull; demos@uniflowslabel.com
+      </div>
+    `;
+    dialog.showModal();
+  }
+};
+
+document.querySelector('#close-admin-epk-btn')?.addEventListener('click', () => document.querySelector('#admin-epk-dialog')?.close());
+document.querySelector('#cancel-admin-epk-btn')?.addEventListener('click', () => document.querySelector('#admin-epk-dialog')?.close());
+document.querySelector('#print-admin-epk-btn')?.addEventListener('click', () => {
+  const printContent = document.querySelector('#admin-epk-printable-area').innerHTML;
+  const originalContent = document.body.innerHTML;
+  document.body.innerHTML = printContent;
+  window.print();
+  document.body.innerHTML = originalContent;
+  location.reload();
 });
 
 // ==========================================

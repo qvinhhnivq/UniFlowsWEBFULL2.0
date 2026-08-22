@@ -1,12 +1,31 @@
 import { supabase, isSupabaseConfigured, getCurrentUserProfile } from './supabase.js';
 
+// Auto-login if previously remembered
+if (localStorage.getItem('uniflows-admin') === 'true' || sessionStorage.getItem('uniflows-admin') === 'true') {
+  location.replace('admin');
+}
+
 const form = document.querySelector('#login-form');
 const errorNotice = document.querySelector('#login-error');
 const submitBtn = document.querySelector('#submit-btn');
+const rememberMeCheckbox = document.querySelector('#admin-remember-me');
 
 function showError(msg) {
   errorNotice.textContent = msg;
   errorNotice.style.display = 'block';
+}
+
+function saveAdminAuthSession(email, remember) {
+  sessionStorage.setItem('uniflows-admin', 'true');
+  sessionStorage.setItem('uniflows-user-email', email);
+
+  if (remember) {
+    localStorage.setItem('uniflows-admin', 'true');
+    localStorage.setItem('uniflows-user-email', email);
+  } else {
+    localStorage.removeItem('uniflows-admin');
+    localStorage.removeItem('uniflows-user-email');
+  }
 }
 
 form.onsubmit = async (e) => {
@@ -14,6 +33,7 @@ form.onsubmit = async (e) => {
   errorNotice.style.display = 'none';
   const email = document.querySelector('#admin-email').value.trim();
   const password = document.querySelector('#admin-password').value;
+  const remember = rememberMeCheckbox ? rememberMeCheckbox.checked : true;
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Đang đăng nhập...';
@@ -30,14 +50,12 @@ form.onsubmit = async (e) => {
         throw new Error('Tài khoản này không có quyền Quản trị viên (Admin).');
       }
 
-      sessionStorage.setItem('uniflows-admin', 'true');
-      sessionStorage.setItem('uniflows-user-email', email);
+      saveAdminAuthSession(email, remember);
       location.href = 'admin';
     } else {
       // Fallback chế độ demo khi chưa cấu hình Supabase URL/Key
       if ((email === 'admin@uniflowslabel.com' || email === 'admin') && password === 'UniFLOWs2026!') {
-        sessionStorage.setItem('uniflows-admin', 'true');
-        sessionStorage.setItem('uniflows-user-email', email);
+        saveAdminAuthSession(email, remember);
         location.href = 'admin';
       } else {
         throw new Error('Email hoặc mật khẩu chưa đúng (Demo: admin@uniflowslabel.com / UniFLOWs2026!).');

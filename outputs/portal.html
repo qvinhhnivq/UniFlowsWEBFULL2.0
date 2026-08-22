@@ -826,11 +826,15 @@
     <p id="password-notice" class="notice" style="display:none;margin-bottom:12px;"></p>
     <form id="change-password-form">
       <div class="field" style="margin-bottom:12px;">
+        <label for="old-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mật khẩu hiện tại</label>
+        <input id="old-password" type="password" required minlength="6" placeholder="Nhập mật khẩu hiện tại" style="width:100%;padding:10px;border:1px solid var(--ink);">
+      </div>
+      <div class="field" style="margin-bottom:12px;">
         <label for="new-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mật khẩu mới</label>
         <input id="new-password" type="password" required minlength="6" placeholder="Tối thiểu 6 ký tự" style="width:100%;padding:10px;border:1px solid var(--ink);">
       </div>
       <div class="field" style="margin-bottom:18px;">
-        <label for="confirm-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Xác nhận mật khẩu</label>
+        <label for="confirm-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Xác nhận mật khẩu mới</label>
         <input id="confirm-password" type="password" required minlength="6" placeholder="Nhập lại mật khẩu mới" style="width:100%;padding:10px;border:1px solid var(--ink);">
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">

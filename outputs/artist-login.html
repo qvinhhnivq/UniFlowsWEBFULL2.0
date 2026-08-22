@@ -25,6 +25,10 @@
         <label for="artist-password">Mật khẩu</label>
         <input id="artist-password" required type="password" autocomplete="current-password" placeholder="••••••••">
       </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;margin-top:-6px;margin-bottom:14px;">
+        <input type="checkbox" id="artist-remember-me" checked style="width:auto;margin:0;cursor:pointer;">
+        <label for="artist-remember-me" style="margin:0;font-size:13px;cursor:pointer;user-select:none;">Lưu đăng nhập trên thiết bị này</label>
+      </div>
       <div class="actions">
         <button class="button" type="submit" id="artist-submit-btn">Đăng nhập Portal</button>
         <a class="button alt" href="index">Quay lại website</a>
@@ -39,13 +43,38 @@
     import { getData } from './assets/data.js';
     import { supabase, isSupabaseConfigured, getCurrentUserProfile } from './assets/supabase.js';
 
+    // Auto-login if previously remembered
+    if (localStorage.getItem('uniflows-artist') === 'true' || sessionStorage.getItem('uniflows-artist') === 'true') {
+      location.replace('portal');
+    }
+
     const form = document.querySelector('#artist-login-form');
     const errorNotice = document.querySelector('#artist-login-error');
     const submitBtn = document.querySelector('#artist-submit-btn');
+    const rememberMeCheckbox = document.querySelector('#artist-remember-me');
 
     function showError(msg) {
       errorNotice.textContent = msg;
       errorNotice.style.display = 'block';
+    }
+
+    function saveAuthSession(artistId, artistName, email, remember) {
+      sessionStorage.setItem('uniflows-artist', 'true');
+      sessionStorage.setItem('uniflows-artist-id', artistId);
+      sessionStorage.setItem('uniflows-artist-name', artistName);
+      sessionStorage.setItem('uniflows-artist-email', email);
+
+      if (remember) {
+        localStorage.setItem('uniflows-artist', 'true');
+        localStorage.setItem('uniflows-artist-id', artistId);
+        localStorage.setItem('uniflows-artist-name', artistName);
+        localStorage.setItem('uniflows-artist-email', email);
+      } else {
+        localStorage.removeItem('uniflows-artist');
+        localStorage.removeItem('uniflows-artist-id');
+        localStorage.removeItem('uniflows-artist-name');
+        localStorage.removeItem('uniflows-artist-email');
+      }
     }
 
     form.onsubmit = async (e) => {
@@ -53,6 +82,7 @@
       errorNotice.style.display = 'none';
       const email = document.querySelector('#artist-email').value.trim();
       const password = document.querySelector('#artist-password').value;
+      const remember = rememberMeCheckbox ? rememberMeCheckbox.checked : true;
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Đang đăng nhập...';
@@ -77,10 +107,7 @@
           const artistId = matched?.id || profile?.artist_id || emailUser;
           const artistName = matched?.name || (emailUser.charAt(0).toUpperCase() + emailUser.slice(1));
 
-          sessionStorage.setItem('uniflows-artist', 'true');
-          sessionStorage.setItem('uniflows-artist-id', artistId);
-          sessionStorage.setItem('uniflows-artist-name', artistName);
-          sessionStorage.setItem('uniflows-artist-email', email);
+          saveAuthSession(artistId, artistName, email, remember);
           location.href = 'portal';
         } else {
           // Demo fallback
@@ -95,10 +122,7 @@
           const artistId = matched?.id || emailUser;
           const artistName = matched?.name || (emailUser.charAt(0).toUpperCase() + emailUser.slice(1));
 
-          sessionStorage.setItem('uniflows-artist', 'true');
-          sessionStorage.setItem('uniflows-artist-id', artistId);
-          sessionStorage.setItem('uniflows-artist-name', artistName);
-          sessionStorage.setItem('uniflows-artist-email', email);
+          saveAuthSession(artistId, artistName, email, remember);
           location.href = 'portal';
         }
       } catch (err) {

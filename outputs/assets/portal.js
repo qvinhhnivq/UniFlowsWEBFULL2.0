@@ -2,7 +2,8 @@ import { getData, saveData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
 
 // Kiểm tra quyền đăng nhập
-if (sessionStorage.getItem('uniflows-artist') !== 'true') {
+const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
+if (!isArtistAuth) {
   location.replace('artist-login');
 }
 
@@ -31,9 +32,9 @@ const closeReleaseDialogBtn = document.querySelector('#close-release-dialog-btn'
 const cancelReleaseBtn = document.querySelector('#cancel-release-btn');
 
 let data = await getData();
-const sessionArtistId = sessionStorage.getItem('uniflows-artist-id');
-const sessionEmail = sessionStorage.getItem('uniflows-artist-email') || '';
-const sessionArtistName = sessionStorage.getItem('uniflows-artist-name') || '';
+const sessionArtistId = sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id');
+const sessionEmail = sessionStorage.getItem('uniflows-artist-email') || localStorage.getItem('uniflows-artist-email') || '';
+const sessionArtistName = sessionStorage.getItem('uniflows-artist-name') || localStorage.getItem('uniflows-artist-name') || '';
 const emailPrefix = sessionEmail ? sessionEmail.split('@')[0].toLowerCase() : '';
 
 // Tự động tìm nghệ sĩ theo ID, Email đăng nhập, hoặc Username
@@ -1543,13 +1544,20 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
 
 // Logout handler
 logoutBtn?.addEventListener('click', async () => {
-  if (isSupabaseConfigured()) {
-    await supabase.auth.signOut();
+  if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi Cổng nghệ sĩ?')) {
+    if (isSupabaseConfigured()) {
+      try { await supabase.auth.signOut(); } catch {}
+    }
+    sessionStorage.removeItem('uniflows-artist');
+    sessionStorage.removeItem('uniflows-artist-id');
+    sessionStorage.removeItem('uniflows-artist-email');
+    sessionStorage.removeItem('uniflows-artist-name');
+    localStorage.removeItem('uniflows-artist');
+    localStorage.removeItem('uniflows-artist-id');
+    localStorage.removeItem('uniflows-artist-email');
+    localStorage.removeItem('uniflows-artist-name');
+    location.href = 'artist-login';
   }
-  sessionStorage.removeItem('uniflows-artist');
-  sessionStorage.removeItem('uniflows-artist-id');
-  sessionStorage.removeItem('uniflows-artist-email');
-  location.href = 'artist-login';
 });
 
 // Change Password Dialog & Submission Handlers
@@ -1572,8 +1580,25 @@ closePasswordDialogBtn?.addEventListener('click', () => {
 
 changePasswordForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const oldPass = document.querySelector('#old-password')?.value;
   const newPass = document.querySelector('#new-password')?.value;
   const confirmPass = document.querySelector('#confirm-password')?.value;
+
+  if (!oldPass) {
+    if (passwordNotice) {
+      passwordNotice.textContent = 'Vui lòng nhập mật khẩu hiện tại.';
+      passwordNotice.style.display = 'block';
+    }
+    return;
+  }
+
+  if (oldPass === newPass) {
+    if (passwordNotice) {
+      passwordNotice.textContent = 'Mật khẩu mới không được trùng với mật khẩu hiện tại.';
+      passwordNotice.style.display = 'block';
+    }
+    return;
+  }
 
   if (newPass !== confirmPass) {
     if (passwordNotice) {
@@ -1590,6 +1615,14 @@ changePasswordForm?.addEventListener('submit', async (e) => {
 
   try {
     if (isSupabaseConfigured()) {
+      // Xác thực mật khẩu cũ trước khi đổi
+      const userEmail = sessionEmail || (await supabase.auth.getUser())?.data?.user?.email;
+      if (userEmail) {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email: userEmail, password: oldPass });
+        if (signInErr) {
+          throw new Error('Mật khẩu hiện tại không chính xác. Vui lòng kiểm tra lại.');
+        }
+      }
       const { error } = await supabase.auth.updateUser({ password: newPass });
       if (error) throw error;
     }
@@ -1928,32 +1961,229 @@ function applyPortalTheme(theme) {
 }
 
 // ==========================================
-// NOTIFICATIONS & CALENDAR & EPK
+// PERSISTENT NOTIFICATION CENTER
 // ==========================================
+let artistNotifications = [];
+
+async function loadNotifications() {
+  const notifStorageKey = 'uniflows-notifications-' + currentArtistId;
+  let list = [];
+
+  try {
+    const cached = JSON.parse(localStorage.getItem(notifStorageKey) || '[]');
+    if (Array.isArray(cached)) list = cached;
+  } catch {}
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbList, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('artist_id', currentArtistId)
+        .order('created_at', { ascending: false });
+
+      if (!error && dbList && dbList.length > 0) {
+        // Merge Supabase with local read statuses
+        list = dbList.map(item => {
+          const localItem = list.find(l => l.id === item.id);
+          return {
+            ...item,
+            is_read: localItem ? (localItem.is_read || item.is_read) : item.is_read
+          };
+        });
+      }
+    } catch (err) {
+      console.warn('Lỗi tải thông báo từ Supabase, sử dụng bộ nhớ cục bộ:', err);
+    }
+  }
+
+  // Generate initial events from releases, payouts & announcements if list is empty
+  if (list.length === 0) {
+    const initialEvents = [];
+
+    // Announcements
+    (data.announcements || []).forEach(ann => {
+      if (ann.active !== false) {
+        initialEvents.push({
+          id: 'ann-' + (ann.id || ann.title),
+          artist_id: currentArtistId,
+          title: '📢 ' + (ann.title || 'Thông báo từ Hãng đĩa'),
+          message: ann.content || 'Thông báo mới từ ban quản trị UniFLOWs.',
+          type: 'announcement',
+          is_read: false,
+          created_at: new Date().toISOString()
+        });
+      }
+    });
+
+    // Payout requests
+    (artistPayoutRequests || []).forEach(p => {
+      const isPaid = p.status === 'Đã thanh toán (Hoàn tất)' || p.status === 'Đã thanh toán';
+      const isRejected = p.status === 'Từ chối thanh toán' || p.status === 'Từ chối';
+      const amtStr = parseInt(p.amount || 0).toLocaleString('vi-VN');
+      if (isPaid) {
+        initialEvents.push({
+          id: 'payout-paid-' + p.id,
+          artist_id: currentArtistId,
+          title: '💳 Yêu cầu rút tiền được duyệt',
+          message: `Khoản thanh toán ₫ ${amtStr} đã được chuyển khoản thành công vào tài khoản ngân hàng của bạn.`,
+          type: 'payout',
+          is_read: false,
+          created_at: p.created_at || new Date().toISOString()
+        });
+      } else if (isRejected) {
+        initialEvents.push({
+          id: 'payout-rej-' + p.id,
+          artist_id: currentArtistId,
+          title: '❌ Yêu cầu rút tiền bị từ chối',
+          message: `Yêu cầu rút ₫ ${amtStr} chưa được duyệt. Lý do: ${p.rejection_reason || 'Vui lòng kiểm tra lại số dư hoặc thông tin ngân hàng'}.`,
+          type: 'payout',
+          is_read: false,
+          created_at: p.created_at || new Date().toISOString()
+        });
+      }
+    });
+
+    // Releases status
+    (artist.products || []).forEach(rel => {
+      const st = rel.submissionStatus || 'Đã phát hành';
+      if (st === 'Đã phát hành') {
+        initialEvents.push({
+          id: 'rel-live-' + (rel.id || rel.slug || rel.title),
+          artist_id: currentArtistId,
+          title: '💿 Bản phát hành đã lên sóng',
+          message: `Sản phẩm "${rel.title}" (${rel.type || 'Single'}) đã được phát hành chính thức trên Spotify, Apple Music và 150+ nền tảng!`,
+          type: 'release',
+          is_read: false,
+          created_at: new Date().toISOString()
+        });
+      }
+    });
+
+    list = initialEvents;
+  }
+
+  artistNotifications = list;
+  localStorage.setItem(notifStorageKey, JSON.stringify(artistNotifications));
+  renderNotificationsUI();
+}
+
+function renderNotificationsUI() {
+  const notifList = document.querySelector('#notif-list');
+  const badge = document.querySelector('#notif-badge');
+  if (!notifList) return;
+
+  const unreadCount = artistNotifications.filter(n => !n.is_read).length;
+
+  if (badge) {
+    if (unreadCount > 0) {
+      badge.style.display = 'block';
+      badge.textContent = String(unreadCount);
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  if (artistNotifications.length === 0) {
+    notifList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--portal-text-muted); font-size: 12px;">Không có thông báo nào</div>';
+    return;
+  }
+
+  notifList.innerHTML = artistNotifications.map((n, idx) => {
+    const isUnread = !n.is_read;
+    const timeStr = n.created_at ? new Date(n.created_at).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+    const bgStyle = isUnread ? 'background: rgba(37, 99, 235, 0.06);' : 'background: transparent;';
+    const dotColor = n.type === 'payout' ? '#16a34a' : (n.type === 'release' ? '#2563eb' : '#f59e0b');
+
+    return `
+      <div class="notif-item" data-notif-idx="${idx}" style="padding: 12px 16px; border-bottom: 1px solid var(--portal-card-border); ${bgStyle} display: flex; gap: 10px; align-items: flex-start; transition: background 0.2s;">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUnread ? dotColor : '#94a3b8'}; margin-top:5px; flex-shrink:0;"></span>
+        <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size: 12px; color: var(--portal-text-main); font-weight:${isUnread ? '700' : '500'};">${esc(n.title)}</strong>
+            <small style="font-size: 10px; color: var(--portal-text-dim); font-family:'DM Mono',monospace;">${esc(timeStr)}</small>
+          </div>
+          <p style="font-size: 11.5px; color: ${isUnread ? 'var(--portal-text-main)' : 'var(--portal-text-muted)'}; margin: 4px 0 0; line-height: 1.4;">${esc(n.message)}</p>
+        </div>
+        ${isUnread ? `
+          <button type="button" class="mark-single-read-btn" data-notif-idx="${idx}" title="Đánh dấu đã đọc" style="background:none; border:none; color:#2563eb; cursor:pointer; padding:2px 4px; font-size:12px; flex-shrink:0;">
+            ✓
+          </button>
+        ` : `
+          <span style="font-size:10px; color:var(--portal-text-dim); flex-shrink:0;" title="Đã xem">✓✓</span>
+        `}
+      </div>
+    `;
+  }).join('');
+
+  // Single mark read handlers
+  notifList.querySelectorAll('.mark-single-read-btn').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.notifIdx, 10);
+      if (artistNotifications[idx]) {
+        artistNotifications[idx].is_read = true;
+        const notifId = artistNotifications[idx].id;
+        const notifStorageKey = 'uniflows-notifications-' + currentArtistId;
+        localStorage.setItem(notifStorageKey, JSON.stringify(artistNotifications));
+        renderNotificationsUI();
+
+        if (isSupabaseConfigured() && notifId && !notifId.startsWith('ann-') && !notifId.startsWith('rel-') && !notifId.startsWith('payout-')) {
+          try {
+            await supabase.from('notifications').update({ is_read: true }).eq('id', notifId);
+          } catch {}
+        }
+      }
+    };
+  });
+}
+
 function initNotifications() {
   const btnNotif = document.querySelector('#btn-notif');
   const dropdown = document.querySelector('#notif-dropdown');
-  const markRead = document.querySelector('#mark-all-read-btn');
-  const badge = document.querySelector('#notif-badge');
-  if(btnNotif && dropdown) {
+  const markAllRead = document.querySelector('#mark-all-read-btn');
+
+  if (btnNotif && dropdown) {
     btnNotif.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-      badge.style.display = 'none';
+      const isOpen = dropdown.style.display === 'block';
+      dropdown.style.display = isOpen ? 'none' : 'block';
     });
+
     document.addEventListener('click', (e) => {
-      if(!dropdown.contains(e.target) && !btnNotif.contains(e.target)) {
+      if (!dropdown.contains(e.target) && !btnNotif.contains(e.target)) {
         dropdown.style.display = 'none';
       }
     });
-    if(markRead) markRead.addEventListener('click', () => { dropdown.style.display = 'none'; });
-    
-    // Mock 1 notif
-    setTimeout(() => {
-      badge.style.display = 'block';
-      badge.textContent = '1';
-      document.querySelector('#notif-list').innerHTML = `<div style="padding:12px 16px;border-bottom:1px solid var(--portal-card-border);"><strong style="font-size:12px;color:var(--portal-text-main);">Chào mừng trở lại!</strong><p style="font-size:11px;color:var(--portal-text-muted);margin:4px 0 0;">Hệ thống đã cập nhật Lịch phát hành và tính năng EPK mới.</p></div>`;
-    }, 1500);
+
+    if (markAllRead) {
+      markAllRead.addEventListener('click', async () => {
+        artistNotifications.forEach(n => { n.is_read = true; });
+        const notifStorageKey = 'uniflows-notifications-' + currentArtistId;
+        localStorage.setItem(notifStorageKey, JSON.stringify(artistNotifications));
+        renderNotificationsUI();
+
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from('notifications').update({ is_read: true }).eq('artist_id', currentArtistId);
+          } catch {}
+        }
+      });
+    }
+
+    loadNotifications();
+
+    // Subscribe to realtime notifications
+    if (isSupabaseConfigured()) {
+      try {
+        supabase
+          .channel('public:notifications:' + currentArtistId)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+            loadNotifications();
+          })
+          .subscribe();
+      } catch {}
+    }
   }
 }
 
