@@ -40,7 +40,7 @@
   </main>
 
   <script type="module">
-    import { getData } from './assets/data.js';
+    import { getData, getLocalCachedData } from './assets/data.js';
     import { supabase, isSupabaseConfigured, getCurrentUserProfile } from './assets/supabase.js';
 
     // Auto-login if previously remembered
@@ -80,8 +80,9 @@
     form.onsubmit = async (e) => {
       e.preventDefault();
       errorNotice.style.display = 'none';
-      const userInput = document.querySelector('#artist-email').value.trim().toLowerCase();
-      const password = document.querySelector('#artist-password').value;
+      const rawInput = document.querySelector('#artist-email').value.trim();
+      const rawPassword = document.querySelector('#artist-password').value.trim();
+      const cleanInput = rawInput.toLowerCase();
       const remember = rememberMeCheckbox ? rememberMeCheckbox.checked : true;
 
       submitBtn.disabled = true;
@@ -89,36 +90,47 @@
 
       try {
         const liveData = await getData();
-        const artists = liveData.artists || [];
+        const cachedData = getLocalCachedData();
+        
+        // Merge artists from both live and local cache
+        const allArtists = [
+          ...(liveData.artists || []),
+          ...(cachedData.artists || [])
+        ];
 
-        // 1. Direct match with artist account in database
-        const matched = artists.find(a => 
-          (a.username && a.username.toLowerCase() === userInput) ||
-          (a.email && a.email.toLowerCase() === userInput) ||
-          (a.id && a.id.toLowerCase() === userInput) ||
-          (a.name && a.name.toLowerCase() === userInput)
-        );
+        // 1. Match artist by username, email, ID, or display name
+        const matched = allArtists.find(a => {
+          if (!a) return false;
+          const u = (a.username || '').trim().toLowerCase();
+          const em = (a.email || '').trim().toLowerCase();
+          const id = (a.id || '').trim().toLowerCase();
+          const nm = (a.name || '').trim().toLowerCase();
+          const slug = nm.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+
+          return u === cleanInput || em === cleanInput || id === cleanInput || nm === cleanInput || slug === cleanInput;
+        });
 
         if (matched) {
-          const expectedPass = matched.password || (matched.name ? `${matched.name}@2026` : 'Uniflows@2026');
-          if (password === expectedPass || password === 'Uniflows@2026' || password === 'UniFLOWs2026!') {
-            saveAuthSession(matched.id, matched.name, matched.email || userInput, remember);
+          const expectedPass = matched.password ? String(matched.password).trim() : (matched.name ? `${matched.name.trim()}@2026` : 'Uniflows@2026');
+          
+          if (rawPassword === expectedPass || rawPassword === 'Uniflows@2026' || rawPassword === 'UniFLOWs2026!') {
+            saveAuthSession(matched.id, matched.name, matched.email || cleanInput, remember);
             location.href = 'portal';
             return;
           } else {
-            throw new Error('Mật khẩu không chính xác. Vui lòng kiểm tra lại hoặc liên hệ Admin.');
+            throw new Error(`Mật khẩu không chính xác cho tài khoản "${matched.name}". Vui lòng kiểm tra lại.`);
           }
         }
 
-        // 2. Try Supabase Auth if user entered an email and is configured
-        if (isSupabaseConfigured() && userInput.includes('@')) {
+        // 2. Try Supabase Auth if user entered an email format and Supabase is configured
+        if (isSupabaseConfigured() && cleanInput.includes('@')) {
           try {
-            const { data, error } = await supabase.auth.signInWithPassword({ email: userInput, password });
+            const { data, error } = await supabase.auth.signInWithPassword({ email: cleanInput, password: rawPassword });
             if (!error && data?.user) {
               const profile = await getCurrentUserProfile();
-              const artistId = profile?.artist_id || userInput.split('@')[0];
+              const artistId = profile?.artist_id || cleanInput.split('@')[0];
               const artistName = profile?.display_name || artistId;
-              saveAuthSession(artistId, artistName, userInput, remember);
+              saveAuthSession(artistId, artistName, cleanInput, remember);
               location.href = 'portal';
               return;
             }
@@ -127,7 +139,7 @@
           }
         }
 
-        throw new Error('Tài khoản không tồn tại trong hệ thống. Vui lòng liên hệ Admin để được cấp tài khoản.');
+        throw new Error(`Không tìm thấy tài khoản "${rawInput}". Vui lòng liên hệ Admin Label để được cấp tài khoản.`);
       } catch (err) {
         showError(err.message || 'Đăng nhập không thành công.');
       } finally {

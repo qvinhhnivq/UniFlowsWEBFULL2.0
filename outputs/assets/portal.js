@@ -42,8 +42,10 @@ const emailPrefix = sessionEmail ? sessionEmail.split('@')[0].toLowerCase() : ''
 // Tự động tìm nghệ sĩ theo ID, Email đăng nhập, hoặc Username
 let artist = (data.artists || []).find(a => 
   (sessionArtistId && a.id === sessionArtistId) ||
+  (sessionArtistId && a.username === sessionArtistId) ||
   (sessionEmail && a.email && a.email.toLowerCase() === sessionEmail.toLowerCase()) ||
   (emailPrefix && a.id && a.id.toLowerCase() === emailPrefix) ||
+  (emailPrefix && a.username && a.username.toLowerCase() === emailPrefix) ||
   (emailPrefix && a.name && a.name.toLowerCase() === emailPrefix) ||
   (sessionArtistName && a.name && a.name.toLowerCase() === sessionArtistName.toLowerCase())
 );

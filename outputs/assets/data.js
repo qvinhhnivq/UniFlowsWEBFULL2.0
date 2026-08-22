@@ -355,16 +355,27 @@ export async function getData() {
         merged.publishing = defaultData.publishing;
       }
 
+      // Parse admin accounts
+      if (Array.isArray(settings.admin_accounts)) {
+        merged.adminAccounts = settings.admin_accounts;
+      } else if (cached.adminAccounts && Array.isArray(cached.adminAccounts)) {
+        merged.adminAccounts = cached.adminAccounts;
+      } else {
+        merged.adminAccounts = defaultData.adminAccounts;
+      }
+
       merged.city = settings.city || merged.city;
     }
 
     if (artistsData && artistsData.length > 0) {
-      merged.artists = artistsData.map(a => {
+      const mappedSupabaseArtists = artistsData.map(a => {
         const localCachedArtist = (cached.artists || []).find(x => x.id === a.id) || {};
         const stats = (typeof a.stats === 'object' && a.stats) ? a.stats : {};
         return {
           id: a.id,
           name: a.name,
+          username: a.username || stats.username || localCachedArtist.username || a.id,
+          password: a.password || stats.password || localCachedArtist.password || (localCachedArtist.name ? `${localCachedArtist.name}@2026` : 'Uniflows@2026'),
           email: a.email || stats.email || localCachedArtist.email || '',
           showOnWeb: a.show_on_web !== undefined ? a.show_on_web : (stats.showOnWeb !== undefined ? stats.showOnWeb : (localCachedArtist.showOnWeb !== undefined ? localCachedArtist.showOnWeb : true)),
           roleType: a.role_type || stats.roleType || localCachedArtist.roleType || 'distribution',
@@ -415,6 +426,12 @@ export async function getData() {
           })
         };
       });
+
+      const supabaseArtistIds = new Set(artistsData.map(a => a.id));
+      const localOnlyArtists = (cached.artists || []).filter(ca => !supabaseArtistIds.has(ca.id));
+      merged.artists = [...mappedSupabaseArtists, ...localOnlyArtists];
+    } else if (cached.artists && cached.artists.length > 0) {
+      merged.artists = cached.artists;
     }
 
     if (articlesData && articlesData.length > 0) {
@@ -457,6 +474,7 @@ export async function saveData(data) {
       emails: data.emails || defaultData.emails,
       announcements: data.announcements || defaultData.announcements,
       publishing: data.publishing || defaultData.publishing,
+      admin_accounts: data.adminAccounts || defaultData.adminAccounts,
       city: data.city,
       updated_at: new Date().toISOString()
     };
@@ -466,12 +484,15 @@ export async function saveData(data) {
       delete settingsPayload.announcements;
       delete settingsPayload.emails;
       delete settingsPayload.publishing;
+      delete settingsPayload.admin_accounts;
       await supabase.from('site_settings').upsert(settingsPayload);
     }
 
     // 2. Save artists with complete stats json
     for (const a of data.artists) {
       const stats = {
+        username: a.username || a.id,
+        password: a.password || '',
         email: a.email || '',
         showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false',
         roleType: a.roleType || 'distribution',

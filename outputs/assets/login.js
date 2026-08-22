@@ -1,4 +1,4 @@
-import { getData } from './data.js';
+import { getData, getLocalCachedData } from './data.js';
 import { supabase, isSupabaseConfigured, getCurrentUserProfile } from './supabase.js';
 
 // Auto-login if previously remembered
@@ -33,7 +33,7 @@ form.onsubmit = async (e) => {
   e.preventDefault();
   errorNotice.style.display = 'none';
   const userInput = document.querySelector('#admin-email').value.trim().toLowerCase();
-  const password = document.querySelector('#admin-password').value;
+  const password = document.querySelector('#admin-password').value.trim();
   const remember = rememberMeCheckbox ? rememberMeCheckbox.checked : true;
 
   submitBtn.disabled = true;
@@ -41,15 +41,19 @@ form.onsubmit = async (e) => {
 
   try {
     const liveData = await getData();
-    const adminAccounts = liveData.adminAccounts || [
-      { username: 'admin', email: 'admin@uniflowslabel.com', password: 'UniFLOWs2026!' }
+    const cachedData = getLocalCachedData();
+    const adminAccounts = [
+      ...(liveData.adminAccounts || []),
+      ...(cachedData.adminAccounts || [
+        { username: 'admin', email: 'admin@uniflowslabel.com', password: 'UniFLOWs2026!' }
+      ])
     ];
 
     // 1. Check direct admin accounts created in Admin Portal
     const matchedAdmin = adminAccounts.find(a => 
-      (a.username && a.username.toLowerCase() === userInput) ||
-      (a.email && a.email.toLowerCase() === userInput) ||
-      (a.id && a.id.toLowerCase() === userInput)
+      (a.username && a.username.trim().toLowerCase() === userInput) ||
+      (a.email && a.email.trim().toLowerCase() === userInput) ||
+      (a.id && a.id.trim().toLowerCase() === userInput)
     );
 
     if (matchedAdmin) {
