@@ -21,6 +21,7 @@ const logoutBtn = document.querySelector('#artist-logout');
 const monthlyStreamsEl = document.querySelector('#artist-monthly-streams');
 const estimatedRevenueEl = document.querySelector('#artist-estimated-revenue');
 const payableBalanceEl = document.querySelector('#artist-payable-balance');
+const pendingBalanceEl = document.querySelector('#artist-pending-balance');
 const requestPayoutBtn = document.querySelector('#request-payout-btn');
 const quickPayoutBtn = document.querySelector('#quick-open-payout-modal-btn');
 const releaseDialog = document.querySelector('#release-dialog');
@@ -67,6 +68,7 @@ if (artist) {
   if (monthlyStreamsEl) monthlyStreamsEl.textContent = artist.monthlyStreams || '0';
   if (estimatedRevenueEl) estimatedRevenueEl.textContent = `₫ ${artist.estimatedRevenue || '0'}`;
   if (payableBalanceEl) payableBalanceEl.textContent = `₫ ${artist.payableBalance || '0'}`;
+  if (pendingBalanceEl) pendingBalanceEl.textContent = `₫ ${artist.pendingBalance || '0'}`;
 
   const ovPayableEl = document.querySelector('#overview-payable-balance');
   if (ovPayableEl) ovPayableEl.textContent = `₫ ${artist.payableBalance || '0'}`;

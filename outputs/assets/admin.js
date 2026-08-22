@@ -1344,6 +1344,55 @@ function render() {
   loadPayoutRequests();
   loadAdminCopyrightReports();
   loadAdminGreenlistRequests();
+  renderDashboard();
+}
+
+// ----------------------------------------------------
+// DASHBOARD ANALYTICS RENDER
+// ----------------------------------------------------
+function renderDashboard() {
+  const totalRevEl = document.querySelector('#admin-total-revenue');
+  const totalStreamsEl = document.querySelector('#admin-total-streams');
+  const totalLiveEl = document.querySelector('#admin-total-live-releases');
+  const topArtistsList = document.querySelector('#admin-top-artists-list');
+  
+  if (!totalRevEl) return;
+  
+  let totalRev = 0;
+  let totalStreams = 0;
+  let liveCount = releases.filter(r => r.submission_status === 'Đã phát hành').length;
+
+  const sortedArtists = [...(data.artists || [])].sort((a, b) => {
+    const revA = parseInt(String(a.estimatedRevenue).replace(/[^0-9]/g, '')) || 0;
+    const revB = parseInt(String(b.estimatedRevenue).replace(/[^0-9]/g, '')) || 0;
+    return revB - revA;
+  });
+
+  sortedArtists.forEach(a => {
+    totalRev += parseInt(String(a.estimatedRevenue).replace(/[^0-9]/g, '')) || 0;
+    totalStreams += parseInt(String(a.monthlyStreams).replace(/[^0-9]/g, '')) || 0;
+  });
+
+  totalRevEl.textContent = `₫ ${totalRev.toLocaleString('vi-VN')}`;
+  totalStreamsEl.textContent = totalStreams.toLocaleString('en-US');
+  totalLiveEl.textContent = liveCount.toString();
+
+  if (topArtistsList) {
+    if (sortedArtists.length === 0) {
+      topArtistsList.innerHTML = '<p class="empty" style="font-size:13px;">Chưa có dữ liệu nghệ sĩ.</p>';
+    } else {
+      topArtistsList.innerHTML = sortedArtists.slice(0, 5).map((a, i) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom: 1px solid var(--line);">
+          <div style="display:flex; align-items:center; gap: 10px;">
+            <b style="font-size: 14px; color: #64748b;">#${i+1}</b>
+            <img src="${a.image || ''}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+            <span style="font-weight: bold; font-size: 14px;">${a.name}</span>
+          </div>
+          <strong style="color: #2563eb; font-size: 14px;">₫ ${(parseInt(String(a.estimatedRevenue).replace(/[^0-9]/g, '')) || 0).toLocaleString('vi-VN')}</strong>
+        </div>
+      `).join('');
+    }
+  }
 }
 
 function readItems(selector, kind) {
