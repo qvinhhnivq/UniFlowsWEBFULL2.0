@@ -1113,29 +1113,29 @@ dialog textarea {
 }
 
 /* ===================================================
-   EXPANDED MONOX BORDERLESS GRADIENT BREATHING CURSOR
+   GIANT MONOX ATMOSPHERIC GRADIENT BREATHING CURSOR (440px)
    =================================================== */
 @media (hover: hover) and (pointer: fine) {
   .uniflows-cursor-dot {
     position: fixed;
     top: 0;
     left: 0;
-    width: 4px;
-    height: 4px;
+    width: 4.5px;
+    height: 4.5px;
     background: #ffffff;
     border-radius: 50%;
     pointer-events: none;
     z-index: 999999;
     transform: translate(-50%, -50%);
     mix-blend-mode: difference;
-    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
   }
   .uniflows-cursor-aura {
     position: fixed;
     top: 0;
     left: 0;
-    width: 88px;
-    height: 88px;
+    width: 440px;
+    height: 440px;
     pointer-events: none;
     z-index: 999998;
     transform: translate(-50%, -50%);
@@ -1144,7 +1144,8 @@ dialog textarea {
     align-items: center;
     justify-content: center;
     mix-blend-mode: difference;
-    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: left, top, width, height, transform;
+    transition: width 0.55s cubic-bezier(0.16, 1, 0.3, 1), height 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   }
   /* Seamless multi-layer breathing density field (Hoàn toàn không có line / viền phân tách) */
   .uniflows-cursor-aura .ring {
@@ -1155,86 +1156,87 @@ dialog textarea {
     border: none;
     outline: none;
     pointer-events: none;
+    will-change: transform, opacity;
   }
   
-  /* Lớp 1: Lõi đậm nhất ở tâm (Dense Core) */
+  /* Lớp 1: Lõi hội tụ đậm ở tâm (Focal Dense Core) */
   .uniflows-cursor-aura .ring-core {
-    width: 24%;
-    height: 24%;
-    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.85) 60%, transparent 100%);
-    filter: blur(1.5px);
-    animation: smoothBreathCore 2.4s infinite ease-in-out;
+    width: 22%;
+    height: 22%;
+    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.85) 40%, rgba(255, 255, 255, 0.2) 75%, transparent 100%);
+    filter: blur(8px);
+    animation: atmosphericBreathCore 3.2s infinite ease-in-out;
   }
 
-  /* Lớp 2: Chuyển tiếp độ đậm trung gian (Mid Density Fade) */
+  /* Lớp 2: Thân chuyển tiếp êm dịu (Mid Liquid Density) */
   .uniflows-cursor-aura .ring-1 {
-    width: 58%;
-    height: 58%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.18) 65%, transparent 100%);
-    filter: blur(4px);
-    animation: smoothBreathMid 3.2s infinite 0.2s ease-in-out;
+    width: 55%;
+    height: 55%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 55%, transparent 100%);
+    filter: blur(24px);
+    animation: atmosphericBreathMid 4.2s infinite 0.3s ease-in-out;
   }
 
-  /* Lớp 3: Khí quyển mờ dần lan tỏa rộng ra ngoài (Atmosphere Fade Out) */
+  /* Lớp 3: Khí quyển khổng lồ hòa tan mềm mại vào nền trang (Giant Boundless Atmosphere) */
   .uniflows-cursor-aura .ring-outer {
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 60%, transparent 100%);
-    filter: blur(8px);
-    animation: smoothBreathOuter 4.2s infinite 0.4s ease-in-out;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 60%, transparent 100%);
+    filter: blur(48px);
+    animation: atmosphericBreathOuter 5.6s infinite 0.6s ease-in-out;
   }
 
-  /* Hover State: Mở rộng cực đại 136px */
+  /* Hover State: Mở rộng bao trùm cực đại 580px */
   body.cursor-hover .uniflows-cursor-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
   }
   body.cursor-hover .uniflows-cursor-aura {
-    width: 136px;
-    height: 136px;
+    width: 580px;
+    height: 580px;
   }
   body.cursor-hover .uniflows-cursor-aura .ring-core {
-    width: 28%;
-    height: 28%;
-    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.9) 65%, transparent 100%);
-    filter: blur(2px);
+    width: 26%;
+    height: 26%;
+    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.95) 45%, rgba(255, 255, 255, 0.3) 80%, transparent 100%);
+    filter: blur(12px);
   }
   body.cursor-hover .uniflows-cursor-aura .ring-1 {
-    width: 65%;
-    height: 65%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.25) 65%, transparent 100%);
-    filter: blur(6px);
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 60%, transparent 100%);
+    filter: blur(32px);
   }
   body.cursor-hover .uniflows-cursor-aura .ring-outer {
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.08) 60%, transparent 100%);
-    filter: blur(12px);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 65%, transparent 100%);
+    filter: blur(64px);
   }
 
-  /* Active Click State: Co lại dứt khoát */
+  /* Active Click State: Co nhẹ tạo độ nảy đàn hồi */
   body.cursor-active .uniflows-cursor-aura {
-    transform: translate(-50%, -50%) scale(0.75);
+    transform: translate(-50%, -50%) scale(0.85);
   }
 }
 
-/* Organic Sine Breathing Animations */
-@keyframes smoothBreathCore {
-  0% { transform: scale(1); opacity: 0.95; }
-  50% { transform: scale(1.14); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.95; }
+/* Organic Silky Sine Wave Breathing Animations */
+@keyframes atmosphericBreathCore {
+  0% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.92; }
 }
 
-@keyframes smoothBreathMid {
-  0% { transform: scale(1); opacity: 0.7; }
-  50% { transform: scale(1.16); opacity: 0.92; }
-  100% { transform: scale(1); opacity: 0.7; }
+@keyframes atmosphericBreathMid {
+  0% { transform: scale(1); opacity: 0.72; }
+  50% { transform: scale(1.15); opacity: 0.95; }
+  100% { transform: scale(1); opacity: 0.72; }
 }
 
-@keyframes smoothBreathOuter {
-  0% { transform: scale(1); opacity: 0.45; }
-  50% { transform: scale(1.18); opacity: 0.75; }
-  100% { transform: scale(1); opacity: 0.45; }
+@keyframes atmosphericBreathOuter {
+  0% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.16); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 0.5; }
 }
 
 

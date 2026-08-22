@@ -448,10 +448,10 @@ function initCustomCursor() {
   window.addEventListener('mousedown', () => document.body.classList.add('cursor-active'));
   window.addEventListener('mouseup', () => document.body.classList.remove('cursor-active'));
 
-  // Smooth fluid lerp interpolation
+  // Smooth fluid lerp interpolation for giant atmospheric aura
   function animateAura() {
-    auraX += (mouseX - auraX) * 0.18;
-    auraY += (mouseY - auraY) * 0.18;
+    auraX += (mouseX - auraX) * 0.11;
+    auraY += (mouseY - auraY) * 0.11;
     aura.style.left = `${auraX}px`;
     aura.style.top = `${auraY}px`;
     requestAnimationFrame(animateAura);
