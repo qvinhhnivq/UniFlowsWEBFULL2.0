@@ -72,6 +72,9 @@ function switchAdminTab(tabId) {
   if (tabId === 'admin-tab-collective48k') {
     renderCollective48kAdmin();
   }
+  if (tabId === 'admin-tab-submissions') {
+    renderMusicSubmissionsAdmin();
+  }
 }
 
 document.querySelectorAll('#admin-tabs .admin-tab-btn').forEach(btn => {
@@ -3752,6 +3755,19 @@ document.querySelector('#btn-save-new-casestudy')?.addEventListener('click', asy
 
   if (!data.collective48k) data.collective48k = JSON.parse(JSON.stringify(defaultData.collective48k));
   if (!data.collective48k.caseStudies) data.collective48k.caseStudies = [];
+  data.collective48k.caseStudies.push(newCS);
+
+  await saveData(data);
+  renderCollective48kAdmin();
+  document.querySelector('#add-casestudy-box').style.display = 'none';
+  showNotice(`✓ Đã thêm Case Study "${title}" vào 48K Collective!`);
+});
+
+document.querySelector('#refresh-48k-proposals-btn')?.addEventListener('click', () => {
+  renderCollective48kAdmin();
+  showNotice('✓ Đã làm mới hộp thư 48K Collective.');
+});
+
 // ====================================================
 // A&R DEMO DROP & MUSIC SUBMISSIONS MANAGEMENT
 // ====================================================
