@@ -423,7 +423,6 @@ function initCustomCursor() {
     aura.className = 'uniflows-cursor-aura';
     aura.innerHTML = `
       <span class="ring ring-outer"></span>
-      <span class="ring ring-2"></span>
       <span class="ring ring-1"></span>
       <span class="ring ring-core"></span>
     `;
