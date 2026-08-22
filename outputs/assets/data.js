@@ -324,7 +324,33 @@ export const defaultData = {
         bio: '10+ năm kinh nghiệm sản xuất âm nhạc cho các nghệ sĩ hàng đầu và các chiến dịch quảng cáo TVC quốc tế.',
         sampleAudio: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
         priceRate: '₫ 15,000,000 / track',
-        status: 'Sẵn sàng nhận dự án'
+        status: 'Sẵn sàng nhận dự án',
+        tracks: [
+          {
+            title: 'Vệt Sáng',
+            artist: 'Lumi',
+            role: 'Music Producer / Beat & Arrangement',
+            audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
+            streams: '2.4M Streams',
+            releaseYear: '2026'
+          },
+          {
+            title: 'Dải Tần',
+            artist: 'MONO//TONE',
+            role: 'Main Beatmaker & Vocal Producer',
+            audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
+            streams: '1.8M Streams',
+            releaseYear: '2025'
+          },
+          {
+            title: 'City Lights (TVC)',
+            artist: 'Sony Vietnam',
+            role: 'Composer & Audio Producer',
+            audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
+            streams: '5M+ Views',
+            releaseYear: '2025'
+          }
+        ]
       },
       {
         id: 'prod-minhdang',
@@ -336,7 +362,25 @@ export const defaultData = {
         bio: 'Kỹ sư âm thanh chứng nhận Apple Digital Masters, chuyên gia xử lý âm học và cân chỉnh không gian stereo sống động.',
         sampleAudio: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
         priceRate: '₫ 4,000,000 / mix & master',
-        status: 'Sẵn sàng nhận dự án'
+        status: 'Sẵn sàng nhận dự án',
+        tracks: [
+          {
+            title: 'Đường Đua (Dolby Atmos Master)',
+            artist: 'KAII',
+            role: 'Mixing & Mastering Engineer (Apple Digital Master)',
+            audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
+            streams: '950K Streams',
+            releaseYear: '2026'
+          },
+          {
+            title: 'Live at The Flow EP',
+            artist: 'UniFLOWs Roster',
+            role: 'Stereo Outboard Mastering',
+            audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
+            streams: '1.2M Streams',
+            releaseYear: '2025'
+          }
+        ]
       },
       {
         id: 'prod-hoangyen',
@@ -348,7 +392,25 @@ export const defaultData = {
         bio: 'Nhạc sĩ sáng tác giai điệu bắt tai với chiều sâu cảm xúc và ca từ sâu sắc chạm tới trái tim người nghe.',
         sampleAudio: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
         priceRate: '₫ 9,000,000 / song',
-        status: 'Sẵn sàng nhận dự án'
+        status: 'Sẵn sàng nhận dự án',
+        tracks: [
+          {
+            title: 'Ánh Đèn Đêm (OST)',
+            artist: 'Elena Topline x UniFLOWs',
+            role: 'Songwriter & Topline Composer',
+            audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
+            streams: '1.5M Streams',
+            releaseYear: '2026'
+          },
+          {
+            title: 'Hợp Âm Mơ',
+            artist: 'Lumi ft. Elena',
+            role: 'Melody & Lyrics Writer',
+            audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
+            streams: '800K Streams',
+            releaseYear: '2025'
+          }
+        ]
       }
     ],
     inquiries: [

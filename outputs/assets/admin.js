@@ -3028,12 +3028,21 @@ function renderUniHubeAdmin() {
         </div>
         <p style="font-size:12px;color:#555;margin:0 0 8px;line-height:1.4;"><strong>Sở trường:</strong> ${esc(p.specialty)}</p>
         <p style="font-size:12px;color:#666;margin:0 0 10px;line-height:1.4;"><strong>Credits:</strong> ${esc(p.credits)}</p>
-        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding-top:10px;flex-wrap:wrap;gap:6px;">
           <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;color:#16a34a;">${esc(p.priceRate || 'Thỏa thuận')}</span>
-          <button type="button" class="button alt remove delete-hube-producer-btn" data-id="${p.id}" style="padding:4px 8px;font-size:11px;">✕ Xóa</button>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="button manage-producer-tracks-btn" data-id="${p.id}" style="padding:5px 10px;font-size:10px;background:#d97706;color:#fff;border-color:#d97706;font-weight:bold;">
+              🎵 Ca khúc (${(p.tracks || []).length})
+            </button>
+            <button type="button" class="button alt remove delete-hube-producer-btn" data-id="${p.id}" style="padding:5px 8px;font-size:10px;">✕ Xóa</button>
+          </div>
         </div>
       </div>
     `).join('');
+
+    grid.querySelectorAll('.manage-producer-tracks-btn').forEach(btn => {
+      btn.onclick = () => openProducerTracksModal(btn.dataset.id);
+    });
 
     grid.querySelectorAll('.delete-hube-producer-btn').forEach(btn => {
       btn.onclick = () => {
@@ -3046,6 +3055,110 @@ function renderUniHubeAdmin() {
     });
   }
 }
+
+// ----------------------------------------------------
+// PRODUCER TRACKS MODAL CONTROLLER
+// ----------------------------------------------------
+let selectedProducerForTracks = null;
+
+function openProducerTracksModal(prodId) {
+  const p = (data.unihube?.producers || []).find(x => x.id === prodId);
+  if (!p) return;
+  selectedProducerForTracks = p;
+  if (!p.tracks) p.tracks = [];
+
+  const titleEl = document.querySelector('#modal-producer-name-title');
+  if (titleEl) titleEl.textContent = `🎵 Quản Lý Ca Khúc: ${p.name}`;
+
+  renderProducerTracksList();
+  document.querySelector('#admin-producer-tracks-dialog')?.showModal();
+}
+
+function renderProducerTracksList() {
+  const tbody = document.querySelector('#modal-producer-tracks-tbody');
+  if (!tbody || !selectedProducerForTracks) return;
+
+  const tracks = selectedProducerForTracks.tracks || [];
+  if (tracks.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:16px;text-align:center;color:#666;">Chưa có ca khúc nào trong danh sách. Hãy thêm ca khúc ở khung trên.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = tracks.map((tr, idx) => `
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:10px 12px;">
+        <strong>${esc(tr.title)}</strong><br>
+        <span style="font-size:11px;color:#666;">Ca sĩ: ${esc(tr.artist || 'N/A')} (${esc(tr.releaseYear || '2026')})</span>
+      </td>
+      <td style="padding:10px 12px;font-size:12px;color:#d97706;">
+        ${esc(tr.role || 'Producer')}
+      </td>
+      <td style="padding:10px 12px;font-size:12px;color:#16a34a;font-weight:bold;">
+        ${esc(tr.streams || 'Live')}
+      </td>
+      <td style="padding:10px 12px;">
+        ${tr.audioUrl ? `<audio controls src="${tr.audioUrl}" style="height:24px;width:120px;"></audio>` : '<span style="color:#999;font-size:11px;">Không có audio</span>'}
+      </td>
+      <td style="padding:10px 12px;text-align:right;">
+        <button type="button" class="button alt remove delete-single-producer-track-btn" data-idx="${idx}" style="padding:3px 8px;font-size:10px;">✕ Xóa</button>
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('.delete-single-producer-track-btn').forEach(btn => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      selectedProducerForTracks.tracks.splice(idx, 1);
+      renderProducerTracksList();
+      renderUniHubeAdmin();
+      showNotice(`✓ Đã xóa ca khúc khỏi danh sách của ${selectedProducerForTracks.name}.`);
+    };
+  });
+}
+
+// Add Track inside modal
+document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', () => {
+  if (!selectedProducerForTracks) return;
+  const title = document.querySelector('#modal-track-title').value.trim();
+  const artist = document.querySelector('#modal-track-artist').value.trim();
+  const role = document.querySelector('#modal-track-role').value.trim() || 'Music Producer';
+  const streams = document.querySelector('#modal-track-streams').value.trim() || 'Live on DSPs';
+  const audioUrl = document.querySelector('#modal-track-audio').value.trim();
+  const releaseYear = document.querySelector('#modal-track-year').value.trim() || '2026';
+
+  if (!title || !artist) {
+    alert('Vui lòng nhập Tên bài hát và Nghệ sĩ thể hiện.');
+    return;
+  }
+
+  const newTrack = {
+    title,
+    artist,
+    role,
+    streams,
+    audioUrl,
+    releaseYear
+  };
+
+  selectedProducerForTracks.tracks.unshift(newTrack);
+  renderProducerTracksList();
+  renderUniHubeAdmin();
+
+  // Clear inputs
+  document.querySelector('#modal-track-title').value = '';
+  document.querySelector('#modal-track-artist').value = '';
+  document.querySelector('#modal-track-audio').value = '';
+  document.querySelector('#modal-track-streams').value = '';
+
+  showNotice(`✓ Đã thêm ca khúc "${title}" cho Producer ${selectedProducerForTracks.name}!`);
+});
+
+document.querySelector('#close-producer-tracks-dialog-btn')?.addEventListener('click', () => {
+  document.querySelector('#admin-producer-tracks-dialog')?.close();
+});
+document.querySelector('#btn-save-close-producer-tracks')?.addEventListener('click', () => {
+  document.querySelector('#admin-producer-tracks-dialog')?.close();
+});
 
 // Add Producer UI Handlers
 document.querySelector('#btn-show-add-producer-form')?.addEventListener('click', () => {
@@ -3081,7 +3194,8 @@ document.querySelector('#btn-save-new-producer')?.addEventListener('click', () =
     sampleAudio,
     credits,
     bio,
-    status: 'Sẵn sàng nhận dự án'
+    status: 'Sẵn sàng nhận dự án',
+    tracks: []
   };
 
   if (!data.unihube) data.unihube = JSON.parse(JSON.stringify(defaultData.unihube));

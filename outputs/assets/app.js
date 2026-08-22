@@ -27,9 +27,9 @@ if (!$('.nav')) {
       <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
       <nav class="nav-links">
         <a href="artists" data-i18n="nav_artists">Nghệ sĩ</a>
-        <a href="unihube" data-i18n="nav_unihube" style="color:#d97706;font-weight:700;">Uni-HUBE 🎛️</a>
-        <a href="48k" data-i18n="nav_48k" style="color:#7c3aed;font-weight:700;">48K Collective ⚡</a>
-        <a href="unipublishing" data-i18n="nav_publishing" style="color:#2563eb;font-weight:700;">UniPUBLISHING 🎬</a>
+        <a href="unihube" data-i18n="nav_unihube">Uni-HUBE</a>
+        <a href="48k" data-i18n="nav_48k">48K Collective</a>
+        <a href="unipublishing" data-i18n="nav_publishing">UniPUBLISHING</a>
         <a href="about" data-i18n="nav_about">Về chúng tôi</a>
         <a href="news" data-i18n="nav_news">Tạp chí</a>
         <a href="contact" data-i18n="nav_contact">Liên hệ</a>

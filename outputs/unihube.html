@@ -6,270 +6,301 @@
   <title>Uni-HUBE — Tổ Đội Sản Xuất Âm Nhạc & Sound Engineering | UniFLOWs</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:image" content="/og-image.jpg">
   <link rel="stylesheet" href="assets/app.css">
   <style>
-    .hube-hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
-      color: #fff;
-      padding: 8vw 3vw 5vw;
-      position: relative;
-      overflow: hidden;
-      border-bottom: 1px solid rgba(255,255,255,0.15);
+    /* Uni-HUBE Accent Theme: Warm Amber / Gold */
+    :root {
+      --hube-accent: #d97706;
+      --hube-light: #fef3c7;
     }
-    .hube-hero::after {
-      content: "";
+    /* Animated Cinematic Hero Motion */
+    .home-hero > img {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 80% 20%, rgba(245,158,11,0.18) 0%, transparent 60%);
-      pointer-events: none;
-    }
-    .producer-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 24px;
-      padding: 4vw 3vw 6vw;
-    }
-    .producer-card {
-      background: #fff;
-      border: 1px solid var(--ink);
-      border-radius: 12px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 4px 4px 0 var(--ink);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .producer-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 8px 8px 0 #d97706;
-    }
-    .producer-card img {
       width: 100%;
-      height: 260px;
+      height: 100%;
       object-fit: cover;
-      filter: grayscale(0.6);
-      transition: filter 0.3s;
+      filter: grayscale(0.85) contrast(1.1) brightness(0.9);
+      animation: studioMotion 20s infinite alternate ease-in-out both;
+      transform-origin: center center;
     }
-    .producer-card:hover img {
-      filter: grayscale(0);
+    @keyframes studioMotion {
+      0% {
+        transform: scale(1) translate(0, 0);
+        filter: grayscale(0.9) brightness(0.85);
+      }
+      50% {
+        transform: scale(1.08) translate(-1%, -1%);
+        filter: grayscale(0.6) brightness(0.95);
+      }
+      100% {
+        transform: scale(1.12) translate(1%, 0.5%);
+        filter: grayscale(0.8) brightness(0.9);
+      }
     }
-    .producer-body {
-      padding: 20px;
+    /* Live Equalizer Animation */
+    .live-soundwave {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 14px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .live-soundwave span {
+      width: 2.5px;
+      background: #fbbf24;
+      border-radius: 1px;
+      animation: liveEq 1.2s infinite ease-in-out alternate;
+    }
+    .live-soundwave span:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+    .live-soundwave span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+    .live-soundwave span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+    .live-soundwave span:nth-child(4) { height: 80%; animation-delay: 0.5s; }
+    .live-soundwave span:nth-child(5) { height: 95%; animation-delay: 0.15s; }
+    .live-soundwave span:nth-child(6) { height: 50%; animation-delay: 0.4s; }
+    @keyframes liveEq {
+      0% { height: 20%; opacity: 0.5; }
+      50% { height: 100%; opacity: 1; }
+      100% { height: 35%; opacity: 0.7; }
+    }
+    .hube-badge {
+      font: 10px 'DM Mono', monospace;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 1px solid var(--ink);
+      background: var(--hube-light);
+      color: var(--ink);
+      font-weight: 700;
+      display: inline-block;
+    }
+    .hube-filter-group {
       display: flex;
-      flex-direction: column;
-      flex: 1;
-      justify-content: space-between;
-    }
-    .filter-btn-group {
-      display: flex;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
-      padding: 20px 3vw 0;
+      padding: 20px 3vw;
+      border-bottom: 1px solid var(--line);
     }
-    .filter-pill {
+    .hube-filter-btn {
       padding: 8px 16px;
       border: 1px solid var(--ink);
-      background: #fff;
+      background: transparent;
       font: 11px 'DM Mono', monospace;
       text-transform: uppercase;
-      font-weight: 700;
       cursor: pointer;
-      border-radius: 20px;
-      transition: all 0.15s ease;
+      font-weight: 700;
+      transition: 0.2s;
     }
-    .filter-pill.active, .filter-pill:hover {
+    .hube-filter-btn.active, .hube-filter-btn:hover {
       background: var(--ink);
       color: #fff;
     }
-    .services-overview-grid {
+    .hube-services-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-      padding: 3vw;
-      background: #fdfaf6;
       border-bottom: 1px solid var(--line);
     }
-    .service-box {
-      background: #fff;
+    .hube-service-card {
+      padding: 28px 3vw 36px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 240px;
+      background: var(--paper);
+    }
+    .hube-service-card:last-child {
+      border-right: 0;
+    }
+    .hube-service-card h3 {
+      font-size: clamp(20px, 2.5vw, 32px);
+      line-height: 1;
+      letter-spacing: -0.06em;
+      margin: 12px 0 8px;
+    }
+    .hube-service-card p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--ink);
+      opacity: 0.85;
+      margin: 0 0 16px;
+    }
+    .hube-booking-box {
+      background: #fafafa;
       border: 1px solid var(--ink);
-      padding: 24px;
-      border-radius: 10px;
+      padding: 32px;
+      margin-top: 24px;
+    }
+    @media (max-width: 700px) {
+      .hube-services-grid {
+        grid-template-columns: 1fr;
+      }
+      .hube-service-card {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        min-height: auto;
+      }
+      .hube-booking-box {
+        padding: 20px;
+      }
     }
   </style>
 </head>
-<body>
-  <!-- Hero Section -->
-  <section class="hube-hero">
-    <div style="position:relative;z-index:2;max-width:1100px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
-        <span style="background:#f59e0b;color:#000;font:11px 'DM Mono',monospace;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase;">
-          🎛️ UniFLOWs Sound Collective
+<body data-page="unihube">
+  <main>
+    <!-- 01: Hero Section (Same style as index.html / unipublishing.html) -->
+    <section class="home-hero">
+      <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=2200&q=90" alt="Uni-HUBE Studio Production">
+      <div class="home-content">
+        <span class="eyebrow" style="color: #fbbf24;">
+          01 / Sound Foundry · Est. 2024
+          <span class="live-soundwave">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </span>
         </span>
-        <span style="font:11px 'DM Mono',monospace;color:#fcd34d;letter-spacing:1px;">
-          ● 24-BIT MASTERING · DOLBY ATMOS CERTIFIED
-        </span>
-      </div>
-      <h1 style="font-size:clamp(44px,7vw,110px);line-height:0.9;letter-spacing:-0.07em;margin:0 0 20px;font-weight:800;">
-        Uni-HUBE.<br><em style="font-family:'Playfair Display',serif;font-weight:500;color:#fbbf24;">The Sound Foundry.</em>
-      </h1>
-      <p style="font-size:clamp(16px,2vw,22px);line-height:1.45;max-width:760px;color:#e2e8f0;margin:0 0 30px;">
-        Tập hợp các Music Producers, Songwriters, Sound Engineers và Beatmakers định hình bản sắc âm thanh hiện đại cho UniFLOWs Label và đối tác âm nhạc toàn cầu.
-      </p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <a href="#producers-roster" class="button" style="background:#f59e0b;color:#000;border-color:#f59e0b;font-weight:800;padding:14px 24px;">
-          🎯 Chọn Nhà Sản Xuất & Đặt Lịch
-        </a>
-        <button type="button" id="open-hube-booking-btn" class="button alt" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.4);padding:14px 24px;">
-          ✍️ Gửi Yêu Cầu Sản Xuất Dự Án
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4 Core Pillars of Uni-HUBE -->
-  <section class="services-overview-grid" id="hube-services-list">
-    <!-- Injected dynamically from data.unihube.services -->
-  </section>
-
-  <!-- Producers Roster Header -->
-  <div class="section-head" id="producers-roster">
-    <div>
-      <h2 style="font-size:clamp(22px,3.5vw,36px);margin:0;letter-spacing:-0.04em;">02 / Đội Ngũ Sản Xuất & Kỹ Sư Âm Thanh</h2>
-      <p style="font-size:13px;color:var(--ink);opacity:0.7;margin:4px 0 0;">Lựa chọn Producer hoặc Kỹ sư âm thanh phù hợp với màu sắc dự án của bạn.</p>
-    </div>
-    <span class="kicker">Producers & Engineers</span>
-  </div>
-
-  <!-- Filter Pills -->
-  <div class="filter-btn-group">
-    <button class="filter-pill active" data-filter="all">Tất cả (All)</button>
-    <button class="filter-pill" data-filter="producer">Music Producers</button>
-    <button class="filter-pill" data-filter="engineer">Mixing & Mastering</button>
-    <button class="filter-pill" data-filter="songwriter">Songwriters & Topline</button>
-  </div>
-
-  <!-- Producers Grid Container -->
-  <section class="producer-grid" id="producers-list-container">
-    <!-- Dynamic Producer Cards -->
-  </section>
-
-  <!-- Spotlight Studio Banner -->
-  <section style="background:#090d16;color:#fff;padding:6vw 3vw;border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
-    <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;" class="hide-mobile-grid">
-      <div>
-        <span style="font:11px 'DM Mono',monospace;color:#f59e0b;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:10px;">
-          UniFLOWs Studio Facilities
-        </span>
-        <h2 style="font-size:clamp(32px,4.5vw,60px);line-height:0.95;letter-spacing:-0.05em;margin:0 0 20px;">
-          Trang thiết bị chuẩn <em>Lossless & Dolby Atmos.</em>
-        </h2>
-        <p style="font-size:15px;color:#94a3b8;line-height:1.6;margin:0 0 20px;">
-          Hệ thống phòng thu Uni-HUBE trang bị bộ chuyển đổi tín hiệu cao cấp, microphone phòng thu chuẩn Neumann, Genelec DSP Monitors và analog outboard gear từ Universal Audio, Neve, SSL.
+        <h1 style="font-size: clamp(48px, 9.5vw, 150px); margin: 10px 0 16px; line-height: 0.82;">
+          UNI-<em>hube.</em><br>THE SOUND.
+        </h1>
+        <p class="home-copy">
+          Tổ đội Music Producers, Songwriters, Mixing & Mastering Engineers và Beatmakers tạo nên bản sắc âm thanh hiện đại cho UniFLOWs Label.
         </p>
-        <button type="button" class="button open-booking-modal-trigger" style="background:#f59e0b;color:#000;border-color:#f59e0b;font-weight:bold;">
-          Liên hệ Đặt Phòng Thu & Sản Xuất →
-        </button>
       </div>
-      <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:24px;">
-        <h4 style="margin:0 0 12px;font-size:14px;color:#fcd34d;font-family:'DM Mono',monospace;">🎧 TIÊU CHUẨN XUẤT MASTER UNIFLOWS</h4>
-        <ul style="list-style:none;padding:0;margin:0;font-size:13px;color:#cbd5e1;line-height:2;">
-          <li>✓ 24-bit / 96kHz Lossless Master Files</li>
-          <li>✓ Certified Apple Digital Masters (ADM)</li>
-          <li>✓ Dolby Atmos Spatial Audio Stems</li>
-          <li>✓ True Peak Limiting & Integrated LUFS (-14 LUFS Spotify / -16 LUFS Apple)</li>
-          <li>✓ ISRC / Metadata Stamping chuẩn quốc tế</li>
-        </ul>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ========================================== -->
-  <!-- MODAL: ĐẶT LỊCH LÀM VIỆC & HỢP TÁC SẢN XUẤT -->
-  <!-- ========================================== -->
-  <dialog id="hube-booking-dialog" class="release-dialog-shell" style="max-width:680px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
-    <div style="background:#0f172a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
+    <!-- 02: Editorial Intro Section -->
+    <section class="intro">
+      <span class="kicker">01 / Craft & Sonic</span>
       <div>
-        <span class="eyebrow" style="color:#f59e0b;margin:0;font-size:10px;">Uni-HUBE Music Foundry</span>
-        <h2 style="font-size:18px;margin:2px 0 0;letter-spacing:-0.03em;">🎛️ Đặt Lịch & Hợp Tác Sản Xuất</h2>
+        <h2>Sản xuất âm nhạc & kỹ thuật phòng thu <em>đỉnh cao.</em></h2>
+        <p>
+          Từ những bản demo đầu tiên đến bản Master hoàn chỉnh đạt chuẩn quốc tế — Uni-HUBE là không gian sáng tạo kết hợp giữa tư duy sản xuất sắc bén và trang thiết bị âm thanh <strong>24-bit Lossless & Dolby Atmos</strong>.
+        </p>
       </div>
-      <button type="button" class="close-btn" id="close-hube-booking-btn" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;">&times;</button>
-    </div>
+    </section>
 
-    <form id="hube-booking-form" style="padding: 24px; display: grid; gap: 14px;">
-      <div style="background:#fffbeb;border:1px solid #fde68a;padding:12px 16px;border-radius:8px;font-size:12px;color:#92400e;line-height:1.5;">
-        💡 <b>Quy trình làm việc:</b> Đội ngũ Uni-HUBE sẽ liên hệ trực tiếp qua Zalo / Email trong vòng <b>24 giờ</b> để trao đổi demo, hợp đồng và tiến độ sản xuất chi tiết.
+    <!-- 03: Core Production Services Grid -->
+    <section>
+      <div class="section-head">
+        <h2>02 / Dịch Vụ Sản Xuất & Kỹ Thuật Phòng Thu</h2>
+        <span class="kicker">4 Pillars</span>
+      </div>
+      <div class="hube-services-grid" id="hube-services-list">
+        <!-- Injected dynamically from data.unihube.services -->
+      </div>
+    </section>
+
+    <!-- 04: Producers & Sound Engineers Roster (Identical to artists.html) -->
+    <section>
+      <div class="section-head">
+        <h2>03 / Đội Ngũ Producers & Sound Engineers</h2>
+        <span class="kicker" id="producers-count-kicker">3 Talents</span>
       </div>
 
-      <div class="mini-grid">
-        <div class="field">
-          <label style="font-weight:bold;">Nhà sản xuất / Kỹ sư mong muốn *</label>
-          <select id="book-producer-select" style="padding:10px;border:1px solid var(--ink);background:#fff;font-weight:bold;">
-            <option value="any">🎲 Uni-HUBE tự đề xuất Producer phù hợp nhất</option>
-            <!-- Injected dynamically -->
-          </select>
+      <!-- Filter Group -->
+      <div class="hube-filter-group">
+        <button class="hube-filter-btn active" data-filter="all">Tất cả (All)</button>
+        <button class="hube-filter-btn" data-filter="producer">Music Producers</button>
+        <button class="hube-filter-btn" data-filter="engineer">Mixing & Mastering</button>
+        <button class="hube-filter-btn" data-filter="songwriter">Songwriters & Topline</button>
+      </div>
+
+      <!-- Artists Roster Grid -->
+      <div class="artists" id="producers-list-container" style="display: grid; grid-template-columns: repeat(3, 1fr);">
+        <!-- Injected dynamically -->
+      </div>
+    </section>
+
+    <!-- 05: Editorial Statement -->
+    <section class="statement">
+      <p>Âm thanh hoàn hảo tạo ra <em>kết nối.</em><br>Bản phối chân thật tạo ra <em>cảm xúc.</em></p>
+    </section>
+
+    <!-- 06: Interactive Booking & Collaboration Section -->
+    <section class="big-copy" style="border-bottom: 0;">
+      <span class="kicker">04 / Đặt Lịch Làm Việc</span>
+      <div>
+        <h2>Sẵn sàng bắt đầu dự án âm nhạc <em>tiếp theo?</em></h2>
+        <p>
+          Điền thông tin dự án bên dưới. Đội ngũ Uni-HUBE sẽ liên hệ trao đổi demo, demo beat và phương án sản xuất chi tiết trong vòng 24 giờ.
+        </p>
+
+        <div class="hube-booking-box">
+          <form id="hube-booking-form" style="display: grid; gap: 16px;">
+            <div class="mini-grid">
+              <div class="field">
+                <label>Nhà sản xuất mong muốn *</label>
+                <select id="book-producer-select" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
+                  <option value="any">🎲 Uni-HUBE tự đề xuất Producer phù hợp nhất</option>
+                  <!-- Injected dynamically -->
+                </select>
+              </div>
+              <div class="field">
+                <label>Dịch vụ yêu cầu *</label>
+                <select id="book-service-select" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
+                  <option value="full-production">Sản xuất Ca khúc Trọn gói (Full Track Production)</option>
+                  <option value="mixing-mastering">Mixing & Mastering 24-bit Lossless</option>
+                  <option value="songwriting-topline">Sáng tác Giai điệu & Lời (Songwriting & Topline)</option>
+                  <option value="vocal-production">Vocal Tuning & Xử lý Thanh nhạc Chuyên sâu</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mini-grid">
+              <div class="field">
+                <label>Tên nghệ sĩ / Đơn vị đại diện *</label>
+                <input id="book-client-name" type="text" required placeholder="Ví dụ: Ca sĩ Tuấn Kiệt">
+              </div>
+              <div class="field">
+                <label>Email liên hệ *</label>
+                <input id="book-client-email" type="email" required placeholder="tuankiet@gmail.com">
+              </div>
+            </div>
+
+            <div class="mini-grid">
+              <div class="field">
+                <label>Số điện thoại / Zalo *</label>
+                <input id="book-client-phone" type="tel" required placeholder="0908xxxxxx">
+              </div>
+              <div class="field">
+                <label>Dự toán ngân sách</label>
+                <select id="book-budget-select" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
+                  <option value="Dưới 10 Triệu VNĐ">Dưới 10 Triệu VNĐ</option>
+                  <option value="10 - 20 Triệu VNĐ" selected>10 - 20 Triệu VNĐ</option>
+                  <option value="20 - 40 Triệu VNĐ">20 - 40 Triệu VNĐ</option>
+                  <option value="Trên 40 Triệu VNĐ (Dự án Lớn)">Trên 40 Triệu VNĐ (Dự án Lớn)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Link Demo hoặc tài liệu tham khảo (Google Drive, Soundcloud, YouTube...)</label>
+              <input id="book-demo-url" type="url" placeholder="https://drive.google.com/...">
+            </div>
+
+            <div class="field">
+              <label>Mô tả chi tiết ý tưởng & Phong cách mong muốn</label>
+              <textarea id="book-notes" rows="3" placeholder="Mô tả phong cách âm nhạc (Reference tracks), concept bài hát, thời gian cần nhận bản hoàn chỉnh..."></textarea>
+            </div>
+
+            <div id="hube-booking-notice" class="notice"></div>
+
+            <div class="actions">
+              <button type="submit" id="submit-hube-booking-btn" class="button" style="background: var(--ink); color: #fff; padding: 16px 28px;">
+                🚀 Gửi Yêu Cầu Hợp Tác Sản Xuất →
+              </button>
+            </div>
+          </form>
         </div>
-        <div class="field">
-          <label style="font-weight:bold;">Dịch vụ yêu cầu *</label>
-          <select id="book-service-select" style="padding:10px;border:1px solid var(--ink);background:#fff;font-weight:bold;">
-            <option value="full-production">Sản xuất Ca khúc Trọn gói (Full Track)</option>
-            <option value="mixing-mastering">Mixing & Mastering 24-bit Lossless</option>
-            <option value="songwriting-topline">Sáng tác Giai điệu & Lời (Songwriting)</option>
-            <option value="vocal-production">Vocal Tuning & Xử lý Thanh nhạc</option>
-          </select>
-        </div>
       </div>
-
-      <div class="mini-grid">
-        <div class="field">
-          <label style="font-weight:bold;">Tên nghệ sĩ / Đơn vị đại diện *</label>
-          <input id="book-client-name" type="text" required placeholder="Ví dụ: Ca sĩ Tuấn Kiệt">
-        </div>
-        <div class="field">
-          <label style="font-weight:bold;">Email liên hệ *</label>
-          <input id="book-client-email" type="email" required placeholder="tuankiet@gmail.com">
-        </div>
-      </div>
-
-      <div class="mini-grid">
-        <div class="field">
-          <label style="font-weight:bold;">Số điện thoại / Zalo *</label>
-          <input id="book-client-phone" type="tel" required placeholder="0908xxxxxx">
-        </div>
-        <div class="field">
-          <label style="font-weight:bold;">Dự toán ngân sách (Budget)</label>
-          <select id="book-budget-select" style="padding:10px;border:1px solid var(--ink);background:#fff;">
-            <option value="Dưới 10 Triệu VNĐ">Dưới 10 Triệu VNĐ</option>
-            <option value="10 - 20 Triệu VNĐ" selected>10 - 20 Triệu VNĐ</option>
-            <option value="20 - 40 Triệu VNĐ">20 - 40 Triệu VNĐ</option>
-            <option value="Trên 40 Triệu VNĐ (Dự án Album / TVC lớn)">Trên 40 Triệu VNĐ (Dự án Lớn)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label style="font-weight:bold;">Link Demo hoặc tài liệu tham khảo (Google Drive, Soundcloud, YouTube...)</label>
-        <input id="book-demo-url" type="url" placeholder="https://drive.google.com/...">
-      </div>
-
-      <div class="field">
-        <label style="font-weight:bold;">Mô tả chi tiết ý tưởng & Timeline mong muốn</label>
-        <textarea id="book-notes" rows="3" placeholder="Mô tả phong cách âm nhạc (Reference tracks), concept bài hát, thời gian cần nhận bản hoàn chỉnh..."></textarea>
-      </div>
-
-      <p id="hube-booking-notice" class="notice" style="display:none;"></p>
-
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px;border-top:1px solid #e2e8f0;padding-top:14px;">
-        <button type="button" class="button alt" id="cancel-hube-booking-btn">Đóng</button>
-        <button type="submit" id="submit-hube-booking-btn" class="button" style="background:#f59e0b;color:#000;border-color:#f59e0b;font-weight:bold;">
-          🚀 Gửi Đề Xuất Hợp Tác Ngay
-        </button>
-      </div>
-    </form>
-  </dialog>
+    </section>
+  </main>
 
   <script type="module">
     import { getData, saveData } from './assets/data.js';
-    import { applyTranslations, t } from './assets/i18n.js';
     import './assets/security.js';
     import './assets/app.js';
 
@@ -277,23 +308,26 @@
     const unihube = data.unihube || {};
 
     // 1. Render Services
-    const servicesListEl = document.querySelector('#hube-services-list');
-    if (servicesListEl && unihube.services) {
-      servicesListEl.innerHTML = unihube.services.map((s, idx) => `
-        <div class="service-box">
-          <span style="font:10px 'DM Mono',monospace;color:#d97706;font-weight:800;">0${idx+1} / SERVICE</span>
-          <h3 style="margin:8px 0 6px;font-size:18px;letter-spacing:-0.03em;">${s.title}</h3>
-          <p style="font-size:13px;color:#555;line-height:1.5;margin:0 0 12px;">${s.desc}</p>
-          <strong style="font-family:'DM Mono',monospace;font-size:12px;color:#000;background:#fef3c7;padding:3px 8px;border-radius:4px;">
-            ${s.price}
-          </strong>
+    const servicesEl = document.querySelector('#hube-services-list');
+    if (servicesEl && unihube.services) {
+      servicesEl.innerHTML = unihube.services.map((s, idx) => `
+        <div class="hube-service-card">
+          <div>
+            <span class="kicker">0${idx+1} / Solution</span>
+            <h3>${s.title}</h3>
+            <p>${s.desc}</p>
+          </div>
+          <div>
+            <span class="hube-badge">${s.price}</span>
+          </div>
         </div>
       `).join('');
     }
 
-    // 2. Render Producers Roster
+    // 2. Render Producers Roster (Using exact .artist styling)
     const producersContainer = document.querySelector('#producers-list-container');
     const producerSelect = document.querySelector('#book-producer-select');
+    const countKicker = document.querySelector('#producers-count-kicker');
 
     function renderProducers(filter = 'all') {
       if (!producersContainer) return;
@@ -307,64 +341,37 @@
         return true;
       });
 
+      if (countKicker) countKicker.textContent = `${filtered.length} Talents`;
+
       if (filtered.length === 0) {
-        producersContainer.innerHTML = '<p class="empty" style="grid-column:1/-1;">Chưa có thành viên nào trong danh mục này.</p>';
+        producersContainer.innerHTML = '<p class="empty" style="grid-column: 1/-1; padding: 40px 3vw;">Chưa có thành viên nào trong danh mục này.</p>';
         return;
       }
 
       producersContainer.innerHTML = filtered.map(p => `
-        <div class="producer-card">
+        <a class="artist" href="producer?id=${p.id}">
           <img src="${p.image || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80'}" alt="${p.name}">
-          <div class="producer-body">
-            <div>
-              <span style="font:10px 'DM Mono',monospace;color:#d97706;font-weight:800;text-transform:uppercase;">
-                ${p.role}
-              </span>
-              <h3 style="margin:6px 0;font-size:22px;letter-spacing:-0.03em;">${p.name}</h3>
-              <p style="font-size:12px;color:#0284c7;font-weight:600;margin:0 0 10px;">
-                🎨 Thể loại: ${p.specialty}
-              </p>
-              <p style="font-size:13px;color:#555;line-height:1.5;margin:0 0 14px;">
-                ${p.bio}
-              </p>
-              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:12px;">
-                <strong>Credits:</strong> <span style="color:#64748b;">${p.credits}</span>
-              </div>
+          <div class="artist-info">
+            <span>${p.role}</span>
+            <h4>${p.name}</h4>
+            <div style="font: 11px 'DM Mono', monospace; color: #fbbf24; margin-bottom: 6px;">
+              ● ${p.specialty} · ${(p.tracks || []).length} Ca khúc tiêu biểu
             </div>
-
-            <div>
-              ${p.sampleAudio ? `
-                <div style="margin-bottom:12px;">
-                  <span style="font-size:11px;font-family:'DM Mono',monospace;color:#64748b;display:block;margin-bottom:4px;">🎧 Sample Preview:</span>
-                  <audio controls src="${p.sampleAudio}" style="width:100%;height:32px;"></audio>
-                </div>
-              ` : ''}
-              <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding-top:12px;margin-top:8px;">
-                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:bold;color:#16a34a;">${p.priceRate || 'Theo thỏa thuận'}</span>
-                <button type="button" class="button book-single-producer-btn" data-prod-id="${p.id}" data-prod-name="${p.name}" style="background:#0f172a;color:#fff;border-color:#0f172a;padding:8px 14px;font-size:11px;">
-                  🎯 Đặt Lịch
-                </button>
-              </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+              <span style="color:#4ade80;font-weight:bold;font-size:11px;">${p.priceRate || 'Thỏa thuận'}</span>
+              <b style="font-size:11px;">Xem Profile & Discography ↗</b>
             </div>
           </div>
-        </div>
+        </a>
       `).join('');
-
-      // Wire single booking buttons
-      producersContainer.querySelectorAll('.book-single-producer-btn').forEach(btn => {
-        btn.onclick = () => {
-          if (producerSelect) producerSelect.value = btn.dataset.prodId;
-          openBookingModal();
-        };
-      });
     }
 
     renderProducers();
 
     // Filter Buttons
-    document.querySelectorAll('.filter-pill').forEach(pill => {
+    document.querySelectorAll('.hube-filter-btn').forEach(pill => {
       pill.onclick = () => {
-        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.hube-filter-btn').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         renderProducers(pill.dataset.filter);
       };
@@ -376,24 +383,10 @@
         unihube.producers.map(p => `<option value="${p.id}">${p.name} (${p.role.split('/')[0].trim()})</option>`).join('');
     }
 
-    // Modal Handlers
-    const bookingDialog = document.querySelector('#hube-booking-dialog');
-    const openModalTriggers = document.querySelectorAll('#open-hube-booking-btn, .open-booking-modal-trigger');
-    const closeModalBtn = document.querySelector('#close-hube-booking-btn');
-    const cancelModalBtn = document.querySelector('#cancel-hube-booking-btn');
+    // Submit Booking Form
     const bookingForm = document.querySelector('#hube-booking-form');
     const bookingNotice = document.querySelector('#hube-booking-notice');
 
-    function openBookingModal() {
-      if (bookingNotice) bookingNotice.style.display = 'none';
-      bookingDialog.showModal();
-    }
-
-    openModalTriggers.forEach(btn => btn.onclick = openBookingModal);
-    if (closeModalBtn) closeModalBtn.onclick = () => bookingDialog.close();
-    if (cancelModalBtn) cancelModalBtn.onclick = () => bookingDialog.close();
-
-    // Submit Booking Form
     if (bookingForm) {
       bookingForm.onsubmit = async (e) => {
         e.preventDefault();
@@ -434,19 +427,13 @@
         await saveData(liveData);
 
         if (bookingNotice) {
-          bookingNotice.textContent = `✓ Cảm ơn ${clientName}! Yêu cầu sản xuất đã được gửi tới Uni-HUBE Foundry. Đội ngũ A&R sẽ phản hồi qua Zalo/Email trong vòng 24h.`;
+          bookingNotice.textContent = `✓ Cảm ơn ${clientName}! Yêu cầu sản xuất đã được gửi tới Uni-HUBE. Đội ngũ A&R sẽ phản hồi qua Zalo/Email trong vòng 24h.`;
           bookingNotice.style.display = 'block';
-          bookingNotice.style.background = '#dcfce7';
-          bookingNotice.style.color = '#15803d';
         }
 
         submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Gửi Đề Xuất Hợp Tác Ngay';
-
-        setTimeout(() => {
-          bookingDialog.close();
-          bookingForm.reset();
-        }, 3000);
+        submitBtn.textContent = '🚀 Gửi Yêu Cầu Hợp Tác Sản Xuất →';
+        bookingForm.reset();
       };
     }
   </script>
