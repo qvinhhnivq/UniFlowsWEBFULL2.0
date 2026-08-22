@@ -99,6 +99,12 @@
           <button id="theme-toggle-header-btn" type="button" class="portal-theme-pill" title="Chuyển đổi giao diện Sáng / Tối">
             <span class="theme-mode-icon">🌙</span> <span class="theme-mode-text">Chế độ Tối</span>
           </button>
+          
+          <!-- Language Switcher in Header -->
+          <button id="portal-lang-toggle-btn" type="button" class="portal-theme-pill lang-toggle-btn" title="Chuyển đổi ngôn ngữ (Language Switcher)" style="box-shadow:none;">
+            <span class="lang-flag">🇻🇳</span> <span class="lang-text">Tiếng Việt</span>
+          </button>
+
           <button class="button release-action-btn" id="quick-open-release-modal-btn">
             💿 + Gửi bản phát hành mới
           </button>
@@ -237,12 +243,17 @@
 
         <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
           <div>
-            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;">Catalogue Bản phát hành</h2>
+            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;" data-i18n="tab_releases">Catalogue Bản phát hành</h2>
             <p style="font-size: 13px; color: var(--portal-text-muted); margin: 4px 0 0;">Quản lý kho nhạc, theo dõi trạng thái kiểm duyệt và SmartLinks.</p>
           </div>
-          <button class="button release-action-btn" id="open-release-modal-btn">
-            💿 + Gửi bản phát hành mới
-          </button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="button alt" id="open-migration-wizard-btn" style="border-color:#2563eb; color:#1d4ed8; background:#eff6ff;" data-i18n="btn_migration_wizard">
+              🔄 Chuyển giao Catalogue & Gỡ bài
+            </button>
+            <button class="button release-action-btn" id="open-release-modal-btn" data-i18n="btn_new_release">
+              💿 + Gửi bản phát hành mới
+            </button>
+          </div>
         </div>
 
         <!-- Search Bar & Filters -->
@@ -340,6 +351,34 @@
           <div><span>Apple Music</span><b id="earn-apple">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
           <div><span>YouTube Music</span><b id="earn-youtube">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
           <div><span>NCT / Zing / khác</span><b id="earn-other">₫ 0</b><small>Báo cáo đối soát DSP</small></div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- DOANH THU PUBLISHING & SYNC LICENSING -->
+        <!-- ========================================== -->
+        <div style="background: linear-gradient(135deg, #090d16 0%, #1e1b4b 50%, #0f172a 100%); border: 1px solid #6366f1; border-radius: 14px; padding: 24px; margin-top: 24px; color: #fff; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:16px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:10px;font-weight:800;background:rgba(99, 102, 241, 0.3);color:#a5b4fc;border:1px solid #818cf8;padding:2px 8px;border-radius:12px;font-family:'DM Mono',monospace;text-transform:uppercase;">🎬 UniPUBLISHING Rights</span>
+                <span id="publishing-contracts-badge" style="font-size:11px;color:#34d399;font-weight:bold;">0 Hợp đồng đã cấp phép</span>
+              </div>
+              <h3 style="margin:6px 0 0;font-size:20px;letter-spacing:-0.03em;color:#fff;">Doanh thu Cấp phép Sync & Tác quyền (Publishing Royalties)</h3>
+              <p style="margin:4px 0 0;font-size:12px;color:#94a3b8;">Thu nhập từ cấp phép đồng bộ cho Phim Điện ảnh, TVC Quảng cáo, Games, YouTube và tác quyền biểu diễn.</p>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:10px;text-transform:uppercase;color:#94a3b8;font-family:'DM Mono',monospace;">Tổng doanh thu Sync thực nhận</span>
+              <strong id="artist-publishing-revenue-display" style="display:block;font-size:28px;color:#38bdf8;letter-spacing:-0.04em;font-weight:800;margin-top:2px;">₫ 0</strong>
+            </div>
+          </div>
+
+          <!-- Detailed Sync Contracts Ledger -->
+          <div style="margin-top:16px;">
+            <strong style="font-size:13px;color:#cbd5e1;display:block;margin-bottom:10px;">📋 Sổ cái Hợp đồng Cấp phép Sync Licensing (Sync License Ledger)</strong>
+            <div id="artist-publishing-contracts-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
         </div>
 
         <div style="margin-top:30px;">
@@ -629,6 +668,17 @@
             <div class="field" style="margin-top:10px;">
               <label style="font-size:10px;color:#64748b;">Hoặc dán Link URL ảnh bìa (Google Drive, Imgur, CDN):</label>
               <input name="artworkExternalUrl" id="artwork-external-url" placeholder="https://drive.google.com/... hoặc https://...">
+            </div>
+
+            <!-- Artwork Pre-flight Quality Inspector Box -->
+            <div id="artwork-inspect-container" style="display:none;margin-top:12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px 14px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <strong style="font-size:11px;text-transform:uppercase;color:#475569;letter-spacing:0.5px;" data-i18n="art_inspect_title">🔍 Kiểm định kỹ thuật Artwork (Pre-flight)</strong>
+                <span id="art-status-badge" style="font-size:10px;font-weight:bold;padding:2px 8px;border-radius:4px;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">DSP READY</span>
+              </div>
+              <div id="art-inspect-details" style="display:grid;gap:5px;color:#334155;">
+                <!-- Dynamically generated item checks -->
+              </div>
             </div>
           </div>
 
@@ -1054,6 +1104,119 @@
     <div class="release-modal-footer">
       <button type="button" class="button alt" id="cancel-epk-btn">Đóng</button>
       <button type="button" id="print-epk-btn" class="button" style="background: #1e293b; color: #fff; border-color: #1e293b;"><i class="fa fa-print"></i> Lưu PDF / In EPK</button>
+    </div>
+  </dialog>
+
+  <!-- ========================================== -->
+  <!-- MODAL: CATALOG MIGRATION & TAKEDOWN WIZARD -->
+  <!-- ========================================== -->
+  <dialog id="migration-wizard-dialog" class="release-dialog-shell" style="max-width: 680px; width: 95%;">
+    <div class="release-modal-header" style="background:#0f172a;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <span class="eyebrow" style="color:#60a5fa;margin:0;">Catalogue Management</span>
+        <h2 style="margin:4px 0 0;font-size:18px;color:#fff;" data-i18n="mig_dialog_title">Catalog Migration & Takedown Wizard</h2>
+      </div>
+      <button type="button" class="close-btn" id="close-mig-dialog-btn" style="background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+
+    <!-- Migration Tabs -->
+    <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+      <button type="button" id="mig-tab-btn-ingest" class="admin-tab-btn active" style="flex:1;padding:12px;border:none;font-weight:bold;cursor:pointer;" data-i18n="mig_tab_migrate">
+        📥 Chuyển nhạc từ Hãng khác (Giữ ISRC & Streams)
+      </button>
+      <button type="button" id="mig-tab-btn-takedown" class="admin-tab-btn" style="flex:1;padding:12px;border:none;font-weight:bold;cursor:pointer;" data-i18n="mig_tab_takedown">
+        📤 Yêu cầu Gỡ bài khỏi DSPs
+      </button>
+    </div>
+
+    <div style="padding:24px;">
+      <!-- PANEL 1: INGEST / MIGRATE TRACKS -->
+      <div id="mig-panel-ingest">
+        <p style="font-size:13px;color:#475569;margin-top:0;line-height:1.5;">
+          Chuyển đổi bài hát từ <strong>DistroKid, TuneCore, CD Baby, The Orchard</strong> về UniFLOWs. Bằng cách tái sử dụng mã ISRC và Spotify Track URI gốc, toàn bộ số lượt stream và vị trí trên playlist sẽ được bảo tồn 100%.
+        </p>
+        <form id="mig-ingest-form">
+          <div class="field" style="margin-bottom:12px;">
+            <label style="font-weight:700;">Tên bài hát / Bản phát hành cần chuyển giao *</label>
+            <input id="mig-song-title" required placeholder="Ví dụ: Vệt Sáng">
+          </div>
+          <div class="mini-grid" style="margin-bottom:12px;">
+            <div class="field">
+              <label style="font-weight:700;">Mã ISRC gốc (12 ký tự) *</label>
+              <input id="mig-isrc-code" required placeholder="VD: US-S1Z-24-00123" style="font-family:'DM Mono',monospace;font-weight:bold;">
+            </div>
+            <div class="field">
+              <label>Mã Barcode / UPC gốc (nếu có)</label>
+              <input id="mig-upc-code" placeholder="VD: 198000123456" style="font-family:'DM Mono',monospace;">
+            </div>
+          </div>
+          <div class="mini-grid" style="margin-bottom:12px;">
+            <div class="field">
+              <label>Ngày phát hành ban đầu (Original Release Date) *</label>
+              <input id="mig-orig-date" type="date" required>
+            </div>
+            <div class="field">
+              <label>Đơn vị phát hành cũ (Distributor)</label>
+              <select id="mig-old-distro" style="padding:10px;background:#fff;border:1px solid var(--ink);">
+                <option value="DistroKid">DistroKid</option>
+                <option value="TuneCore">TuneCore</option>
+                <option value="CD Baby">CD Baby</option>
+                <option value="Believe Digital">Believe Digital</option>
+                <option value="The Orchard / Sony">The Orchard / Sony Music</option>
+                <option value="Khác">Khác / Independent</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:16px;">
+            <label>Spotify Track URI / URL bài hát gốc</label>
+            <input id="mig-spotify-url" placeholder="https://open.spotify.com/track/..." style="font-size:12px;">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e2e8f0;padding-top:15px;flex-wrap:wrap;gap:10px;">
+            <button type="button" id="export-metadata-json-btn" class="button alt" style="font-size:11px;">💾 Xuất file Metadata Backup</button>
+            <button type="submit" class="button" style="background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;">Xác nhận Chuyển giao về UniFLOWs</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- PANEL 2: GRANULAR TAKEDOWN REQUEST -->
+      <div id="mig-panel-takedown" style="display:none;">
+        <p style="font-size:13px;color:#475569;margin-top:0;line-height:1.5;">
+          Gửi lệnh gỡ bài hát khỏi toàn bộ hoặc chỉ gỡ trên một số DSP cụ thể.
+        </p>
+        <form id="mig-takedown-form">
+          <div class="field" style="margin-bottom:14px;">
+            <label style="font-weight:700;">Chọn tác phẩm muốn yêu cầu gỡ *</label>
+            <select id="mig-takedown-release-select" style="padding:10px;background:#fff;border:1px solid var(--ink);width:100%;">
+              <!-- Injected dynamically -->
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:14px;">
+            <label style="font-weight:700;">Phạm vi gỡ bỏ (Platform Scope):</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;font-size:12px;">
+              <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="dsp_takedown" value="all" checked id="td-dsp-all"> <b>Toàn bộ nền tảng (All DSPs)</b></label>
+              <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="dsp_takedown" value="spotify"> Spotify</label>
+              <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="dsp_takedown" value="apple"> Apple Music</label>
+              <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="dsp_takedown" value="tiktok"> TikTok & ByteDance</label>
+              <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="dsp_takedown" value="youtube"> YouTube Music & Content ID</label>
+              <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="dsp_takedown" value="zing"> Zing MP3 / NCT</label>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:16px;">
+            <label style="font-weight:700;">Lý do yêu cầu gỡ *</label>
+            <select id="mig-takedown-reason" style="padding:10px;background:#fff;border:1px solid var(--ink);width:100%;">
+              <option value="Cập nhật bản thu âm mới (Remaster / Audio Replacement)">Cập nhật bản thu âm mới (Remaster / Audio Replacement)</option>
+              <option value="Hết thời hạn cấp quyền / Bản quyền">Hết thời hạn cấp quyền / Bản quyền</option>
+              <option value="Chuyển giao sang nhãn đĩa khác">Chuyển giao sang nhãn đĩa khác</option>
+              <option value="Sửa đổi thông tin nghệ sĩ hoặc tranh chấp tác giả">Sửa đổi thông tin nghệ sĩ hoặc tranh chấp tác giả</option>
+              <option value="Khác">Lý do khác</option>
+            </select>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #e2e8f0;padding-top:15px;">
+            <button type="button" id="close-mig-dialog-btn-2" class="button alt">Hủy bỏ</button>
+            <button type="submit" class="button" style="background:#dc2626;color:#fff;border-color:#dc2626;font-weight:bold;">Gửi Yêu Cầu Gỡ Bài</button>
+          </div>
+        </form>
+      </div>
     </div>
   </dialog>
 

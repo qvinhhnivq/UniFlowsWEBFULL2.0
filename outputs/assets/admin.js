@@ -368,6 +368,14 @@ const artistEditor = (a, idx) => {
           <label>Thời hạn hợp đồng / Ghi chú hợp đồng</label>
           <input data-key="contractTerm" value="${esc(a.contractTerm || 'Hợp đồng độc quyền phân phối 2024 - 2027')}" placeholder="Ví dụ: 2024 - 2027 (Thời hạn 3 năm)">
         </div>
+        <div class="field">
+          <label style="color:#2563eb;font-weight:bold;">Doanh thu Publishing & Sync đã ghi nhận (₫)</label>
+          <input data-key="publishingRevenue" value="${esc(a.publishingRevenue || '0')}" placeholder="Ví dụ: 8500000" style="font-weight:bold;color:#2563eb;">
+        </div>
+        <div class="field">
+          <label style="color:#2563eb;font-weight:bold;">Tỷ lệ chia sẻ Publishing (% Nghệ sĩ nhận)</label>
+          <input data-key="publishingRoyaltyRate" value="${esc(a.publishingRoyaltyRate || '75%')}" placeholder="Ví dụ: 75%">
+        </div>
       </div>
     </div>
 
@@ -1583,6 +1591,7 @@ function render() {
   loadAdminGreenlistRequests();
   renderDashboard();
   renderPitchingBoard();
+  renderPublishingAdmin();
 }
 
 // ----------------------------------------------------
@@ -2066,8 +2075,27 @@ form.addEventListener('submit', async (e) => {
   // Update articles
   data.articles = readItems('[data-article]', 'article');
 
+  // Update UniPUBLISHING settings & pricing
+  if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing));
+  data.publishing.basePrices = {
+    commercial: parseInt(document.querySelector('#pub-price-commercial')?.value || '15000000', 10),
+    film: parseInt(document.querySelector('#pub-price-film')?.value || '10000000', 10),
+    series: parseInt(document.querySelector('#pub-price-series')?.value || '6000000', 10),
+    gaming: parseInt(document.querySelector('#pub-price-gaming')?.value || '4000000', 10),
+    creator: parseInt(document.querySelector('#pub-price-creator')?.value || '2500000', 10),
+    event: parseInt(document.querySelector('#pub-price-event')?.value || '5000000', 10)
+  };
+  data.publishing.bundleDiscounts = {
+    b10: { count: 10, discountPct: parseInt(document.querySelector('#pub-bundle-10')?.value || '15', 10), name: 'Gói Mini Sync (10 bài)' },
+    b15: { count: 15, discountPct: parseInt(document.querySelector('#pub-bundle-15')?.value || '25', 10), name: 'Gói Pro Film (15 bài)' },
+    b20: { count: 20, discountPct: parseInt(document.querySelector('#pub-bundle-20')?.value || '35', 10), name: 'Gói Agency Master (20 bài)' },
+    full: { discountPct: parseInt(document.querySelector('#pub-bundle-full')?.value || '50', 10), name: 'Cấp phép Toàn bộ Catalogue' }
+  };
+  data.publishing.terms = document.querySelector('#pub-terms-text')?.value || '';
+
   await saveData(data);
-  showNotice('✓ Đã lưu toàn bộ dữ liệu hệ thống lên Supabase thành công!');
+  await logAuditEvent('Cập nhật UniPUBLISHING & Cấu hình hệ thống', 'Lưu thay đổi bảng giá và danh mục toàn website');
+  showNotice('✓ Đã lưu toàn bộ dữ liệu hệ thống và bảng giá UniPUBLISHING lên Supabase thành công!');
   saveBtn.disabled = false;
   saveBtn.textContent = 'Lưu toàn bộ lên Supabase';
   render();
@@ -2270,6 +2298,383 @@ async function loadAdminAuditLogs() {
 document.querySelector('#refresh-audit-logs-btn')?.addEventListener('click', () => {
   loadAdminAuditLogs();
   showNotice('✓ Đã làm mới lịch sử bảo mật Audit Log!');
+});
+
+// ====================================================
+// UNIPUBLISHING & SYNC MANAGEMENT SYSTEM
+// ====================================================
+function renderPublishingAdmin() {
+  const pubData = data.publishing || defaultData.publishing || {};
+  const basePrices = pubData.basePrices || {};
+  const bundles = pubData.bundleDiscounts || {};
+
+  // 1. Populate base prices
+  const pComm = document.querySelector('#pub-price-commercial');
+  const pFilm = document.querySelector('#pub-price-film');
+  const pSeries = document.querySelector('#pub-price-series');
+  const pGaming = document.querySelector('#pub-price-gaming');
+  const pCreator = document.querySelector('#pub-price-creator');
+  const pEvent = document.querySelector('#pub-price-event');
+
+  if (pComm) pComm.value = basePrices.commercial || 15000000;
+  if (pFilm) pFilm.value = basePrices.film || 10000000;
+  if (pSeries) pSeries.value = basePrices.series || 6000000;
+  if (pGaming) pGaming.value = basePrices.gaming || 4000000;
+  if (pCreator) pCreator.value = basePrices.creator || 2500000;
+  if (pEvent) pEvent.value = basePrices.event || 5000000;
+
+  // 2. Populate bundle discounts
+  const b10 = document.querySelector('#pub-bundle-10');
+  const b15 = document.querySelector('#pub-bundle-15');
+  const b20 = document.querySelector('#pub-bundle-20');
+  const bFull = document.querySelector('#pub-bundle-full');
+  const termsText = document.querySelector('#pub-terms-text');
+
+  if (b10) b10.value = bundles.b10?.discountPct || 15;
+  if (b15) b15.value = bundles.b15?.discountPct || 25;
+  if (b20) b20.value = bundles.b20?.discountPct || 35;
+  if (bFull) bFull.value = bundles.full?.discountPct || 50;
+  if (termsText) termsText.value = pubData.terms || '';
+
+  // 3. Render publishing tracks list & Portal releases dropdown & Sync requests
+  populatePortalReleasesToSyncSelect();
+  renderPublishingTracksList();
+  renderSyncLicenseRequests();
+}
+
+// Populate releases from portal into UniPUBLISHING select
+function populatePortalReleasesToSyncSelect() {
+  const select = document.querySelector('#portal-release-to-sync-select');
+  if (!select) return;
+
+  const options = [];
+  (data.artists || []).forEach(art => {
+    (art.products || []).forEach(prod => {
+      options.push({
+        artistName: art.name,
+        artistId: art.id,
+        trackTitle: prod.title,
+        genre: art.genre || 'Independent',
+        audioUrl: prod.url || '',
+        display: `${prod.title} — ${art.name} (${prod.type || 'Single'})`
+      });
+    });
+  });
+
+  if (options.length === 0) {
+    select.innerHTML = '<option value="">Chưa có bài hát nào trong kho phát hành</option>';
+    return;
+  }
+
+  select.innerHTML = options.map((opt, idx) => `
+    <option value="${idx}" data-artist="${esc(opt.artistName)}" data-artist-id="${esc(opt.artistId)}" data-title="${esc(opt.trackTitle)}" data-genre="${esc(opt.genre)}">
+      ${esc(opt.display)}
+    </option>
+  `).join('');
+}
+
+// 1-Click Add Track from Artist Portal Releases into UniPUBLISHING
+document.querySelector('#btn-add-portal-release-to-sync')?.addEventListener('click', async () => {
+  const select = document.querySelector('#portal-release-to-sync-select');
+  const selectedOpt = select?.selectedOptions[0];
+  if (!selectedOpt || !selectedOpt.dataset.title) {
+    alert('Vui lòng chọn bài hát từ danh sách bản phát hành.');
+    return;
+  }
+
+  const title = selectedOpt.dataset.title;
+  const artist = selectedOpt.dataset.artist;
+  const genre = selectedOpt.dataset.genre || 'Alternative';
+
+  if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing));
+  if (!data.publishing.customTracks) data.publishing.customTracks = [];
+
+  // Check if already in publishing
+  const exists = data.publishing.customTracks.some(t => t.title.toLowerCase() === title.toLowerCase() && t.artist.toLowerCase() === artist.toLowerCase());
+  if (exists) {
+    alert(`Tác phẩm "${title}" của ${artist} đã có trong danh mục UniPUBLISHING rồi!`);
+    return;
+  }
+
+  const newTrack = {
+    id: `pub-portal-${Date.now()}`,
+    title,
+    artist,
+    genre,
+    mood: 'Cinematic · Original Master',
+    bpm: '115 BPM · Master Quality',
+    audioUrl: '',
+    isExternal: false,
+    enabled: true
+  };
+
+  data.publishing.customTracks.unshift(newTrack);
+  await saveData(data);
+  renderPublishingTracksList();
+  showNotice(`✓ Đã thêm tác phẩm "${title}" của ${artist} từ Portal vào UniPUBLISHING thành công!`);
+  await logAuditEvent('Thêm tác phẩm Portal vào UniPUBLISHING', `Tác phẩm: ${title} - Nghệ sĩ: ${artist}`);
+});
+
+function renderPublishingTracksList() {
+  const tbody = document.querySelector('#pub-tracks-admin-tbody');
+  const countEl = document.querySelector('#pub-total-tracks-count');
+  if (!tbody) return;
+
+  if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing));
+  if (!data.publishing.customTracks) data.publishing.customTracks = [];
+
+  const tracks = data.publishing.customTracks;
+  if (countEl) countEl.textContent = `${tracks.length} Tác phẩm`;
+
+  if (tracks.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:#64748b;">Chưa có tác phẩm nào trong thư viện Sync. Hãy thêm tác phẩm mới ở trên.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = tracks.map((tr, idx) => `
+    <tr style="border-bottom:1px solid #e2e8f0;">
+      <td style="padding:12px 14px;">
+        <strong style="font-size:14px;display:block;">${esc(tr.title)}</strong>
+        <span style="font-size:12px;color:#64748b;">${esc(tr.artist)}</span>
+      </td>
+      <td style="padding:12px 14px;">
+        <span style="font-size:11px;font-weight:bold;background:#eff6ff;color:#1d4ed8;padding:2px 6px;border-radius:4px;">${esc(tr.genre || 'Music')}</span>
+        <small style="display:block;color:#64748b;margin-top:2px;">${esc(tr.mood || 'Standard')}</small>
+      </td>
+      <td style="padding:12px 14px;font-family:'DM Mono',monospace;font-size:12px;">
+        ${esc(tr.bpm || '—')}
+      </td>
+      <td style="padding:12px 14px;">
+        <span style="font-size:11px;padding:2px 8px;border-radius:12px;${tr.isExternal ? 'background:#fef3c7;color:#92400e;' : 'background:#ecfdf5;color:#065f46;'}">
+          ${tr.isExternal ? '👤 Nghệ sĩ ngoài' : '⭐ Label Roster'}
+        </span>
+      </td>
+      <td style="padding:12px 14px;text-align:center;">
+        <button type="button" class="button alt toggle-pub-track" data-idx="${idx}" style="padding:4px 10px;font-size:11px;${tr.enabled ? 'background:#ecfdf5;color:#047857;border-color:#a7f3d0;' : 'background:#fef2f2;color:#dc2626;border-color:#fecaca;'}">
+          ${tr.enabled ? '🟢 Đang Cấp Phép' : '⚪ Đã Tắt'}
+        </button>
+      </td>
+      <td style="padding:12px 14px;text-align:right;">
+        <button type="button" class="button alt remove-pub-track" data-idx="${idx}" style="padding:4px 8px;font-size:11px;color:#dc2626;">
+          ✕ Xóa
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Toggle handler
+  tbody.querySelectorAll('.toggle-pub-track').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      tracks[idx].enabled = !tracks[idx].enabled;
+      await saveData(data);
+      renderPublishingTracksList();
+      showNotice(`✓ Đã ${tracks[idx].enabled ? 'bật' : 'tắt'} cấp phép tác phẩm "${tracks[idx].title}"`);
+    };
+  });
+
+  // Delete handler
+  tbody.querySelectorAll('.remove-pub-track').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      if (confirm(`Bạn có chắc muốn xóa tác phẩm "${tracks[idx].title}" khỏi UniPUBLISHING?`)) {
+        tracks.splice(idx, 1);
+        await saveData(data);
+        renderPublishingTracksList();
+        showNotice(`✓ Đã xóa tác phẩm khỏi danh mục Sync!`);
+      }
+    };
+  });
+}
+
+// ====================================================
+// SYNC LICENSING REQUESTS & AUTOMATED ROYALTY CREDITING
+// ====================================================
+function renderSyncLicenseRequests() {
+  const tbody = document.querySelector('#sync-license-requests-tbody');
+  const countBadge = document.querySelector('#pub-pending-requests-count');
+  if (!tbody) return;
+
+  if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing));
+  if (!data.publishing.syncLicenseRequests) data.publishing.syncLicenseRequests = [];
+
+  const requests = data.publishing.syncLicenseRequests;
+  const pendingCount = requests.filter(r => r.status === 'Chờ xét duyệt').length;
+
+  if (countBadge) {
+    countBadge.textContent = `${pendingCount} Yêu cầu chờ duyệt`;
+    countBadge.style.background = pendingCount > 0 ? '#ecfdf5' : '#f1f5f9';
+    countBadge.style.color = pendingCount > 0 ? '#047857' : '#64748b';
+  }
+
+  if (requests.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:#64748b;">Chưa có yêu cầu cấp phép Sync nào.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = requests.map((req, idx) => {
+    const isApproved = req.status === 'Đã cấp phép & Đã thanh toán';
+    return `
+      <tr style="border-bottom:1px solid #e2e8f0;background:${isApproved ? '#f8fafc' : '#fff'};">
+        <td style="padding:12px 14px;font-family:'DM Mono',monospace;font-size:12px;color:#64748b;">
+          ${esc(req.requestedDate || 'Hôm nay')}
+        </td>
+        <td style="padding:12px 14px;">
+          <strong style="font-size:14px;display:block;">${esc(req.trackTitle)}</strong>
+          <span style="font-size:12px;color:#2563eb;">${esc(req.artistName || 'Nghệ sĩ Label')}</span>
+        </td>
+        <td style="padding:12px 14px;">
+          <strong style="font-size:13px;display:block;">${esc(req.clientName)}</strong>
+          <small style="color:#64748b;">${esc(req.clientEmail || '—')}</small>
+        </td>
+        <td style="padding:12px 14px;font-size:12px;">
+          <span style="font-weight:600;display:block;">${esc(req.mediaType)}</span>
+          <small style="color:#64748b;">${esc(req.territory || 'Việt Nam')} · ${esc(req.term || '1 Năm')}</small>
+        </td>
+        <td style="padding:12px 14px;font-family:'DM Mono',monospace;font-weight:bold;color:#0f172a;font-size:14px;">
+          ₫ ${(req.totalFee || 0).toLocaleString('vi-VN')}
+        </td>
+        <td style="padding:12px 14px;text-align:center;">
+          <span style="font-size:11px;font-weight:bold;padding:3px 8px;border-radius:12px;${isApproved ? 'background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;' : 'background:#fffbeb;color:#b45309;border:1px solid #fde68a;'}">
+            ${isApproved ? '🟢 Đã Cấp Phép & Cộng Tiền' : '🟡 Chờ Xét Duyệt'}
+          </span>
+        </td>
+        <td style="padding:12px 14px;text-align:right;">
+          ${!isApproved ? `
+            <button type="button" class="button btn-grant-sync-license" data-idx="${idx}" style="background:#059669;color:#fff;border-color:#059669;font-size:11px;padding:6px 12px;font-weight:bold;">
+              ⚡ Duyệt & Cộng Tiền Portal
+            </button>
+          ` : `
+            <span style="font-size:11px;color:#059669;font-weight:bold;">✓ Đã ghi nhận Portal</span>
+          `}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Handle Grant License & Auto-Credit Artist Royalty
+  tbody.querySelectorAll('.btn-grant-sync-license').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const req = requests[idx];
+      if (!req) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Đang xử lý...';
+
+      // 1. Find matching artist in data.artists
+      let matchedArtist = (data.artists || []).find(a => 
+        a.name.toLowerCase().trim() === req.artistName.toLowerCase().trim() ||
+        (a.products || []).some(p => p.title.toLowerCase().trim() === req.trackTitle.toLowerCase().trim())
+      );
+
+      // Default split percentage (default 75% or artist's custom rate)
+      let splitPct = 75;
+      if (matchedArtist && matchedArtist.publishingRoyaltyRate) {
+        splitPct = parseInt(String(matchedArtist.publishingRoyaltyRate).replace(/[^0-9]/g, ''), 10) || 75;
+      }
+
+      const totalFee = req.totalFee || 0;
+      const artistEarning = Math.round(totalFee * (splitPct / 100));
+
+      // 2. Mark request as approved
+      req.status = 'Đã cấp phép & Đã thanh toán';
+      req.licensedDate = new Date().toLocaleDateString('vi-VN');
+      req.artistSplitPct = splitPct;
+      req.artistEarning = artistEarning;
+
+      // 3. Update matched artist's financial balance in Portal
+      if (matchedArtist) {
+        if (!matchedArtist.publishingContracts) matchedArtist.publishingContracts = [];
+        
+        // Add contract ledger entry
+        matchedArtist.publishingContracts.unshift({
+          id: `sync-contract-${Date.now()}`,
+          trackTitle: req.trackTitle,
+          client: req.clientName,
+          mediaType: req.mediaType,
+          territory: req.territory || 'Việt Nam',
+          term: req.term || '1 Năm',
+          totalFee: totalFee,
+          artistSplitPct: splitPct,
+          artistEarning: artistEarning,
+          status: 'Đã cấp phép & Đã thanh toán',
+          licensedDate: new Date().toLocaleDateString('vi-VN')
+        });
+
+        // Credit to publishingRevenue
+        const currentPubRev = parseInt(String(matchedArtist.publishingRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
+        matchedArtist.publishingRevenue = (currentPubRev + artistEarning).toLocaleString('vi-VN');
+
+        // Credit to payableBalance (Available Cleared Balance for immediate payout)
+        const currentPayable = parseInt(String(matchedArtist.payableBalance || '0').replace(/[^0-9]/g, ''), 10) || 0;
+        matchedArtist.payableBalance = (currentPayable + artistEarning).toLocaleString('vi-VN');
+
+        // Add persistent in-portal notification
+        if (!matchedArtist.notifications) matchedArtist.notifications = [];
+        matchedArtist.notifications.unshift({
+          id: `notif-pub-${Date.now()}`,
+          title: '🎉 Nhận doanh thu Cấp phép Sync Licensing!',
+          content: `Hợp đồng cấp phép Sync cho tác phẩm "${req.trackTitle}" (${req.clientName}) đã được Admin duyệt thành công. Khoản thu ₫ ${artistEarning.toLocaleString('vi-VN')} (${splitPct}% Split) đã được cộng trực tiếp vào Số dư khả dụng của bạn!`,
+          date: new Date().toLocaleDateString('vi-VN'),
+          type: 'financial',
+          read: false
+        });
+      }
+
+      await saveData(data);
+      await logAuditEvent('Duyệt Cấp Phép Sync & Phân Bổ Tiền', `Tác phẩm: ${req.trackTitle} - Đơn vị: ${req.clientName} - Nghệ sĩ nhận: ₫ ${artistEarning.toLocaleString('vi-VN')}`);
+      
+      renderSyncLicenseRequests();
+      renderSelectedArtistEditor();
+      showNotice(`✓ Đã duyệt cấp phép thành công! Đã tự động cộng ₫ ${artistEarning.toLocaleString('vi-VN')} vào Số dư khả dụng của nghệ sĩ ${matchedArtist?.name || req.artistName}`);
+    };
+  });
+}
+
+// Add External Track Button Handler
+document.querySelector('#btn-add-external-track')?.addEventListener('click', async () => {
+  const title = document.querySelector('#ext-track-title')?.value.trim();
+  const artist = document.querySelector('#ext-track-artist')?.value.trim();
+  const genre = document.querySelector('#ext-track-genre')?.value.trim() || 'General';
+  const mood = document.querySelector('#ext-track-mood')?.value.trim() || 'Cinematic / Modern';
+  const bpm = document.querySelector('#ext-track-bpm')?.value.trim() || '120 BPM';
+  const audio = document.querySelector('#ext-track-audio')?.value.trim();
+
+  if (!title || !artist) {
+    alert('Vui lòng nhập đầy đủ Tên tác phẩm và Nhạc sĩ/Nghệ sĩ.');
+    return;
+  }
+
+  if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing));
+  if (!data.publishing.customTracks) data.publishing.customTracks = [];
+
+  const newTrack = {
+    id: `pub-ext-${Date.now()}`,
+    title,
+    artist,
+    genre,
+    mood,
+    bpm,
+    audioUrl: audio,
+    isExternal: true,
+    enabled: true
+  };
+
+  data.publishing.customTracks.unshift(newTrack);
+  await saveData(data);
+
+  // Reset form inputs
+  document.querySelector('#ext-track-title').value = '';
+  document.querySelector('#ext-track-artist').value = '';
+  document.querySelector('#ext-track-genre').value = '';
+  document.querySelector('#ext-track-mood').value = '';
+  document.querySelector('#ext-track-bpm').value = '';
+  document.querySelector('#ext-track-audio').value = '';
+
+  renderPublishingTracksList();
+  showNotice(`✓ Đã thêm tác phẩm ký gửi "${title}" của ${artist} vào UniPUBLISHING thành công!`);
+  await logAuditEvent('Thêm tác phẩm UniPUBLISHING', `Tác phẩm: ${title} - Nghệ sĩ: ${artist}`);
 });
 
 render();

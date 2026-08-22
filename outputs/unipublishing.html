@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>UniPUBLISHING — Sync Licensing & Music Publishing</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <link rel="stylesheet" href="assets/app.css">
+  <style>
+    .sync-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      font-family: 'DM Mono', monospace;
+    }
+    .calc-box {
+      background: #fafafa;
+      border: 1px solid var(--ink, #111);
+      padding: 28px;
+      margin-top: 30px;
+    }
+    .track-row {
+      display: grid;
+      grid-template-columns: 50px 2fr 1.2fr 1fr 140px;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border-bottom: 1px solid #eee;
+      background: #fff;
+    }
+    .track-row:hover {
+      background: #f8fafc;
+    }
+    .songwriter-spotlight-box {
+      background: linear-gradient(135deg, #090d16 0%, #1e1b4b 50%, #0f172a 100%);
+      border: 2px solid #6366f1;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+      color: #fff;
+      padding: 48px 40px;
+      margin: 60px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    @media (max-width: 768px) {
+      .track-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .songwriter-spotlight-box {
+        padding: 32px 20px;
+      }
+    }
+  </style>
+</head>
+<body data-page="unipublishing">
+  <main>
+    <!-- Hero Section -->
+    <section class="home-hero" style="min-height: 480px;">
+      <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=2000&q=90" alt="Music Publishing & Studio">
+      <div class="home-content">
+        <span class="eyebrow" data-i18n="pub_hero_eyebrow">UniFLOWs Publishing & Master Sync</span>
+        <h1 style="font-size: clamp(36px, 5.5vw, 72px); margin: 8px 0 16px;">UniPUBLISHING.</h1>
+        <p class="home-copy" data-i18n="pub_hero_copy">
+          Cổng cấp phép âm nhạc đồng bộ (Sync Licensing) và quản trị tác quyền toàn cầu cho Điện ảnh, Games, Quảng cáo và Sáng tạo số.
+        </p>
+      </div>
+    </section>
+
+    <!-- 01: Core Publishing Pillars -->
+    <section class="intro">
+      <span class="kicker">01 / Sync & Rights</span>
+      <div>
+        <h2 data-i18n="pub_p1_title">One-Stop Licensing. Âm nhạc bản quyền 100% sạch.</h2>
+        <p data-i18n="pub_p1_desc">
+          UniPUBLISHING đại diện cho cả Master Rights (quyền ghi âm) và Publishing Rights (quyền tác giả), cho phép các đạo diễn, nhà sản xuất phim và agency quảng cáo cấp phép sử dụng nhạc chỉ với <strong>01 hợp đồng duy nhất</strong> — không thủ tục rườm rà, sẵn sàng phát hành toàn cầu.
+        </p>
+      </div>
+    </section>
+
+    <!-- 02: Sync Catalogue Explorer (Dynamically Rendered from Database) -->
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="pub_cat_title">02 / Sync Music Catalogue</h2>
+          <p style="font-size: 14px; opacity: 0.8; margin: 4px 0 0;" data-i18n="pub_cat_subtitle">Duyệt nhanh các tác phẩm nổi bật sẵn sàng cấp phép cho phim ảnh & TVC (Bao gồm Nghệ sĩ Label & Nghệ sĩ ngoài).</p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span class="sync-badge">✓ 100% Pre-cleared</span>
+          <span class="sync-badge" style="background:#ecfdf5;color:#047857;border-color:#a7f3d0;">HQ WAV & Stems</span>
+        </div>
+      </div>
+
+      <div style="border: 1px solid var(--ink, #111); overflow: hidden; margin-top: 15px;">
+        <div style="display: grid; grid-template-columns: 50px 2fr 1.2fr 1fr 140px; background: #0f172a; color: #fff; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; font-family: 'DM Mono', monospace;" class="hide-mobile">
+          <span>#</span>
+          <span data-i18n="pub_th_track">Tác phẩm / Nghệ sĩ</span>
+          <span data-i18n="pub_th_genre">Thể loại / Mood</span>
+          <span>BPM / Key</span>
+          <span style="text-align: right;" data-i18n="pub_th_action">Cấp phép</span>
+        </div>
+
+        <div id="sync-tracks-list">
+          <!-- Dynamically Injected from data.publishing.customTracks -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 03: Interactive Sync Fee Estimator & Request Form (With Bundles & Full Catalog) -->
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="pub_calc_title">03 / Bảng Tính & Báo Giá Sync Bản Quyền (Gói Lẻ & Bundle)</h2>
+          <p style="font-size: 14px; opacity: 0.8; margin: 4px 0 0;" data-i18n="pub_calc_subtitle">Ước tính chi phí cấp phép tự động, áp dụng ưu đãi chiết khấu khi mua theo gói Bundle hoặc toàn bộ Catalogue.</p>
+        </div>
+        <span class="kicker">Instant Quote</span>
+      </div>
+
+      <div class="calc-box">
+        <form id="sync-quote-form">
+          <!-- Package Choice: Single / Bundle / Full Catalog -->
+          <div class="field" style="margin-bottom: 16px;">
+            <label style="font-weight: 800; font-size: 14px; color: #1e3a8a;">1. Lựa chọn Gói Cấp Phép (License Scope & Bundle) *</label>
+            <select id="sync-bundle-select" style="padding: 12px; font-size: 14px; font-weight: bold; background: #eff6ff; border: 2px solid #3b82f6; border-radius: 6px;">
+              <option value="1" data-discount="0" data-count="1" selected>🎵 1 Bài Hát Đơn Lẻ (Single Track License - Nguyên giá)</option>
+              <option value="10" data-discount="15" data-count="10">📦 Bundle 10 Bài (Mini Sync Package - Ưu đãi Giảm 15%)</option>
+              <option value="15" data-discount="25" data-count="15">🎬 Bundle 15 Bài (Pro Film Package - Ưu đãi Giảm 25%)</option>
+              <option value="20" data-discount="35" data-count="20">🏆 Bundle 20 Bài (Agency Master Package - Ưu đãi Giảm 35%)</option>
+              <option value="all" data-discount="50" data-count="50">🔥 Cấp Quyền TOÀN BỘ CATALOGUE (Full Catalog Unlimited Access - Ưu đãi Giảm 50%)</option>
+            </select>
+          </div>
+
+          <div class="field" id="sync-song-wrapper" style="margin-bottom: 16px;">
+            <label style="font-weight: 700;" data-i18n="pub_form_song">Tên ca khúc muốn cấp phép (Hoặc mô tả danh sách bài) *</label>
+            <input id="sync-song-input" required placeholder="Ví dụ: Vệt Sáng - Lumi" value="Vệt Sáng - Lumi" style="padding: 12px; font-size: 15px; font-weight: bold;">
+          </div>
+
+          <div class="mini-grid" style="margin-bottom: 16px;">
+            <div class="field">
+              <label data-i18n="pub_form_usage">2. Loại hình sử dụng (Usage Media) *</label>
+              <select id="sync-media-type" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="commercial" data-price="15000000">TVC / Quảng cáo Thương mại (Commercial)</option>
+                <option value="film" data-price="10000000">Phim Điện ảnh / Chiếu rạp (Feature Film)</option>
+                <option value="series" data-price="6000000">Phim Truyền hình / Web-Drama / Series</option>
+                <option value="gaming" data-price="4000000">Game / Trò chơi điện tử (Gaming App)</option>
+                <option value="creator" data-price="2500000" selected>Video Trực tuyến / YouTube / TikTok Creator</option>
+                <option value="event" data-price="5000000">Sự kiện Trực tiếp / Fashion Show / Triển lãm</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label data-i18n="pub_form_territory">3. Phạm vi lãnh thổ (Territory) *</label>
+              <select id="sync-territory" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="1" selected>Việt Nam</option>
+                <option value="1.5">Khu vực Đông Nam Á / Châu Á</option>
+                <option value="2.2">Toàn cầu (Worldwide)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mini-grid" style="margin-bottom: 20px;">
+            <div class="field">
+              <label data-i18n="pub_form_term">4. Thời hạn cấp quyền (License Term) *</label>
+              <select id="sync-term" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="1" selected>1 Năm (1 Year)</option>
+                <option value="1.6">2 Năm (2 Years)</option>
+                <option value="2.5">5 Năm (5 Years)</option>
+                <option value="3.5">Vĩnh viễn (In Perpetuity)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label data-i18n="pub_form_excl">5. Tính chất độc quyền (Exclusivity)</label>
+              <select id="sync-exclusivity" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="1" selected>Không độc quyền (Non-Exclusive)</option>
+                <option value="2.0">Độc quyền ngành hàng (Category Exclusive)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Estimated Quote Detailed Breakdown Display -->
+          <div style="background: #0f172a; color: #fff; padding: 24px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid #334155; padding-bottom: 16px;">
+              <div>
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #60a5fa; font-family: 'DM Mono', monospace;" data-i18n="pub_est_fee">Ước tính phí bản quyền (Sync Fee)</span>
+                <h3 id="sync-estimated-price" style="margin: 4px 0 0; font-size: 36px; font-weight: 800; letter-spacing: -0.04em; color: #38bdf8;">₫ 2,500,000</h3>
+              </div>
+              <div style="font-size: 12px; color: #94a3b8; text-align: right;">
+                <span id="sync-badge-bundle-status" style="display:inline-block;padding:3px 10px;border-radius:12px;font-weight:bold;background:#1e293b;color:#38bdf8;border:1px solid #38bdf8;margin-bottom:4px;">1 Bài đơn lẻ</span><br>
+                <span>Bao gồm Master Recording + Publishing Rights (100% Clean)</span>
+              </div>
+            </div>
+
+            <!-- Discount Breakdown Table -->
+            <div id="sync-breakdown-details" style="margin-top: 14px; font-size: 13px; display: grid; gap: 6px; color: #cbd5e1; font-family: 'DM Mono', monospace;">
+              <!-- Dynamic Calculations Injected Here -->
+            </div>
+          </div>
+
+          <!-- Contact Details to Submit -->
+          <div class="mini-grid" style="margin-bottom: 16px;">
+            <div class="field">
+              <label data-i18n="pub_form_name">Họ tên người đại diện / Đơn vị mua bản quyền *</label>
+              <input id="sync-client-name" required placeholder="Ví dụ: Nguyễn Văn A (Agency XYZ)">
+            </div>
+            <div class="field">
+              <label data-i18n="pub_form_email">Email liên hệ nhận hợp đồng *</label>
+              <input id="sync-client-email" type="email" required placeholder="producer@agency.com">
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom: 20px;">
+            <label data-i18n="pub_form_desc">Mô tả dự án / Kịch bản sử dụng</label>
+            <textarea id="sync-project-desc" rows="3" placeholder="Mô tả phân đoạn xuất hiện của bài hát, tên phim, TVC hoặc kênh phát sóng..."></textarea>
+          </div>
+
+          <button type="submit" class="button" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 800; background: #2563eb; color: #fff; border-color: #2563eb; letter-spacing: -0.02em;" data-i18n="pub_btn_submit">
+            📄 Gửi Yêu Cầu Cấp Phép & Nhận Dự Thảo Hợp Đồng Bản Quyền
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 04: HIGH-CONTRAST SPOTLIGHT SECTION FOR SONGWRITERS & PRODUCERS -->
+    <section class="songwriter-spotlight-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <span style="background: rgba(99, 102, 241, 0.2); border: 1px solid #818cf8; color: #c7d2fe; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; letter-spacing: 1.5px; font-family: 'DM Mono', monospace;">
+          ⚡ For Songwriters, Composers & Music Producers
+        </span>
+        <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">UniFLOWs Publishing Network</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 36px; align-items: center;" class="hide-mobile-grid">
+        <div>
+          <h2 style="font-size: clamp(26px, 3.2vw, 38px); margin: 0 0 16px; letter-spacing: -0.04em; line-height: 1.2; color: #fff;" data-i18n="pub_writer_title">
+            Bạn là Nhạc sĩ hoặc Producer sáng tác ca khúc?
+          </h2>
+          <p style="font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-bottom: 24px;" data-i18n="pub_writer_desc">
+            Đừng để tác quyền bị lãng quên. UniPUBLISHING ký gửi và bảo vệ bản quyền toàn cầu cho ca khúc của bạn: thu thập <strong>Performance Royalties</strong> (truyền hình, radio, sự kiện trực tiếp), <strong>Mechanical Royalties</strong> (Spotify, Apple Music, đĩa cứng), và kết nối đưa tác phẩm vào các dự án <strong>Phim Điện ảnh & TVC Quảng cáo</strong> với mức thù lao cao nhất.
+          </p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <a href="contact" class="button" style="background:#6366f1;color:#fff;border-color:#6366f1;padding:12px 24px;font-weight:800;font-size:14px;" data-i18n="pub_btn_contact">
+              ⚡ Đăng Ký Quản Trị Tác Quyền & Ký Gửi Sync →
+            </a>
+            <a href="mailto:publishing@uniflowslabel.com" class="button alt" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.3);padding:12px 20px;font-size:14px;">
+              ✉️ Trao đổi với A&R Publishing
+            </a>
+          </div>
+        </div>
+
+        <!-- 3 Feature Stat Cards -->
+        <div style="display:grid;gap:12px;">
+          <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);padding:16px 20px;border-radius:10px;backdrop-filter:blur(10px);">
+            <strong style="font-size:16px;color:#38bdf8;display:block;margin-bottom:2px;">100% Thu Nhập Tác Quyền Minh Bạch</strong>
+            <span style="font-size:12px;color:#94a3b8;">Báo cáo đối soát chi tiết từng lượt phát sóng và phân bổ định kỳ vào ví.</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);padding:16px 20px;border-radius:10px;backdrop-filter:blur(10px);">
+            <strong style="font-size:16px;color:#a855f7;display:block;margin-bottom:2px;">Bảo Vệ Tác Quyền PROs Toàn Cầu</strong>
+            <span style="font-size:12px;color:#94a3b8;">Đăng ký VCPMC, BMI, ASCAP, JASRAC & Content ID để chặn re-up trái phép.</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);padding:16px 20px;border-radius:10px;backdrop-filter:blur(10px);">
+            <strong style="font-size:16px;color:#34d399;display:block;margin-bottom:2px;">Cơ Hội Pitching TVC & Phim Rạp</strong>
+            <span style="font-size:12px;color:#94a3b8;">Đưa bài hát trực tiếp vào bàn làm việc của các Music Supervisor và Đạo diễn.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/app.js"></script>
+  <script type="module">
+    import { getData, getLocalCachedData, saveData } from './assets/data.js';
+
+    let currentPubData = getLocalCachedData()?.publishing || {};
+
+    window.selectSyncTrack = function(trackName) {
+      const input = document.querySelector('#sync-song-input');
+      if (input) {
+        input.value = trackName;
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+      }
+    };
+
+    function renderPublicSyncCatalogue() {
+      const listEl = document.querySelector('#sync-tracks-list');
+      if (!listEl) return;
+
+      const tracks = (currentPubData.customTracks || []).filter(t => t.enabled !== false);
+
+      if (tracks.length === 0) {
+        listEl.innerHTML = `<p style="padding:24px;text-align:center;color:#64748b;">Hiện tại chưa có bài hát nào trong thư viện mở. Vui lòng liên hệ trực tiếp để nhận catalog riêng.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = tracks.map((tr, i) => `
+        <div class="track-row">
+          <span style="font-weight: bold; color: #64748b;">${String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <strong style="font-size: 15px; display: block;">${tr.title}</strong>
+            <small style="color: #64748b;">${tr.artist} · ${tr.isExternal ? 'Ký gửi Publishing' : 'Master & Publishing'}</small>
+          </div>
+          <div>
+            <span class="sync-badge">${tr.genre || 'Music'}</span>
+            <small style="display: block; margin-top: 3px; color: #64748b;">${tr.mood || 'Standard'}</small>
+          </div>
+          <span style="font-family: 'DM Mono', monospace; font-size: 13px;">${tr.bpm || '—'}</span>
+          <div style="text-align: right;">
+            <button type="button" class="button" onclick="selectSyncTrack('${tr.title.replace(/'/g, "\\'")} - ${tr.artist.replace(/'/g, "\\'")}')" style="padding: 6px 12px; font-size: 11px;" data-i18n="pub_btn_license">Xin báo giá</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Dynamic Sync Price & Bundle Calculator
+    function updateSyncPrice() {
+      const basePrices = currentPubData.basePrices || {
+        commercial: 15000000,
+        film: 10000000,
+        series: 6000000,
+        gaming: 4000000,
+        creator: 2500000,
+        event: 5000000
+      };
+
+      const mediaKey = document.querySelector('#sync-media-type')?.value || 'creator';
+      const basePricePerTrack = basePrices[mediaKey] || 2500000;
+
+      const territoryMul = parseFloat(document.querySelector('#sync-territory')?.value || '1');
+      const termMul = parseFloat(document.querySelector('#sync-term')?.value || '1');
+      const exclMul = parseFloat(document.querySelector('#sync-exclusivity')?.value || '1');
+
+      const bundleOption = document.querySelector('#sync-bundle-select')?.selectedOptions[0];
+      const bundleVal = bundleOption ? bundleOption.value : '1';
+      const discountPct = bundleOption ? parseFloat(bundleOption.dataset.discount || '0') : 0;
+      
+      let trackMultiplier = 1;
+      let isFullCatalog = false;
+
+      if (bundleVal === '10') {
+        trackMultiplier = 10;
+      } else if (bundleVal === '15') {
+        trackMultiplier = 15;
+      } else if (bundleVal === '20') {
+        trackMultiplier = 20;
+      } else if (bundleVal === 'all') {
+        trackMultiplier = 30; // Effective baseline rate for entire catalogue
+        isFullCatalog = true;
+      }
+
+      // Single track price with multipliers
+      const singlePrice = Math.round(basePricePerTrack * territoryMul * termMul * exclMul);
+      const grossTotal = Math.round(singlePrice * trackMultiplier);
+      const discountAmount = Math.round(grossTotal * (discountPct / 100));
+      const finalPrice = Math.max(0, grossTotal - discountAmount);
+
+      const display = document.querySelector('#sync-estimated-price');
+      const badgeStatus = document.querySelector('#sync-badge-bundle-status');
+      const breakdownEl = document.querySelector('#sync-breakdown-details');
+
+      if (display) {
+        display.textContent = `₫ ${finalPrice.toLocaleString('vi-VN')}`;
+      }
+
+      if (badgeStatus) {
+        if (discountPct > 0) {
+          badgeStatus.textContent = isFullCatalog ? `🔥 Toàn bộ Catalogue (Giảm ${discountPct}%)` : `📦 Gói Bundle ${bundleVal} bài (Giảm ${discountPct}%)`;
+          badgeStatus.style.background = '#065f46';
+          badgeStatus.style.color = '#34d399';
+          badgeStatus.style.borderColor = '#34d399';
+        } else {
+          badgeStatus.textContent = '1 Bài đơn lẻ';
+          badgeStatus.style.background = '#1e293b';
+          badgeStatus.style.color = '#38bdf8';
+          badgeStatus.style.borderColor = '#38bdf8';
+        }
+      }
+
+      if (breakdownEl) {
+        if (discountPct > 0) {
+          breakdownEl.innerHTML = `
+            <div style="display:flex;justify-content:space-between;"><span>Đơn giá cơ bản / bài:</span> <span>₫ ${singlePrice.toLocaleString('vi-VN')}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Số lượng bài cấp phép:</span> <span>${isFullCatalog ? 'Toàn bộ Catalog (Không giới hạn)' : bundleVal + ' bài'}</span></div>
+            <div style="display:flex;justify-content:space-between;color:#94a3b8;"><span>Tổng giá gốc (Chưa ưu đãi):</span> <span>₫ ${grossTotal.toLocaleString('vi-VN')}</span></div>
+            <div style="display:flex;justify-content:space-between;color:#34d399;font-weight:bold;"><span>Ưu đãi gói Bundle (-${discountPct}%):</span> <span>- ₫ ${discountAmount.toLocaleString('vi-VN')}</span></div>
+          `;
+        } else {
+          breakdownEl.innerHTML = `
+            <div style="display:flex;justify-content:space-between;"><span>Phí cấp phép 01 ca khúc:</span> <span>₫ ${singlePrice.toLocaleString('vi-VN')}</span></div>
+            <div style="display:flex;justify-content:space-between;color:#94a3b8;"><span>Mẹo: Chọn các gói Bundle 10/15/20 bài hoặc Full Catalog để nhận chiết khấu lên tới 50%!</span></div>
+          `;
+        }
+      }
+    }
+
+    document.querySelectorAll('#sync-bundle-select, #sync-media-type, #sync-territory, #sync-term, #sync-exclusivity').forEach(el => {
+      el?.addEventListener('change', updateSyncPrice);
+    });
+
+    document.querySelector('#sync-quote-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const bundle = document.querySelector('#sync-bundle-select')?.selectedOptions[0]?.textContent;
+      const song = document.querySelector('#sync-song-input')?.value;
+      const client = document.querySelector('#sync-client-name')?.value;
+      const email = document.querySelector('#sync-client-email')?.value;
+      const priceText = document.querySelector('#sync-estimated-price')?.textContent || '0';
+      const priceNum = parseInt(priceText.replace(/[^0-9]/g, ''), 10) || 0;
+      const mediaText = document.querySelector('#sync-media-type')?.selectedOptions[0]?.textContent || 'Commercial';
+      const territoryText = document.querySelector('#sync-territory')?.selectedOptions[0]?.textContent || 'Việt Nam';
+      const termText = document.querySelector('#sync-term')?.selectedOptions[0]?.textContent || '1 Năm';
+
+      // Infer artist name if formatted as "Title - Artist"
+      let trackTitle = song;
+      let artistName = 'Lumi';
+      if (song.includes('-')) {
+        const parts = song.split('-');
+        trackTitle = parts[0].trim();
+        artistName = parts[1].trim();
+      }
+
+      // Persist to syncLicenseRequests
+      try {
+        const liveData = await getData();
+        if (!liveData.publishing) liveData.publishing = JSON.parse(JSON.stringify(currentPubData));
+        if (!liveData.publishing.syncLicenseRequests) liveData.publishing.syncLicenseRequests = [];
+
+        const newRequest = {
+          id: `sync-req-${Date.now()}`,
+          trackTitle: trackTitle,
+          artistName: artistName,
+          clientName: client,
+          clientEmail: email,
+          mediaType: mediaText,
+          territory: territoryText,
+          term: termText,
+          totalFee: priceNum,
+          status: 'Chờ xét duyệt',
+          requestedDate: new Date().toLocaleDateString('vi-VN')
+        };
+
+        liveData.publishing.syncLicenseRequests.unshift(newRequest);
+        await saveData(liveData);
+      } catch (err) {
+        console.warn('Could not save sync request to database:', err);
+      }
+
+      alert(`✓ Yêu cầu cấp phép bản quyền (${bundle}) của bạn đã được gửi thành công!\n\nTác phẩm/Gói: ${song}\nĐại diện: ${client} (${email})\nPhí dự tính: ${priceText}\n\nĐội ngũ UniPUBLISHING sẽ gửi bản thảo hợp đồng điện tử và hóa đơn tài chính qua email trong vòng 2-4 giờ làm việc.`);
+    });
+
+    renderPublicSyncCatalogue();
+    updateSyncPrice();
+
+    getData().then(liveData => {
+      if (liveData?.publishing) {
+        currentPubData = liveData.publishing;
+        renderPublicSyncCatalogue();
+        updateSyncPrice();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -3,31 +3,311 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Studio Access — UniFLOWs</title>
+  <title>UniPUBLISHING — Sync Licensing & Music Publishing</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="assets/app.css">
+  <style>
+    .sync-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      font-family: 'DM Mono', monospace;
+    }
+    .calc-box {
+      background: #fafafa;
+      border: 1px solid var(--ink, #111);
+      padding: 28px;
+      margin-top: 30px;
+    }
+    .track-row {
+      display: grid;
+      grid-template-columns: 50px 2fr 1.2fr 1fr 140px;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border-bottom: 1px solid #eee;
+      background: #fff;
+    }
+    .track-row:hover {
+      background: #f8fafc;
+    }
+    @media (max-width: 768px) {
+      .track-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+  </style>
 </head>
-<body>
-  <main class="admin discreet-login">
-    <span class="eyebrow">UniFLOWs / Internal</span>
-    <h1>Studio<br>access.</h1>
-    <p id="login-error" class="notice" style="display: none;"></p>
-    <form id="login-form">
-      <div class="field">
-        <label for="admin-email">Admin Email</label>
-        <input id="admin-email" type="email" required autocomplete="username" placeholder="admin@uniflowslabel.com">
+<body data-page="unipublishing">
+  <main>
+    <!-- Hero Section -->
+    <section class="home-hero" style="min-height: 480px;">
+      <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=2000&q=90" alt="Music Publishing & Studio">
+      <div class="home-content">
+        <span class="eyebrow" data-i18n="pub_hero_eyebrow">UniFLOWs Publishing & Master Sync</span>
+        <h1 style="font-size: clamp(36px, 5.5vw, 72px); margin: 8px 0 16px;">UniPUBLISHING.</h1>
+        <p class="home-copy" data-i18n="pub_hero_copy">
+          Cổng cấp phép âm nhạc đồng bộ (Sync Licensing) và quản trị tác quyền toàn cầu cho Điện ảnh, Games, Quảng cáo và Sáng tạo số.
+        </p>
       </div>
-      <div class="field">
-        <label for="admin-password">Password</label>
-        <input id="admin-password" type="password" required autocomplete="current-password">
+    </section>
+
+    <!-- 01: Core Publishing Pillars -->
+    <section class="intro">
+      <span class="kicker">01 / Sync & Rights</span>
+      <div>
+        <h2 data-i18n="pub_p1_title">One-Stop Licensing. Âm nhạc bản quyền 100% sạch.</h2>
+        <p data-i18n="pub_p1_desc">
+          UniPUBLISHING đại diện cho cả Master Rights (quyền ghi âm) và Publishing Rights (quyền tác giả), cho phép các đạo diễn, nhà sản xuất phim và agency quảng cáo cấp phép sử dụng nhạc chỉ với <strong>01 hợp đồng duy nhất</strong> — không thủ tục rườm rà, sẵn sàng phát hành toàn cầu.
+        </p>
       </div>
-      <div class="actions">
-        <button class="button" id="submit-btn">Continue</button>
-        <a class="button alt" href="index">Exit</a>
+    </section>
+
+    <!-- 02: Sync Catalogue Explorer -->
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="pub_cat_title">02 / Sync Music Catalogue</h2>
+          <p style="font-size: 14px; opacity: 0.8; margin: 4px 0 0;" data-i18n="pub_cat_subtitle">Duyệt nhanh các tác phẩm nổi bật sẵn sàng cấp phép cho phim ảnh & TVC.</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span class="sync-badge">✓ 100% Pre-cleared</span>
+          <span class="sync-badge" style="background:#ecfdf5;color:#047857;border-color:#a7f3d0;">HQ WAV & Stems</span>
+        </div>
       </div>
-    </form>
+
+      <div style="border: 1px solid var(--ink, #111); overflow: hidden; margin-top: 15px;">
+        <div style="display: grid; grid-template-columns: 50px 2fr 1.2fr 1fr 140px; background: #0f172a; color: #fff; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; font-family: 'DM Mono', monospace;">
+          <span>#</span>
+          <span data-i18n="pub_th_track">Tác phẩm / Nghệ sĩ</span>
+          <span data-i18n="pub_th_genre">Thể loại / Mood</span>
+          <span>BPM / Key</span>
+          <span style="text-align: right;" data-i18n="pub_th_action">Cấp phép</span>
+        </div>
+
+        <div id="sync-tracks-list">
+          <div class="track-row">
+            <span style="font-weight: bold; color: #64748b;">01</span>
+            <div>
+              <strong style="font-size: 15px; display: block;">Vệt Sáng</strong>
+              <small style="color: #64748b;">Lumi · Master & Publishing</small>
+            </div>
+            <div>
+              <span class="sync-badge">Alternative R&B</span>
+              <small style="display: block; margin-top: 3px; color: #64748b;">Dreamy · Nocturnal · Cinematic</small>
+            </div>
+            <span style="font-family: 'DM Mono', monospace; font-size: 13px;">92 BPM · E Minor</span>
+            <div style="text-align: right;">
+              <button type="button" class="button" onclick="selectSyncTrack('Vệt Sáng - Lumi')" style="padding: 6px 12px; font-size: 11px;" data-i18n="pub_btn_license">Xin báo giá</button>
+            </div>
+          </div>
+
+          <div class="track-row">
+            <span style="font-weight: bold; color: #64748b;">02</span>
+            <div>
+              <strong style="font-size: 15px; display: block;">Dải Tần</strong>
+              <small style="color: #64748b;">MONO//TONE · Master & Publishing</small>
+            </div>
+            <div>
+              <span class="sync-badge" style="background:#fdf4ff;color:#86198f;border-color:#f5d0fe;">Future Pop</span>
+              <small style="display: block; margin-top: 3px; color: #64748b;">Energetic · Neon · Modern</small>
+            </div>
+            <span style="font-family: 'DM Mono', monospace; font-size: 13px;">124 BPM · A Major</span>
+            <div style="text-align: right;">
+              <button type="button" class="button" onclick="selectSyncTrack('Dải Tần - MONO//TONE')" style="padding: 6px 12px; font-size: 11px;" data-i18n="pub_btn_license">Xin báo giá</button>
+            </div>
+          </div>
+
+          <div class="track-row">
+            <span style="font-weight: bold; color: #64748b;">03</span>
+            <div>
+              <strong style="font-size: 15px; display: block;">Đường Đua</strong>
+              <small style="color: #64748b;">KAII · Master & Publishing</small>
+            </div>
+            <div>
+              <span class="sync-badge" style="background:#fef2f2;color:#991b1b;border-color:#fecaca;">Hip-hop / Rap</span>
+              <small style="display: block; margin-top: 3px; color: #64748b;">Bold · Aggressive · Action</small>
+            </div>
+            <span style="font-family: 'DM Mono', monospace; font-size: 13px;">140 BPM · C Minor</span>
+            <div style="text-align: right;">
+              <button type="button" class="button" onclick="selectSyncTrack('Đường Đua - KAII')" style="padding: 6px 12px; font-size: 11px;" data-i18n="pub_btn_license">Xin báo giá</button>
+            </div>
+          </div>
+
+          <div class="track-row">
+            <span style="font-weight: bold; color: #64748b;">04</span>
+            <div>
+              <strong style="font-size: 15px; display: block;">Live at The Flow (Visual Session)</strong>
+              <small style="color: #64748b;">Lumi · Master & Publishing</small>
+            </div>
+            <div>
+              <span class="sync-badge">Acoustic / Soul</span>
+              <small style="display: block; margin-top: 3px; color: #64748b;">Warm · Intimate · Deep</small>
+            </div>
+            <span style="font-family: 'DM Mono', monospace; font-size: 13px;">78 BPM · D Minor</span>
+            <div style="text-align: right;">
+              <button type="button" class="button" onclick="selectSyncTrack('Live at The Flow - Lumi')" style="padding: 6px 12px; font-size: 11px;" data-i18n="pub_btn_license">Xin báo giá</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03: Interactive Sync Fee Estimator & Request Form -->
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="pub_calc_title">03 / Bảng Tính & Báo Giá Sync Bản Quyền</h2>
+          <p style="font-size: 14px; opacity: 0.8; margin: 4px 0 0;" data-i18n="pub_calc_subtitle">Ước tính chi phí cấp phép tự động và gửi đề xuất xin quyền trực tiếp.</p>
+        </div>
+        <span class="kicker">Instant Quote</span>
+      </div>
+
+      <div class="calc-box">
+        <form id="sync-quote-form">
+          <div class="field" style="margin-bottom: 16px;">
+            <label style="font-weight: 700;" data-i18n="pub_form_song">1. Ca khúc muốn cấp phép sử dụng *</label>
+            <input id="sync-song-input" required placeholder="Ví dụ: Vệt Sáng - Lumi" value="Vệt Sáng - Lumi" style="padding: 12px; font-size: 15px; font-weight: bold;">
+          </div>
+
+          <div class="mini-grid" style="margin-bottom: 16px;">
+            <div class="field">
+              <label data-i18n="pub_form_usage">2. Loại hình sử dụng (Usage Media) *</label>
+              <select id="sync-media-type" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="15000000" data-label="TVC / Quảng cáo Thương mại (Commercial)">TVC / Quảng cáo Thương mại (Commercial)</option>
+                <option value="10000000" data-label="Phim Điện ảnh / Chiếu rạp (Feature Film)">Phim Điện ảnh / Chiếu rạp (Feature Film)</option>
+                <option value="6000000" data-label="Phim Truyền hình / Web-Drama / Series">Phim Truyền hình / Web-Drama / Series</option>
+                <option value="4000000" data-label="Game / Trò chơi điện tử (Gaming App)">Game / Trò chơi điện tử (Gaming App)</option>
+                <option value="2500000" selected data-label="Video Trực tuyến / YouTube / TikTok Creator">Video Trực tuyến / YouTube / TikTok Creator</option>
+                <option value="5000000" data-label="Sự kiện Trực tiếp / Fashion Show / Triển lãm">Sự kiện Trực tiếp / Fashion Show / Triển lãm</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label data-i18n="pub_form_territory">3. Phạm vi lãnh thổ (Territory) *</label>
+              <select id="sync-territory" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="1" selected>Việt Nam</option>
+                <option value="1.5">Khu vực Đông Nam Á / Châu Á</option>
+                <option value="2.2">Toàn cầu (Worldwide)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mini-grid" style="margin-bottom: 20px;">
+            <div class="field">
+              <label data-i18n="pub_form_term">4. Thời hạn cấp quyền (License Term) *</label>
+              <select id="sync-term" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="1" selected>1 Năm (1 Year)</option>
+                <option value="1.6">2 Năm (2 Years)</option>
+                <option value="2.5">5 Năm (5 Years)</option>
+                <option value="3.5">Vĩnh viễn (In Perpetuity)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label data-i18n="pub_form_excl">5. Tính chất độc quyền (Exclusivity)</label>
+              <select id="sync-exclusivity" style="padding: 10px; font-size: 13px; background: #fff;">
+                <option value="1" selected>Không độc quyền (Non-Exclusive)</option>
+                <option value="2.0">Độc quyền ngành hàng (Category Exclusive)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Estimated Quote Display -->
+          <div style="background: #0f172a; color: #fff; padding: 20px 24px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+            <div>
+              <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #60a5fa; font-family: 'DM Mono', monospace;" data-i18n="pub_est_fee">Ước tính phí bản quyền (Sync Fee)</span>
+              <h3 id="sync-estimated-price" style="margin: 4px 0 0; font-size: 32px; font-weight: 800; letter-spacing: -0.04em; color: #fff;">₫ 2,500,000</h3>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8; text-align: right;">
+              <span>Bao gồm Master Recording + Publishing Rights</span><br>
+              <small>Có hợp đồng cấp phép điện tử & hóa đơn VAT</small>
+            </div>
+          </div>
+
+          <!-- Contact Details to Submit -->
+          <div class="mini-grid" style="margin-bottom: 16px;">
+            <div class="field">
+              <label data-i18n="pub_form_name">Họ tên người đại diện / Đơn vị mua bản quyền *</label>
+              <input id="sync-client-name" required placeholder="Ví dụ: Nguyễn Văn A (Agency XYZ)">
+            </div>
+            <div class="field">
+              <label data-i18n="pub_form_email">Email liên hệ nhận hợp đồng *</label>
+              <input id="sync-client-email" type="email" required placeholder="producer@agency.com">
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom: 20px;">
+            <label data-i18n="pub_form_desc">Mô tả dự án / Kịch bản sử dụng</label>
+            <textarea id="sync-project-desc" rows="3" placeholder="Mô tả phân đoạn xuất hiện của bài hát, tên phim, TVC hoặc kênh phát sóng..."></textarea>
+          </div>
+
+          <button type="submit" class="button" style="width: 100%; padding: 14px; font-size: 14px; font-weight: 800; background: #2563eb; color: #fff; border-color: #2563eb;" data-i18n="pub_btn_submit">
+            📄 Gửi Yêu Cầu Cấp Phép & Nhận Dự Thảo Hợp Đồng
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 04: Publishing Administration for Songwriters -->
+    <section class="statement" style="text-align: left; padding: 60px 4vw; background: #f8fafc; border-top: 1px solid var(--ink, #111); border-bottom: 1px solid var(--ink, #111);">
+      <span class="eyebrow" style="color: #2563eb;">For Songwriters & Producers</span>
+      <h2 style="font-size: 28px; margin: 8px 0 14px; letter-spacing: -0.04em;" data-i18n="pub_writer_title">Bạn là Nhạc sĩ hoặc Producer sáng tác ca khúc?</h2>
+      <p style="font-size: 15px; line-height: 1.7; max-width: 800px; color: #334155;" data-i18n="pub_writer_desc">
+        UniPUBLISHING bảo vệ tác quyền toàn cầu, thu thập đầy đủ <strong>Performance Royalties</strong> (từ đài truyền hình, radio, sự kiện trực tiếp), <strong>Mechanical Royalties</strong> (từ streaming Spotify/Apple Music), và phân phối trực tiếp về ví của bạn với tỷ lệ minh bạch 100%.
+      </p>
+      <a href="contact" class="button" style="margin-top: 14px; display: inline-block;" data-i18n="pub_btn_contact">Đăng ký Quản trị Tác quyền →</a>
+    </section>
   </main>
-  <script type="module" src="assets/login.js"></script>
+
+  <script type="module" src="assets/app.js"></script>
+  <script>
+    window.selectSyncTrack = function(trackName) {
+      const input = document.querySelector('#sync-song-input');
+      if (input) {
+        input.value = trackName;
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+      }
+    };
+
+    // Calculate Sync Fee Live
+    function updateSyncPrice() {
+      const mediaVal = parseFloat(document.querySelector('#sync-media-type')?.value || '2500000');
+      const territoryMul = parseFloat(document.querySelector('#sync-territory')?.value || '1');
+      const termMul = parseFloat(document.querySelector('#sync-term')?.value || '1');
+      const exclMul = parseFloat(document.querySelector('#sync-exclusivity')?.value || '1');
+
+      const total = Math.round(mediaVal * territoryMul * termMul * exclMul);
+      const display = document.querySelector('#sync-estimated-price');
+      if (display) {
+        display.textContent = `₫ ${total.toLocaleString('vi-VN')}`;
+      }
+    }
+
+    document.querySelectorAll('#sync-media-type, #sync-territory, #sync-term, #sync-exclusivity').forEach(el => {
+      el?.addEventListener('change', updateSyncPrice);
+    });
+
+    document.querySelector('#sync-quote-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const song = document.querySelector('#sync-song-input')?.value;
+      const client = document.querySelector('#sync-client-name')?.value;
+      const email = document.querySelector('#sync-client-email')?.value;
+      const price = document.querySelector('#sync-estimated-price')?.textContent;
+
+      alert(`✓ Yêu cầu cấp phép cho tác phẩm "${song}" của bạn đã được tiếp nhận!\n\nĐại diện: ${client} (${email})\nPhí dự tính: ${price}\n\nĐội ngũ UniPUBLISHING sẽ gửi bản thảo hợp đồng và thông tin thanh toán qua email của bạn trong vòng 2-4 giờ làm việc.`);
+    });
+  </script>
 </body>
 </html>

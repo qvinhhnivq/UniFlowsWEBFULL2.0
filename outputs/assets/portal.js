@@ -1,5 +1,6 @@
 import { getData, saveData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
+import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 
 // Kiểm tra quyền đăng nhập
 const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
@@ -464,6 +465,72 @@ audioFileInput?.addEventListener('change', (e) => {
   }
 });
 
+function inspectArtworkImage(source, fileObj = null) {
+  const container = document.querySelector('#artwork-inspect-container');
+  const details = document.querySelector('#art-inspect-details');
+  const statusBadge = document.querySelector('#art-status-badge');
+  if (!container || !details || !statusBadge) return;
+
+  const img = new Image();
+  img.onload = () => {
+    container.style.display = 'block';
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    const isSquare = Math.abs(w - h) <= 2;
+    const isOptimalRes = w >= 3000 && h >= 3000;
+    const isMinRes = w >= 1400 && h >= 1400;
+    const fileSizeMB = fileObj ? (fileObj.size / (1024 * 1024)).toFixed(2) : null;
+    const formatName = fileObj ? fileObj.type.split('/')[1]?.toUpperCase() : (source.startsWith('data:image/') ? source.substring(11, source.indexOf(';')).toUpperCase() : 'JPG/PNG');
+
+    const allGood = isSquare && isMinRes;
+
+    let html = '';
+
+    // 1. Aspect ratio check
+    if (isSquare) {
+      html += `<div style="display:flex;align-items:center;gap:6px;color:#16a34a;"><span>✓</span> <b>Tỷ lệ khung hình:</b> Chuẩn vuông 1:1 (${w} × ${h} px)</div>`;
+    } else {
+      html += `<div style="display:flex;align-items:center;gap:6px;color:#dc2626;"><span>✕</span> <b>Tỷ lệ khung hình:</b> Không vuông (${w} × ${h} px) — DSPs bắt buộc hình vuông 1:1!</div>`;
+    }
+
+    // 2. Resolution check
+    if (isOptimalRes) {
+      html += `<div style="display:flex;align-items:center;gap:6px;color:#16a34a;"><span>✓</span> <b>Độ phân giải:</b> Đạt chuẩn tối ưu (${w}px ≥ 3000px)</div>`;
+    } else if (isMinRes) {
+      html += `<div style="display:flex;align-items:center;gap:6px;color:#d97706;"><span>⚠️</span> <b>Độ phân giải:</b> ${w} × ${h} px (Đạt tối thiểu 1400px, khuyến nghị nâng lên 3000px)</div>`;
+    } else {
+      html += `<div style="display:flex;align-items:center;gap:6px;color:#dc2626;"><span>✕</span> <b>Độ phân giải:</b> ${w} × ${h} px (Quá nhỏ, bắt buộc tối thiểu 1400 × 1400 px)</div>`;
+    }
+
+    // 3. File details
+    if (fileSizeMB) {
+      html += `<div style="display:flex;align-items:center;gap:6px;color:#475569;"><span>ℹ️</span> <b>Định dạng & Dung lượng:</b> ${formatName} · ${fileSizeMB} MB</div>`;
+    }
+
+    details.innerHTML = html;
+
+    if (allGood) {
+      statusBadge.textContent = 'DSP READY (ĐẠT CHUẨN)';
+      statusBadge.style.background = '#ecfdf5';
+      statusBadge.style.color = '#047857';
+      statusBadge.style.borderColor = '#a7f3d0';
+    } else {
+      statusBadge.textContent = 'CẦN ĐIỀU CHỈNH';
+      statusBadge.style.background = '#fef2f2';
+      statusBadge.style.color = '#991b1b';
+      statusBadge.style.borderColor = '#fecaca';
+    }
+  };
+  img.onerror = () => {
+    container.style.display = 'block';
+    details.innerHTML = '<div style="color:#dc2626;"><span>✕</span> Không thể đọc được file ảnh. Vui lòng kiểm tra lại định dạng.</div>';
+    statusBadge.textContent = 'LỖI FILE';
+    statusBadge.style.background = '#fef2f2';
+    statusBadge.style.color = '#991b1b';
+  };
+  img.src = source;
+}
+
 artworkFileInput?.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -483,6 +550,9 @@ artworkFileInput?.addEventListener('change', (e) => {
       }
       if (artDropContent) artDropContent.style.display = 'none';
       if (mockArt) mockArt.src = artUrl;
+
+      // Run real-time quality inspection
+      inspectArtworkImage(artUrl, file);
     };
     reader.readAsDataURL(file);
   }
@@ -501,6 +571,9 @@ artUrlInput?.addEventListener('input', (e) => {
     }
     if (artDropContent) artDropContent.style.display = 'none';
     if (mockArt) mockArt.src = url;
+
+    // Run real-time quality inspection
+    inspectArtworkImage(url);
   }
 });
 
@@ -2254,9 +2327,228 @@ document.querySelector('#print-epk-btn')?.addEventListener('click', () => {
   location.reload();
 });
 
+// ====================================================
+// CATALOG MIGRATION & GRANULAR TAKEDOWN WIZARD
+// ====================================================
+const migrationDialog = document.querySelector('#migration-wizard-dialog');
+const openMigrationBtn = document.querySelector('#open-migration-wizard-btn');
+const closeMigrationBtn = document.querySelector('#close-mig-dialog-btn');
+const closeMigrationBtn2 = document.querySelector('#close-mig-dialog-btn-2');
+const migTabIngestBtn = document.querySelector('#mig-tab-btn-ingest');
+const migTabTakedownBtn = document.querySelector('#mig-tab-btn-takedown');
+const migPanelIngest = document.querySelector('#mig-panel-ingest');
+const migPanelTakedown = document.querySelector('#mig-panel-takedown');
+const migIngestForm = document.querySelector('#mig-ingest-form');
+const migTakedownForm = document.querySelector('#mig-takedown-form');
+const exportMetaBtn = document.querySelector('#export-metadata-json-btn');
+
+openMigrationBtn?.addEventListener('click', () => {
+  const select = document.querySelector('#mig-takedown-release-select');
+  if (select) {
+    const products = cachedFetchedReleases || artist.products || [];
+    if (products.length === 0) {
+      select.innerHTML = '<option value="">(Chưa có tác phẩm nào trong catalogue)</option>';
+    } else {
+      select.innerHTML = products.map(p => `<option value="${esc(p.id || p.slug || p.title)}">${esc(p.title)} (${esc(p.type || 'Single')})</option>`).join('');
+    }
+  }
+  migrationDialog?.showModal();
+});
+
+closeMigrationBtn?.addEventListener('click', () => migrationDialog?.close());
+closeMigrationBtn2?.addEventListener('click', () => migrationDialog?.close());
+
+migTabIngestBtn?.addEventListener('click', () => {
+  migTabIngestBtn.classList.add('active');
+  migTabTakedownBtn?.classList.remove('active');
+  if (migPanelIngest) migPanelIngest.style.display = 'block';
+  if (migPanelTakedown) migPanelTakedown.style.display = 'none';
+});
+
+migTabTakedownBtn?.addEventListener('click', () => {
+  migTabTakedownBtn.classList.add('active');
+  migTabIngestBtn?.classList.remove('active');
+  if (migPanelIngest) migPanelIngest.style.display = 'none';
+  if (migPanelTakedown) migPanelTakedown.style.display = 'block';
+});
+
+migIngestForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = document.querySelector('#mig-song-title')?.value.trim();
+  const isrc = document.querySelector('#mig-isrc-code')?.value.trim();
+  const upc = document.querySelector('#mig-upc-code')?.value.trim();
+  const date = document.querySelector('#mig-orig-date')?.value;
+  const distro = document.querySelector('#mig-old-distro')?.value;
+  const spotifyUrl = document.querySelector('#mig-spotify-url')?.value.trim();
+
+  const newMigrated = {
+    title,
+    type: `Single (Chuyển giao từ ${distro})`,
+    slug: slug(title),
+    submissionStatus: 'Đang chờ UniFLOWs duyệt (Chuyển giao ISRC)',
+    releaseDate: date,
+    links: { spotify: spotifyUrl || '#' },
+    metadata: {
+      isrc,
+      upc,
+      originalDistributor: distro,
+      originalReleaseDate: date,
+      isMigrated: true,
+      spotifyTrackUri: spotifyUrl
+    }
+  };
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('releases').insert({
+        artist_id: currentArtistId,
+        title,
+        type: `Single (Chuyển giao từ ${distro})`,
+        release_date: date,
+        slug: slug(title),
+        upc: isrc,
+        links: { spotify: spotifyUrl || '#' },
+        submission_status: 'Đang chờ UniFLOWs duyệt (Chuyển giao ISRC)',
+        metadata: newMigrated.metadata
+      });
+    } catch (err) {
+      console.warn('Lưu Supabase chuyển giao lỗi:', err);
+    }
+  }
+
+  if (!artist.products) artist.products = [];
+  artist.products.unshift(newMigrated);
+  await saveData(data);
+
+  alert(`✓ Đã tiếp nhận hồ sơ chuyển giao tác phẩm "${title}" (ISRC: ${isrc}) từ ${distro}!\n\nUniFLOWs sẽ cấu hình Delivery Engine để giữ nguyên 100% lượt stream và playlist trên Spotify & Apple Music.`);
+  migrationDialog?.close();
+  migIngestForm.reset();
+  await renderReleases();
+});
+
+migTakedownForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const relId = document.querySelector('#mig-takedown-release-select')?.value;
+  const reason = document.querySelector('#mig-takedown-reason')?.value;
+  const checkboxes = Array.from(document.querySelectorAll('input[name="dsp_takedown"]:checked')).map(cb => cb.value);
+
+  const statusText = `Yêu cầu gỡ: [${checkboxes.join(', ')}] - ${reason}`;
+
+  if (isSupabaseConfigured() && relId) {
+    try {
+      await supabase.from('releases').update({
+        submission_status: statusText
+      }).eq('id', relId);
+    } catch {}
+  }
+
+  const item = (artist.products || []).find(p => p.id === relId || p.slug === relId);
+  if (item) {
+    item.submissionStatus = statusText;
+    await saveData(data);
+  }
+
+  alert(`✓ Đã gửi lệnh gỡ bài hát khỏi [${checkboxes.join(', ')}] tới Admin của UniFLOWs với lý do: "${reason}".`);
+  migrationDialog?.close();
+  await renderReleases();
+});
+
+exportMetaBtn?.addEventListener('click', () => {
+  const metaBackup = {
+    artist: artist.name,
+    artistId: artist.id,
+    generatedAt: new Date().toISOString(),
+    catalog: cachedFetchedReleases || artist.products || []
+  };
+  const blob = new Blob([JSON.stringify(metaBackup, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `UniFLOWs_Metadata_Backup_${artist.id}_${Date.now()}.json`;
+  a.click();
+});
+
+// ====================================================
+// PORTAL LANGUAGE TOGGLE & TRANSLATION SYSTEM
+// ====================================================
+function initPortalLanguage() {
+  const langBtn = document.querySelector('#portal-lang-toggle-btn');
+  if (!langBtn) return;
+
+  function updatePortalLanguageUI(lang) {
+    const isEn = lang === 'en';
+    const flagEl = langBtn.querySelector('.lang-flag');
+    const textEl = langBtn.querySelector('.lang-text');
+    if (flagEl) flagEl.textContent = isEn ? '🇬🇧' : '🇻🇳';
+    if (textEl) textEl.textContent = isEn ? 'English' : 'Tiếng Việt';
+
+    applyTranslations(lang);
+  }
+
+  updatePortalLanguageUI(getCurrentLang());
+
+  langBtn.addEventListener('click', () => {
+    const current = getCurrentLang();
+    const next = current === 'vi' ? 'en' : 'vi';
+    setLang(next);
+    updatePortalLanguageUI(next);
+  });
+}
+
+// ====================================================
+// ARTIST PUBLISHING & SYNC REVENUE LEDGER
+// ====================================================
+function renderArtistPublishingEarnings() {
+  const pubRevEl = document.querySelector('#artist-publishing-revenue-display');
+  const badgeEl = document.querySelector('#publishing-contracts-badge');
+  const listEl = document.querySelector('#artist-publishing-contracts-list');
+  if (!pubRevEl || !listEl) return;
+
+  const contracts = artist.publishingContracts || [];
+  const pubRev = parseInt(String(artist.publishingRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
+
+  pubRevEl.textContent = `₫ ${pubRev.toLocaleString('vi-VN')}`;
+  if (badgeEl) badgeEl.textContent = `${contracts.length} Hợp đồng đã cấp phép`;
+
+  if (contracts.length === 0) {
+    listEl.innerHTML = `<p class="empty" style="font-size:13px;padding:16px;background:rgba(255,255,255,0.05);border:1px dashed rgba(255,255,255,0.2);border-radius:10px;color:#94a3b8;">Chưa có hợp đồng cấp phép Sync phát sinh trong kỳ này. Khi các tác phẩm của bạn được cấp phép sử dụng cho Phim hoặc TVC, khoản thanh toán sẽ tự động hiển thị tại đây.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = `
+    <div style="border:1px solid rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;background:rgba(0,0,0,0.2);">
+      <div style="display:grid;grid-template-columns:120px 1.8fr 1.5fr 1fr 1fr 140px;background:rgba(255,255,255,0.08);padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;color:#94a3b8;font-family:'DM Mono',monospace;">
+        <span>Ngày cấp phép</span>
+        <span>Tác phẩm & Đơn vị mua</span>
+        <span>Loại hình & Thời hạn</span>
+        <span>Tổng phí Sync</span>
+        <span>Tỷ lệ Split</span>
+        <span>Thực nhận</span>
+      </div>
+      ${contracts.map(c => `
+        <div style="display:grid;grid-template-columns:120px 1.8fr 1.5fr 1fr 1fr 140px;padding:14px;border-top:1px solid rgba(255,255,255,0.08);font-size:13px;align-items:center;">
+          <span style="font-family:'DM Mono',monospace;color:#94a3b8;font-size:12px;">${esc(c.licensedDate || 'Gần đây')}</span>
+          <div>
+            <strong style="color:#fff;font-size:14px;display:block;">${esc(c.trackTitle)}</strong>
+            <span style="font-size:12px;color:#94a3b8;">${esc(c.client)}</span>
+          </div>
+          <div>
+            <span style="font-size:12px;color:#38bdf8;">${esc(c.mediaType)}</span>
+            <small style="display:block;color:#94a3b8;margin-top:2px;">${esc(c.territory || 'Việt Nam')} · ${esc(c.term || '1 Năm')}</small>
+          </div>
+          <span style="font-family:'DM Mono',monospace;color:#cbd5e1;">₫ ${(c.totalFee || 0).toLocaleString('vi-VN')}</span>
+          <b style="font-family:'DM Mono',monospace;color:#818cf8;">${c.artistSplitPct || 75}%</b>
+          <b style="font-family:'DM Mono',monospace;color:#34d399;font-size:14px;">₫ ${(c.artistEarning || 0).toLocaleString('vi-VN')}</b>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
 initPortalTheme();
+initPortalLanguage();
 renderReleases();
 loadArtistPayouts();
+renderArtistPublishingEarnings();
 loadArtistServiceRequests();
 initNotifications();
 renderReleaseCalendar();

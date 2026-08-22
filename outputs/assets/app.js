@@ -1,4 +1,5 @@
 import { getData, getLocalCachedData } from './data.js';
+import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 
 let data = getLocalCachedData();
 const $ = (s, r = document) => r.querySelector(s);
@@ -24,11 +25,13 @@ if (!$('.nav')) {
       <a href="index" class="brand">UNIFLOWs<small>label / est. 2024</small></a>
       <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
       <nav class="nav-links">
-        <a href="artists">Nghệ sĩ</a>
-        <a href="about">Về chúng tôi</a>
-        <a href="news">Tạp chí</a>
-        <a href="contact">Liên hệ</a>
-        <a class="artist-login-link" href="artist-login">Artist login ↗</a>
+        <a href="artists" data-i18n="nav_artists">Nghệ sĩ</a>
+        <a href="about" data-i18n="nav_about">Về chúng tôi</a>
+        <a href="news" data-i18n="nav_news">Tạp chí</a>
+        <a href="unipublishing" data-i18n="nav_publishing" style="color:#2563eb;font-weight:700;">UniPUBLISHING 🎬</a>
+        <a href="contact" data-i18n="nav_contact">Liên hệ</a>
+        <button type="button" class="lang-toggle-btn button alt" style="padding:4px 10px;font-size:11px;border-radius:20px;cursor:pointer;margin-left:4px;box-shadow:none;">🇬🇧 English</button>
+        <a class="artist-login-link" href="artist-login" data-i18n="nav_artist_login">Artist login ↗</a>
       </nav>
     </header>
   `);
@@ -374,9 +377,19 @@ function renderAll() {
   artistDetail();
   articleDetail();
   smartPage();
+  applyTranslations();
 }
 
 renderAll();
+
+document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
+  btn.onclick = () => {
+    const current = getCurrentLang();
+    const next = current === 'vi' ? 'en' : 'vi';
+    setLang(next);
+    renderAll();
+  };
+});
 
 getData().then(liveData => {
   data = liveData;

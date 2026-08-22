@@ -34,6 +34,36 @@ export const defaultData = {
       monthlyStreams: '248.6K',
       estimatedRevenue: '18,400,000',
       payableBalance: '12,750,000',
+      publishingRevenue: '8,500,000',
+      publishingRoyaltyRate: '75%',
+      publishingContracts: [
+        {
+          id: 'sync-contract-1',
+          trackTitle: 'Vệt Sáng',
+          client: 'VTV / Đạo diễn Nguyễn Hà (Web Series “Ánh Đèn Đêm”)',
+          mediaType: 'Phim Truyền hình / Web-Drama',
+          territory: 'Việt Nam',
+          term: '2 Năm (2 Years)',
+          totalFee: 6000000,
+          artistSplitPct: 75,
+          artistEarning: 4500000,
+          status: 'Đã cấp phép & Đã thanh toán',
+          licensedDate: '15/08/2026'
+        },
+        {
+          id: 'sync-contract-2',
+          trackTitle: 'Live at The Flow',
+          client: 'Sun Life Vietnam (Fashion & Art Exhibition Event)',
+          mediaType: 'Sự kiện Trực tiếp / Triển lãm',
+          territory: 'Việt Nam',
+          term: '1 Năm (1 Year)',
+          totalFee: 5000000,
+          artistSplitPct: 80,
+          artistEarning: 4000000,
+          status: 'Đã cấp phép & Đã thanh toán',
+          licensedDate: '18/08/2026'
+        }
+      ],
       spotifyStreams: '150,000',
       spotifyRevenue: '10,500,000',
       appleStreams: '60,000',
@@ -139,7 +169,98 @@ export const defaultData = {
       body: 'Chúng tôi tìm kiếm những người làm nhạc tò mò, có gu riêng và sẵn sàng tạo ra điều khác biệt cùng nghệ sĩ của UniFLOWs.',
       published: true
     }
-  ]
+  ],
+  publishing: {
+    basePrices: {
+      commercial: 15000000,
+      film: 10000000,
+      series: 6000000,
+      gaming: 4000000,
+      creator: 2500000,
+      event: 5000000
+    },
+    bundleDiscounts: {
+      b10: { count: 10, discountPct: 15, name: 'Gói Mini Sync (10 bài - Giảm 15%)' },
+      b15: { count: 15, discountPct: 25, name: 'Gói Pro Film (15 bài - Giảm 25%)' },
+      b20: { count: 20, discountPct: 35, name: 'Gói Agency Master (20 bài - Giảm 35%)' },
+      full: { discountPct: 50, name: 'Cấp phép Toàn bộ Catalogue (Full Catalog License - Giảm 50%)' }
+    },
+    terms: 'Bao gồm Master Recording + Publishing Rights (100% Pre-cleared). Cấp phép sử dụng cho toàn cầu, bao gồm giấy phép điện tử và hóa đơn tài chính.',
+    customTracks: [
+      {
+        id: 'pub-ext-1',
+        title: 'Vệt Sáng',
+        artist: 'Lumi',
+        genre: 'Alternative R&B',
+        mood: 'Dreamy · Nocturnal · Cinematic',
+        bpm: '92 BPM · E Minor',
+        audioUrl: '',
+        isExternal: false,
+        enabled: true
+      },
+      {
+        id: 'pub-ext-2',
+        title: 'Dải Tần',
+        artist: 'MONO//TONE',
+        genre: 'Future Pop',
+        mood: 'Energetic · Neon · Modern',
+        bpm: '124 BPM · A Major',
+        audioUrl: '',
+        isExternal: false,
+        enabled: true
+      },
+      {
+        id: 'pub-ext-3',
+        title: 'Đường Đua',
+        artist: 'KAII',
+        genre: 'Hip-hop / Rap',
+        mood: 'Bold · Aggressive · Action',
+        bpm: '140 BPM · C Minor',
+        audioUrl: '',
+        isExternal: false,
+        enabled: true
+      },
+      {
+        id: 'pub-ext-4',
+        title: 'Live at The Flow (Visual Session)',
+        artist: 'Lumi',
+        genre: 'Acoustic / Soul',
+        mood: 'Warm · Intimate · Deep',
+        bpm: '78 BPM · D Minor',
+        audioUrl: '',
+        isExternal: false,
+        enabled: true
+      }
+    ],
+    syncLicenseRequests: [
+      {
+        id: 'sync-req-101',
+        trackTitle: 'Vệt Sáng',
+        artistName: 'Lumi',
+        clientName: 'Galaxy Studio / Phim “Chuyến Tàu Đêm”',
+        clientEmail: 'producer@galaxystudio.vn',
+        mediaType: 'Phim Điện ảnh / Chiếu rạp',
+        territory: 'Toàn cầu (Worldwide)',
+        term: 'Vĩnh viễn (In Perpetuity)',
+        totalFee: 22000000,
+        status: 'Chờ xét duyệt',
+        requestedDate: '22/08/2026'
+      },
+      {
+        id: 'sync-req-102',
+        trackTitle: 'Đường Đua',
+        artistName: 'KAII',
+        clientName: 'Ogilvy Vietnam (TVC Honda Winner X)',
+        clientEmail: 'licensing@ogilvy.vn',
+        mediaType: 'TVC / Quảng cáo Thương mại',
+        territory: 'Việt Nam',
+        term: '1 Năm (1 Year)',
+        totalFee: 15000000,
+        status: 'Chờ xét duyệt',
+        requestedDate: '22/08/2026'
+      }
+    ]
+  }
 };
 
 export function getLocalCachedData() {
@@ -202,6 +323,15 @@ export async function getData() {
         merged.announcements = defaultData.announcements;
       }
 
+      // Parse publishing data
+      if (settings.publishing && typeof settings.publishing === 'object') {
+        merged.publishing = settings.publishing;
+      } else if (cached.publishing && typeof cached.publishing === 'object') {
+        merged.publishing = cached.publishing;
+      } else {
+        merged.publishing = defaultData.publishing;
+      }
+
       merged.city = settings.city || merged.city;
     }
 
@@ -225,6 +355,9 @@ export async function getData() {
           monthlyStreams: a.monthly_streams !== undefined ? a.monthly_streams : (localCachedArtist.monthlyStreams || '0'),
           estimatedRevenue: a.estimated_revenue !== undefined ? a.estimated_revenue : (localCachedArtist.estimatedRevenue || '0'),
           payableBalance: a.payable_balance !== undefined ? a.payable_balance : (localCachedArtist.payableBalance || '0'),
+          publishingRevenue: stats.publishingRevenue || localCachedArtist.publishingRevenue || '0',
+          publishingRoyaltyRate: stats.publishingRoyaltyRate || localCachedArtist.publishingRoyaltyRate || '75%',
+          publishingContracts: Array.isArray(stats.publishingContracts) ? stats.publishingContracts : (localCachedArtist.publishingContracts || []),
           payoutCycle: a.payout_cycle || stats.payoutCycle || localCachedArtist.payoutCycle || 'Hàng tháng (Monthly)',
           royaltyRate: a.royalty_rate || stats.royaltyRate || localCachedArtist.royaltyRate || '80% Master',
           contractTerm: a.contract_term || stats.contractTerm || localCachedArtist.contractTerm || '2024 - 2027',
@@ -300,6 +433,7 @@ export async function saveData(data) {
       email: data.email,
       emails: data.emails || defaultData.emails,
       announcements: data.announcements || defaultData.announcements,
+      publishing: data.publishing || defaultData.publishing,
       city: data.city,
       updated_at: new Date().toISOString()
     };
@@ -308,6 +442,7 @@ export async function saveData(data) {
     if (settingsError) {
       delete settingsPayload.announcements;
       delete settingsPayload.emails;
+      delete settingsPayload.publishing;
       await supabase.from('site_settings').upsert(settingsPayload);
     }
 
@@ -320,6 +455,9 @@ export async function saveData(data) {
         payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
         royaltyRate: a.royaltyRate || '80% Master',
         contractTerm: a.contractTerm || '2024 - 2027',
+        publishingRevenue: a.publishingRevenue || '0',
+        publishingRoyaltyRate: a.publishingRoyaltyRate || '75%',
+        publishingContracts: a.publishingContracts || [],
         spotifyStreams: a.spotifyStreams || '0',
         spotifyRevenue: a.spotifyRevenue || '0',
         appleStreams: a.appleStreams || '0',
