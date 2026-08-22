@@ -1113,15 +1113,15 @@ dialog textarea {
 }
 
 /* ===================================================
-   COMPACT MONOX BORDERLESS GRADIENT BREATHING CURSOR
+   EXPANDED MONOX BORDERLESS GRADIENT BREATHING CURSOR
    =================================================== */
 @media (hover: hover) and (pointer: fine) {
   .uniflows-cursor-dot {
     position: fixed;
     top: 0;
     left: 0;
-    width: 3.5px;
-    height: 3.5px;
+    width: 4px;
+    height: 4px;
     background: #ffffff;
     border-radius: 50%;
     pointer-events: none;
@@ -1134,8 +1134,8 @@ dialog textarea {
     position: fixed;
     top: 0;
     left: 0;
-    width: 26px;
-    height: 26px;
+    width: 88px;
+    height: 88px;
     pointer-events: none;
     z-index: 999998;
     transform: translate(-50%, -50%);
@@ -1144,7 +1144,7 @@ dialog textarea {
     align-items: center;
     justify-content: center;
     mix-blend-mode: difference;
-    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
   /* Seamless multi-layer breathing density field (Hoàn toàn không có line / viền phân tách) */
   .uniflows-cursor-aura .ring {
@@ -1159,62 +1159,62 @@ dialog textarea {
   
   /* Lớp 1: Lõi đậm nhất ở tâm (Dense Core) */
   .uniflows-cursor-aura .ring-core {
-    width: 42%;
-    height: 42%;
-    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.85) 100%);
-    filter: blur(0.5px);
+    width: 24%;
+    height: 24%;
+    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.85) 60%, transparent 100%);
+    filter: blur(1.5px);
     animation: smoothBreathCore 2.4s infinite ease-in-out;
   }
 
   /* Lớp 2: Chuyển tiếp độ đậm trung gian (Mid Density Fade) */
   .uniflows-cursor-aura .ring-1 {
-    width: 72%;
-    height: 72%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.25) 75%, transparent 100%);
-    filter: blur(1.5px);
-    animation: smoothBreathMid 3.0s infinite 0.2s ease-in-out;
+    width: 58%;
+    height: 58%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.18) 65%, transparent 100%);
+    filter: blur(4px);
+    animation: smoothBreathMid 3.2s infinite 0.2s ease-in-out;
   }
 
-  /* Lớp 3: Khí quyển mờ dần hòa tan ra nền (Atmosphere Fade Out) */
+  /* Lớp 3: Khí quyển mờ dần lan tỏa rộng ra ngoài (Atmosphere Fade Out) */
   .uniflows-cursor-aura .ring-outer {
-    width: 120%;
-    height: 120%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.08) 60%, transparent 100%);
-    filter: blur(3px);
-    animation: smoothBreathOuter 3.8s infinite 0.4s ease-in-out;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 60%, transparent 100%);
+    filter: blur(8px);
+    animation: smoothBreathOuter 4.2s infinite 0.4s ease-in-out;
   }
 
-  /* Hover State: Nở rộng êm ái sang 40px */
+  /* Hover State: Mở rộng cực đại 136px */
   body.cursor-hover .uniflows-cursor-dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   body.cursor-hover .uniflows-cursor-aura {
-    width: 42px;
-    height: 42px;
+    width: 136px;
+    height: 136px;
   }
   body.cursor-hover .uniflows-cursor-aura .ring-core {
-    width: 48%;
-    height: 48%;
-    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%);
-    filter: blur(1px);
-  }
-  body.cursor-hover .uniflows-cursor-aura .ring-1 {
-    width: 78%;
-    height: 78%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 75%, transparent 100%);
+    width: 28%;
+    height: 28%;
+    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.9) 65%, transparent 100%);
     filter: blur(2px);
   }
+  body.cursor-hover .uniflows-cursor-aura .ring-1 {
+    width: 65%;
+    height: 65%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.25) 65%, transparent 100%);
+    filter: blur(6px);
+  }
   body.cursor-hover .uniflows-cursor-aura .ring-outer {
-    width: 130%;
-    height: 130%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.1) 65%, transparent 100%);
-    filter: blur(4px);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.08) 60%, transparent 100%);
+    filter: blur(12px);
   }
 
-  /* Active Click State: Thu gọn nhanh dứt khoát */
+  /* Active Click State: Co lại dứt khoát */
   body.cursor-active .uniflows-cursor-aura {
-    transform: translate(-50%, -50%) scale(0.72);
+    transform: translate(-50%, -50%) scale(0.75);
   }
 }
 
