@@ -338,11 +338,37 @@ const artistEditor = (a, idx) => {
       </div>
     </div>
 
+    <!-- 02: Login Credentials & Security Vault -->
+    <div style="background:#f0fdf4;border:1px solid #86efac;padding:15px;margin-bottom:15px;border-radius:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <h4 style="margin:0;font-size:13px;text-transform:uppercase;color:#166534;">🔑 Thông Tin Đăng Nhập & Mật Khẩu Portal</h4>
+        <button type="button" class="btn-export-artist-handover button" data-artist-idx="${idx}" style="background:#16a34a;color:#fff;border-color:#16a34a;padding:5px 12px;font-size:11px;font-weight:bold;">
+          📋 Xuất Phiếu Bàn Giao Tài Khoản
+        </button>
+      </div>
+      <div class="mini-grid">
+        <div class="field">
+          <label style="color:#166534;font-weight:bold;">Tên đăng nhập (Username)</label>
+          <input data-key="username" value="${esc(a.username || a.id)}" placeholder="Ví dụ: lumi.artist">
+        </div>
+        <div class="field">
+          <label style="color:#166534;font-weight:bold;">Email liên kết đăng nhập</label>
+          <input data-key="email" value="${esc(a.email || '')}" placeholder="artist@uniflowslabel.com">
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label style="color:#166534;font-weight:bold;margin:0;">Mật khẩu đăng nhập Portal</label>
+            <span style="font-size:11px;color:#15803d;">Admin có thể đổi mật khẩu trực tiếp tại đây bất cứ lúc nào</span>
+          </div>
+          <input data-key="password" type="text" value="${esc(a.password || (a.name ? `${a.name}@2026` : 'Uniflows@2026'))}" style="font-family:'DM Mono',monospace;font-weight:bold;color:#14532d;background:#fff;border:1px solid #86efac;padding:10px;">
+        </div>
+      </div>
+    </div>
+
     <div class="mini-grid">
       <div class="field"><label>Tên nghệ sĩ / Tên người dùng</label><input data-key="name" value="${esc(a.name)}" required></div>
       <div class="field"><label>ID hệ thống (Slug cố định)</label><input data-key="id" value="${esc(a.id)}" required></div>
-      <div class="field"><label>Email đăng nhập Portal (để liên kết tài khoản)</label><input data-key="email" value="${esc(a.email || '')}" placeholder="artist@uniflowslabel.com"></div>
-      <div class="field"><label>Thể loại chính / Lĩnh vực</label><input data-key="genre" value="${esc(a.genre || 'Independent')}"></div>
+      <div class="field" style="grid-column: 1 / -1;"><label>Thể loại chính / Lĩnh vực</label><input data-key="genre" value="${esc(a.genre || 'Independent')}"></div>
       <div class="field" style="grid-column: 1 / -1;">
         <label>URL Ảnh đại diện (Hoặc tải ảnh từ máy tính)</label>
         <input data-key="image" id="artist-img-${idx}" value="${esc(a.image)}" placeholder="https://...">
@@ -2678,4 +2704,226 @@ document.querySelector('#btn-add-external-track')?.addEventListener('click', asy
   await logAuditEvent('Thêm tác phẩm UniPUBLISHING', `Tác phẩm: ${title} - Nghệ sĩ: ${artist}`);
 });
 
+// ====================================================
+// DIRECT ACCOUNT PROVISIONING & HANDOVER GENERATOR
+// ====================================================
+function initAccountProvisioning() {
+  const openBtn = document.querySelector('#open-provision-dialog-btn');
+  const dialog = document.querySelector('#admin-provision-dialog');
+  const closeBtn = document.querySelector('#close-provision-dialog-btn');
+  const cancelBtn = document.querySelector('#cancel-provision-dialog-btn');
+  const genPassBtn = document.querySelector('#btn-generate-pass');
+  const form = document.querySelector('#provision-user-form');
+  const resultCard = document.querySelector('#provision-result-card');
+  const handoverPre = document.querySelector('#handover-text-preview');
+  const copyHandoverBtn = document.querySelector('#btn-copy-handover');
+
+  if (!openBtn || !dialog || !form) return;
+
+  openBtn.onclick = () => {
+    resultCard.style.display = 'none';
+    form.reset();
+    document.querySelector('#prov-password').value = generateSecurePassword('Artist');
+    dialog.showModal();
+  };
+
+  closeBtn.onclick = () => dialog.close();
+  cancelBtn.onclick = () => dialog.close();
+
+  function generateSecurePassword(prefix = 'Flow') {
+    const specials = ['@', '#', '!', '$'];
+    const spec = specials[Math.floor(Math.random() * specials.length)];
+    const year = new Date().getFullYear();
+    const randNum = Math.floor(100 + Math.random() * 900);
+    return `${prefix}${spec}${year}_${randNum}`;
+  }
+
+  genPassBtn.onclick = () => {
+    const name = document.querySelector('#prov-name').value.trim() || 'Artist';
+    const cleanPrefix = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z]/g, '') || 'Artist';
+    document.querySelector('#prov-password').value = generateSecurePassword(cleanPrefix);
+  };
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const name = document.querySelector('#prov-name').value.trim();
+    const username = document.querySelector('#prov-username').value.trim().toLowerCase();
+    const email = document.querySelector('#prov-email').value.trim().toLowerCase();
+    const password = document.querySelector('#prov-password').value.trim();
+    const roleType = document.querySelector('#prov-role').value;
+    const showOnWeb = document.querySelector('#prov-visibility').value === 'true';
+    const royaltyRate = document.querySelector('#prov-royalty').value.trim() || '80% Master';
+    const payoutCycle = document.querySelector('#prov-payout-cycle').value.trim() || 'Hàng tháng (Monthly)';
+
+    if (!name || !username || !password) {
+      alert('Vui lòng nhập đầy đủ Tên hiển thị, Tên đăng nhập và Mật khẩu.');
+      return;
+    }
+
+    const id = username.replace(/[^a-z0-9]/g, '-').replace(/^-+|-+$/g, '') || `user-${Date.now()}`;
+
+    // Role display title
+    const roleMap = {
+      admin: '👑 Quản trị viên Tối cao (Super Admin)',
+      exclusive: '⭐ Nghệ sĩ Độc quyền (Exclusive Artist)',
+      distribution: '💿 Nghệ sĩ Phân phối (Distribution Client)',
+      partner: '🤝 Đối tác Chiến lược (Strategic Partner)',
+      collab: '✨ Nghệ sĩ Collab / Featured (Guest Artist)',
+      producer: '🎛️ Producer / Beatmaker',
+      manager: '👔 Quản lý Nghệ sĩ (Artist Manager)'
+    };
+    const roleTitle = roleMap[roleType] || 'Nghệ sĩ';
+    const loginUrl = roleType === 'admin' 
+      ? `${window.location.origin}/login`
+      : `${window.location.origin}/artist-login`;
+
+    // 1. If role is Admin, save to adminAccounts
+    if (roleType === 'admin') {
+      if (!data.adminAccounts) data.adminAccounts = [];
+      const existingAdminIdx = data.adminAccounts.findIndex(a => a.username === username || a.email === email);
+      const adminObj = {
+        id,
+        username,
+        email,
+        name,
+        password,
+        role: 'admin',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      if (existingAdminIdx >= 0) {
+        data.adminAccounts[existingAdminIdx] = adminObj;
+      } else {
+        data.adminAccounts.push(adminObj);
+      }
+    }
+
+    // 2. Add or update in data.artists
+    if (!data.artists) data.artists = [];
+    const existingIdx = data.artists.findIndex(a => a.id === id || a.username === username || (email && a.email === email));
+    
+    const artistRecord = {
+      id,
+      name,
+      username,
+      email,
+      password,
+      roleType,
+      showOnWeb,
+      genre: roleType === 'producer' ? 'Music Producer' : (roleType === 'partner' ? 'Strategic Partner' : 'Independent'),
+      image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80',
+      bio: `${name} — Thành viên chính thức trong hệ sinh thái UniFLOWs Label.`,
+      gallery: [],
+      monthlyStreams: '0',
+      estimatedRevenue: '0',
+      payableBalance: '0',
+      payoutCycle,
+      royaltyRate,
+      contractTerm: `Hợp đồng ${roleTitle} 2026 - 2029`,
+      publishingRevenue: '0',
+      publishingRoyaltyRate: '75%',
+      publishingContracts: [],
+      spotifyStreams: '0',
+      spotifyRevenue: '0',
+      appleStreams: '0',
+      appleRevenue: '0',
+      youtubeStreams: '0',
+      youtubeRevenue: '0',
+      otherStreams: '0',
+      otherRevenue: '0',
+      topCountry: 'Việt Nam',
+      topCity: 'Hồ Chí Minh',
+      topSource: 'Direct Portal Provisioning',
+      products: []
+    };
+
+    if (existingIdx >= 0) {
+      data.artists[existingIdx] = { ...data.artists[existingIdx], ...artistRecord };
+    } else {
+      data.artists.push(artistRecord);
+    }
+
+    await saveData(data);
+    await logAuditEvent('Cấp tài khoản mới trực tiếp', `Tên: ${name} - Username: ${username} - Vai trò: ${roleTitle}`);
+
+    // Generate Handover Text
+    const handoverText = [
+      `══════════════════════════════════════════════`,
+      `🎉 THÔNG TIN BÀN GIAO TÀI KHOẢN UNIFLOWS PORTAL`,
+      `══════════════════════════════════════════════`,
+      `👤 Tên hiển thị: ${name}`,
+      `🔑 Tên đăng nhập (Username): ${username}`,
+      `📧 Email liên kết: ${email}`,
+      `🔒 Mật khẩu khởi tạo: ${password}`,
+      `🎭 Phân quyền: ${roleTitle}`,
+      `🌐 Link đăng nhập: ${loginUrl}`,
+      `══════════════════════════════════════════════`,
+      `💡 Vui lòng bảo mật thông tin và đổi mật khẩu sau khi đăng nhập thành công.`,
+      `Trân trọng, UniFLOWs Record Label & Distribution.`
+    ].join('\n');
+
+    handoverPre.textContent = handoverText;
+    resultCard.style.display = 'block';
+
+    selectedArtistId = id;
+    renderArtistSelector();
+    renderSelectedArtistEditor();
+
+    showNotice(`✓ Đã cấp tài khoản thành công cho "${name}"!`);
+  };
+
+  copyHandoverBtn.onclick = () => {
+    const text = handoverPre.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      showNotice('✓ Đã sao chép Phiếu Bàn Giao vào bộ nhớ tạm! Sẵn sàng gửi qua Zalo / Telegram / Email.');
+    }).catch(() => {
+      prompt('Nội dung bàn giao:', text);
+    });
+  };
+}
+
+// Handover slip export from individual artist card
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-export-artist-handover');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.artistIdx, 10);
+  const a = data.artists[idx];
+  if (!a) return;
+
+  const roleMap = {
+    admin: '👑 Quản trị viên Tối cao (Super Admin)',
+    exclusive: '⭐ Nghệ sĩ Độc quyền (Exclusive Artist)',
+    distribution: '💿 Nghệ sĩ Phân phối (Distribution Client)',
+    partner: '🤝 Đối tác Chiến lược (Strategic Partner)',
+    collab: '✨ Nghệ sĩ Collab / Featured (Guest Artist)',
+    producer: '🎛️ Producer / Beatmaker',
+    manager: '👔 Quản lý Nghệ sĩ (Artist Manager)'
+  };
+  const roleTitle = roleMap[a.roleType] || 'Nghệ sĩ';
+  const loginUrl = a.roleType === 'admin' 
+    ? `${window.location.origin}/login`
+    : `${window.location.origin}/artist-login`;
+
+  const handoverText = [
+    `══════════════════════════════════════════════`,
+    `🎉 THÔNG TIN BÀN GIAO TÀI KHOẢN UNIFLOWS PORTAL`,
+    `══════════════════════════════════════════════`,
+    `👤 Tên hiển thị: ${a.name}`,
+    `🔑 Tên đăng nhập (Username): ${a.username || a.id}`,
+    `📧 Email liên kết: ${a.email || 'Chưa cập nhật'}`,
+    `🔒 Mật khẩu đăng nhập: ${a.password || (a.name ? `${a.name}@2026` : 'Uniflows@2026')}`,
+    `🎭 Phân quyền: ${roleTitle}`,
+    `🌐 Link đăng nhập: ${loginUrl}`,
+    `══════════════════════════════════════════════`,
+    `💡 Vui lòng bảo mật thông tin và đổi mật khẩu sau khi đăng nhập thành công.`,
+    `Trân trọng, UniFLOWs Record Label & Distribution.`
+  ].join('\n');
+
+  navigator.clipboard.writeText(handoverText).then(() => {
+    showNotice(`✓ Đã sao chép Phiếu Bàn Giao của "${a.name}" vào bộ nhớ tạm!`);
+  }).catch(() => {
+    alert(handoverText);
+  });
+});
+
+initAccountProvisioning();
 render();

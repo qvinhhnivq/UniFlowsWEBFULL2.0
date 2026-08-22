@@ -23,10 +23,25 @@ export const defaultData = {
     }
   ],
   city: 'Hồ Chí Minh · Việt Nam',
+  adminAccounts: [
+    {
+      id: 'admin-super',
+      username: 'admin',
+      email: 'admin@uniflowslabel.com',
+      name: 'UniFLOWs Super Admin',
+      password: 'UniFLOWs2026!',
+      role: 'admin',
+      createdAt: '2026-08-20'
+    }
+  ],
   artists: [
     {
       id: 'lumi',
+      username: 'lumi',
+      email: 'lumi@uniflowslabel.com',
+      password: 'Lumi@2026',
       name: 'Lumi',
+      roleType: 'exclusive',
       genre: 'Alternative R&B',
       image: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=1000&q=85',
       bio: 'Lumi pha trộn R&B mơ màng với những lát cắt rất thật của thành phố về đêm.',
@@ -85,7 +100,11 @@ export const defaultData = {
     },
     {
       id: 'monotone',
+      username: 'monotone',
+      email: 'monotone@uniflowslabel.com',
+      password: 'Monotone@2026',
       name: 'MONO//TONE',
+      roleType: 'exclusive',
       genre: 'Future Pop',
       image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1000&q=85',
       bio: 'MONO//TONE là dự án pop điện tử dành cho những nhịp điệu không đứng yên.',
@@ -113,7 +132,11 @@ export const defaultData = {
     },
     {
       id: 'kaii',
+      username: 'kaii',
+      email: 'kaii@uniflowslabel.com',
+      password: 'Kaii@2026',
       name: 'KAII',
+      roleType: 'distribution',
       genre: 'Hip-hop / Rap',
       image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
       bio: 'KAII kể những câu chuyện đời thường bằng flow sắc nét và trực diện.',

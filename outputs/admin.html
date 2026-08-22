@@ -257,7 +257,8 @@
             <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý nghệ sĩ công khai trên web và các tài khoản người dùng đăng nhập Portal (không bắt buộc hiển thị lên web).</p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="button" type="button" id="add-artist">+ Thêm Nghệ sĩ lên Web</button>
+            <button class="button" type="button" id="open-provision-dialog-btn" style="background:#2563eb;color:#fff;border-color:#2563eb;font-weight:800;">✨ + Cấp Tài Khoản Mới (All-in-One)</button>
+            <button class="button alt" type="button" id="add-artist">+ Thêm Nghệ sĩ lên Web</button>
             <button class="button alt" type="button" id="add-portal-user" style="border: 1px solid var(--ink); background: #f0fdf4; color: #166534;">+ Thêm Nghệ sĩ Phân phối</button>
             <button class="button alt" type="button" id="add-partner-user" style="border: 1px solid #2563eb; background: #eff6ff; color: #1d4ed8;">🤝 + Thêm Đối tác / Collab</button>
           </div>
@@ -696,6 +697,97 @@
       <button type="button" class="button alt" id="cancel-admin-epk-btn">Đóng</button>
       <button type="button" id="print-admin-epk-btn" class="button" style="background: #1e293b; color: #fff; border-color: #1e293b;">🖨️ Lưu PDF / In EPK</button>
     </div>
+  </dialog>
+
+  <!-- ========================================== -->
+  <!-- MODAL: CẤP & QUẢN TRỊ TÀI KHOẢN MỚI (PROVISIONING) -->
+  <!-- ========================================== -->
+  <dialog id="admin-provision-dialog" class="release-dialog-shell" style="max-width:680px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+    <div style="background:#0f172a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
+      <div>
+        <span class="eyebrow" style="color:#38bdf8;margin:0;font-size:10px;">UniFLOWs Direct User Provisioning</span>
+        <h2 style="font-size:18px;margin:2px 0 0;letter-spacing:-0.03em;">✨ Cấp Tài Khoản Mới Trực Tiếp</h2>
+      </div>
+      <button type="button" class="close-btn" id="close-provision-dialog-btn" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+
+    <form id="provision-user-form" style="padding: 24px; display: grid; gap: 14px;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:12px 16px;border-radius:8px;font-size:12px;color:#1e40af;line-height:1.5;">
+        💡 <b>Cấp tài khoản tức thì:</b> Tài khoản được kích hoạt ngay lập tức trong hệ thống. Bạn có thể gửi tên đăng nhập và mật khẩu trực tiếp cho nghệ sĩ/đối tác mà không cần vào Supabase Auth.
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;">Tên hiển thị / Nghệ danh *</label>
+          <input id="prov-name" type="text" required placeholder="Ví dụ: Vũ. hoặc Chillies">
+        </div>
+        <div class="field">
+          <label style="font-weight:bold;">Tên đăng nhập (Username) *</label>
+          <input id="prov-username" type="text" required placeholder="Ví dụ: vu.artist hoặc chillies">
+        </div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;">Email đăng nhập *</label>
+          <input id="prov-email" type="email" required placeholder="Ví dụ: vu@uniflowslabel.com">
+        </div>
+        <div class="field">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label style="font-weight:bold;margin:0;">Mật khẩu khởi tạo *</label>
+            <button type="button" id="btn-generate-pass" style="background:none;border:none;color:#2563eb;font-size:11px;cursor:pointer;font-weight:bold;padding:0;">🎲 Sinh ngẫu nhiên</button>
+          </div>
+          <input id="prov-password" type="text" required value="Uniflows@2026" placeholder="Mật khẩu ít nhất 6 ký tự">
+        </div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;">Vai trò & Phân quyền *</label>
+          <select id="prov-role" style="padding:10px;border:1px solid var(--ink);background:#fff;font-weight:bold;">
+            <option value="exclusive">⭐ Nghệ sĩ Độc quyền (Exclusive Artist)</option>
+            <option value="distribution">💿 Nghệ sĩ Phân phối (Distribution Client)</option>
+            <option value="partner">🤝 Đối tác Chiến lược (Strategic Partner)</option>
+            <option value="collab">✨ Nghệ sĩ Collab / Featured (Guest Artist)</option>
+            <option value="producer">🎛️ Producer / Beatmaker</option>
+            <option value="manager">👔 Quản lý Nghệ sĩ (Artist Manager)</option>
+            <option value="admin">👑 Quản trị viên (Admin Dashboard Access)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label style="font-weight:bold;">Hiển thị trên Website công khai</label>
+          <select id="prov-visibility" style="padding:10px;border:1px solid var(--ink);background:#fff;font-weight:bold;">
+            <option value="true">🌐 Có (Hiển thị lên Website công khai)</option>
+            <option value="false">🔒 Không (Chỉ dùng Portal nội bộ, ẩn khỏi web)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label>Tỷ lệ chia sẻ Royalty (% Master)</label>
+          <input id="prov-royalty" type="text" value="80% Master" placeholder="Ví dụ: 80% Master">
+        </div>
+        <div class="field">
+          <label>Kỳ đối soát doanh thu</label>
+          <input id="prov-payout-cycle" type="text" value="Hàng tháng (Monthly)" placeholder="Ví dụ: Hàng tháng">
+        </div>
+      </div>
+
+      <div id="provision-result-card" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px;margin-top:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="color:#166534;font-size:13px;">🎉 ĐÃ CẤP TÀI KHOẢN THÀNH CÔNG!</strong>
+          <button type="button" id="btn-copy-handover" class="button" style="background:#16a34a;color:#fff;border-color:#16a34a;padding:6px 12px;font-size:11px;font-weight:bold;">📋 Sao chép Phiếu Bàn Giao</button>
+        </div>
+        <pre id="handover-text-preview" style="background:#fff;border:1px solid #bbf7d0;padding:10px;border-radius:6px;font-family:'DM Mono',monospace;font-size:11px;margin:0;white-space:pre-wrap;color:#14532d;"></pre>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px;border-top:1px solid #e2e8f0;padding-top:14px;">
+        <button type="button" class="button alt" id="cancel-provision-dialog-btn">Hủy / Đóng</button>
+        <button type="submit" id="submit-provision-btn" class="button" style="background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;">✨ Kích hoạt & Lưu Tài Khoản</button>
+      </div>
+    </form>
   </dialog>
 
   <script type="module" src="assets/admin.js"></script>
