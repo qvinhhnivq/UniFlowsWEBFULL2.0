@@ -1,5 +1,6 @@
 import { getData, getLocalCachedData } from './data.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
+import './security.js';
 
 let data = getLocalCachedData();
 const $ = (s, r = document) => r.querySelector(s);

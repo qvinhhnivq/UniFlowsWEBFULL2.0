@@ -1,5 +1,6 @@
 import { getData, saveData, defaultData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
+import './security.js';
 
 const isAdminAuth = sessionStorage.getItem('uniflows-admin') === 'true' || localStorage.getItem('uniflows-admin') === 'true';
 if (!isAdminAuth) {

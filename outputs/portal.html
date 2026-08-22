@@ -32,6 +32,9 @@
         <a href="#calendar" data-tab="tab-calendar">
           <span>📅 Lịch Phát Hành</span>
         </a>
+        <a href="#lyrics" data-tab="tab-lyrics">
+          <span>🎤 Lời Đồng Bộ (.LRC)</span>
+        </a>
         <a href="#support" data-tab="tab-support">
           <span>🛡️ Bản quyền & A&R</span>
         </a>
@@ -549,6 +552,126 @@
         
         <div id="release-calendar-list" style="margin-top: 20px; display: grid; gap: 16px;">
            <p class="empty" style="padding:20px;background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:10px;color:var(--portal-text-muted);">Đang tải lịch phát hành...</p>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 7: TRÌNH NẠP & TẠO LỜI BÀI HÁT ĐỒNG BỘ (.LRC) -->
+      <!-- ========================================== -->
+      <section id="tab-lyrics" class="tab-pane">
+        <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
+          <div>
+            <h2 style="font-size:24px;margin:0;letter-spacing:-0.04em;">🎤 Synced Lyrics Studio (.LRC Generator)</h2>
+            <p style="font-size:13px;color:var(--portal-text-muted);margin:4px 0 0;">Đồng bộ lời bài hát chạy chữ theo mili-giây thời gian thực cho Spotify, Apple Music, Instagram Stories và TikTok.</p>
+          </div>
+          <span class="kicker">Real-time Timestamping</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px;margin-top:20px;" class="hide-mobile-grid">
+          <!-- Left Column: Audio Stamping Engine -->
+          <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:14px;padding:22px;box-shadow:var(--portal-shadow);display:flex;flex-direction:column;gap:16px;">
+            <!-- Step 1: Select or Upload Track -->
+            <div>
+              <label style="font-weight:700;font-size:12px;text-transform:uppercase;color:var(--portal-text-muted);display:block;margin-bottom:6px;font-family:'DM Mono',monospace;">1. Chọn bài hát từ Catalogue hoặc tải file Audio:</label>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <select id="lyrics-track-select" style="flex:1;min-width:200px;padding:10px;background:var(--portal-input-bg);border:1px solid var(--portal-input-border);color:var(--portal-text-main);border-radius:6px;font-size:13px;">
+                  <!-- Options injected from artist releases -->
+                </select>
+                <label class="button alt" style="cursor:pointer;padding:10px 14px;font-size:11px;margin:0;display:inline-flex;align-items:center;gap:6px;">
+                  📂 Tải Audio máy
+                  <input type="file" id="lyrics-audio-file" accept="audio/*" style="display:none;">
+                </label>
+              </div>
+            </div>
+
+            <!-- Audio Player Dashboard -->
+            <div style="background:#090d16;color:#fff;border-radius:12px;padding:18px;border:1px solid #1e293b;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <strong id="lyrics-current-track-name" style="font-size:14px;color:#38bdf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:250px;">Chưa chọn bài hát</strong>
+                <span id="lyrics-time-display" style="font-family:'DM Mono',monospace;font-size:14px;color:#34d399;font-weight:bold;">00:00.00 / 00:00.00</span>
+              </div>
+
+              <!-- Audio progress bar -->
+              <input type="range" id="lyrics-audio-seek" min="0" max="100" value="0" style="width:100%;accent-color:#38bdf8;cursor:pointer;margin-bottom:12px;">
+
+              <audio id="lyrics-html5-audio" preload="metadata" style="display:none;"></audio>
+
+              <!-- Controls bar -->
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button type="button" id="lyrics-btn-rw" class="button alt" style="background:#1e293b;color:#fff;border-color:#334155;padding:6px 12px;font-size:12px;">⏪ -3s</button>
+                  <button type="button" id="lyrics-btn-play" class="button" style="background:#38bdf8;color:#090d16;border-color:#38bdf8;padding:8px 18px;font-size:13px;font-weight:800;">▶ PHÁT</button>
+                  <button type="button" id="lyrics-btn-ff" class="button alt" style="background:#1e293b;color:#fff;border-color:#334155;padding:6px 12px;font-size:12px;">⏩ +3s</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'DM Mono',monospace;color:#94a3b8;">
+                  <span>Tốc độ:</span>
+                  <select id="lyrics-playback-rate" style="padding:4px 6px;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:4px;font-size:11px;">
+                    <option value="0.75">0.75x (Chậm)</option>
+                    <option value="1.0" selected>1.0x (Chuẩn)</option>
+                    <option value="1.25">1.25x (Nhanh)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Big Spacebar Stamp Button -->
+            <div>
+              <button type="button" id="lyrics-btn-stamp" class="button" style="width:100%;padding:16px;font-size:14px;font-weight:800;background:linear-gradient(135deg,#6366f1,#3b82f6);color:#fff;border:none;border-radius:10px;letter-spacing:0.5px;box-shadow:0 6px 20px rgba(99,102,241,0.3);cursor:pointer;">
+                ⏱️ GẮN TIMESTAMP DÒNG NÀY (BẤM PHÍM SPACE)
+              </button>
+              <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--portal-text-dim);font-family:'DM Mono',monospace;">
+                <span>💡 Mẹo: Nhấn phím SPACE khi đang nghe nhạc</span>
+                <span id="lyrics-active-line-counter">Dòng 1 / 0</span>
+              </div>
+            </div>
+
+            <!-- Raw Lyrics Input Box (Collapsible / Switchable) -->
+            <div style="border-top:1px solid var(--portal-card-border);padding-top:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <label style="font-weight:700;font-size:12px;text-transform:uppercase;color:var(--portal-text-muted);font-family:'DM Mono',monospace;">2. Nhập Lời bài hát Thô (Mỗi dòng 1 câu hát):</label>
+                <button type="button" id="lyrics-btn-load-sample" style="background:none;border:none;color:#3b82f6;font-size:11px;cursor:pointer;text-decoration:underline;">Nạp lời mẫu</button>
+              </div>
+              <textarea id="lyrics-raw-input" rows="6" placeholder="Dán lời bài hát vào đây...&#10;Mỗi dòng là một câu hát độc lập&#10;Đêm buông dần trên những góc phố quen&#10;Ánh đèn mờ soi bóng ai bên thềm..." style="width:100%;font-size:13px;padding:10px;border-radius:6px;background:var(--portal-input-bg);border:1px solid var(--portal-input-border);color:var(--portal-text-main);"></textarea>
+              <button type="button" id="lyrics-btn-init-stamping" class="button alt" style="width:100%;margin-top:8px;padding:10px;font-size:12px;font-weight:bold;">
+                ⚡ Nạp Lời & Bắt đầu Gắn Nhịp Timestamp
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Stamped Lines & Live Karaoke Screen -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- Live Karaoke Simulation Display -->
+            <div style="background:#090d16;border:2px solid #38bdf8;border-radius:14px;padding:20px;min-height:220px;max-height:220px;overflow-y:auto;color:#fff;box-shadow:0 10px 30px rgba(56,189,248,0.15);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;" id="lyrics-karaoke-display">
+              <span style="position:absolute;top:10px;left:14px;font-size:10px;font-weight:800;color:#38bdf8;text-transform:uppercase;font-family:'DM Mono',monospace;letter-spacing:1px;">● LIVE KARAOKE SYNC</span>
+              <div id="karaoke-prev-line" style="font-size:13px;color:#64748b;margin-bottom:8px;transition:0.3s;">—</div>
+              <div id="karaoke-current-line" style="font-size:18px;font-weight:800;color:#34d399;text-shadow:0 0 15px rgba(52,211,153,0.6);margin-bottom:8px;transition:0.3s;">🎵 Sẵn sàng phát nhạc và đồng bộ lời...</div>
+              <div id="karaoke-next-line" style="font-size:13px;color:#64748b;transition:0.3s;">—</div>
+            </div>
+
+            <!-- Stamped Lines Editor Board -->
+            <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:14px;padding:18px;flex:1;max-height:340px;overflow-y:auto;box-shadow:var(--portal-shadow);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid var(--portal-card-border);padding-bottom:8px;">
+                <strong style="font-size:13px;">📋 Bảng Dòng Lời & Timestamps</strong>
+                <button type="button" id="lyrics-btn-reset-timestamps" style="background:none;border:none;color:#ef4444;font-size:11px;cursor:pointer;">✕ Xóa toàn bộ timestamps</button>
+              </div>
+              <div id="lyrics-lines-container" style="display:grid;gap:6px;">
+                <p style="font-size:12px;color:var(--portal-text-dim);text-align:center;padding:20px;">Chưa nạp lời bài hát. Vui lòng dán lời bài hát ở bên trái và bấm "Nạp Lời".</p>
+              </div>
+            </div>
+
+            <!-- Output Actions Bar -->
+            <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:12px;padding:16px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;box-shadow:var(--portal-shadow);">
+              <button type="button" id="lyrics-btn-download-lrc" class="button" style="background:#059669;color:#fff;border-color:#059669;font-size:12px;padding:10px 16px;font-weight:800;">
+                📥 Tải về file .LRC
+              </button>
+              <button type="button" id="lyrics-btn-copy-lrc" class="button alt" style="font-size:12px;padding:10px 14px;">
+                📋 Sao chép mã LRC
+              </button>
+              <button type="button" id="lyrics-btn-save-to-release" class="button alt" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;font-size:12px;padding:10px 14px;font-weight:bold;">
+                💿 Lưu vào Siêu Dữ Liệu Release
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </section>

@@ -1,6 +1,7 @@
 import { getData, saveData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
+import './security.js';
 
 // Kiểm tra quyền đăng nhập
 const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
@@ -286,6 +287,8 @@ function handleHash() {
     releases: 'tab-releases',
     earnings: 'tab-earnings',
     insights: 'tab-insights',
+    calendar: 'tab-calendar',
+    lyrics: 'tab-lyrics',
     marketing: 'tab-marketing',
     support: 'tab-support'
   };
@@ -2544,6 +2547,414 @@ function renderArtistPublishingEarnings() {
   `;
 }
 
+// ====================================================
+// SYNCED LYRICS STUDIO (.LRC GENERATOR & REALTIME STAMPING)
+// ====================================================
+let lyricsAudio = document.querySelector('#lyrics-html5-audio');
+let lyricsLines = [];
+let currentLyricsLineIndex = 0;
+let isAudioPlaying = false;
+
+function initSyncedLyricsStudio() {
+  lyricsAudio = document.querySelector('#lyrics-html5-audio');
+  const trackSelect = document.querySelector('#lyrics-track-select');
+  const audioFileInp = document.querySelector('#lyrics-audio-file');
+  const playBtn = document.querySelector('#lyrics-btn-play');
+  const timeDisplay = document.querySelector('#lyrics-time-display');
+  const seekBar = document.querySelector('#lyrics-audio-seek');
+  const rateSelect = document.querySelector('#lyrics-playback-rate');
+  const rwBtn = document.querySelector('#lyrics-btn-rw');
+  const ffBtn = document.querySelector('#lyrics-btn-ff');
+  const stampBtn = document.querySelector('#lyrics-btn-stamp');
+  const initStampingBtn = document.querySelector('#lyrics-btn-init-stamping');
+  const loadSampleBtn = document.querySelector('#lyrics-btn-load-sample');
+  const rawInput = document.querySelector('#lyrics-raw-input');
+  const linesContainer = document.querySelector('#lyrics-lines-container');
+  const resetTimestampsBtn = document.querySelector('#lyrics-btn-reset-timestamps');
+  const downloadLrcBtn = document.querySelector('#lyrics-btn-download-lrc');
+  const copyLrcBtn = document.querySelector('#lyrics-btn-copy-lrc');
+  const saveToReleaseBtn = document.querySelector('#lyrics-btn-save-to-release');
+  const trackNameDisplay = document.querySelector('#lyrics-current-track-name');
+  const counterDisplay = document.querySelector('#lyrics-active-line-counter');
+
+  if (!lyricsAudio || !playBtn) return;
+
+  // 1. Populate track select from artist catalogue
+  if (trackSelect) {
+    const products = artist.products || [];
+    if (products.length === 0) {
+      trackSelect.innerHTML = '<option value="">Chưa có bài hát trong catalogue</option>';
+    } else {
+      trackSelect.innerHTML = products.map((p, idx) => `
+        <option value="${idx}" data-title="${esc(p.title)}" data-audio="${esc(p.audioUrl || '')}">
+          ${esc(p.title)} (${esc(p.type || 'Single')})
+        </option>
+      `).join('');
+    }
+
+    trackSelect.onchange = () => {
+      const opt = trackSelect.selectedOptions[0];
+      if (opt && opt.dataset.title) {
+        trackNameDisplay.textContent = opt.dataset.title;
+        if (opt.dataset.audio) {
+          lyricsAudio.src = opt.dataset.audio;
+          lyricsAudio.load();
+        }
+      }
+    };
+    // Trigger initial select
+    if (trackSelect.options.length > 0) {
+      trackSelect.dispatchEvent(new Event('change'));
+    }
+  }
+
+  // 2. Local Audio File Picker
+  audioFileInp?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const blobUrl = URL.createObjectURL(file);
+      lyricsAudio.src = blobUrl;
+      lyricsAudio.load();
+      if (trackNameDisplay) trackNameDisplay.textContent = file.name.replace(/\.[^/.]+$/, '');
+      showNotice(`✓ Đã nạp file âm thanh: ${file.name}`);
+    }
+  });
+
+  // 3. Audio Controls
+  function formatLrcTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return '00:00.00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds - Math.floor(seconds)) * 100);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+  }
+
+  function formatDisplayTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return '00:00.00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds - Math.floor(seconds)) * 100);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+  }
+
+  playBtn.onclick = () => {
+    if (!lyricsAudio.src || lyricsAudio.src === window.location.href) {
+      // Create a virtual synthesized tone for demo if no audio loaded
+      simulateDemoAudioPlayback();
+      return;
+    }
+    if (lyricsAudio.paused) {
+      lyricsAudio.play();
+      playBtn.textContent = '⏸ TẠM DỪNG';
+      playBtn.style.background = '#f59e0b';
+      playBtn.style.borderColor = '#f59e0b';
+      isAudioPlaying = true;
+    } else {
+      lyricsAudio.pause();
+      playBtn.textContent = '▶ PHÁT';
+      playBtn.style.background = '#38bdf8';
+      playBtn.style.borderColor = '#38bdf8';
+      isAudioPlaying = false;
+    }
+  };
+
+  lyricsAudio.ontimeupdate = () => {
+    const cur = lyricsAudio.currentTime || 0;
+    const dur = lyricsAudio.duration || 1;
+    if (timeDisplay) {
+      timeDisplay.textContent = `${formatDisplayTime(cur)} / ${formatDisplayTime(dur)}`;
+    }
+    if (seekBar && !seekBar.matches(':active')) {
+      seekBar.value = Math.floor((cur / dur) * 100);
+    }
+    updateKaraokeDisplay(cur);
+  };
+
+  seekBar.oninput = () => {
+    const dur = lyricsAudio.duration || 1;
+    lyricsAudio.currentTime = (seekBar.value / 100) * dur;
+  };
+
+  rwBtn.onclick = () => {
+    lyricsAudio.currentTime = Math.max(0, (lyricsAudio.currentTime || 0) - 3);
+  };
+
+  ffBtn.onclick = () => {
+    lyricsAudio.currentTime = Math.min((lyricsAudio.duration || 9999), (lyricsAudio.currentTime || 0) + 3);
+  };
+
+  rateSelect.onchange = () => {
+    lyricsAudio.playbackRate = parseFloat(rateSelect.value || '1.0');
+  };
+
+  // 4. Sample Lyrics loader
+  loadSampleBtn.onclick = () => {
+    rawInput.value = `Đêm buông dần trên những góc phố quen
+Ánh đèn mờ soi bóng ai bên thềm
+Từng giai điệu rơi vào trong màn đêm
+Chờ đợi tia sáng đánh thức con tim
+Và em biết ta luôn thuộc về nhau
+Qua muôn ngàn dải tần không biên giới
+UniFLOWs studio sound
+Every heartbeat belongs to you`;
+    showNotice('✓ Đã nạp lời bài hát mẫu!');
+  };
+
+  // 5. Initialize Lyrics Stamping Table
+  initStampingBtn.onclick = () => {
+    const text = rawInput.value.trim();
+    if (!text) {
+      alert('Vui lòng nhập hoặc dán lời bài hát vào ô trước khi bắt đầu.');
+      return;
+    }
+
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    lyricsLines = lines.map((line, idx) => ({
+      id: idx,
+      text: line,
+      timestamp: null,
+      timeSeconds: null
+    }));
+
+    currentLyricsLineIndex = 0;
+    renderLyricsEditorLines();
+    showNotice(`✓ Đã nạp thành công ${lyricsLines.length} dòng lời. Hãy bấm Phát nhạc và nhấn Space để gắn nhịp!`);
+  };
+
+  function renderLyricsEditorLines() {
+    if (!linesContainer) return;
+    if (lyricsLines.length === 0) {
+      linesContainer.innerHTML = '<p style="font-size:12px;color:var(--portal-text-dim);text-align:center;padding:20px;">Chưa có dòng lời nào. Hãy dán lời bài hát ở bên trái và bấm "Nạp Lời".</p>';
+      if (counterDisplay) counterDisplay.textContent = 'Dòng 0 / 0';
+      return;
+    }
+
+    if (counterDisplay) {
+      counterDisplay.textContent = `Dòng ${Math.min(currentLyricsLineIndex + 1, lyricsLines.length)} / ${lyricsLines.length}`;
+    }
+
+    linesContainer.innerHTML = lyricsLines.map((line, idx) => {
+      const isCurrent = idx === currentLyricsLineIndex;
+      const isStamped = line.timestamp !== null;
+      return `
+        <div class="lyrics-line-row ${isCurrent ? 'active-target' : ''}" data-idx="${idx}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid ${isCurrent ? '#3b82f6' : (isStamped ? '#10b981' : 'var(--portal-card-border)')};background:${isCurrent ? 'rgba(59,130,246,0.1)' : (isStamped ? 'rgba(16,185,129,0.06)' : 'var(--portal-hover-bg)')};transition:all 0.2s;">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;color:${isCurrent ? '#2563eb' : (isStamped ? '#059669' : 'var(--portal-text-dim)')};min-width:24px;">
+              ${String(idx + 1).padStart(2, '0')}
+            </span>
+            <span style="font-size:13px;font-weight:${isCurrent ? '700' : '500'};color:var(--portal-text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              ${esc(line.text)}
+            </span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="lrc-tag" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:800;padding:2px 8px;border-radius:4px;background:${isStamped ? '#065f46;color:#34d399;' : '#334155;color:#94a3b8;'}">
+              ${line.timestamp || '[ --:--.-- ]'}
+            </span>
+            <button type="button" class="btn-set-line-focus" data-idx="${idx}" title="Chọn làm dòng mục tiêu tiếp theo" style="border:none;background:none;cursor:pointer;font-size:12px;">🎯</button>
+            ${isStamped ? `<button type="button" class="btn-clear-line-time" data-idx="${idx}" title="Xóa timestamp dòng này" style="border:none;background:none;color:#ef4444;cursor:pointer;font-size:11px;">✕</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach row events
+    linesContainer.querySelectorAll('.btn-set-line-focus').forEach(btn => {
+      btn.onclick = () => {
+        currentLyricsLineIndex = parseInt(btn.dataset.idx, 10);
+        renderLyricsEditorLines();
+      };
+    });
+
+    linesContainer.querySelectorAll('.btn-clear-line-time').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        lyricsLines[idx].timestamp = null;
+        lyricsLines[idx].timeSeconds = null;
+        renderLyricsEditorLines();
+      };
+    });
+
+    // Auto-scroll active row into view
+    const activeRow = linesContainer.querySelector('.active-target');
+    if (activeRow) {
+      activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  // 6. Real-time Stamping Function
+  function recordCurrentTimestamp() {
+    if (lyricsLines.length === 0) return;
+    if (currentLyricsLineIndex >= lyricsLines.length) {
+      showNotice('✓ Đã gắn nhịp hoàn tất cho toàn bộ ca khúc!');
+      return;
+    }
+
+    const curTime = lyricsAudio.currentTime || 0;
+    const lrcTag = `[${formatLrcTime(curTime)}]`;
+
+    lyricsLines[currentLyricsLineIndex].timestamp = lrcTag;
+    lyricsLines[currentLyricsLineIndex].timeSeconds = curTime;
+
+    currentLyricsLineIndex++;
+    renderLyricsEditorLines();
+  }
+
+  stampBtn.onclick = recordCurrentTimestamp;
+
+  // Spacebar global capture inside lyrics tab
+  window.addEventListener('keydown', (e) => {
+    const isLyricsTabActive = document.querySelector('#tab-lyrics')?.classList.contains('active');
+    if (!isLyricsTabActive) return;
+
+    // Do not trigger if typing in raw textarea or normal inputs
+    if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
+      return;
+    }
+
+    if (e.code === 'Space' || e.key === ' ') {
+      e.preventDefault();
+      recordCurrentTimestamp();
+    }
+  });
+
+  resetTimestampsBtn.onclick = () => {
+    if (confirm('Bạn có chắc muốn xóa toàn bộ timestamps đã gắn?')) {
+      lyricsLines.forEach(l => {
+        l.timestamp = null;
+        l.timeSeconds = null;
+      });
+      currentLyricsLineIndex = 0;
+      renderLyricsEditorLines();
+      showNotice('✓ Đã đặt lại timestamps!');
+    }
+  };
+
+  // 7. Live Karaoke Display Sync
+  function updateKaraokeDisplay(curTime) {
+    const prevEl = document.querySelector('#karaoke-prev-line');
+    const curEl = document.querySelector('#karaoke-current-line');
+    const nextEl = document.querySelector('#karaoke-next-line');
+    if (!curEl) return;
+
+    const stamped = lyricsLines.filter(l => l.timeSeconds !== null).sort((a, b) => a.timeSeconds - b.timeSeconds);
+    if (stamped.length === 0) return;
+
+    let activeIdx = -1;
+    for (let i = 0; i < stamped.length; i++) {
+      if (curTime >= stamped[i].timeSeconds) {
+        activeIdx = i;
+      } else {
+        break;
+      }
+    }
+
+    if (activeIdx >= 0) {
+      if (prevEl) prevEl.textContent = activeIdx > 0 ? stamped[activeIdx - 1].text : '—';
+      curEl.textContent = `🎵 ${stamped[activeIdx].text}`;
+      curEl.style.color = '#34d399';
+      curEl.style.textShadow = '0 0 20px rgba(52,211,153,0.8)';
+      if (nextEl) nextEl.textContent = (activeIdx < stamped.length - 1) ? stamped[activeIdx + 1].text : '—';
+    }
+  }
+
+  // 8. Generate .LRC Output Text
+  function generateLrcPayload() {
+    const trackTitle = trackNameDisplay?.textContent || 'Track';
+    const header = [
+      `[ar:${artist.name || 'UniFLOWs Artist'}]`,
+      `[ti:${trackTitle}]`,
+      `[al:${trackTitle} - Single]`,
+      `[by:UniFLOWs Synced Lyrics Studio]`,
+      `[offset:0]`,
+      ''
+    ].join('\n');
+
+    const body = lyricsLines.map(l => `${l.timestamp || '[00:00.00]'}${l.text}`).join('\n');
+    return `${header}\n${body}`;
+  }
+
+  downloadLrcBtn.onclick = () => {
+    if (lyricsLines.length === 0) {
+      alert('Vui lòng nạp lời bài hát trước khi tải file .LRC.');
+      return;
+    }
+    const payload = generateLrcPayload();
+    const blob = new Blob([payload], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${(trackNameDisplay?.textContent || 'lyrics').replace(/\s+/g, '_')}.lrc`;
+    link.click();
+    showNotice('✓ Đã tải file .LRC về máy thành công!');
+  };
+
+  copyLrcBtn.onclick = () => {
+    const payload = generateLrcPayload();
+    navigator.clipboard.writeText(payload).then(() => {
+      showNotice('✓ Đã sao chép toàn bộ mã .LRC vào bộ nhớ tạm!');
+    }).catch(() => {
+      prompt('Mã .LRC của bạn:', payload);
+    });
+  };
+
+  saveToReleaseBtn.onclick = async () => {
+    if (lyricsLines.length === 0) {
+      alert('Vui lòng nạp và gắn timestamps cho bài hát.');
+      return;
+    }
+    const payload = generateLrcPayload();
+    const trackTitle = trackNameDisplay?.textContent || '';
+    
+    // Attach to matching release product
+    const prod = (artist.products || []).find(p => p.title.toLowerCase() === trackTitle.toLowerCase());
+    if (prod) {
+      if (!prod.metadata) prod.metadata = {};
+      prod.metadata.syncedLyricsLRC = payload;
+      prod.metadata.hasSyncedLyrics = true;
+      const allData = await getData();
+      const myIdx = allData.artists.findIndex(a => a.id === artist.id);
+      if (myIdx >= 0) {
+        allData.artists[myIdx] = artist;
+        await saveData(allData);
+      }
+      showNotice(`✓ Đã lưu file lời đồng bộ .LRC vào siêu dữ liệu phát hành của "${trackTitle}"!`);
+    } else {
+      showNotice(`✓ Đã tạo file .LRC cho "${trackTitle}". Bạn có thể tải file về để gửi kèm bản thu.`);
+    }
+  };
+}
+
+function simulateDemoAudioPlayback() {
+  const timeDisplay = document.querySelector('#lyrics-time-display');
+  const playBtn = document.querySelector('#lyrics-btn-play');
+  if (isAudioPlaying) {
+    isAudioPlaying = false;
+    if (playBtn) playBtn.textContent = '▶ PHÁT';
+    return;
+  }
+  isAudioPlaying = true;
+  if (playBtn) {
+    playBtn.textContent = '⏸ TẠM DỪNG (ĐANG CHẠY MẪU)';
+    playBtn.style.background = '#f59e0b';
+  }
+  
+  let cur = 0;
+  const dur = 180;
+  const interval = setInterval(() => {
+    if (!isAudioPlaying) {
+      clearInterval(interval);
+      return;
+    }
+    cur += 0.2;
+    if (lyricsAudio) lyricsAudio.currentTime = cur;
+    if (cur >= dur) {
+      isAudioPlaying = false;
+      clearInterval(interval);
+      if (playBtn) playBtn.textContent = '▶ PHÁT';
+    }
+  }, 200);
+}
+
 initPortalTheme();
 initPortalLanguage();
 renderReleases();
@@ -2552,3 +2963,4 @@ renderArtistPublishingEarnings();
 loadArtistServiceRequests();
 initNotifications();
 renderReleaseCalendar();
+initSyncedLyricsStudio();
