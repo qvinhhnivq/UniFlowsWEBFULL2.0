@@ -11,6 +11,8 @@ drop table if exists public.site_settings cascade;
 drop table if exists public.profiles cascade;
 drop table if exists public.contracts cascade;
 drop table if exists public.audit_logs cascade;
+drop table if exists public.collab_posts cascade;
+drop table if exists public.gigs cascade;
 
 -- Xóa các policy cũ (nếu có)
 drop policy if exists "Mọi người đều có thể xem Artworks" on storage.objects;
@@ -144,6 +146,32 @@ create table public.audit_logs (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 1.9. BẢNG COLLAB_POSTS (BẢNG TƯƠNG TÁC HỢP TÁC NỘI BỘ NGHỆ SĨ)
+create table public.collab_posts (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  title text not null,
+  genre text default 'Pop',
+  looking_for text default 'Vocalist / Feature',
+  description text not null,
+  audio_preview text default '',
+  status text default 'open',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 1.10. BẢNG GIGS (QUẢN LÝ SHOW DIỄN & BOOKING)
+create table public.gigs (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  event_name text not null,
+  venue text not null,
+  city text default 'Hồ Chí Minh',
+  gig_date date not null,
+  fee text default '0',
+  status text default 'Đã xác nhận',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- ==============================================================================
 -- 2. STORAGE BUCKETS (LƯU TRỮ AUDIO & ARTWORK)
 -- ==============================================================================
@@ -185,6 +213,8 @@ alter table public.articles enable row level security;
 alter table public.payout_requests enable row level security;
 alter table public.contracts enable row level security;
 alter table public.audit_logs enable row level security;
+alter table public.collab_posts enable row level security;
+alter table public.gigs enable row level security;
 
 create policy "Cho phép đọc công khai site_settings" on public.site_settings for select using (true);
 create policy "Cho phép đọc công khai artists" on public.artists for select using (true);
@@ -194,6 +224,8 @@ create policy "Cho phép đọc profile" on public.profiles for select using (tr
 create policy "Cho phép đọc payout_requests" on public.payout_requests for select using (true);
 create policy "Cho phép đọc công khai contracts" on public.contracts for select using (true);
 create policy "Cho phép đọc công khai audit_logs" on public.audit_logs for select using (true);
+create policy "Cho phép đọc công khai collab_posts" on public.collab_posts for select using (true);
+create policy "Cho phép đọc công khai gigs" on public.gigs for select using (true);
 
 create policy "Toàn quyền quản trị site_settings" on public.site_settings for all using (true) with check (true);
 create policy "Toàn quyền quản trị artists" on public.artists for all using (true) with check (true);
@@ -203,6 +235,8 @@ create policy "Toàn quyền quản trị profiles" on public.profiles for all u
 create policy "Toàn quyền quản trị payout_requests" on public.payout_requests for all using (true) with check (true);
 create policy "Toàn quyền quản trị contracts" on public.contracts for all using (true) with check (true);
 create policy "Toàn quyền quản trị audit_logs" on public.audit_logs for all using (true) with check (true);
+create policy "Toàn quyền quản trị collab_posts" on public.collab_posts for all using (true) with check (true);
+create policy "Toàn quyền quản trị gigs" on public.gigs for all using (true) with check (true);
 
 -- ==============================================================================
 -- 4. SEED DATA MẪU BAN ĐẦU

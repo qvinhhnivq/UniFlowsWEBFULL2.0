@@ -6,6 +6,8 @@
   <title>Quản trị nội dung & Phân phối — UniFLOWs</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
@@ -17,12 +19,14 @@
     <!-- Admin Navigation Tabs -->
     <nav class="admin-nav-tabs" id="admin-tabs">
       <button type="button" class="admin-tab-btn active" data-tab="admin-tab-overview">📊 00 / Dashboard Tổng quan</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-releases">💿 01 / Duyệt phát hành & SmartLink</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">👥 02 / Quản lý Nghệ sĩ & Tài khoản Portal</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-payouts">💳 03 / Quản lý Rút tiền</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-copyright">🛡️ 04 / Bản quyền & Green-list</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 05 / Bài viết & Tạp chí</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-settings">⚙️ 06 / Cấu hình Trang & Email</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-releases">💿 01 / Duyệt phát hành & Waveform A&R</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-pitching">🎯 02 / Pitching & Playlist Tracker</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">👥 03 / Quản lý Nghệ sĩ & Portal</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-payouts">💳 04 / Quản lý Rút tiền</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-copyright">🛡️ 05 / Bản quyền & Green-list</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 06 / Bài viết & Tạp chí</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-settings">⚙️ 07 / Cấu hình Trang & Email</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-audit">🔐 08 / Nhật ký Bảo mật & Audit</button>
     </nav>
 
     <div id="notice" class="notice"></div>
@@ -183,7 +187,67 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 2: QUẢN LÝ NGHỆ SĨ & TÀI KHOẢN PORTAL -->
+      <!-- TAB 2: QUẢN LÝ PITCHING & PLAYLIST TRACKER -->
+      <!-- ========================================== -->
+      <section id="admin-tab-pitching" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Editorial Pitching & Playlist Tracker</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Theo dõi tiến độ gửi nhạc tới Tổng biên tập Spotify, Apple Music & Zing MP3 theo quy trình Kanban.</p>
+          </div>
+          <button type="button" id="admin-add-pitch-btn" class="button" style="padding: 6px 14px; font-size: 12px;">+ Tạo Chiến Dịch Pitching Mới</button>
+        </div>
+
+        <!-- Kanban Board Container -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px;">
+          <!-- Column 1: A&R Queue -->
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #94a3b8; padding-bottom:8px; margin-bottom:12px;">
+              <strong style="font-size:13px; text-transform:uppercase; color:#475569;">⏳ 1. Chờ Pitching</strong>
+              <span id="kanban-count-queue" style="background:#e2e8f0; color:#334155; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:10px;">0</span>
+            </div>
+            <div id="kanban-col-queue" class="kanban-column" style="display:grid; gap:10px; min-height:120px;">
+              <p class="empty" style="font-size:12px;">Không có bài chờ pitching.</p>
+            </div>
+          </div>
+
+          <!-- Column 2: Pitch Submitted -->
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #3b82f6; padding-bottom:8px; margin-bottom:12px;">
+              <strong style="font-size:13px; text-transform:uppercase; color:#1d4ed8;">🚀 2. Đang gửi Editorial</strong>
+              <span id="kanban-count-submitted" style="background:#dbeafe; color:#1e40af; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:10px;">0</span>
+            </div>
+            <div id="kanban-col-submitted" class="kanban-column" style="display:grid; gap:10px; min-height:120px;">
+              <p class="empty" style="font-size:12px;">Không có bài đang chờ phản hồi.</p>
+            </div>
+          </div>
+
+          <!-- Column 3: Placed -->
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #22c55e; padding-bottom:8px; margin-bottom:12px;">
+              <strong style="font-size:13px; text-transform:uppercase; color:#15803d;">🌟 3. Vào Playlist Thành Công</strong>
+              <span id="kanban-count-placed" style="background:#dcfce7; color:#166534; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:10px;">0</span>
+            </div>
+            <div id="kanban-col-placed" class="kanban-column" style="display:grid; gap:10px; min-height:120px;">
+              <p class="empty" style="font-size:12px;">Chưa có bài nào được xếp playlist.</p>
+            </div>
+          </div>
+
+          <!-- Column 4: Passed -->
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ef4444; padding-bottom:8px; margin-bottom:12px;">
+              <strong style="font-size:13px; text-transform:uppercase; color:#b91c1c;">❌ 4. Không Được Chọn</strong>
+              <span id="kanban-count-passed" style="background:#fee2e2; color:#991b1b; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:10px;">0</span>
+            </div>
+            <div id="kanban-col-passed" class="kanban-column" style="display:grid; gap:10px; min-height:120px;">
+              <p class="empty" style="font-size:12px;">Không có bài bị từ chối.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: QUẢN LÝ NGHỆ SĨ & TÀI KHOẢN PORTAL -->
       <!-- ========================================== -->
       <section id="admin-tab-artists" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
         <div class="section-head" style="padding-left: 0; padding-right: 0;">
@@ -384,6 +448,35 @@
         </div>
       </section>
 
+      <!-- ========================================== -->
+      <!-- TAB 8: NHẬT KÝ BẢO MẬT & AUDIT LOGS -->
+      <!-- ========================================== -->
+      <section id="admin-tab-audit" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 22px; letter-spacing: -0.04em;">Nhật Ký Bảo Mật & Audit Logs</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Lưu vết mọi hành động quản trị, cập nhật hợp đồng, duyệt rút tiền và thay đổi dữ liệu trên hệ thống.</p>
+          </div>
+          <button type="button" id="refresh-audit-logs-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Làm mới</button>
+        </div>
+
+        <div style="background: #fff; border: 1px solid var(--ink); border-radius: 8px; overflow: hidden; margin-top: 15px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+            <thead>
+              <tr style="background: #fafafa; border-bottom: 2px solid var(--ink);">
+                <th style="padding: 10px 14px; width: 180px;">Thời gian</th>
+                <th style="padding: 10px 14px; width: 220px;">Tài khoản Quản trị</th>
+                <th style="padding: 10px 14px; width: 180px;">Hành động</th>
+                <th style="padding: 10px 14px;">Chi tiết thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="admin-audit-logs-tbody">
+              <!-- Dynamic Audit Log Rows -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Sticky Actions Bar -->
       <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10; display: flex; gap: 12px; align-items: center;">
         <button class="button" type="submit" id="save-all-btn" style="padding: 12px 24px; font-weight: bold;">Lưu toàn bộ lên Supabase</button>
@@ -396,5 +489,12 @@
   </main>
 
   <script type="module" src="assets/admin.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

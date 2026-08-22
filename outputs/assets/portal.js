@@ -284,6 +284,10 @@ function handleHash() {
     releases: 'tab-releases',
     earnings: 'tab-earnings',
     insights: 'tab-insights',
+    collab: 'tab-collab',
+    gigs: 'tab-gigs',
+    contracts: 'tab-contracts',
+    marketing: 'tab-marketing',
     support: 'tab-support'
   };
   if (hashMap[hash]) {
@@ -626,6 +630,11 @@ function renderReleaseListItems() {
             <span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:bold;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</span>
           </div>
           ${playlistsHtml}
+          ${(p.metadata && p.metadata.arFeedback) ? `
+            <div style="margin-top:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 12px;font-size:12px;color:#991b1b;">
+              <strong>💬 Góp ý từ A&R UniFLOWs:</strong> ${esc(p.metadata.arFeedback)}
+            </div>
+          ` : ''}
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           ${p.audioUrl ? `<a href="${esc(p.audioUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;font-weight:bold;">🎵 Master</a>` : ''}
@@ -1093,6 +1102,57 @@ async function renderReleases() {
 }
 
 // ----------------------------------------------------
+// DYNAMIC ROYALTY SPLITS BUILDER (PORTAL STEP 3)
+// ----------------------------------------------------
+const splitsContainer = document.querySelector('#royalty-splits-container');
+const addSplitBtn = document.querySelector('#add-royalty-split-btn');
+const totalSplitsDisplay = document.querySelector('#total-splits-display');
+
+function updateSplitsTotal() {
+  let total = 0;
+  document.querySelectorAll('#royalty-splits-container .split-pct').forEach(input => {
+    total += parseFloat(input.value) || 0;
+  });
+  if (totalSplitsDisplay) {
+    totalSplitsDisplay.textContent = `${total}%`;
+    totalSplitsDisplay.style.color = Math.round(total) === 100 ? '#16a34a' : '#dc2626';
+  }
+}
+
+document.querySelector('#royalty-splits-container')?.addEventListener('input', (e) => {
+  if (e.target.classList.contains('split-pct')) {
+    updateSplitsTotal();
+  }
+});
+
+addSplitBtn?.addEventListener('click', () => {
+  if (!splitsContainer) return;
+  const row = document.createElement('div');
+  row.className = 'royalty-split-row';
+  row.style = 'display:flex;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;';
+  row.innerHTML = `
+    <input class="split-name" placeholder="Tên nghệ sĩ / Email đối tác" required style="flex:2;padding:8px;font-size:12px;border:1px solid var(--ink);border-radius:4px;">
+    <select class="split-role" style="flex:1.5;padding:8px;font-size:12px;background:#fff;border:1px solid var(--ink);border-radius:4px;">
+      <option value="Producer">Producer</option>
+      <option value="Songwriter">Songwriter</option>
+      <option value="Featured Artist">Featured Artist</option>
+      <option value="Mix/Master Engineer">Mix/Master Engineer</option>
+    </select>
+    <div style="display:flex;align-items:center;gap:4px;flex:1;">
+      <input class="split-pct" type="number" min="1" max="99" value="20" style="padding:8px;font-size:12px;text-align:right;font-weight:bold;width:100%;border:1px solid var(--ink);border-radius:4px;">
+      <span style="font-size:12px;font-weight:bold;">%</span>
+    </div>
+    <button type="button" class="remove-split-btn button alt" style="padding:6px 10px;font-size:11px;color:#dc2626;border-radius:4px;">✕</button>
+  `;
+  row.querySelector('.remove-split-btn').onclick = () => {
+    row.remove();
+    updateSplitsTotal();
+  };
+  splitsContainer.appendChild(row);
+  updateSplitsTotal();
+});
+
+// ----------------------------------------------------
 // FORM SUBMISSION (WITH DIRECT ARTWORK URL OPTION)
 // ----------------------------------------------------
 form?.addEventListener('submit', async (e) => {
@@ -1101,6 +1161,25 @@ form?.addEventListener('submit', async (e) => {
     alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
     return;
   }
+
+  // 0. Validate Splits
+  const splits = [];
+  let totalPct = 0;
+  document.querySelectorAll('#royalty-splits-container .royalty-split-row').forEach(row => {
+    const name = row.querySelector('.split-name')?.value.trim();
+    const role = row.querySelector('.split-role')?.value || 'Contributor';
+    const percentage = parseFloat(row.querySelector('.split-pct')?.value) || 0;
+    if (name && percentage > 0) {
+      splits.push({ artistName: name, role, percentage });
+      totalPct += percentage;
+    }
+  });
+
+  if (splits.length > 0 && Math.round(totalPct) !== 100) {
+    alert(`Tổng tỷ lệ phân chia Royalty hiện tại là ${totalPct}%. Vui lòng điều chỉnh lại các phần trăm để tổng bằng chính xác 100%.`);
+    return;
+  }
+
   submitBtn.disabled = true;
   submitBtn.textContent = 'Đang gửi...';
   notice.style.display = 'none';
@@ -1145,6 +1224,14 @@ form?.addEventListener('submit', async (e) => {
     if (v.linkYoutube) links.youtube = v.linkYoutube.trim();
     if (v.linkZing) links.zingmp3 = v.linkZing.trim();
 
+    const metadataPayload = {
+      ...v,
+      splits,
+      lyricsText: v.lyricsText || '',
+      lyricsLrc: v.lyricsLrc || '',
+      syncLicensingConsent: v.syncLicensingConsent === 'on' || v.syncLicensingConsent === true
+    };
+
     const newReleaseObj = {
       title: v.title,
       type: releaseTypeFormatted,
@@ -1159,7 +1246,7 @@ form?.addEventListener('submit', async (e) => {
         phonogram: v.phonogram,
         copyright: v.copyright
       },
-      metadata: v,
+      metadata: metadataPayload,
       audioUrl,
       artworkUrl
     };
@@ -1192,7 +1279,7 @@ form?.addEventListener('submit', async (e) => {
         audio_url: audioUrl,
         artwork_url: artworkUrl,
         links,
-        metadata: v
+        metadata: metadataPayload
       }).select().single();
 
       if (dbError) throw dbError;
@@ -1843,8 +1930,312 @@ function applyPortalTheme(theme) {
   });
 }
 
+// ==========================================
+// 01: COLLAB & INTERNAL ARTIST NETWORK
+// ==========================================
+let collabPosts = [];
+
+const defaultCollabPosts = [
+  {
+    id: 'collab-1',
+    artist_name: 'MONO//TONE',
+    artist_genre: 'Future Pop',
+    title: 'Cần tìm Vocalist Nữ hát đoạn Chorus bài Synth-pop mới',
+    looking_for: 'Vocalist (Nữ)',
+    genre: 'Synth-pop / Dance',
+    description: 'Track đã hoàn thiện demo arrangement, tempo 124 BPM. Cần giọng nữ vocal sáng, phong cách tươi mới như Dua Lipa. Tác quyền split 30% Master.',
+    audio_preview: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'collab-2',
+    artist_name: 'KAII',
+    artist_genre: 'Hip-hop / Rap',
+    title: 'Tìm Music Producer làm Beat Trap / Drill nặng đô',
+    looking_for: 'Music Producer',
+    genre: 'Hip-hop / Drill',
+    description: 'Mình có sẵn 2 verse rap 140 BPM, cần producer phối beat có 808 gắt và sample nhạc cụ dân tộc. Có thể hợp tác dài hạn cho cả EP.',
+    audio_preview: '',
+    created_at: new Date(Date.now() - 86400000).toISOString()
+  }
+];
+
+async function loadCollabPosts() {
+  const feedEl = document.querySelector('#portal-collab-feed');
+  if (!feedEl) return;
+
+  try {
+    collabPosts = JSON.parse(localStorage.getItem('uniflows-collab-posts') || 'null') || defaultCollabPosts;
+  } catch {
+    collabPosts = defaultCollabPosts;
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbPosts, error } = await supabase.from('collab_posts').select('*').order('created_at', { ascending: false });
+      if (!error && dbPosts && dbPosts.length > 0) {
+        collabPosts = dbPosts;
+        localStorage.setItem('uniflows-collab-posts', JSON.stringify(collabPosts));
+      }
+    } catch (e) {
+      console.warn('Lỗi lấy collab từ Supabase:', e);
+    }
+  }
+
+  if (collabPosts.length === 0) {
+    feedEl.innerHTML = '<p class="empty" style="padding:20px;background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:10px;color:var(--portal-text-muted);">Chưa có bài đăng tìm collab nào.</p>';
+    return;
+  }
+
+  feedEl.innerHTML = collabPosts.map(post => `
+    <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:12px;padding:20px;box-shadow:var(--portal-shadow);display:flex;flex-direction:column;justify-content:space-between;">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;">
+          <div>
+            <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;color:#2563eb;font-weight:bold;background:#eff6ff;padding:2px 8px;border-radius:4px;">
+              🎯 Cần: ${esc(post.looking_for || 'Collab')}
+            </span>
+            <h3 style="font-size:16px;margin:8px 0 2px;letter-spacing:-0.02em;">${esc(post.title)}</h3>
+            <small style="color:var(--portal-text-dim);">Đăng bởi <b>${esc(post.artist_name || 'Nghệ sĩ')}</b> · ${esc(post.genre || 'Music')}</small>
+          </div>
+        </div>
+
+        <p style="font-size:13px;color:var(--portal-text-muted);line-height:1.5;margin:10px 0;">
+          ${esc(post.description)}
+        </p>
+
+        ${post.audio_preview ? `
+          <div style="margin:10px 0;background:var(--portal-hover-bg);padding:8px 12px;border-radius:6px;">
+            <small style="display:block;font-size:11px;color:var(--portal-text-dim);margin-bottom:4px;">Demo nghe thử:</small>
+            <audio controls src="${esc(post.audio_preview)}" style="width:100%;height:30px;"></audio>
+          </div>
+        ` : ''}
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:14px;border-top:1px solid var(--portal-card-border);padding-top:12px;">
+        <button type="button" class="button" style="flex:1;padding:8px;font-size:11px;font-weight:bold;" onclick="alert('Đã gửi thông báo kết nối hợp tác tới ${esc(post.artist_name || 'Nghệ sĩ')}! Hãng đĩa sẽ tạo nhóm trao đổi nội bộ.')">
+          🤝 Nhận Kèo Collab
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Collab Modal Handlers
+const collabDialog = document.querySelector('#collab-dialog');
+document.querySelector('#open-collab-modal-btn')?.addEventListener('click', () => collabDialog?.showModal());
+document.querySelector('#close-collab-dialog-btn')?.addEventListener('click', () => collabDialog?.close());
+document.querySelector('#close-collab-dialog-btn-2')?.addEventListener('click', () => collabDialog?.close());
+
+document.querySelector('#collab-post-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = document.querySelector('#collab-title-input')?.value.trim();
+  const role = document.querySelector('#collab-role-input')?.value;
+  const genre = document.querySelector('#collab-genre-input')?.value.trim();
+  const desc = document.querySelector('#collab-desc-input')?.value.trim();
+  const demo = document.querySelector('#collab-demo-input')?.value.trim() || '';
+
+  const newPost = {
+    id: `collab-${Date.now()}`,
+    artist_id: artist.id,
+    artist_name: artist.name,
+    artist_genre: artist.genre || 'Music',
+    title,
+    looking_for: role,
+    genre,
+    description: desc,
+    audio_preview: demo,
+    created_at: new Date().toISOString()
+  };
+
+  collabPosts.unshift(newPost);
+  localStorage.setItem('uniflows-collab-posts', JSON.stringify(collabPosts));
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('collab_posts').insert(newPost);
+    } catch (err) {
+      console.warn('Lỗi lưu collab lên Supabase:', err);
+    }
+  }
+
+  collabDialog?.close();
+  document.querySelector('#collab-post-form')?.reset();
+  showNotice('✓ Đã đăng bài tìm đối tác Collab lên bảng tin thành công!');
+  loadCollabPosts();
+});
+
+// ==========================================
+// 02: LIVE GIGS & SHOW BOOKING
+// ==========================================
+const sampleGigs = [
+  {
+    event_name: 'The Flow Live Session #4',
+    venue: 'Nhà Hát Lớn TP. Hồ Chí Minh',
+    city: 'Hồ Chí Minh',
+    gig_date: '2026-09-15',
+    fee: '20,000,000',
+    status: 'Đã thanh toán vào ví'
+  },
+  {
+    event_name: 'Monsoon Music Festival 2026',
+    venue: 'Hoàng Thành Thăng Long',
+    city: 'Hà Nội',
+    gig_date: '2026-10-24',
+    fee: '25,000,000',
+    status: 'Đã xác nhận'
+  }
+];
+
+function loadArtistGigs() {
+  const gigsListEl = document.querySelector('#portal-gigs-list');
+  if (!gigsListEl) return;
+
+  let gigs = sampleGigs;
+  try {
+    const cached = JSON.parse(localStorage.getItem('uniflows-gigs') || 'null');
+    if (cached) gigs = cached;
+  } catch {}
+
+  gigsListEl.innerHTML = gigs.map(g => `
+    <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;box-shadow:var(--portal-shadow);">
+      <div style="display:flex;gap:14px;align-items:center;">
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;text-align:center;min-width:70px;">
+          <strong style="font-size:18px;color:#1d4ed8;display:block;">${new Date(g.gig_date).getDate()}</strong>
+          <small style="font-size:10px;text-transform:uppercase;color:#3b82f6;font-weight:bold;">Tháng ${new Date(g.gig_date).getMonth() + 1}</small>
+        </div>
+        <div>
+          <strong style="font-size:16px;display:block;margin-bottom:2px;">${esc(g.event_name)}</strong>
+          <small style="color:var(--portal-text-muted);">📍 ${esc(g.venue)} · ${esc(g.city)}</small>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="text-align:right;">
+          <span style="font-size:10px;text-transform:uppercase;color:var(--portal-text-dim);display:block;">Cát-xê trình diễn:</span>
+          <strong style="font-size:16px;color:#10b981;font-family:'DM Mono',monospace;">₫ ${parseInt(g.fee.replace(/[^0-9]/g,'')).toLocaleString('vi-VN')}</strong>
+        </div>
+        <span style="font-size:11px;font-weight:bold;padding:4px 10px;border-radius:12px;background:${g.status.includes('thanh toán') ? '#ecfdf5' : '#fef3c7'};color:${g.status.includes('thanh toán') ? '#059669' : '#b45309'};border:1px solid ${g.status.includes('thanh toán') ? '#a7f3d0' : '#fde68a'};">
+          ${esc(g.status)}
+        </span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==========================================
+// 03: E-CONTRACTS & DIGITAL SIGNATURE CANVAS
+// ==========================================
+function initDigitalSignaturePad() {
+  const canvas = document.querySelector('#signature-pad');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  let isDrawing = false;
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+
+  const getPos = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height)
+    };
+  };
+
+  const startDraw = (e) => {
+    isDrawing = true;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  const stopDraw = () => { isDrawing = false; };
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  window.addEventListener('mouseup', stopDraw);
+
+  canvas.addEventListener('touchstart', startDraw, { passive: true });
+  canvas.addEventListener('touchmove', draw, { passive: true });
+  window.addEventListener('touchend', stopDraw);
+
+  document.querySelector('#clear-signature-btn')?.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  });
+
+  document.querySelector('#save-signature-btn')?.addEventListener('click', () => {
+    const dataUrl = canvas.toDataURL();
+    localStorage.setItem(`uniflows-signature-${artist.id}`, dataUrl);
+    const badge = document.querySelector('#contract-status-badge');
+    if (badge) {
+      badge.textContent = '✓ ĐÃ KÝ XÁC NHẬN ĐIỆN TỬ';
+      badge.style.background = '#ecfdf5';
+      badge.style.color = '#059669';
+    }
+    showNotice('✓ Đã lưu chữ ký điện tử và kích hoạt hợp đồng phân phối âm nhạc thành công!');
+  });
+}
+
+// ==========================================
+// 04: MARKETING & ONE-CLICK ADS MANAGER
+// ==========================================
+function initMarketingTools() {
+  const releaseSelect = document.querySelector('#ads-release-select');
+  const promoStoryTitle = document.querySelector('#promo-story-title');
+  const promoStoryArtist = document.querySelector('#promo-story-artist');
+  const promoStoryArt = document.querySelector('#promo-story-art');
+
+  const products = artist.products || [];
+
+  if (releaseSelect && products.length > 0) {
+    releaseSelect.innerHTML = products.map(p => `<option value="${esc(p.title)}" data-art="${esc(p.artworkUrl || '')}">${esc(p.title)} (${esc(p.type || 'Single')})</option>`).join('');
+
+    // Set initial promo preview
+    const firstP = products[0];
+    if (promoStoryTitle) promoStoryTitle.textContent = firstP.title;
+    if (promoStoryArtist) promoStoryArtist.textContent = artist.name;
+    if (promoStoryArt && firstP.artworkUrl) promoStoryArt.src = firstP.artworkUrl;
+
+    releaseSelect.addEventListener('change', () => {
+      const opt = releaseSelect.selectedOptions[0];
+      const title = opt.value;
+      const art = opt.dataset.art;
+      if (promoStoryTitle) promoStoryTitle.textContent = title;
+      if (promoStoryArt && art) promoStoryArt.src = art;
+    });
+  }
+
+  document.querySelector('#download-promo-story-btn')?.addEventListener('click', () => {
+    alert('✓ Đang chuẩn bị tệp Story 1080x1920 px chuẩn Instagram/TikTok. Ảnh sẽ được tải xuống thiết bị của bạn!');
+  });
+
+  document.querySelector('#launch-ads-btn')?.addEventListener('click', () => {
+    const budget = document.querySelector('#ads-budget-select')?.value;
+    const budgetFormatted = parseInt(budget || '1000000').toLocaleString('vi-VN');
+    if (confirm(`Bạn có đồng ý trích ₫ ${budgetFormatted} từ số dư khả dụng để khởi chạy chiến dịch quảng cáo đa nền tảng cho ca khúc này không?`)) {
+      showNotice(`🚀 Chiến dịch quảng cáo đã được kích hoạt thành công! Dữ liệu tiếp cận sẽ được cập nhật sau 24h.`);
+    }
+  });
+}
+
 initPortalTheme();
 renderReleases();
 loadArtistPayouts();
 loadArtistServiceRequests();
+loadCollabPosts();
+loadArtistGigs();
+initDigitalSignaturePad();
+initMarketingTools();
+
 
