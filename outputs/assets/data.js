@@ -330,8 +330,11 @@ export const defaultData = {
             title: 'Vệt Sáng',
             artist: 'Lumi',
             role: 'Music Producer / Beat & Arrangement',
-            dspLink: 'https://open.spotify.com',
-            platform: 'Spotify',
+            links: [
+              { name: 'Spotify', url: 'https://open.spotify.com' },
+              { name: 'Apple Music', url: 'https://music.apple.com' },
+              { name: 'YouTube MV', url: 'https://youtube.com' }
+            ],
             audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
             streams: '2.4M Streams',
             releaseYear: '2026'
@@ -340,8 +343,10 @@ export const defaultData = {
             title: 'Dải Tần',
             artist: 'MONO//TONE',
             role: 'Main Beatmaker & Vocal Producer',
-            dspLink: 'https://music.apple.com',
-            platform: 'Apple Music',
+            links: [
+              { name: 'Apple Music', url: 'https://music.apple.com' },
+              { name: 'Spotify', url: 'https://open.spotify.com' }
+            ],
             audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
             streams: '1.8M Streams',
             releaseYear: '2025'
@@ -350,8 +355,10 @@ export const defaultData = {
             title: 'City Lights (TVC)',
             artist: 'Sony Vietnam',
             role: 'Composer & Audio Producer',
-            dspLink: 'https://youtube.com',
-            platform: 'YouTube',
+            links: [
+              { name: 'YouTube', url: 'https://youtube.com' },
+              { name: 'SoundCloud', url: 'https://soundcloud.com' }
+            ],
             audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
             streams: '5M+ Views',
             releaseYear: '2025'
@@ -374,8 +381,10 @@ export const defaultData = {
             title: 'Đường Đua (Dolby Atmos Master)',
             artist: 'KAII',
             role: 'Mixing & Mastering Engineer (Apple Digital Master)',
-            dspLink: 'https://music.apple.com',
-            platform: 'Apple Music',
+            links: [
+              { name: 'Apple Music', url: 'https://music.apple.com' },
+              { name: 'Spotify', url: 'https://open.spotify.com' }
+            ],
             audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
             streams: '950K Streams',
             releaseYear: '2026'
@@ -384,8 +393,10 @@ export const defaultData = {
             title: 'Live at The Flow EP',
             artist: 'UniFLOWs Roster',
             role: 'Stereo Outboard Mastering',
-            dspLink: 'https://open.spotify.com',
-            platform: 'Spotify',
+            links: [
+              { name: 'Spotify', url: 'https://open.spotify.com' },
+              { name: 'YouTube', url: 'https://youtube.com' }
+            ],
             audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
             streams: '1.2M Streams',
             releaseYear: '2025'
@@ -408,8 +419,10 @@ export const defaultData = {
             title: 'Ánh Đèn Đêm (OST)',
             artist: 'Elena Topline x UniFLOWs',
             role: 'Songwriter & Topline Composer',
-            dspLink: 'https://youtube.com',
-            platform: 'YouTube',
+            links: [
+              { name: 'YouTube MV', url: 'https://youtube.com' },
+              { name: 'Zing MP3', url: 'https://zingmp3.vn' }
+            ],
             audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
             streams: '1.5M Streams',
             releaseYear: '2026'
@@ -418,8 +431,10 @@ export const defaultData = {
             title: 'Hợp Âm Mơ',
             artist: 'Lumi ft. Elena',
             role: 'Melody & Lyrics Writer',
-            dspLink: 'https://open.spotify.com',
-            platform: 'Spotify',
+            links: [
+              { name: 'Spotify', url: 'https://open.spotify.com' },
+              { name: 'Apple Music', url: 'https://music.apple.com' }
+            ],
             audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
             streams: '800K Streams',
             releaseYear: '2025'

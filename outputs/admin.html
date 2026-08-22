@@ -1049,19 +1049,23 @@
         </div>
         <div class="mini-grid">
           <div class="field">
-            <label style="font-weight:bold;font-size:11px;">Link Nghe Trên DSPs (Spotify / Apple Music / YouTube...) *</label>
-            <input id="modal-track-dsplink" type="url" placeholder="https://open.spotify.com/track/... hoặc YouTube">
+            <label style="font-weight:bold;font-size:11px;">Tên Nền Tảng (Tự do điền: Spotify, Apple Music, Beatport, YouTube...)</label>
+            <input id="modal-track-platform" type="text" list="dsp-suggestions" placeholder="Ví dụ: Spotify hoặc Beatport" value="Spotify">
+            <datalist id="dsp-suggestions">
+              <option value="Spotify">
+              <option value="Apple Music">
+              <option value="YouTube MV">
+              <option value="SoundCloud">
+              <option value="Zing MP3">
+              <option value="Beatport">
+              <option value="Bandcamp">
+              <option value="TikTok Sound">
+              <option value="Smart Link">
+            </datalist>
           </div>
           <div class="field">
-            <label style="font-weight:bold;font-size:11px;">Nền tảng DSPs</label>
-            <select id="modal-track-platform" style="padding:10px;border:1px solid var(--ink);border-radius:4px;font-size:13px;background:#fff;">
-              <option value="Spotify">🟢 Spotify</option>
-              <option value="Apple Music">🍎 Apple Music</option>
-              <option value="YouTube">🔴 YouTube / MV</option>
-              <option value="SoundCloud">🟠 SoundCloud</option>
-              <option value="Zing MP3">🟣 Zing MP3</option>
-              <option value="Smart Link">🔗 Smart Link (All DSPs)</option>
-            </select>
+            <label style="font-weight:bold;font-size:11px;">Link Nghe Trực Tiếp (URL) *</label>
+            <input id="modal-track-dsplink" type="url" placeholder="https://open.spotify.com/... hoặc link nền tảng bất kỳ">
           </div>
         </div>
         <div class="mini-grid">

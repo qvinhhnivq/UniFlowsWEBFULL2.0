@@ -61,37 +61,24 @@
       border-radius: 20px;
       display: inline-block;
     }
-    .dsp-stream-btn {
+    .track-link-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font: 12px 'DM Mono', monospace;
+      gap: 4px;
+      padding: 6px 12px;
+      font: 11px 'DM Mono', monospace;
       font-weight: 700;
+      text-transform: uppercase;
       text-decoration: none;
       border: 1px solid var(--ink);
+      background: transparent;
+      color: var(--ink);
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .track-link-pill:hover {
       background: var(--ink);
-      color: #fff;
-      transition: 0.2s;
-    }
-    .dsp-stream-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    }
-    .dsp-stream-btn.spotify {
-      background: #1db954;
-      border-color: #1db954;
-      color: #fff;
-    }
-    .dsp-stream-btn.apple {
-      background: #fa243c;
-      border-color: #fa243c;
-      color: #fff;
-    }
-    .dsp-stream-btn.youtube {
-      background: #ff0000;
-      border-color: #ff0000;
       color: #fff;
     }
     @media (max-width: 850px) {
@@ -112,25 +99,14 @@
     import './assets/security.js';
     import './assets/app.js';
 
-    function getPlatformMeta(tr) {
-      const url = (tr.dspLink || '').toLowerCase();
-      const platform = (tr.platform || '').toLowerCase();
-      if (platform.includes('spotify') || url.includes('spotify')) {
-        return { cls: 'spotify', icon: '🟢', name: 'Spotify' };
+    function getTrackLinks(tr) {
+      if (Array.isArray(tr.links) && tr.links.length > 0) {
+        return tr.links.filter(l => l && l.url);
       }
-      if (platform.includes('apple') || url.includes('apple')) {
-        return { cls: 'apple', icon: '🍎', name: 'Apple Music' };
+      if (tr.dspLink) {
+        return [{ name: tr.platform || 'DSPs', url: tr.dspLink }];
       }
-      if (platform.includes('youtube') || url.includes('youtu')) {
-        return { cls: 'youtube', icon: '🔴', name: 'YouTube' };
-      }
-      if (platform.includes('soundcloud') || url.includes('soundcloud')) {
-        return { cls: 'soundcloud', icon: '🟠', name: 'SoundCloud' };
-      }
-      if (platform.includes('zing') || url.includes('zing')) {
-        return { cls: 'zing', icon: '🟣', name: 'Zing MP3' };
-      }
-      return { cls: '', icon: '🔗', name: tr.platform || 'DSPs' };
+      return [];
     }
 
     const root = document.querySelector('[data-producer-detail]');
@@ -202,7 +178,7 @@
             </div>
             
             ${tracks.length > 0 ? tracks.map(tr => {
-              const dsp = getPlatformMeta(tr);
+              const links = getTrackLinks(tr);
               return `
                 <div class="producer-track-row">
                   <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -214,14 +190,14 @@
                     <div class="track-artist-text">Ca sĩ / Dự án: <b>${tr.artist}</b></div>
                   </div>
 
-                  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    ${tr.dspLink ? `
-                      <a href="${tr.dspLink}" target="_blank" rel="noopener noreferrer" class="dsp-stream-btn ${dsp.cls}">
-                        <span>${dsp.icon}</span> Nghe trên ${dsp.name} ↗
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    ${links.length > 0 ? links.map(l => `
+                      <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="track-link-pill">
+                        ${l.name || 'Nghe nhạc'} ↗
                       </a>
-                    ` : (tr.audioUrl ? `
+                    `).join('') : (tr.audioUrl ? `
                       <audio controls src="${tr.audioUrl}" style="width: 100%; max-width: 220px; height: 32px;"></audio>
-                    ` : '<span style="font: 11px \'DM Mono\', monospace; color: #888;">Lossless Studio Master</span>')}
+                    ` : '<span style="font: 11px \'DM Mono\', monospace; color: #888;">Chưa gắn link</span>')}
                   </div>
 
                   <div>

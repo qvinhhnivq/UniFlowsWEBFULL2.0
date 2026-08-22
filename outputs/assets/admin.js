@@ -3139,18 +3139,17 @@ function renderProducerTracksList() {
   }
 
   tbody.innerHTML = tracks.map((tr, idx) => {
-    let dspBadge = '';
-    if (tr.dspLink) {
-      let icon = '🔗 DSP Link';
-      if (tr.platform === 'Spotify' || tr.dspLink.includes('spotify')) icon = '🟢 Spotify';
-      else if (tr.platform === 'Apple Music' || tr.dspLink.includes('apple')) icon = '🍎 Apple';
-      else if (tr.platform === 'YouTube' || tr.dspLink.includes('youtu')) icon = '🔴 YouTube';
-      else if (tr.platform === 'SoundCloud' || tr.dspLink.includes('soundcloud')) icon = '🟠 SoundCloud';
-      else if (tr.platform === 'Zing MP3' || tr.dspLink.includes('zing')) icon = '🟣 Zing MP3';
-      else if (tr.platform) icon = `🔗 ${tr.platform}`;
-
-      dspBadge = `<a href="${esc(tr.dspLink)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#2563eb;font-weight:bold;text-decoration:underline;">${icon} ↗</a>`;
+    // Normalize links array
+    if (!Array.isArray(tr.links)) {
+      tr.links = tr.dspLink ? [{ name: tr.platform || 'Spotify', url: tr.dspLink }] : [];
     }
+
+    const linksHtml = tr.links.map((link, lIdx) => `
+      <div style="display:inline-flex;align-items:center;gap:4px;border:1px solid #0b0b0b;padding:2px 6px;border-radius:3px;font-size:10px;font-family:'DM Mono',monospace;background:#fff;margin:2px 3px 2px 0;">
+        <a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" style="color:#0b0b0b;font-weight:bold;text-decoration:none;">${esc(link.name || 'Link')} ↗</a>
+        <button type="button" class="delete-track-link-btn" data-tidx="${idx}" data-lidx="${lIdx}" title="Xóa link này" style="background:none;border:none;color:#ef4444;font-weight:bold;cursor:pointer;padding:0 2px;line-height:1;font-size:11px;">✕</button>
+      </div>
+    `).join('');
 
     return `
       <tr style="border-bottom:1px solid #eee;">
@@ -3164,16 +3163,80 @@ function renderProducerTracksList() {
         <td style="padding:10px 12px;font-size:12px;color:#16a34a;font-weight:bold;">
           ${esc(tr.streams || 'Live')}
         </td>
-        <td style="padding:10px 12px;">
-          ${dspBadge || (tr.audioUrl ? `<audio controls src="${tr.audioUrl}" style="height:24px;width:110px;"></audio>` : '<span style="color:#999;font-size:11px;">Chưa gắn link</span>')}
+        <td style="padding:10px 12px;min-width:160px;">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">
+            ${linksHtml || '<span style="color:#999;font-size:11px;">Chưa có link</span>'}
+            <button type="button" class="button alt add-link-to-track-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px;font-weight:bold;" title="Thêm link nền tảng mới">+ Link</button>
+          </div>
         </td>
-        <td style="padding:10px 12px;text-align:right;">
-          <button type="button" class="button alt remove delete-single-producer-track-btn" data-idx="${idx}" style="padding:3px 8px;font-size:10px;">✕ Xóa</button>
+        <td style="padding:10px 12px;text-align:right;white-space:nowrap;">
+          <button type="button" class="button alt edit-producer-track-btn" data-idx="${idx}" style="padding:3px 6px;font-size:10px;margin-right:4px;">✏️ Sửa</button>
+          <button type="button" class="button alt remove delete-single-producer-track-btn" data-idx="${idx}" style="padding:3px 6px;font-size:10px;">✕ Xóa</button>
         </td>
       </tr>
     `;
   }).join('');
 
+  // Delete individual platform link
+  tbody.querySelectorAll('.delete-track-link-btn').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const tIdx = parseInt(btn.dataset.tidx, 10);
+      const lIdx = parseInt(btn.dataset.lidx, 10);
+      selectedProducerForTracks.tracks[tIdx].links.splice(lIdx, 1);
+      await saveData(data);
+      renderProducerTracksList();
+      renderUniHubeAdmin();
+      showNotice('✓ Đã xóa link nền tảng.');
+    };
+  });
+
+  // Add new platform link to existing track
+  tbody.querySelectorAll('.add-link-to-track-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const tIdx = parseInt(btn.dataset.idx, 10);
+      const tr = selectedProducerForTracks.tracks[tIdx];
+      const platform = prompt(`Nhập tên nền tảng (vd: Spotify, Apple Music, Beatport, YouTube, Zing MP3...):`, 'Spotify');
+      if (!platform || !platform.trim()) return;
+      const url = prompt(`Nhập link URL cho ${platform.trim()}:`, 'https://');
+      if (!url || !url.trim() || url === 'https://') return;
+
+      if (!Array.isArray(tr.links)) tr.links = [];
+      tr.links.push({ name: platform.trim(), url: url.trim() });
+      await saveData(data);
+      renderProducerTracksList();
+      renderUniHubeAdmin();
+      showNotice(`✓ Đã thêm link ${platform.trim()} cho bài hát "${tr.title}"!`);
+    };
+  });
+
+  // Edit track metadata
+  tbody.querySelectorAll('.edit-producer-track-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const tIdx = parseInt(btn.dataset.idx, 10);
+      const tr = selectedProducerForTracks.tracks[tIdx];
+      const newTitle = prompt('Sửa Tên bài hát:', tr.title);
+      if (newTitle === null) return;
+      const newArtist = prompt('Sửa Tên ca sĩ / nghệ sĩ:', tr.artist);
+      if (newArtist === null) return;
+      const newRole = prompt('Sửa Vai trò sản xuất (Role/Credit):', tr.role || 'Music Producer');
+      if (newRole === null) return;
+      const newStreams = prompt('Sửa Thành tích / Lượt stream:', tr.streams || 'Live');
+      if (newStreams === null) return;
+
+      tr.title = newTitle.trim() || tr.title;
+      tr.artist = newArtist.trim() || tr.artist;
+      tr.role = newRole.trim() || tr.role;
+      tr.streams = newStreams.trim() || tr.streams;
+
+      await saveData(data);
+      renderProducerTracksList();
+      renderUniHubeAdmin();
+      showNotice(`✓ Đã cập nhật thông tin bài hát "${tr.title}"!`);
+    };
+  });
+
+  // Delete full track
   tbody.querySelectorAll('.delete-single-producer-track-btn').forEach(btn => {
     btn.onclick = async () => {
       const idx = parseInt(btn.dataset.idx, 10);
@@ -3194,7 +3257,7 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
   const role = document.querySelector('#modal-track-role').value.trim() || 'Music Producer';
   const streams = document.querySelector('#modal-track-streams').value.trim() || 'Live on DSPs';
   const dspLink = document.querySelector('#modal-track-dsplink')?.value.trim() || '';
-  const platform = document.querySelector('#modal-track-platform')?.value || 'Spotify';
+  const platform = document.querySelector('#modal-track-platform')?.value.trim() || 'Spotify';
   const audioUrl = document.querySelector('#modal-track-audio').value.trim();
   const releaseYear = document.querySelector('#modal-track-year').value.trim() || '2026';
 
@@ -3203,13 +3266,17 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
     return;
   }
 
+  const links = [];
+  if (dspLink) {
+    links.push({ name: platform, url: dspLink });
+  }
+
   const newTrack = {
     title,
     artist,
     role,
     streams,
-    dspLink,
-    platform,
+    links,
     audioUrl,
     releaseYear
   };
@@ -3226,7 +3293,7 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
   document.querySelector('#modal-track-audio').value = '';
   document.querySelector('#modal-track-streams').value = '';
 
-  showNotice(`✓ Đã thêm ca khúc "${title}" (${platform}) cho Producer ${selectedProducerForTracks.name}!`);
+  showNotice(`✓ Đã thêm ca khúc "${title}" cho Producer ${selectedProducerForTracks.name}!`);
 });
 
 document.querySelector('#close-producer-tracks-dialog-btn')?.addEventListener('click', () => {
