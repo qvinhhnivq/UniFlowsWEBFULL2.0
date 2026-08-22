@@ -30,6 +30,7 @@ if (!$('.nav')) {
         <a href="unihube" data-i18n="nav_unihube">Uni-HUBE</a>
         <a href="48k" data-i18n="nav_48k">48K Collective</a>
         <a href="unipublishing" data-i18n="nav_publishing">UniPUBLISHING</a>
+        <a href="submit-music" data-i18n="nav_submit_music" style="color:#0284c7;font-weight:700;">Gửi Demo</a>
         <a href="about" data-i18n="nav_about">Về chúng tôi</a>
         <a href="news" data-i18n="nav_news">Tạp chí</a>
         <a href="contact" data-i18n="nav_contact">Liên hệ</a>

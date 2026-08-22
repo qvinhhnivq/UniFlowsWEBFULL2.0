@@ -533,7 +533,61 @@ export const defaultData = {
         createdAt: '22/08/2026'
       }
     ]
-  }
+  },
+  musicSubmissions: [
+    {
+      id: 'sub-demo-101',
+      fullName: 'Nguyễn Hoàng Long',
+      artistName: 'Long Nguyen',
+      email: 'long.music@gmail.com',
+      phone: '0908123456',
+      city: 'Hồ Chí Minh · Việt Nam',
+      genres: ['Alternative R&B', 'Neo-Soul'],
+      spotifyUrl: 'https://open.spotify.com/artist/example-long',
+      appleMusicUrl: 'https://music.apple.com/artist/example-long',
+      demoUrl: 'https://soundcloud.com/demo-unreleased/thanh-pho-tat-den-ep',
+      tracklistNotes: '1. Thành Phố Tắt Đèn (Produced by Alexandre)\n2. Mưa Rơi Qua Phố\n3. Giấc Mơ Xa',
+      socials: {
+        instagram: 'https://instagram.com/long.official',
+        tiktok: 'https://tiktok.com/@long.tunes',
+        youtube: 'https://youtube.com/@longmusic',
+        other: ''
+      },
+      goals: 'Tìm kiếm Hãng đĩa quản lý & phát hành Album đầu tay, kết nối với Music Producer chuyên nghiệp tại Uni-HUBE và phân phối DSPs toàn cầu.',
+      bio: 'Nghệ sĩ kiêm nhạc sĩ độc lập theo đuổi âm nhạc R&B không gian từ 2022. Phong cách pha trộn giai điệu tự sự ấm áp với âm thanh hiện đại.',
+      proudestProject: 'Single "Thành Phố Tắt Đèn" (Đạt 150k organic streams trên Spotify)',
+      status: 'Chờ duyệt',
+      rating: 5,
+      adminNotes: 'Tone giọng R&B rất đặc trưng, giai điệu bắt tai, phong cách phù hợp với định hướng UniFLOWs. Đã chuyển cho A&R team thẩm định.',
+      submittedAt: '22/08/2026'
+    },
+    {
+      id: 'sub-demo-102',
+      fullName: 'Trần Minh Thảo',
+      artistName: 'Minh Thảo',
+      email: 'thao.ambient@gmail.com',
+      phone: '0918765432',
+      city: 'Hà Nội · Việt Nam',
+      genres: ['Indie Electronic', 'Dream Pop'],
+      spotifyUrl: '',
+      appleMusicUrl: '',
+      demoUrl: 'https://drive.google.com/drive/folders/demo-minh-thao-unreleased',
+      tracklistNotes: 'EP "Sương Mù" gồm 4 bài hát (Demo Rough Mix)',
+      socials: {
+        instagram: 'https://instagram.com/minhthao.wav',
+        tiktok: 'https://tiktok.com/@minhthao.music',
+        youtube: '',
+        other: ''
+      },
+      goals: 'Hợp tác sản xuất âm nhạc chuyên sâu, mixing mastering tại Uni-HUBE và tham gia mạng lưới cấp phép UniPUBLISHING.',
+      bio: 'Sáng tác và tự sản xuất các bài hát mang âm hưởng Dream Pop / Indie hoài niệm với chất giọng nhẹ nhàng, bay bổng.',
+      proudestProject: 'Demo "Những Ngày Mưa Tháng Tám"',
+      status: 'Đang thẩm định',
+      rating: 4,
+      adminNotes: 'Ý tưởng bài hát tốt, melody lạ, cần hỗ trợ phối khí và master chuyên nghiệp tại Uni-HUBE.',
+      submittedAt: '21/08/2026'
+    }
+  ]
 };
 
 export function getLocalCachedData() {
@@ -639,6 +693,15 @@ export async function getData() {
         merged.adminAccounts = cached.adminAccounts;
       } else {
         merged.adminAccounts = defaultData.adminAccounts;
+      }
+
+      // Parse music submissions (A&R Demos)
+      if (Array.isArray(settings.music_submissions)) {
+        merged.musicSubmissions = settings.music_submissions;
+      } else if (cached.musicSubmissions && Array.isArray(cached.musicSubmissions)) {
+        merged.musicSubmissions = cached.musicSubmissions;
+      } else {
+        merged.musicSubmissions = defaultData.musicSubmissions;
       }
 
       merged.city = settings.city || merged.city;
@@ -766,6 +829,7 @@ export async function saveData(data) {
       unihube: data.unihube || defaultData.unihube,
       collective48k: data.collective48k || defaultData.collective48k,
       admin_accounts: data.adminAccounts || defaultData.adminAccounts,
+      music_submissions: data.musicSubmissions || defaultData.musicSubmissions,
       artist_order: data.artist_order || (data.artists || []).map(a => a.id),
       city: data.city,
       updated_at: new Date().toISOString()
@@ -779,6 +843,7 @@ export async function saveData(data) {
       delete settingsPayload.unihube;
       delete settingsPayload.collective48k;
       delete settingsPayload.admin_accounts;
+      delete settingsPayload.music_submissions;
       await supabase.from('site_settings').upsert(settingsPayload);
     }
 

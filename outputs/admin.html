@@ -30,6 +30,7 @@
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-publishing">🎬 09 / UniPUBLISHING & Sync</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-unihube" style="border-left: 2px solid #d97706; background:#fffbeb;">🎛️ 10 / Uni-HUBE (Sản xuất)</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-collective48k" style="border-left: 2px solid #7c3aed; background:#faf5ff;">⚡ 11 / 48K Collective (Agency)</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-submissions" style="border-left: 2px solid #0284c7; background:#f0f9ff; font-weight:bold;">🎵 12 / Nhận Demo & Tuyển Chọn A&R</button>
     </nav>
 
     <div id="notice" class="notice"></div>
@@ -935,6 +936,63 @@
           <div id="collective48k-casestudies-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;">
             <!-- Injected dynamically -->
           </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 12: NHẬN DEMO & TUYỂN CHỌN A&R -->
+      <!-- ========================================== -->
+      <section id="admin-tab-submissions" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;">🎵 A&R Demo Drop & Tuyển Chọn Nghệ Sĩ Mới</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Tiếp nhận, nghe thử bản thu demo, xem profile Spotify / Apple Music, thẩm định định hướng nghệ thuật và 1-click đưa nghệ sĩ vào hệ thống.</p>
+          </div>
+          <span class="kicker">A&R Talent Hub</span>
+        </div>
+
+        <!-- Metric KPI Cards for Submissions -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 18px 0;">
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 16px; border-radius: 8px; border-top: 4px solid #0284c7;">
+            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #0284c7;">📥 Tổng Số Bản Demo Gửi Về</span>
+            <strong id="admin-total-submissions-count" style="display: block; font-size: 26px; margin-top: 4px; color: #0f172a;">0</strong>
+          </div>
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 16px; border-radius: 8px; border-top: 4px solid #f59e0b;">
+            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #d97706;">⏳ Chờ Thẩm Định</span>
+            <strong id="admin-pending-submissions-count" style="display: block; font-size: 26px; margin-top: 4px; color: #92400e;">0</strong>
+          </div>
+          <div style="background: #fff; border: 1px solid var(--ink); padding: 16px; border-radius: 8px; border-top: 4px solid #10b981;">
+            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #16a34a;">✨ Đã Duyệt / Đã Ký Hợp Đồng</span>
+            <strong id="admin-signed-submissions-count" style="display: block; font-size: 26px; margin-top: 4px; color: #14532d;">0</strong>
+          </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <div style="background: #fff; border: 1px solid var(--ink); padding: 16px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <label style="font-family: 'DM Mono', monospace; font-size: 11px; font-weight: bold;">Trạng thái:</label>
+            <select id="admin-submission-status-filter" style="padding: 8px 12px; font-size: 12px; font-weight: bold; background: #f8fafc; border: 1px solid #94a3b8; border-radius: 4px; cursor: pointer;">
+              <option value="all">Tất cả trạng thái (All)</option>
+              <option value="Chờ duyệt">⏳ Chờ duyệt (Pending)</option>
+              <option value="Đang thẩm định">🔍 Đang thẩm định (In Review)</option>
+              <option value="Đã liên hệ">💬 Đã liên hệ (Contacted)</option>
+              <option value="Đã ký hợp đồng">✨ Đã ký hợp đồng (Signed)</option>
+              <option value="Lưu trữ">📁 Lưu trữ (Archived)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex: 1; max-width: 400px;">
+            <input type="search" id="admin-submission-search" placeholder="Tìm theo tên nghệ sĩ, email, thể loại..." style="padding: 8px 12px; font-size: 12px; width: 100%; border: 1px solid #94a3b8; border-radius: 4px;">
+          </div>
+
+          <div>
+            <a href="submit-music" target="_blank" class="button alt" style="padding: 8px 14px; font-size: 11px;">Mở Trang Gửi Demo ↗</a>
+          </div>
+        </div>
+
+        <!-- Submissions Feed / List Container -->
+        <div id="admin-submissions-feed" style="display: flex; flex-direction: column; gap: 18px;">
+          <!-- Dynamically Injected -->
         </div>
       </section>
 

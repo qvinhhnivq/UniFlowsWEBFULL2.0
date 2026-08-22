@@ -1716,6 +1716,7 @@ function render() {
   renderPublishingAdmin();
   renderUniHubeAdmin();
   renderCollective48kAdmin();
+  renderMusicSubmissionsAdmin();
 }
 
 // ----------------------------------------------------
@@ -3751,19 +3752,333 @@ document.querySelector('#btn-save-new-casestudy')?.addEventListener('click', asy
 
   if (!data.collective48k) data.collective48k = JSON.parse(JSON.stringify(defaultData.collective48k));
   if (!data.collective48k.caseStudies) data.collective48k.caseStudies = [];
-  data.collective48k.caseStudies.push(newCS);
+// ====================================================
+// A&R DEMO DROP & MUSIC SUBMISSIONS MANAGEMENT
+// ====================================================
+function renderMusicSubmissionsAdmin() {
+  const feed = document.querySelector('#admin-submissions-feed');
+  if (!feed) return;
 
-  await saveData(data);
-  renderCollective48kAdmin();
-  document.querySelector('#add-casestudy-box').style.display = 'none';
-  showNotice(`✓ Đã thêm Case Study "${title}" vào 48K Collective!`);
-});
+  const submissions = data.musicSubmissions || defaultData.musicSubmissions || [];
 
-document.querySelector('#refresh-48k-proposals-btn')?.addEventListener('click', () => {
-  renderCollective48kAdmin();
-  showNotice('✓ Đã làm mới hộp thư 48K Collective.');
-});
+  // Update Metric Counters
+  const totalCountEl = document.querySelector('#admin-total-submissions-count');
+  const pendingCountEl = document.querySelector('#admin-pending-submissions-count');
+  const signedCountEl = document.querySelector('#admin-signed-submissions-count');
+
+  const pendingSubs = submissions.filter(s => s.status === 'Chờ duyệt' || s.status === 'Đang thẩm định');
+  const signedSubs = submissions.filter(s => s.status === 'Đã ký hợp đồng');
+
+  if (totalCountEl) totalCountEl.textContent = submissions.length;
+  if (pendingCountEl) pendingCountEl.textContent = pendingSubs.length;
+  if (signedCountEl) signedCountEl.textContent = signedSubs.length;
+
+  // Filter & Search Logic
+  const statusFilter = document.querySelector('#admin-submission-status-filter')?.value || 'all';
+  const searchTerm = (document.querySelector('#admin-submission-search')?.value || '').toLowerCase().trim();
+
+  let filtered = submissions;
+  if (statusFilter !== 'all') {
+    filtered = filtered.filter(s => s.status === statusFilter);
+  }
+  if (searchTerm) {
+    filtered = filtered.filter(s => {
+      const targetStr = `${s.artistName || ''} ${s.fullName || ''} ${s.email || ''} ${(s.genres || []).join(' ')} ${s.bio || ''} ${s.goals || ''}`.toLowerCase();
+      return targetStr.includes(searchTerm);
+    });
+  }
+
+  if (filtered.length === 0) {
+    feed.innerHTML = `
+      <div style="background:#fff;border:1px dashed #cbd5e1;padding:40px;text-align:center;border-radius:8px;color:#64748b;">
+        <div style="font-size:36px;margin-bottom:10px;">📭</div>
+        <p style="margin:0;font-size:14px;font-weight:600;">Không có hồ sơ demo nào phù hợp với bộ lọc hiện tại.</p>
+        <span style="font-size:12px;opacity:0.8;">Các bản demo gửi từ trang ngoài sẽ tự động xuất hiện tại đây.</span>
+      </div>
+    `;
+    return;
+  }
+
+  feed.innerHTML = filtered.map((sub) => {
+    const idx = submissions.indexOf(sub);
+    const isPending = sub.status === 'Chờ duyệt';
+    const isInReview = sub.status === 'Đang thẩm định';
+    const isContacted = sub.status === 'Đã liên hệ';
+    const isSigned = sub.status === 'Đã ký hợp đồng';
+
+    const statusBg = isSigned ? '#dcfce7; color:#15803d; border-color:#86efac' :
+      (isContacted ? '#f3e8ff; color:#6b21a8; border-color:#d8b4fe' :
+      (isInReview ? '#e0f2fe; color:#0369a1; border-color:#7dd3fc' :
+      (isPending ? '#fef3c7; color:#92400e; border-color:#fcd34d' : '#f1f5f9; color:#475569; border-color:#cbd5e1')));
+
+    const genresHtml = (sub.genres || []).map(g => `
+      <span style="font-size:11px;font-weight:700;background:#f1f5f9;color:#334155;padding:3px 8px;border-radius:4px;">${esc(g)}</span>
+    `).join('');
+
+    const ratingStars = [1, 2, 3, 4, 5].map(star => `
+      <span class="sub-star-btn" data-idx="${idx}" data-star="${star}" style="cursor:pointer;font-size:18px;color:${star <= (sub.rating || 0) ? '#f59e0b' : '#cbd5e1'};">★</span>
+    `).join('');
+
+    const socials = sub.socials || {};
+
+    return `
+      <div class="submission-card" data-sub-idx="${idx}" style="background:#fff;border:2px solid var(--ink);border-radius:8px;padding:24px;box-shadow:4px 4px 0 var(--ink);">
+        <!-- Top Row: Artist Header & Status -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid #e2e8f0;padding-bottom:14px;margin-bottom:16px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-family:'DM Mono',monospace;font-size:11px;background:#0f172a;color:#fff;padding:2px 6px;border-radius:3px;">
+                ${esc(sub.refCode || sub.id)}
+              </span>
+              <span style="font-size:11px;font-family:'DM Mono',monospace;color:#64748b;">
+                📅 Gửi ngày ${esc(sub.submittedAt || 'Mới đây')}
+              </span>
+            </div>
+            <h3 style="margin:0;font-size:22px;letter-spacing:-0.04em;">
+              ${esc(sub.artistName || 'Chưa đặt nghệ danh')}
+              <span style="font-size:14px;font-weight:normal;color:#64748b;">(${esc(sub.fullName || 'Họ tên')})</span>
+            </h3>
+            <div style="display:flex;gap:12px;margin-top:6px;font-size:12px;color:#475569;flex-wrap:wrap;">
+              <span>📧 <a href="mailto:${esc(sub.email)}" style="font-weight:600;text-decoration:underline;">${esc(sub.email)}</a></span>
+              <span>📞 <a href="tel:${esc(sub.phone)}" style="font-weight:600;">${esc(sub.phone)}</a></span>
+              <span>📍 ${esc(sub.city || 'Việt Nam')}</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;padding:4px 10px;border-radius:20px;border:1px solid;background:${statusBg};">
+              ${esc(sub.status || 'Chờ duyệt')}
+            </span>
+          </div>
+        </div>
+
+        <!-- Genres & Direct Music Stream Links -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;background:#f8fafc;padding:12px 16px;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:11px;font-family:'DM Mono',monospace;font-weight:bold;color:#475569;">Thể loại:</span>
+            ${genresHtml || '<span style="font-size:11px;">Chưa chọn</span>'}
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${sub.demoUrl ? `
+              <a href="${esc(sub.demoUrl)}" target="_blank" class="button" style="background:var(--lime);color:var(--ink);border-color:var(--ink);padding:6px 14px;font-size:11px;font-weight:bold;box-shadow:none;">
+                ▶ MỞ DEMO STREAMING (SoundCloud / Drive) ↗
+              </a>
+            ` : '<span style="color:#ef4444;font-size:11px;font-weight:bold;">⚠️ Không có link demo</span>'}
+
+            ${sub.spotifyUrl ? `
+              <a href="${esc(sub.spotifyUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;font-weight:bold;">
+                🎧 Spotify ↗
+              </a>
+            ` : ''}
+
+            ${sub.appleMusicUrl ? `
+              <a href="${esc(sub.appleMusicUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;font-weight:bold;">
+                🍎 Apple Music ↗
+              </a>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Tracklist Notes if provided -->
+        ${sub.tracklistNotes ? `
+          <div style="margin-bottom:14px;background:#fff;border:1px solid #e2e8f0;padding:10px 14px;border-radius:4px;font-size:12px;">
+            <strong style="color:#0f172a;display:block;margin-bottom:2px;">🎼 Danh sách bài hát / Ghi chú sản xuất:</strong>
+            <div style="white-space:pre-wrap;color:#334155;line-height:1.4;">${esc(sub.tracklistNotes)}</div>
+          </div>
+        ` : ''}
+
+        <!-- Social Media Row -->
+        <div style="display:flex;gap:12px;margin-bottom:16px;font-size:12px;flex-wrap:wrap;">
+          <span style="font-family:'DM Mono',monospace;color:#64748b;font-weight:bold;">Mạng xã hội:</span>
+          ${socials.instagram ? `<a href="${esc(socials.instagram)}" target="_blank" style="color:#e1306c;font-weight:600;">📷 Instagram ↗</a>` : ''}
+          ${socials.tiktok ? `<a href="${esc(socials.tiktok)}" target="_blank" style="color:#000;font-weight:600;">🎵 TikTok ↗</a>` : ''}
+          ${socials.youtube ? `<a href="${esc(socials.youtube)}" target="_blank" style="color:#dc2626;font-weight:600;">📺 YouTube ↗</a>` : ''}
+          ${socials.other ? `<a href="${esc(socials.other)}" target="_blank" style="color:#2563eb;font-weight:600;">🔗 Khác ↗</a>` : ''}
+          ${!socials.instagram && !socials.tiktok && !socials.youtube && !socials.other ? '<span style="color:#94a3b8;">Chưa cung cấp link MXH</span>' : ''}
+        </div>
+
+        <!-- Artist Statement & Career Goals -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;margin-bottom:16px;">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:14px;border-radius:6px;">
+            <strong style="font-size:12px;color:#1e40af;display:block;margin-bottom:4px;">🎯 Mục tiêu & Định hướng hợp tác:</strong>
+            <p style="font-size:13px;color:#1e3a8a;margin:0;line-height:1.4;white-space:pre-wrap;">${esc(sub.goals || 'Chưa cung cấp')}</p>
+          </div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:6px;">
+            <strong style="font-size:12px;color:#0f172a;display:block;margin-bottom:4px;">✍️ Giới thiệu bản thân & Phong cách âm nhạc:</strong>
+            <p style="font-size:13px;color:#334155;margin:0;line-height:1.4;white-space:pre-wrap;">${esc(sub.bio || 'Chưa cung cấp')}</p>
+          </div>
+        </div>
+
+        ${sub.proudestProject ? `
+          <div style="margin-bottom:16px;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 14px;border-radius:6px;font-size:12px;color:#166534;">
+            <strong>🏆 Dự án / Thành tích tự hào:</strong> ${esc(sub.proudestProject)}
+          </div>
+        ` : ''}
+
+        <!-- A&R Review & Action Toolbar -->
+        <div style="border-top:1px solid #e2e8f0;padding-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:#f8fafc;padding:14px;border-radius:6px;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;">Trạng thái:</label>
+              <select class="sub-status-select" data-idx="${idx}" style="padding:4px 8px;font-size:11px;font-weight:bold;border:1px solid #94a3b8;background:#fff;border-radius:4px;cursor:pointer;">
+                <option value="Chờ duyệt" ${sub.status === 'Chờ duyệt' ? 'selected' : ''}>⏳ Chờ duyệt</option>
+                <option value="Đang thẩm định" ${sub.status === 'Đang thẩm định' ? 'selected' : ''}>🔍 Đang thẩm định</option>
+                <option value="Đã liên hệ" ${sub.status === 'Đã liên hệ' ? 'selected' : ''}>💬 Đã liên hệ</option>
+                <option value="Đã ký hợp đồng" ${sub.status === 'Đã ký hợp đồng' ? 'selected' : ''}>✨ Đã ký hợp đồng</option>
+                <option value="Lưu trữ" ${sub.status === 'Lưu trữ' ? 'selected' : ''}>📁 Lưu trữ</option>
+              </select>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:4px;">
+              <label style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;">Đánh giá:</label>
+              <div style="display:inline-flex;gap:2px;">
+                ${ratingStars}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn-onboard-sub-artist button" data-idx="${idx}" style="background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;padding:6px 14px;font-size:11px;">
+              ✨ Chuyển thành Nghệ sĩ Portal
+            </button>
+            <button type="button" class="btn-remove-submission button alt remove" data-idx="${idx}" style="padding:6px 12px;font-size:11px;">
+              ✕ Xóa
+            </button>
+          </div>
+        </div>
+
+        <!-- A&R Internal Notes -->
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+          <input type="text" class="sub-admin-notes-input" data-idx="${idx}" value="${esc(sub.adminNotes || '')}" placeholder="Ghi chú nội bộ của A&R (Ví dụ: Giọng tốt, hẹn phỏng vấn thứ 6)..." style="flex:1;padding:6px 10px;font-size:12px;border:1px solid #cbd5e1;background:#fff;border-radius:4px;">
+          <button type="button" class="btn-save-sub-notes button alt" data-idx="${idx}" style="padding:6px 12px;font-size:11px;font-weight:bold;">
+            💾 Lưu ghi chú
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach Status Change Listener
+  feed.querySelectorAll('.sub-status-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const idx = parseInt(sel.dataset.idx, 10);
+      if (submissions[idx]) {
+        submissions[idx].status = sel.value;
+        await saveData(data);
+        await logAuditEvent('Cập nhật A&R Demo', `Đã đổi trạng thái của "${submissions[idx].artistName}" sang: ${sel.value}`);
+        showNotice(`✓ Đã cập nhật trạng thái của "${submissions[idx].artistName}" sang "${sel.value}"!`);
+        renderMusicSubmissionsAdmin();
+      }
+    });
+  });
+
+  // Attach Star Rating Click Listener
+  feed.querySelectorAll('.sub-star-btn').forEach(starBtn => {
+    starBtn.addEventListener('click', async () => {
+      const idx = parseInt(starBtn.dataset.idx, 10);
+      const rating = parseInt(starBtn.dataset.star, 10);
+      if (submissions[idx]) {
+        submissions[idx].rating = rating;
+        await saveData(data);
+        renderMusicSubmissionsAdmin();
+      }
+    });
+  });
+
+  // Attach Save Notes Listener
+  feed.querySelectorAll('.btn-save-sub-notes').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const input = feed.querySelector(`.sub-admin-notes-input[data-idx="${idx}"]`);
+      if (submissions[idx] && input) {
+        submissions[idx].adminNotes = input.value.trim();
+        await saveData(data);
+        showNotice(`✓ Đã lưu ghi chú A&R cho "${submissions[idx].artistName}"!`);
+      }
+    });
+  });
+
+  // Attach 1-Click Onboard to Artist Portal
+  feed.querySelectorAll('.btn-onboard-sub-artist').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const sub = submissions[idx];
+      if (!sub) return;
+
+      const artistName = sub.artistName || sub.fullName || 'Nghệ sĩ mới';
+      if (!confirm(`Xác nhận chuyển ứng viên "${artistName}" thành Nghệ sĩ chính thức trên Artist Portal?`)) return;
+
+      // Check if already in data.artists
+      const existing = (data.artists || []).find(a => (a.email && a.email.toLowerCase() === sub.email?.toLowerCase()) || a.name.toLowerCase() === artistName.toLowerCase());
+      if (existing) {
+        alert(`Nghệ sĩ "${artistName}" (${sub.email}) đã tồn tại trong danh sách nghệ sĩ!`);
+        return;
+      }
+
+      const newId = slug(artistName) || ('artist-' + Date.now().toString(36));
+      const newArtist = {
+        id: newId,
+        username: newId,
+        password: `${newId.replace(/[^a-zA-Z0-9]/g, '')}@2026`,
+        name: artistName,
+        email: sub.email || '',
+        genre: Array.isArray(sub.genres) ? sub.genres[0] : (sub.genres || 'Independent Music'),
+        bio: sub.bio || '',
+        image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
+        gallery: [],
+        showOnWeb: true,
+        roleType: 'exclusive',
+        monthlyStreams: '0',
+        estimatedRevenue: '0',
+        payableBalance: '0',
+        payoutCycle: 'Hàng tháng (Monthly)',
+        royaltyRate: '80% Master',
+        contractTerm: '2026 - 2029',
+        instagram: sub.socials?.instagram || '',
+        youtube: sub.socials?.youtube || '',
+        tiktok: sub.socials?.tiktok || '',
+        products: []
+      };
+
+      if (!data.artists) data.artists = [];
+      data.artists.push(newArtist);
+      data.artist_order = data.artists.map(a => a.id);
+
+      sub.status = 'Đã ký hợp đồng';
+      await saveData(data);
+      await logAuditEvent('A&R Onboard Nghệ Sĩ Mới', `Đã kích hoạt tài khoản nghệ sĩ cho "${artistName}" từ hồ sơ Demo.`);
+      showNotice(`🎉 ĐÃ ONBOARD THÀNH CÔNG! Nghệ sĩ "${artistName}" đã được đưa vào hệ thống và hiển thị trên Website!`);
+      
+      selectedArtistId = newId;
+      render();
+    });
+  });
+
+  // Attach Remove Submission Listener
+  feed.querySelectorAll('.btn-remove-submission').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const sub = submissions[idx];
+      if (!sub) return;
+
+      if (!confirm(`Xác nhận xóa hồ sơ demo của "${sub.artistName || sub.fullName}"?`)) return;
+
+      submissions.splice(idx, 1);
+      data.musicSubmissions = submissions;
+      await saveData(data);
+      await logAuditEvent('Xóa Hồ sơ A&R Demo', `Đã xóa hồ sơ của "${sub.artistName || sub.fullName}".`);
+      showNotice(`✓ Đã xóa hồ sơ demo thành công!`);
+      renderMusicSubmissionsAdmin();
+    });
+  });
+}
+
+// Filter listeners for A&R Submissions
+document.querySelector('#admin-submission-status-filter')?.addEventListener('change', renderMusicSubmissionsAdmin);
+document.querySelector('#admin-submission-search')?.addEventListener('input', renderMusicSubmissionsAdmin);
 
 initAccountProvisioning();
 render();
+
 

@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Gửi Demo & Submit Music — UniFLOWs A&R</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:image" content="/og-image.jpg">
+  <link rel="stylesheet" href="assets/app.css">
+  <style>
+    .submit-hero {
+      padding: 60px 4vw 40px;
+      border-bottom: 1px solid var(--line);
+      background: #0f172a;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .submit-hero:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(216,255,72,0.12), transparent 50%),
+                  radial-gradient(circle at 20% 80%, rgba(56,189,248,0.12), transparent 50%);
+      pointer-events: none;
+    }
+    .submit-form-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 50px 4vw 80px;
+    }
+    .form-section-card {
+      background: #fff;
+      border: 1px solid var(--ink);
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 32px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+    .form-section-card h3 {
+      font-size: 20px;
+      margin: 0 0 8px;
+      letter-spacing: -0.04em;
+    }
+    .form-section-card p.subhead {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0 0 20px;
+    }
+    .genre-tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .genre-chip {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      background: #f8fafc;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .genre-chip.active {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+    .genre-chip:hover {
+      border-color: #0f172a;
+    }
+    .goal-option-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #f8fafc;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.2s ease;
+    }
+    .goal-option-card:hover, .goal-option-card.selected {
+      border-color: #0284c7;
+      background: #f0f9ff;
+    }
+    .goal-option-card input[type="checkbox"], .goal-option-card input[type="radio"] {
+      margin-top: 3px;
+      accent-color: #0284c7;
+      transform: scale(1.15);
+    }
+    .submit-success-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .submit-success-modal.show {
+      display: flex;
+    }
+    .submit-dialog-box {
+      background: #fff;
+      border: 2px solid var(--ink);
+      box-shadow: 12px 12px 0 var(--lime);
+      max-width: 560px;
+      width: 100%;
+      padding: 40px;
+      border-radius: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body data-page="submit-music">
+  <main>
+    <!-- HERO SECTION -->
+    <section class="submit-hero">
+      <div style="position:relative;z-index:1;max-width:1100px;margin:0 auto;">
+        <span class="eyebrow" style="color:var(--lime);display:inline-block;margin-bottom:12px;" data-i18n="submit_hero_eyebrow">
+          UniFLOWs / Tuyển chọn & Phát triển Nghệ sĩ (A&R)
+        </span>
+        <h1 style="font-size:clamp(36px,6vw,72px);line-height:0.95;letter-spacing:-0.07em;margin:0 0 20px;font-weight:800;" data-i18n="submit_hero_h1">
+          GỬI ÂM NHẠC & DEMO CỦA BẠN ĐẾN UNIFLOWS
+        </h1>
+        <p style="font-size:clamp(15px,2vw,19px);line-height:1.5;max-width:760px;color:#cbd5e1;margin:0 0 25px;" data-i18n="submit_hero_p">
+          UniFLOWs luôn tìm kiếm những tiếng nói táo bạo, chân thật và không ngại thử nghiệm. Hãy chia sẻ âm nhạc, định hướng và câu chuyện của bạn với đội ngũ A&R.
+        </p>
+        <div style="display:flex;gap:15px;flex-wrap:wrap;font-size:12px;font-family:'DM Mono',monospace;color:#94a3b8;">
+          <span style="background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:20px;">🎧 100% Lắng nghe bởi A&R Team</span>
+          <span style="background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:20px;">⚡ Phản hồi trong 3-5 ngày</span>
+          <span style="background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:20px;">🌐 Hỗ trợ Phát hành & Sync Toàn cầu</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORM SECTION -->
+    <div class="submit-form-shell">
+      <form id="music-submission-form">
+        <!-- 01: THÔNG TIN NGHỆ SĨ & LIÊN HỆ -->
+        <div class="form-section-card">
+          <h3 data-i18n="submit_sec1_title">01 / Thông Tin Nghệ Sĩ & Liên Hệ</h3>
+          <p class="subhead">Thông tin cơ bản để đội ngũ A&R liên hệ trực tiếp với bạn.</p>
+
+          <div class="mini-grid">
+            <div class="field">
+              <label data-i18n="submit_form_name">Họ và tên *</label>
+              <input type="text" id="sub-full-name" required placeholder="Nguyễn Hoàng Long" style="font-weight:bold;">
+            </div>
+            <div class="field">
+              <label data-i18n="submit_form_artist_name">Nghệ danh / Tên nghệ sĩ *</label>
+              <input type="text" id="sub-artist-name" required placeholder="Long Nguyen (L.O.N.G)" style="font-weight:bold;">
+            </div>
+          </div>
+
+          <div class="mini-grid" style="margin-top:14px;">
+            <div class="field">
+              <label data-i18n="submit_form_email">Email liên hệ chính thức *</label>
+              <input type="email" id="sub-email" required placeholder="artist.contact@gmail.com">
+            </div>
+            <div class="field">
+              <label data-i18n="submit_form_phone">Số điện thoại / Zalo / WhatsApp *</label>
+              <input type="tel" id="sub-phone" required placeholder="0908 123 456">
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:14px;">
+            <label data-i18n="submit_form_city">Thành phố & Quốc gia đang sinh sống *</label>
+            <input type="text" id="sub-city" required placeholder="Hồ Chí Minh, Việt Nam">
+          </div>
+        </div>
+
+        <!-- 02: ÂM NHẠC & DEMO TRACKS -->
+        <div class="form-section-card">
+          <h3 data-i18n="submit_sec2_title">02 / Âm Nhạc, Bản Thu Demo & Nền Tảng DSPs</h3>
+          <p class="subhead">Hãy gửi cho chúng tôi những bản nhạc tốt nhất và thể hiện rõ nhất cá tính của bạn.</p>
+
+          <div class="field">
+            <label data-i18n="submit_form_genres">Thể loại âm nhạc theo đuổi (Nhấp chọn hoặc điền thêm) *</label>
+            <div class="genre-tag-cloud" id="genre-selector">
+              <span class="genre-chip" data-val="Alternative R&B">Alternative R&B</span>
+              <span class="genre-chip" data-val="Neo-Soul">Neo-Soul</span>
+              <span class="genre-chip" data-val="Pop / Indie Pop">Pop / Indie Pop</span>
+              <span class="genre-chip" data-val="Hip-hop / Rap">Hip-hop / Rap</span>
+              <span class="genre-chip" data-val="Future Pop / Electronic">Future Pop / Electronic</span>
+              <span class="genre-chip" data-val="Hyperpop">Hyperpop</span>
+              <span class="genre-chip" data-val="Indie Folk / Acoustic">Indie Folk / Acoustic</span>
+              <span class="genre-chip" data-val="Lo-Fi / Chillhop">Lo-Fi / Chillhop</span>
+              <span class="genre-chip" data-val="City Pop / Synthwave">City Pop / Synthwave</span>
+              <span class="genre-chip" data-val="Rock / Alternative">Rock / Alternative</span>
+            </div>
+            <input type="text" id="sub-genres-input" required placeholder="R&B, Pop, Electronic..." style="font-weight:bold;">
+          </div>
+
+          <div class="mini-grid" style="margin-top:16px;">
+            <div class="field">
+              <label data-i18n="submit_form_spotify">Link Profile Spotify (Nếu đã có)</label>
+              <input type="url" id="sub-spotify-url" placeholder="https://open.spotify.com/artist/...">
+            </div>
+            <div class="field">
+              <label data-i18n="submit_form_apple">Link Profile Apple Music (Nếu đã có)</label>
+              <input type="url" id="sub-apple-url" placeholder="https://music.apple.com/artist/...">
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:16px;background:#f0fdf4;padding:16px;border:1px solid #86efac;border-radius:6px;">
+            <label style="color:#166534;font-weight:bold;" data-i18n="submit_form_demo">Link Demo Album / EP / Ca khúc chưa phát hành *</label>
+            <input type="url" id="sub-demo-url" required placeholder="https://soundcloud.com/private/... hoặc https://drive.google.com/..." style="font-weight:bold;background:#fff;border:1px solid #16a34a;">
+            <small style="display:block;margin-top:6px;color:#166534;" data-i18n="submit_form_demo_hint">
+              💡 Chấp nhận SoundCloud Private Link, Google Drive (Mở quyền xem công khai), Dropbox, YouTube Unlisted, Bandcamp...
+            </small>
+          </div>
+
+          <div class="field" style="margin-top:16px;">
+            <label data-i18n="submit_form_tracklist">Danh sách bài hát & Ghi chú sản xuất (Credits, Nhà sản xuất...)</label>
+            <textarea id="sub-tracklist-notes" rows="3" placeholder="1. Tên bài hát 1 (Produced by...)\n2. Tên bài hát 2..."></textarea>
+          </div>
+        </div>
+
+        <!-- 03: MẠNG XÃ HỘI & TRUYỀN THÔNG -->
+        <div class="form-section-card">
+          <h3 data-i18n="submit_sec3_title">03 / Mạng Xã Hội & Kênh Truyền Thông</h3>
+          <p class="subhead">Các kênh để A&R có thể xem thêm hình ảnh và tương tác của bạn với người nghe.</p>
+
+          <div class="mini-grid">
+            <div class="field">
+              <label data-i18n="submit_form_ig">Instagram Profile URL</label>
+              <input type="text" id="sub-social-ig" placeholder="https://instagram.com/yourname">
+            </div>
+            <div class="field">
+              <label data-i18n="submit_form_tiktok">TikTok Profile URL</label>
+              <input type="text" id="sub-social-tiktok" placeholder="https://tiktok.com/@yourname">
+            </div>
+          </div>
+
+          <div class="mini-grid" style="margin-top:14px;">
+            <div class="field">
+              <label data-i18n="submit_form_youtube">Kênh YouTube</label>
+              <input type="text" id="sub-social-yt" placeholder="https://youtube.com/@yourchannel">
+            </div>
+            <div class="field">
+              <label data-i18n="submit_form_other_social">Facebook / Threads / Link khác</label>
+              <input type="text" id="sub-social-other" placeholder="https://facebook.com/...">
+            </div>
+          </div>
+        </div>
+
+        <!-- 04: MỤC TIÊU, ĐỊNH HƯỚNG & CÂU CHUYỆN -->
+        <div class="form-section-card">
+          <h3 data-i18n="submit_sec4_title">04 / Mục Tiêu, Định Hướng & Câu Chuyện Của Bạn</h3>
+          <p class="subhead">Chúng tôi không chỉ quan tâm đến bài hát — chúng tôi quan tâm đến con đường bạn muốn đi.</p>
+
+          <div class="field">
+            <label style="font-weight:bold;" data-i18n="submit_form_goals">Mục tiêu & Định hướng phát triển âm nhạc *</label>
+            <div style="margin-bottom:12px;">
+              <label class="goal-option-card">
+                <input type="checkbox" name="sub-goal-cb" value="Hãng đĩa quản lý & phát hành Album toàn diện">
+                <div>
+                  <strong>Hãng đĩa quản lý & Phát hành Album / EP toàn diện</strong>
+                  <span style="display:block;font-size:12px;color:#64748b;">Định hình phong cách, tài trợ sản xuất, phát hành DSPs và định hướng chiến lược dài hạn.</span>
+                </div>
+              </label>
+              <label class="goal-option-card">
+                <input type="checkbox" name="sub-goal-cb" value="Hợp tác sản xuất âm nhạc chuyên sâu tại Uni-HUBE">
+                <div>
+                  <strong>Hợp tác sản xuất âm nhạc & Phòng thu tại Uni-HUBE</strong>
+                  <span style="display:block;font-size:12px;color:#64748b;">Làm việc trực tiếp với các Music Producer, Arranger, Sound Engineer và Nhạc sĩ hàng đầu.</span>
+                </div>
+              </label>
+              <label class="goal-option-card">
+                <input type="checkbox" name="sub-goal-cb" value="Cấp phép Tác quyền & Sync Licensing tại UniPUBLISHING">
+                <div>
+                  <strong>Ký gửi Tác quyền & Cấp phép Phim ảnh / TVC tại UniPUBLISHING</strong>
+                  <span style="display:block;font-size:12px;color:#64748b;">Đưa bài hát vào TVC quảng cáo, phim chiếu rạp, series và games với 100% bản quyền minh bạch.</span>
+                </div>
+              </label>
+              <label class="goal-option-card">
+                <input type="checkbox" name="sub-goal-cb" value="Chiến dịch Truyền thông & Viral TikTok cùng 48K Collective">
+                <div>
+                  <strong>Chiến dịch Truyền thông & Viral TikTok cùng 48K Collective</strong>
+                  <span style="display:block;font-size:12px;color:#64748b;">Xây dựng hình ảnh nghệ sĩ, sáng tạo nội dung viral đa nền tảng và lan tỏa tác phẩm.</span>
+                </div>
+              </label>
+            </div>
+            <textarea id="sub-goals-text" rows="3" required placeholder="Chia sẻ thêm về mục tiêu cụ thể và kế hoạch âm nhạc trong 1 - 2 năm tới của bạn..." data-i18n-placeholder="submit_form_goals_ph"></textarea>
+          </div>
+
+          <div class="field" style="margin-top:16px;">
+            <label style="font-weight:bold;" data-i18n="submit_form_bio">Giới thiệu bản thân & Phong cách âm nhạc *</label>
+            <textarea id="sub-bio-text" rows="4" required placeholder="Hãy chia sẻ về nguồn cảm hứng, hành trình làm nhạc và điều khiến âm nhạc của bạn khác biệt..." data-i18n-placeholder="submit_form_bio_ph"></textarea>
+          </div>
+
+          <div class="field" style="margin-top:16px;">
+            <label data-i18n="submit_form_proudest">Dự án / Tác phẩm tự hào nhất (Hoặc thành tích nổi bật)</label>
+            <input type="text" id="sub-proudest" placeholder="Ví dụ: Đạt 100k views cho single đầu tay, Top 1 cuộc thi sáng tác...">
+          </div>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <div style="text-align:center;margin-top:35px;">
+          <button type="submit" id="btn-submit-music" class="button" style="padding:18px 48px;font-size:13px;font-weight:800;letter-spacing:1.5px;background:#0f172a;color:#fff;border-color:#0f172a;box-shadow:4px 4px 0 var(--lime);border-radius:4px;cursor:pointer;">
+            🚀 GỬI BẢN DEMO ĐẾN ĐỘI NGŨ A&R
+          </button>
+          <p style="font-size:12px;color:#64748b;margin-top:12px;">
+            🔒 Tất cả bản thu và thông tin bạn gửi được bảo vệ quyền tác giả theo chính sách bảo mật nội bộ của UniFLOWs.
+          </p>
+        </div>
+      </form>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div id="submit-success-modal" class="submit-success-modal" aria-hidden="true">
+      <div class="submit-dialog-box">
+        <div style="font-size:52px;margin-bottom:12px;">🎉</div>
+        <h2 style="font-size:26px;letter-spacing:-0.05em;margin:0 0 10px;" data-i18n="submit_success_title">
+          ĐÃ TIẾP NHẬN BẢN DEMO THÀNH CÔNG!
+        </h2>
+        <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 24px;" data-i18n="submit_success_msg">
+          Cảm ơn bạn đã chia sẻ âm nhạc với UniFLOWs. Đội ngũ A&R sẽ lắng nghe kỹ lưỡng từng bản demo và phản hồi qua email trong vòng 3 - 5 ngày làm việc.
+        </p>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:6px;margin-bottom:24px;font-family:'DM Mono',monospace;font-size:12px;color:#0f172a;">
+          Mã tiếp nhận A&R: <strong id="submission-ref-code">UNIFLOWS-AR-2026</strong>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <a href="artists" class="button alt" style="padding:10px 20px;font-size:11px;">Xem Roster Nghệ Sĩ</a>
+          <button type="button" id="btn-close-success-modal" class="button" style="padding:10px 24px;font-size:11px;background:#0f172a;color:#fff;">Hoàn tất</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="assets/app.js"></script>
+  <script type="module">
+    import { getData, saveData } from './assets/data.js';
+    import { applyTranslations, getCurrentLang, t } from './assets/i18n.js';
+
+    // Interactive Genre Chip Selector
+    const genreInput = document.querySelector('#sub-genres-input');
+    const selectedGenres = new Set();
+
+    document.querySelectorAll('.genre-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const val = chip.dataset.val;
+        if (selectedGenres.has(val)) {
+          selectedGenres.delete(val);
+          chip.classList.remove('active');
+        } else {
+          selectedGenres.add(val);
+          chip.classList.add('active');
+        }
+        genreInput.value = Array.from(selectedGenres).join(', ');
+      });
+    });
+
+    // Checkbox cards styling
+    document.querySelectorAll('.goal-option-card input').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const parent = cb.closest('.goal-option-card');
+        if (cb.checked) {
+          parent.classList.add('selected');
+        } else {
+          parent.classList.remove('selected');
+        }
+      });
+    });
+
+    // Form Submission
+    const form = document.querySelector('#music-submission-form');
+    const modal = document.querySelector('#submit-success-modal');
+    const submitBtn = document.querySelector('#btn-submit-music');
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang gửi bản Demo...';
+
+      const fullName = document.querySelector('#sub-full-name').value.trim();
+      const artistName = document.querySelector('#sub-artist-name').value.trim();
+      const email = document.querySelector('#sub-email').value.trim();
+      const phone = document.querySelector('#sub-phone').value.trim();
+      const city = document.querySelector('#sub-city').value.trim();
+
+      const genresRaw = genreInput.value.trim();
+      const genresList = genresRaw.split(',').map(s => s.trim()).filter(Boolean);
+
+      const spotifyUrl = document.querySelector('#sub-spotify-url').value.trim();
+      const appleMusicUrl = document.querySelector('#sub-apple-url').value.trim();
+      const demoUrl = document.querySelector('#sub-demo-url').value.trim();
+      const tracklistNotes = document.querySelector('#sub-tracklist-notes').value.trim();
+
+      const ig = document.querySelector('#sub-social-ig').value.trim();
+      const tiktok = document.querySelector('#sub-social-tiktok').value.trim();
+      const youtube = document.querySelector('#sub-social-yt').value.trim();
+      const otherSocial = document.querySelector('#sub-social-other').value.trim();
+
+      const checkedGoals = Array.from(document.querySelectorAll('input[name="sub-goal-cb"]:checked')).map(el => el.value);
+      const customGoals = document.querySelector('#sub-goals-text').value.trim();
+      const combinedGoals = checkedGoals.length > 0 ? (checkedGoals.join('; ') + (customGoals ? ' | ' + customGoals : '')) : customGoals;
+
+      const bio = document.querySelector('#sub-bio-text').value.trim();
+      const proudest = document.querySelector('#sub-proudest').value.trim();
+
+      const refCode = 'UNIFLOWS-AR-' + Date.now().toString(36).toUpperCase();
+
+      const newSubmission = {
+        id: 'sub-' + Date.now().toString(36),
+        refCode,
+        fullName,
+        artistName,
+        email,
+        phone,
+        city,
+        genres: genresList.length > 0 ? genresList : [genresRaw || 'General Music'],
+        spotifyUrl,
+        appleMusicUrl,
+        demoUrl,
+        tracklistNotes,
+        socials: {
+          instagram: ig,
+          tiktok: tiktok,
+          youtube: youtube,
+          other: otherSocial
+        },
+        goals: combinedGoals,
+        bio,
+        proudestProject: proudest,
+        status: 'Chờ duyệt',
+        rating: 0,
+        adminNotes: '',
+        submittedAt: new Date().toLocaleDateString('vi-VN')
+      };
+
+      try {
+        const liveData = await getData();
+        if (!liveData.musicSubmissions || !Array.isArray(liveData.musicSubmissions)) {
+          liveData.musicSubmissions = [];
+        }
+        liveData.musicSubmissions.unshift(newSubmission);
+        await saveData(liveData);
+
+        document.querySelector('#submission-ref-code').textContent = refCode;
+        modal.classList.add('show');
+        form.reset();
+        selectedGenres.clear();
+        document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.goal-option-card').forEach(c => c.classList.remove('selected'));
+      } catch (err) {
+        console.error('Error submitting music:', err);
+        alert('Có lỗi xảy ra khi gửi demo. Vui lòng thử lại.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 GỬI BẢN DEMO ĐẾN ĐỘI NGŨ A&R';
+      }
+    });
+
+    document.querySelector('#btn-close-success-modal')?.addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+
+    window.addEventListener('uniflows:langchange', () => {
+      applyTranslations();
+    });
+  </script>
+</body>
+</html>
