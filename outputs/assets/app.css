@@ -1113,28 +1113,29 @@ dialog textarea {
 }
 
 /* ===================================================
-   UNIFLOWS 6-LAYER DENSE CONCENTRIC BREATHING CURSOR
+   COMPACT MONOX DIFFERENCE-BLEND BREATHING CURSOR
    =================================================== */
 @media (hover: hover) and (pointer: fine) {
   .uniflows-cursor-dot {
     position: fixed;
     top: 0;
     left: 0;
-    width: 6px;
-    height: 6px;
-    background: var(--ink);
+    width: 4px;
+    height: 4px;
+    background: #ffffff;
     border-radius: 50%;
     pointer-events: none;
     z-index: 999999;
     transform: translate(-50%, -50%);
-    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
+    mix-blend-mode: difference;
+    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
   }
   .uniflows-cursor-aura {
     position: fixed;
     top: 0;
     left: 0;
-    width: 54px;
-    height: 54px;
+    width: 24px;
+    height: 24px;
     pointer-events: none;
     z-index: 999998;
     transform: translate(-50%, -50%);
@@ -1142,143 +1143,106 @@ dialog textarea {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    mix-blend-mode: difference;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  /* Concentric multi-layer breathing rings */
+  /* Concentric breathing layers */
   .uniflows-cursor-aura .ring {
     position: absolute;
     border-radius: 50%;
     pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   
-  /* Layer 1: Center Core (Đậm nhất ở tâm) */
+  /* Core Dense Center (Đậm nhất ở lõi) */
   .uniflows-cursor-aura .ring-core {
-    width: 32%;
-    height: 32%;
-    background: radial-gradient(circle, rgba(11, 11, 11, 0.85) 0%, rgba(11, 11, 11, 0.5) 100%);
-    border: 1.5px solid rgba(11, 11, 11, 0.95);
-    box-shadow: 0 0 8px rgba(11, 11, 11, 0.25);
-    animation: ringBreathCore 2.4s infinite ease-in-out;
+    width: 40%;
+    height: 40%;
+    background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+    animation: monoCoreBreath 2.2s infinite ease-in-out;
   }
 
-  /* Layer 2: Inner Ring 1 */
+  /* Layer 1: Inner Solid Ring */
   .uniflows-cursor-aura .ring-1 {
-    width: 52%;
-    height: 52%;
-    border: 1.2px solid rgba(11, 11, 11, 0.65);
-    background: radial-gradient(circle, rgba(11, 11, 11, 0.2) 0%, transparent 80%);
-    animation: ringBreath1 2.8s infinite 0.15s ease-in-out;
+    width: 65%;
+    height: 65%;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    animation: monoRing1Breath 2.6s infinite 0.15s ease-in-out;
   }
 
-  /* Layer 3: Mid Ring 2 (Đứt đoạn) */
+  /* Layer 2: Mid Dashed Ring */
   .uniflows-cursor-aura .ring-2 {
-    width: 72%;
-    height: 72%;
-    border: 1px dashed rgba(11, 11, 11, 0.42);
-    animation: ringBreath2 3.4s infinite 0.3s ease-in-out;
+    width: 88%;
+    height: 88%;
+    border: 1px dashed rgba(255, 255, 255, 0.45);
+    animation: monoRing2Breath 3.2s infinite 0.3s ease-in-out;
   }
 
-  /* Layer 4: Mid Ring 3 */
-  .uniflows-cursor-aura .ring-3 {
-    width: 94%;
-    height: 94%;
-    border: 1px solid rgba(11, 11, 11, 0.25);
-    background: radial-gradient(circle, transparent 40%, rgba(11, 11, 11, 0.04) 100%);
-    animation: ringBreath3 4.0s infinite 0.45s ease-in-out;
-  }
-
-  /* Layer 5: Outer Ring 4 (Mờ dần) */
-  .uniflows-cursor-aura .ring-4 {
-    width: 118%;
-    height: 118%;
-    border: 1px dashed rgba(11, 11, 11, 0.15);
-    animation: ringBreath4 4.6s infinite 0.6s ease-in-out;
-  }
-
-  /* Layer 6: Atmosphere Outer Aura (Mờ tan biến ra không gian web) */
+  /* Layer 3: Outer Atmosphere Fade (Mờ dần ra ngoài) */
   .uniflows-cursor-aura .ring-outer {
-    width: 148%;
-    height: 148%;
-    border: 1px solid rgba(11, 11, 11, 0.08);
-    background: radial-gradient(circle, rgba(11, 11, 11, 0.04) 0%, transparent 70%);
-    box-shadow: 0 0 28px rgba(11, 11, 11, 0.07);
-    animation: ringBreathOuter 5.2s infinite 0.75s ease-in-out;
+    width: 125%;
+    height: 125%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.25);
+    animation: monoRingOuterBreath 4.0s infinite 0.5s ease-in-out;
   }
 
-  /* Interactive Hover State on links, buttons, cards (Chuyển màu Amber thương hiệu mượt mà) */
+  /* Hover State on interactive elements (Nở rộng compact 42px) */
   body.cursor-hover .uniflows-cursor-dot {
-    width: 8px;
-    height: 8px;
-    background: #d97706;
+    width: 6px;
+    height: 6px;
+    opacity: 0.8;
   }
   body.cursor-hover .uniflows-cursor-aura {
-    width: 72px;
-    height: 72px;
+    width: 42px;
+    height: 42px;
   }
   body.cursor-hover .uniflows-cursor-aura .ring-core {
-    background: radial-gradient(circle, rgba(217, 119, 6, 0.95) 0%, rgba(217, 119, 6, 0.6) 100%);
-    border-color: #d97706;
-    box-shadow: 0 0 12px rgba(217, 119, 6, 0.5);
+    width: 50%;
+    height: 50%;
+    background: radial-gradient(circle, #ffffff 20%, rgba(255, 255, 255, 0.5) 100%);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
   }
   body.cursor-hover .uniflows-cursor-aura .ring-1 {
-    border-color: rgba(217, 119, 6, 0.7);
-    background: radial-gradient(circle, rgba(217, 119, 6, 0.22) 0%, transparent 80%);
+    border-color: rgba(255, 255, 255, 0.9);
   }
   body.cursor-hover .uniflows-cursor-aura .ring-2 {
-    border-color: rgba(217, 119, 6, 0.5);
-  }
-  body.cursor-hover .uniflows-cursor-aura .ring-3 {
-    border-color: rgba(217, 119, 6, 0.32);
-  }
-  body.cursor-hover .uniflows-cursor-aura .ring-4 {
-    border-color: rgba(217, 119, 6, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
   }
   body.cursor-hover .uniflows-cursor-aura .ring-outer {
-    border-color: rgba(217, 119, 6, 0.1);
-    box-shadow: 0 0 32px rgba(217, 119, 6, 0.2);
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
   }
 
   /* Active Click State */
   body.cursor-active .uniflows-cursor-aura {
-    transform: translate(-50%, -50%) scale(0.82);
+    transform: translate(-50%, -50%) scale(0.7);
   }
 }
 
-@keyframes ringBreathCore {
-  0% { transform: scale(1); opacity: 0.9; }
-  50% { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.9; }
+@keyframes monoCoreBreath {
+  0% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.16); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.95; }
 }
 
-@keyframes ringBreath1 {
-  0% { transform: scale(1); opacity: 0.7; }
-  50% { transform: scale(1.18); opacity: 0.95; }
-  100% { transform: scale(1); opacity: 0.7; }
+@keyframes monoRing1Breath {
+  0% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.14); opacity: 0.95; }
+  100% { transform: scale(1); opacity: 0.75; }
 }
 
-@keyframes ringBreath2 {
-  0% { transform: scale(1) rotate(0deg); opacity: 0.5; }
-  50% { transform: scale(1.16) rotate(60deg); opacity: 0.8; }
-  100% { transform: scale(1) rotate(120deg); opacity: 0.5; }
+@keyframes monoRing2Breath {
+  0% { transform: scale(1) rotate(0deg); opacity: 0.45; }
+  50% { transform: scale(1.12) rotate(90deg); opacity: 0.7; }
+  100% { transform: scale(1) rotate(180deg); opacity: 0.45; }
 }
 
-@keyframes ringBreath3 {
-  0% { transform: scale(1); opacity: 0.35; }
-  50% { transform: scale(1.14); opacity: 0.65; }
-  100% { transform: scale(1); opacity: 0.35; }
-}
-
-@keyframes ringBreath4 {
-  0% { transform: scale(1) rotate(0deg); opacity: 0.22; }
-  50% { transform: scale(1.12) rotate(-45deg); opacity: 0.45; }
-  100% { transform: scale(1) rotate(-90deg); opacity: 0.22; }
-}
-
-@keyframes ringBreathOuter {
-  0% { transform: scale(1); opacity: 0.12; }
-  50% { transform: scale(1.1); opacity: 0.3; }
-  100% { transform: scale(1); opacity: 0.12; }
+@keyframes monoRingOuterBreath {
+  0% { transform: scale(1); opacity: 0.2; }
+  50% { transform: scale(1.08); opacity: 0.45; }
+  100% { transform: scale(1); opacity: 0.2; }
 }
 
 
