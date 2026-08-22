@@ -110,26 +110,67 @@ function renderContent() {
   if (footerCity) footerCity.textContent = data.city;
 }
 
+let isArtistsExpanded = false;
+
 function artists() {
   let grid = $('[data-artists]');
   if (!grid) return;
   const publicArtists = (data.artists || []).filter(a => a.showOnWeb !== false && a.showOnWeb !== 'false');
   
   if (publicArtists.length === 0) {
-    grid.innerHTML = '<p class="empty" style="padding:20px;grid-column:1/-1;">Danh sách nghệ sĩ đang được cập nhật.</p>';
+    grid.innerHTML = `<p class="empty" style="padding:20px;grid-column:1/-1;">${getCurrentLang() === 'en' ? 'Artist roster is being updated.' : 'Danh sách nghệ sĩ đang được cập nhật.'}</p>`;
     return;
   }
 
-  grid.innerHTML = publicArtists.map(a => `
+  const isArtistsPage = document.body.dataset.page === 'artists';
+  const limit = isArtistsPage ? 6 : 4;
+  const shouldTruncate = publicArtists.length > limit;
+  const visibleArtists = (shouldTruncate && !isArtistsExpanded) ? publicArtists.slice(0, limit) : publicArtists;
+
+  const exploreText = t('explore_artist');
+
+  const cardsHtml = visibleArtists.map(a => `
     <a class="artist" href="artist?id=${encodeURIComponent(a.id)}">
       <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80')}" alt="${esc(a.name)}">
       <div class="artist-info">
         <span>${esc(a.genre || 'Music')}</span>
         <h4>${esc(a.name)}</h4>
-        <b>Khám phá ↗</b>
+        <b>${esc(exploreText)}</b>
       </div>
     </a>
   `).join('');
+
+  let toggleBtnHtml = '';
+  if (shouldTruncate) {
+    const btnLabel = isArtistsExpanded 
+      ? t('collapse_artists') 
+      : t('view_all_artists', { count: publicArtists.length });
+    
+    toggleBtnHtml = `
+      <div class="artists-toggle-bar" style="grid-column: 1 / -1; margin-top: 24px; text-align: center; width: 100%;">
+        <button type="button" id="btn-toggle-artists-roster" class="button alt" style="padding: 12px 28px; font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; border-radius: 4px; box-shadow: 2px 2px 0 var(--ink);">
+          ${esc(btnLabel)}
+        </button>
+      </div>
+    `;
+  }
+
+  grid.innerHTML = cardsHtml + toggleBtnHtml;
+
+  // Update counts on artists page
+  const kickerCount = document.querySelector('[data-page="artists"] .section-head .kicker');
+  if (kickerCount) {
+    kickerCount.textContent = t('roster_talents_count', { count: publicArtists.length });
+  }
+
+  // Handle Toggle Click
+  const toggleBtn = grid.querySelector('#btn-toggle-artists-roster');
+  if (toggleBtn) {
+    toggleBtn.onclick = () => {
+      isArtistsExpanded = !isArtistsExpanded;
+      artists();
+    };
+  }
 }
 
 function articleCards() {

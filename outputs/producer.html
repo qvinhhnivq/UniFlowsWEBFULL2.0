@@ -96,6 +96,7 @@
 
   <script type="module">
     import { getData, saveData } from './assets/data.js';
+    import { t, getCurrentLang } from './assets/i18n.js';
     import './assets/security.js';
     import './assets/app.js';
 
@@ -109,236 +110,249 @@
       return [];
     }
 
-    const root = document.querySelector('[data-producer-detail]');
-    if (root) {
+    async function renderProducerProfile() {
+      const root = document.querySelector('[data-producer-detail]');
+      if (!root) return;
+      
       const data = await getData();
       const unihube = data.unihube || {};
       const params = new URLSearchParams(location.search);
       const prodId = params.get('id');
+      const lang = getCurrentLang();
 
       const producer = (unihube.producers || []).find(p => p.id === prodId) || (unihube.producers || [])[0];
 
       if (!producer) {
-        root.innerHTML = '<div style="padding:10vw 3vw;text-align:center;"><h2>Không tìm thấy thông tin nhà sản xuất.</h2><a href="unihube" class="button">← Quay lại Uni-HUBE</a></div>';
-      } else {
-        const tracks = producer.tracks || [];
-        const budgetTiers = unihube.budgetTiers || [
-          'Dưới 5 Triệu VNĐ (Vocal Tuning / Demo / Beat Indie)',
-          '5 - 10 Triệu VNĐ (Sáng tác Topline / Mixing & Mastering)',
-          '10 - 20 Triệu VNĐ (Sản xuất Single Tiêu chuẩn)',
-          '20 - 40 Triệu VNĐ (Sản xuất Single Cao cấp & Dolby Atmos)',
-          '40 - 80 Triệu VNĐ (Sản xuất Trọn gói EP 3 - 5 Bài)',
-          '80 - 150 Triệu VNĐ (Sản xuất Full Album / Live Session)',
-          'Trên 150 Triệu VNĐ (TVC / Quảng Cáo / Dự Án Hãng Đĩa Lớn)',
-          'Thỏa thuận linh hoạt theo khối lượng công việc'
-        ];
+        root.innerHTML = `<div style="padding:10vw 3vw;text-align:center;"><h2>${lang === 'en' ? 'Producer profile not found.' : 'Không tìm thấy thông tin nhà sản xuất.'}</h2><a href="unihube" class="button">← ${lang === 'en' ? 'Back to Uni-HUBE' : 'Quay lại Uni-HUBE'}</a></div>`;
+        return;
+      }
 
-        root.innerHTML = `
-          <!-- 01: Hero Profile (Identical to artist.html) -->
-          <section class="artist-detail">
-            <img src="${producer.image || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1000&q=85'}" alt="${producer.name}">
-            <div>
-              <span class="eyebrow" style="color:#d97706;">Uni-HUBE / ${producer.role}</span>
-              <h1>${producer.name}</h1>
-              <p>${producer.bio}</p>
-              
-              <div style="margin: 20px 0; font: 12px 'DM Mono', monospace;">
-                <span style="color:#666;text-transform:uppercase;">Thể loại sở trường:</span>
-                <strong style="color:#000;display:block;margin-top:4px;">● ${producer.specialty}</strong>
-              </div>
+      const tracks = producer.tracks || [];
+      const budgetTiers = unihube.budgetTiers || [
+        'Dưới 5 Triệu VNĐ (Vocal Tuning / Demo / Beat Indie)',
+        '5 - 10 Triệu VNĐ (Sáng tác Topline / Mixing & Mastering)',
+        '10 - 20 Triệu VNĐ (Sản xuất Single Tiêu chuẩn)',
+        '20 - 40 Triệu VNĐ (Sản xuất Single Cao cấp & Dolby Atmos)',
+        '40 - 80 Triệu VNĐ (Sản xuất Trọn gói EP 3 - 5 Bài)',
+        '80 - 150 Triệu VNĐ (Sản xuất Full Album / Live Session)',
+        'Trên 150 Triệu VNĐ (TVC / Quảng Cáo / Dự Án Hãng Đĩa Lớn)',
+        'Thỏa thuận linh hoạt theo khối lượng công việc'
+      ];
 
-              <div style="margin: 20px 0; font: 12px 'DM Mono', monospace;">
-                <span style="color:#666;text-transform:uppercase;">Chi phí cơ bản (Rate):</span>
-                <strong style="color:#16a34a;font-size:16px;display:block;margin-top:4px;">${producer.priceRate || 'Theo thỏa thuận'}</strong>
-              </div>
+      const firstName = producer.name.split(' ')[0] || producer.name;
 
-              ${producer.sampleAudio ? `
-                <div style="margin: 20px 0;">
-                  <span style="font: 11px 'DM Mono', monospace; text-transform: uppercase; color: #666; display: block; margin-bottom: 6px;">🎧 Audio Showreel:</span>
-                  <audio controls src="${producer.sampleAudio}" style="width: 100%; height: 32px;"></audio>
-                </div>
-              ` : ''}
-
-              <div class="actions" style="margin-top: 30px;">
-                <a href="#booking-section" class="button" style="background: var(--ink); color: #fff; padding: 14px 24px;">
-                  🎯 Đặt Lịch Làm Việc Với ${producer.name.split(' ')[0]} →
-                </a>
-                <a href="unihube" class="button alt" style="padding: 14px 20px;">
-                  ← Uni-HUBE Roster
-                </a>
-              </div>
-            </div>
-          </section>
-
-          <!-- 02: Featured Discography (Same style as releases on artist.html) -->
-          <section class="releases">
-            <div class="section-head">
-              <h2>02 / Ca Khúc Tiêu Biểu & Sản Phẩm Đã Thực Hiện</h2>
-              <span class="kicker">${tracks.length} Featured Tracks</span>
-            </div>
+      root.innerHTML = `
+        <!-- 01: Hero Profile (Identical to artist.html) -->
+        <section class="artist-detail">
+          <img src="${producer.image || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1000&q=85'}" alt="${producer.name}">
+          <div>
+            <span class="eyebrow" style="color:#d97706;">Uni-HUBE / ${producer.role}</span>
+            <h1>${producer.name}</h1>
+            <p>${producer.bio}</p>
             
-            ${tracks.length > 0 ? tracks.map(tr => {
-              const links = getTrackLinks(tr);
-              return `
-                <div class="producer-track-row">
-                  <div style="display: flex; flex-direction: column; gap: 4px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span class="track-role-pill">Vai trò: ${tr.role || 'Music Producer'}</span>
-                      <span style="font: 11px 'DM Mono', monospace; color: #888;">${tr.releaseYear || '2026'}</span>
-                    </div>
-                    <div class="track-title-text">${tr.title}</div>
-                    <div class="track-artist-text">Ca sĩ / Dự án: <b>${tr.artist}</b></div>
-                  </div>
+            <div style="margin: 20px 0; font: 12px 'DM Mono', monospace;">
+              <span style="color:#666;text-transform:uppercase;">${t('producer_specialty_label')}:</span>
+              <strong style="color:#000;display:block;margin-top:4px;">● ${producer.specialty}</strong>
+            </div>
 
-                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    ${links.length > 0 ? links.map(l => `
-                      <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="track-link-pill">
-                        ${l.name || 'Nghe nhạc'} ↗
-                      </a>
-                    `).join('') : (tr.audioUrl ? `
-                      <audio controls src="${tr.audioUrl}" style="width: 100%; max-width: 220px; height: 32px;"></audio>
-                    ` : '<span style="font: 11px \'DM Mono\', monospace; color: #888;">Chưa gắn link</span>')}
-                  </div>
+            <div style="margin: 20px 0; font: 12px 'DM Mono', monospace;">
+              <span style="color:#666;text-transform:uppercase;">${t('producer_rate_label')}:</span>
+              <strong style="color:#16a34a;font-size:16px;display:block;margin-top:4px;">${producer.priceRate || (lang === 'en' ? 'Negotiable' : 'Theo thỏa thuận')}</strong>
+            </div>
 
-                  <div>
-                    <span class="track-metric-badge">
-                      ${tr.streams || '✓ Live on DSPs'}
-                    </span>
-                  </div>
+            ${producer.sampleAudio ? `
+              <div style="margin: 20px 0;">
+                <span style="font: 11px 'DM Mono', monospace; text-transform: uppercase; color: #666; display: block; margin-bottom: 6px;">🎧 Audio Showreel:</span>
+                <audio controls src="${producer.sampleAudio}" style="width: 100%; height: 32px;"></audio>
+              </div>
+            ` : ''}
 
-                  <div style="text-align: right;">
-                    <a href="#booking-section" class="button alt" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;">
-                      Đặt bài tương tự ↗
+            <div class="actions" style="margin-top: 30px;">
+              <a href="#booking-section" class="button" style="background: var(--ink); color: #fff; padding: 14px 24px;">
+                ${t('producer_book_now', { name: firstName })}
+              </a>
+              <a href="unihube" class="button alt" style="padding: 14px 20px;">
+                ${t('producer_back_roster')}
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 02: Featured Discography (Same style as releases on artist.html) -->
+        <section class="releases">
+          <div class="section-head">
+            <h2>${t('producer_tracks_title')}</h2>
+            <span class="kicker">${tracks.length} ${lang === 'en' ? 'Featured Tracks' : 'Ca khúc'}</span>
+          </div>
+          
+          ${tracks.length > 0 ? tracks.map(tr => {
+            const links = getTrackLinks(tr);
+            return `
+              <div class="producer-track-row">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="track-role-pill">${lang === 'en' ? 'Role' : 'Vai trò'}: ${tr.role || 'Music Producer'}</span>
+                    <span style="font: 11px 'DM Mono', monospace; color: #888;">${tr.releaseYear || '2026'}</span>
+                  </div>
+                  <div class="track-title-text">${tr.title}</div>
+                  <div class="track-artist-text">${lang === 'en' ? 'Artist / Project' : 'Ca sĩ / Dự án'}: <b>${tr.artist}</b></div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  ${links.length > 0 ? links.map(l => `
+                    <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="track-link-pill">
+                      ${l.name || (lang === 'en' ? 'Listen' : 'Nghe nhạc')} ↗
                     </a>
+                  `).join('') : (tr.audioUrl ? `
+                    <audio controls src="${tr.audioUrl}" style="width: 100%; max-width: 220px; height: 32px;"></audio>
+                  ` : `<span style="font: 11px 'DM Mono', monospace; color: #888;">${lang === 'en' ? 'No stream link' : 'Chưa gắn link'}</span>`)}
+                </div>
+
+                <div>
+                  <span class="track-metric-badge">
+                    ${tr.streams || '✓ Live on DSPs'}
+                  </span>
+                </div>
+
+                <div style="text-align: right;">
+                  <a href="#booking-section" class="button alt" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;">
+                    ${t('producer_similar_track')}
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('') : `<p class="empty" style="padding:30px 3vw;">${lang === 'en' ? 'No featured tracks available.' : 'Chưa cập nhật danh sách ca khúc tiêu biểu.'}</p>`}
+        </section>
+
+        <!-- 03: Direct Booking Form -->
+        <section class="big-copy" id="booking-section" style="border-bottom: 0;">
+          <span class="kicker">${lang === 'en' ? '03 / Direct Booking' : '03 / Đặt Lịch Trực Tiếp'}</span>
+          <div>
+            <h2>${lang === 'en' ? 'Work with' : 'Làm việc cùng'} <em>${producer.name}</em></h2>
+            <p>
+              ${lang === 'en' 
+                ? 'Send your song idea or demo. We will respond directly with technical production solutions and agreement within 24 hours.' 
+                : 'Gửi ý tưởng bài hát hoặc bản demo. Chúng tôi sẽ phản hồi trực tiếp kèm phương án sản xuất và hợp đồng trong vòng 24 giờ.'}
+            </p>
+
+            <div style="background: #fafafa; border: 1px solid var(--ink); padding: 32px; margin-top: 24px;">
+              <form id="direct-producer-booking-form" style="display: grid; gap: 16px;">
+                <div class="mini-grid">
+                  <div class="field">
+                    <label>${lang === 'en' ? 'Requested Service *' : 'Dịch vụ yêu cầu *'}</label>
+                    <select id="direct-service" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
+                      <option value="full-production">${lang === 'en' ? 'Full Track Production' : 'Sản xuất Ca khúc Trọn gói (Full Track Production)'}</option>
+                      <option value="mixing-mastering">${lang === 'en' ? 'Mixing & Mastering 24-bit Lossless / Dolby Atmos' : 'Mixing & Mastering 24-bit Lossless / Dolby Atmos'}</option>
+                      <option value="songwriting-topline">${lang === 'en' ? 'Songwriting & Topline Composing' : 'Sáng tác Giai điệu & Lời (Songwriting & Topline)'}</option>
+                      <option value="vocal-production">${lang === 'en' ? 'Vocal Tuning & Advanced Production' : 'Vocal Tuning & Xử lý Thanh nhạc Chuyên sâu'}</option>
+                      <option value="beat-arrangement">${lang === 'en' ? 'Beatmaking & Custom Arrangement' : 'Hòa âm Phối khí & Làm Beat (Beatmaking)'}</option>
+                      <option value="commercial-tvc">${lang === 'en' ? 'Commercial TVC & Film Score' : 'Sản xuất Nhạc Quảng Cáo TVC / Phim Ảnh'}</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>${lang === 'en' ? 'Estimated Budget Tier *' : 'Dự toán ngân sách *'}</label>
+                    <select id="direct-budget" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
+                      ${budgetTiers.map(tier => `<option value="${tier}">${tier}</option>`).join('')}
+                    </select>
                   </div>
                 </div>
-              `;
-            }).join('') : '<p class="empty" style="padding:30px 3vw;">Chưa cập nhật danh sách ca khúc tiêu biểu.</p>'}
-          </section>
 
-          <!-- 03: Direct Booking Form -->
-          <section class="big-copy" id="booking-section" style="border-bottom: 0;">
-            <span class="kicker">03 / Đặt Lịch Trực Tiếp</span>
-            <div>
-              <h2>Làm việc cùng <em>${producer.name}</em></h2>
-              <p>
-                Gửi ý tưởng bài hát hoặc bản demo. Chúng tôi sẽ phản hồi trực tiếp kèm phương án sản xuất và hợp đồng trong vòng 24 giờ.
-              </p>
-
-              <div style="background: #fafafa; border: 1px solid var(--ink); padding: 32px; margin-top: 24px;">
-                <form id="direct-producer-booking-form" style="display: grid; gap: 16px;">
-                  <div class="mini-grid">
-                    <div class="field">
-                      <label>Dịch vụ yêu cầu *</label>
-                      <select id="direct-service" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
-                        <option value="full-production">Sản xuất Ca khúc Trọn gói (Full Track Production)</option>
-                        <option value="mixing-mastering">Mixing & Mastering 24-bit Lossless / Dolby Atmos</option>
-                        <option value="songwriting-topline">Sáng tác Giai điệu & Lời (Songwriting & Topline)</option>
-                        <option value="vocal-production">Vocal Tuning & Xử lý Thanh nhạc Chuyên sâu</option>
-                        <option value="beat-arrangement">Hòa âm Phối khí & Làm Beat (Beatmaking)</option>
-                        <option value="commercial-tvc">Sản xuất Nhạc Quảng Cáo TVC / Phim Ảnh</option>
-                      </select>
-                    </div>
-                    <div class="field">
-                      <label>Dự toán ngân sách *</label>
-                      <select id="direct-budget" style="padding: 12px; border: 1px solid var(--ink); background: #fff; font: 14px Manrope, sans-serif;">
-                        ${budgetTiers.map(tier => `<option value="${tier}">${tier}</option>`).join('')}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="mini-grid">
-                    <div class="field">
-                      <label>Họ tên nghệ sĩ / Đại diện *</label>
-                      <input id="direct-name" type="text" required placeholder="Ví dụ: Ca sĩ Tuấn Kiệt">
-                    </div>
-                    <div class="field">
-                      <label>Email liên hệ *</label>
-                      <input id="direct-email" type="email" required placeholder="tuankiet@gmail.com">
-                    </div>
-                  </div>
-
-                  <div class="mini-grid">
-                    <div class="field">
-                      <label>Số điện thoại / Zalo *</label>
-                      <input id="direct-phone" type="tel" required placeholder="0908xxxxxx">
-                    </div>
-                    <div class="field">
-                      <label>Link Demo (Google Drive, Soundcloud...)</label>
-                      <input id="direct-demo" type="url" placeholder="https://drive.google.com/...">
-                    </div>
-                  </div>
-
+                <div class="mini-grid">
                   <div class="field">
-                    <label>Mô tả chi tiết concept dự án & Timeline</label>
-                    <textarea id="direct-notes" rows="3" placeholder="Mô tả phong cách mong muốn..."></textarea>
+                    <label>${lang === 'en' ? 'Artist / Client Full Name *' : 'Họ tên nghệ sĩ / Đại diện *'}</label>
+                    <input id="direct-name" type="text" required placeholder="${lang === 'en' ? 'e.g. Alex Singer' : 'Ví dụ: Ca sĩ Tuấn Kiệt'}">
                   </div>
-
-                  <div id="direct-booking-notice" class="notice"></div>
-
-                  <div class="actions">
-                    <button type="submit" id="direct-submit-btn" class="button" style="background: var(--ink); color: #fff; padding: 16px 28px;">
-                      🚀 Gửi Yêu Cầu Làm Việc Với ${producer.name.split(' ')[0]} →
-                    </button>
+                  <div class="field">
+                    <label>${lang === 'en' ? 'Contact Email *' : 'Email liên hệ *'}</label>
+                    <input id="direct-email" type="email" required placeholder="contact@example.com">
                   </div>
-                </form>
-              </div>
+                </div>
+
+                <div class="mini-grid">
+                  <div class="field">
+                    <label>${lang === 'en' ? 'Phone / WhatsApp / Zalo *' : 'Số điện thoại / Zalo *'}</label>
+                    <input id="direct-phone" type="tel" required placeholder="0908xxxxxx">
+                  </div>
+                  <div class="field">
+                    <label>${lang === 'en' ? 'Demo Link (Drive, SoundCloud...)' : 'Link Demo (Google Drive, Soundcloud...)'}</label>
+                    <input id="direct-demo" type="url" placeholder="https://drive.google.com/...">
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>${lang === 'en' ? 'Project Vision & Delivery Timeline' : 'Mô tả chi tiết concept dự án & Timeline'}</label>
+                  <textarea id="direct-notes" rows="3" placeholder="${lang === 'en' ? 'Describe your musical vision, references, mood...' : 'Mô tả phong cách mong muốn...'}"></textarea>
+                </div>
+
+                <div id="direct-booking-notice" class="notice"></div>
+
+                <div class="actions">
+                  <button type="submit" id="direct-submit-btn" class="button" style="background: var(--ink); color: #fff; padding: 16px 28px;">
+                    ${lang === 'en' ? `🚀 Submit Production Request to ${firstName} →` : `🚀 Gửi Yêu Cầu Làm Việc Với ${firstName} →`}
+                  </button>
+                </div>
+              </form>
             </div>
-          </section>
-        `;
+          </div>
+        </section>
+      `;
 
-        // Direct Booking Form Submission
-        const form = document.querySelector('#direct-producer-booking-form');
-        const notice = document.querySelector('#direct-booking-notice');
-        if (form) {
-          form.onsubmit = async (e) => {
-            e.preventDefault();
-            const submitBtn = document.querySelector('#direct-submit-btn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Đang gửi...';
+      // Direct Booking Form Submission
+      const form = document.querySelector('#direct-producer-booking-form');
+      const notice = document.querySelector('#direct-booking-notice');
+      if (form) {
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const submitBtn = document.querySelector('#direct-submit-btn');
+          submitBtn.disabled = true;
+          submitBtn.textContent = lang === 'en' ? 'Submitting...' : 'Đang gửi...';
 
-            const clientName = document.querySelector('#direct-name').value.trim();
-            const clientEmail = document.querySelector('#direct-email').value.trim();
-            const clientPhone = document.querySelector('#direct-phone').value.trim();
-            const serviceType = document.querySelector('#direct-service').selectedOptions[0]?.textContent || 'Full Track';
-            const budget = document.querySelector('#direct-budget').value;
-            const demoUrl = document.querySelector('#direct-demo').value.trim();
-            const notes = document.querySelector('#direct-notes').value.trim();
+          const clientName = document.querySelector('#direct-name').value.trim();
+          const clientEmail = document.querySelector('#direct-email').value.trim();
+          const clientPhone = document.querySelector('#direct-phone').value.trim();
+          const serviceType = document.querySelector('#direct-service').selectedOptions[0]?.textContent || 'Full Track';
+          const budget = document.querySelector('#direct-budget').value;
+          const demoUrl = document.querySelector('#direct-demo').value.trim();
+          const notes = document.querySelector('#direct-notes').value.trim();
 
-            const newInquiry = {
-              id: `inq-${Date.now()}`,
-              clientName,
-              clientEmail,
-              clientPhone,
-              producerId: producer.id,
-              producerName: producer.name,
-              serviceType,
-              budget,
-              demoUrl,
-              notes,
-              status: 'Mới tiếp nhận',
-              createdAt: new Date().toLocaleDateString('vi-VN')
-            };
-
-            const liveData = await getData();
-            if (!liveData.unihube) liveData.unihube = JSON.parse(JSON.stringify(unihube));
-            if (!liveData.unihube.inquiries) liveData.unihube.inquiries = [];
-
-            liveData.unihube.inquiries.unshift(newInquiry);
-            await saveData(liveData);
-
-            if (notice) {
-              notice.innerHTML = `<strong>✓ Gửi yêu cầu làm việc thành công!</strong><br>Uni-HUBE đã tiếp nhận thông tin từ <b>${clientName || 'quý khách'}</b> dành cho Producer <b>${producer.name}</b>. Chúng tôi sẽ phản hồi trong vòng 24 giờ.`;
-              notice.style.display = 'block';
-            }
-
-            submitBtn.disabled = false;
-            submitBtn.textContent = `🚀 Gửi Yêu Cầu Làm Việc Với ${producer.name.split(' ')[0]} →`;
-            form.reset();
+          const newInquiry = {
+            id: `inq-${Date.now()}`,
+            clientName,
+            clientEmail,
+            clientPhone,
+            producerId: producer.id,
+            producerName: producer.name,
+            serviceType,
+            budget,
+            demoUrl,
+            notes,
+            status: 'Mới tiếp nhận',
+            createdAt: new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'vi-VN')
           };
-        }
+
+          const liveData = await getData();
+          if (!liveData.unihube) liveData.unihube = JSON.parse(JSON.stringify(unihube));
+          if (!liveData.unihube.inquiries) liveData.unihube.inquiries = [];
+
+          liveData.unihube.inquiries.unshift(newInquiry);
+          await saveData(liveData);
+
+          if (notice) {
+            notice.innerHTML = lang === 'en' 
+              ? `<strong>✓ Production request submitted successfully!</strong><br>Uni-HUBE received your request from <b>${clientName || 'Client'}</b> for Producer <b>${producer.name}</b>. We will contact you within 24 hours.`
+              : `<strong>✓ Gửi yêu cầu làm việc thành công!</strong><br>Uni-HUBE đã tiếp nhận thông tin từ <b>${clientName || 'quý khách'}</b> dành cho Producer <b>${producer.name}</b>. Chúng tôi sẽ phản hồi trong vòng 24 giờ.`;
+            notice.style.display = 'block';
+          }
+
+          submitBtn.disabled = false;
+          submitBtn.textContent = lang === 'en' ? `🚀 Submit Production Request to ${firstName} →` : `🚀 Gửi Yêu Cầu Làm Việc Với ${firstName} →`;
+          form.reset();
+        };
       }
     }
+
+    renderProducerProfile();
+    window.addEventListener('uniflows:langchange', renderProducerProfile);
   </script>
 </body>
 </html>

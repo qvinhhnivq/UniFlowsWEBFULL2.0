@@ -147,7 +147,7 @@
       padding: 32px;
       margin-top: 24px;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 850px) {
       .agency-services-grid, .agency-cases-grid {
         grid-template-columns: 1fr;
       }
@@ -168,14 +168,14 @@
     <section class="home-hero">
       <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=2200&q=90" alt="48K Collective Media & Distribution">
       <div class="home-content">
-        <span class="eyebrow" style="color: #c084fc;">
+        <span class="eyebrow" style="color: #c084fc;" data-i18n="collective_hero_eyebrow">
           01 / Music Media & Global Distro
           <span class="live-pulse"></span>
         </span>
         <h1 style="font-size: clamp(48px, 9.5vw, 150px); margin: 10px 0 16px; line-height: 0.82;">
           48K<br><em>collective.</em><br>AMPLIFY.
         </h1>
-        <p class="home-copy">
+        <p class="home-copy" data-i18n="collective_hero_p">
           Agency chiến lược truyền thông âm nhạc, Viral TikTok Sound, PR Báo chí và Mạng lưới phân phối nhạc số toàn cầu thuộc UniFLOWs Label.
         </p>
       </div>
@@ -195,7 +195,7 @@
     <!-- 03: Core Solutions Grid -->
     <section>
       <div class="section-head">
-        <h2>02 / Dịch Vụ Chiến Lược & Phân Phối</h2>
+        <h2 data-i18n="collective_services_title">01 / Dịch Vụ Sáng Tạo & Chiến Lược</h2>
         <span class="kicker">Core Solutions</span>
       </div>
       <div class="agency-services-grid" id="collective-services-list">
@@ -206,7 +206,7 @@
     <!-- 04: Case Studies Section -->
     <section>
       <div class="section-head">
-        <h2>03 / Chiến Dịch Ra Mắt Tiêu Biểu</h2>
+        <h2 data-i18n="collective_work_title">02 / Case Studies & Dự Án Tiêu Biểu</h2>
         <span class="kicker">Case Studies</span>
       </div>
       <div class="agency-cases-grid" id="collective-case-studies-list">
@@ -221,7 +221,7 @@
 
     <!-- 06: Interactive Campaign Proposal Section -->
     <section class="big-copy" style="border-bottom: 0;">
-      <span class="kicker">04 / Đề Xuất Chiến Dịch</span>
+      <span class="kicker" data-i18n="collective_brief_title">03 / Gửi Brief Dự Án Sáng Tạo</span>
       <div>
         <h2>Lên kế hoạch phát hành cho sản phẩm <em>mới?</em></h2>
         <p>
@@ -305,107 +305,116 @@
 
   <script type="module">
     import { getData, saveData } from './assets/data.js';
+    import { t, getCurrentLang } from './assets/i18n.js';
     import './assets/security.js';
     import './assets/app.js';
 
-    const data = await getData();
-    const collective48k = data.collective48k || {};
+    async function renderCollective() {
+      const data = await getData();
+      const collective48k = data.collective48k || {};
+      const lang = getCurrentLang();
 
-    // 1. Render Services
-    const servicesEl = document.querySelector('#collective-services-list');
-    if (servicesEl && collective48k.services) {
-      servicesEl.innerHTML = collective48k.services.map((s, idx) => `
-        <div class="agency-service-card">
-          <div>
-            <span class="kicker">0${idx+1} / Solution</span>
-            <h3>${s.title}</h3>
-            <p>${s.desc}</p>
-          </div>
-          <div>
-            <span class="agency-badge">🎯 ${s.stats}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // 2. Render Case Studies
-    const caseStudiesEl = document.querySelector('#collective-case-studies-list');
-    if (caseStudiesEl && collective48k.caseStudies) {
-      caseStudiesEl.innerHTML = collective48k.caseStudies.map(cs => `
-        <div class="agency-case-card">
-          <div>
-            <img src="${cs.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80'}" alt="${cs.title}">
-            <span class="eyebrow">${cs.client}</span>
-            <h3>${cs.title}</h3>
-            <div style="font: 11px 'DM Mono', monospace; color: #7c3aed; margin-bottom: 12px; font-weight: bold;">
-              ⚡ ${cs.tags}
+      // 1. Render Services
+      const servicesEl = document.querySelector('#collective-services-list');
+      if (servicesEl && collective48k.services) {
+        servicesEl.innerHTML = collective48k.services.map((s, idx) => `
+          <div class="agency-service-card">
+            <div>
+              <span class="kicker">0${idx+1} / Solution</span>
+              <h3>${s.title}</h3>
+              <p>${s.desc}</p>
             </div>
-            <p style="font-size: 14px; line-height: 1.5; color: var(--ink); opacity: 0.85; margin: 0 0 16px;">
-              ${cs.summary}
-            </p>
+            <div>
+              <span class="agency-badge">🎯 ${s.stats}</span>
+            </div>
           </div>
-          <div style="border-top: 1px solid var(--line); padding-top: 14px;">
-            <strong style="font: 12px 'DM Mono', monospace; text-transform: uppercase;">
-              📊 ${cs.reach}
-            </strong>
+        `).join('');
+      }
+
+      // 2. Render Case Studies
+      const caseStudiesEl = document.querySelector('#collective-case-studies-list');
+      if (caseStudiesEl && collective48k.caseStudies) {
+        caseStudiesEl.innerHTML = collective48k.caseStudies.map(cs => `
+          <div class="agency-case-card">
+            <div>
+              <img src="${cs.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80'}" alt="${cs.title}">
+              <span class="eyebrow">${cs.client}</span>
+              <h3>${cs.title}</h3>
+              <div style="font: 11px 'DM Mono', monospace; color: #7c3aed; margin-bottom: 12px; font-weight: bold;">
+                ⚡ ${cs.tags}
+              </div>
+              <p style="font-size: 14px; line-height: 1.5; color: var(--ink); opacity: 0.85; margin: 0 0 16px;">
+                ${cs.summary}
+              </p>
+            </div>
+            <div style="border-top: 1px solid var(--line); padding-top: 14px;">
+              <strong style="font: 12px 'DM Mono', monospace; text-transform: uppercase;">
+                📊 ${cs.reach}
+              </strong>
+            </div>
           </div>
-        </div>
-      `).join('');
-    }
+        `).join('');
+      }
 
-    // Submit Proposal Form
-    const proposalForm = document.querySelector('#proposal-form');
-    const proposalNotice = document.querySelector('#proposal-notice');
+      // Submit Proposal Form
+      const proposalForm = document.querySelector('#proposal-form');
+      const proposalNotice = document.querySelector('#proposal-notice');
 
-    if (proposalForm) {
-      proposalForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const submitBtn = document.querySelector('#submit-proposal-btn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Đang gửi kế hoạch...';
+      if (proposalForm) {
+        proposalForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const submitBtn = document.querySelector('#submit-proposal-btn');
+          submitBtn.disabled = true;
+          submitBtn.textContent = lang === 'en' ? 'Sending proposal...' : 'Đang gửi kế hoạch...';
 
-        const clientName = document.querySelector('#prop-client-name').value.trim();
-        const songTitle = document.querySelector('#prop-song-title').value.trim();
-        const clientEmail = document.querySelector('#prop-client-email').value.trim();
-        const clientPhone = document.querySelector('#prop-client-phone').value.trim();
-        const packageType = document.querySelector('#prop-package-select').value;
-        const releaseDate = document.querySelector('#prop-release-date').value;
-        const targetGoal = document.querySelector('#prop-target-goal').value.trim();
-        const budget = document.querySelector('#prop-budget-select').value;
-        const notes = document.querySelector('#prop-notes').value.trim();
+          const clientName = document.querySelector('#prop-client-name').value.trim();
+          const songTitle = document.querySelector('#prop-song-title').value.trim();
+          const clientEmail = document.querySelector('#prop-client-email').value.trim();
+          const clientPhone = document.querySelector('#prop-client-phone').value.trim();
+          const packageType = document.querySelector('#prop-package-select').value;
+          const releaseDate = document.querySelector('#prop-release-date').value;
+          const targetGoal = document.querySelector('#prop-target-goal').value.trim();
+          const budget = document.querySelector('#prop-budget-select').value;
+          const notes = document.querySelector('#prop-notes').value.trim();
 
-        const newProposal = {
-          id: `prop-${Date.now()}`,
-          clientName,
-          songTitle,
-          clientEmail,
-          clientPhone,
-          packageType,
-          releaseDate,
-          targetGoal,
-          budget,
-          notes,
-          status: 'Chờ phản hồi',
-          createdAt: new Date().toLocaleDateString('vi-VN')
+          const newProposal = {
+            id: `prop-${Date.now()}`,
+            clientName,
+            songTitle,
+            clientEmail,
+            clientPhone,
+            packageType,
+            releaseDate,
+            targetGoal,
+            budget,
+            notes,
+            status: 'Chờ phản hồi',
+            createdAt: new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'vi-VN')
+          };
+
+          const liveData = await getData();
+          if (!liveData.collective48k) liveData.collective48k = JSON.parse(JSON.stringify(collective48k));
+          if (!liveData.collective48k.proposals) liveData.collective48k.proposals = [];
+
+          liveData.collective48k.proposals.unshift(newProposal);
+          await saveData(liveData);
+
+          if (proposalNotice) {
+            proposalNotice.innerHTML = lang === 'en'
+              ? `<strong>✓ Campaign brief submitted successfully!</strong><br>48K Collective received project details for <b>"${songTitle || 'New Project'}"</b> from <b>${clientName || 'Client'}</b>. Our Media Planner team will contact you within 24 hours.`
+              : `<strong>✓ Gửi đề xuất chiến dịch thành công!</strong><br>48K Collective đã tiếp nhận yêu cầu cho dự án <b>"${songTitle || 'Dự án mới'}"</b> từ <b>${clientName || 'quý khách'}</b>. Đội ngũ Media Planner sẽ liên hệ trực tiếp trong vòng 24 giờ.`;
+            proposalNotice.style.display = 'block';
+          }
+
+          submitBtn.disabled = false;
+          submitBtn.textContent = lang === 'en' ? '🚀 Submit Campaign Brief →' : '🚀 Gửi Yêu Cầu Kế Hoạch Truyền Thông →';
+          proposalForm.reset();
         };
-
-        const liveData = await getData();
-        if (!liveData.collective48k) liveData.collective48k = JSON.parse(JSON.stringify(collective48k));
-        if (!liveData.collective48k.proposals) liveData.collective48k.proposals = [];
-
-        liveData.collective48k.proposals.unshift(newProposal);
-        await saveData(liveData);
-
-        if (proposalNotice) {
-          proposalNotice.innerHTML = `<strong>✓ Gửi đề xuất chiến dịch thành công!</strong><br>48K Collective đã tiếp nhận yêu cầu cho dự án <b>"${songTitle || 'Dự án mới'}"</b> từ <b>${clientName || 'quý khách'}</b>. Đội ngũ Media Planner sẽ liên hệ trực tiếp trong vòng 24 giờ.`;
-          proposalNotice.style.display = 'block';
-        }
-
-        submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Gửi Yêu Cầu Kế Hoạch Truyền Thông →';
-        proposalForm.reset();
-      };
+      }
     }
+
+    renderCollective();
+    window.addEventListener('uniflows:langchange', renderCollective);
   </script>
 </body>
 </html>
