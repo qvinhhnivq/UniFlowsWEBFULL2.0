@@ -566,19 +566,19 @@ export async function getData() {
         merged.publishing = defaultData.publishing;
       }
 
-      // Parse Uni-HUBE data
-      if (settings.unihube && typeof settings.unihube === 'object') {
+      // Parse Uni-HUBE data (Preserve local items if Supabase column is empty or newly created)
+      if (settings.unihube && typeof settings.unihube === 'object' && Array.isArray(settings.unihube.producers) && settings.unihube.producers.length > 0) {
         merged.unihube = settings.unihube;
-      } else if (cached.unihube && typeof cached.unihube === 'object') {
+      } else if (cached.unihube && typeof cached.unihube === 'object' && Array.isArray(cached.unihube.producers) && cached.unihube.producers.length > 0) {
         merged.unihube = cached.unihube;
       } else {
         merged.unihube = defaultData.unihube;
       }
 
       // Parse 48K Collective data
-      if (settings.collective48k && typeof settings.collective48k === 'object') {
+      if (settings.collective48k && typeof settings.collective48k === 'object' && Array.isArray(settings.collective48k.caseStudies) && settings.collective48k.caseStudies.length > 0) {
         merged.collective48k = settings.collective48k;
-      } else if (cached.collective48k && typeof cached.collective48k === 'object') {
+      } else if (cached.collective48k && typeof cached.collective48k === 'object' && Array.isArray(cached.collective48k.caseStudies) && cached.collective48k.caseStudies.length > 0) {
         merged.collective48k = cached.collective48k;
       } else {
         merged.collective48k = defaultData.collective48k;

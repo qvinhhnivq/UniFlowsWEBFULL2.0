@@ -2991,10 +2991,11 @@ function renderUniHubeAdmin() {
       }).join('');
 
       tbody.querySelectorAll('.hube-inquiry-status-select').forEach(sel => {
-        sel.onchange = () => {
+        sel.onchange = async () => {
           const inq = hube.inquiries.find(x => x.id === sel.dataset.id);
           if (inq) {
             inq.status = sel.value;
+            await saveData(data);
             showNotice(`✓ Đã cập nhật trạng thái yêu cầu của "${inq.clientName}" thành "${sel.value}".`);
             renderUniHubeAdmin();
           }
@@ -3002,9 +3003,10 @@ function renderUniHubeAdmin() {
       });
 
       tbody.querySelectorAll('.delete-hube-inquiry-btn').forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
           if (confirm('Xác nhận xóa yêu cầu đặt lịch sản xuất này?')) {
             hube.inquiries = hube.inquiries.filter(x => x.id !== btn.dataset.id);
+            await saveData(data);
             renderUniHubeAdmin();
             showNotice('✓ Đã xóa yêu cầu sản xuất.');
           }
@@ -3045,9 +3047,10 @@ function renderUniHubeAdmin() {
     });
 
     grid.querySelectorAll('.delete-hube-producer-btn').forEach(btn => {
-      btn.onclick = () => {
+      btn.onclick = async () => {
         if (confirm('Xác nhận xóa thành viên này khỏi Uni-HUBE?')) {
           hube.producers = hube.producers.filter(x => x.id !== btn.dataset.id);
+          await saveData(data);
           renderUniHubeAdmin();
           showNotice('✓ Đã xóa thành viên khỏi Uni-HUBE.');
         }
@@ -3106,9 +3109,10 @@ function renderProducerTracksList() {
   `).join('');
 
   tbody.querySelectorAll('.delete-single-producer-track-btn').forEach(btn => {
-    btn.onclick = () => {
+    btn.onclick = async () => {
       const idx = parseInt(btn.dataset.idx, 10);
       selectedProducerForTracks.tracks.splice(idx, 1);
+      await saveData(data);
       renderProducerTracksList();
       renderUniHubeAdmin();
       showNotice(`✓ Đã xóa ca khúc khỏi danh sách của ${selectedProducerForTracks.name}.`);
@@ -3117,7 +3121,7 @@ function renderProducerTracksList() {
 }
 
 // Add Track inside modal
-document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', () => {
+document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', async () => {
   if (!selectedProducerForTracks) return;
   const title = document.querySelector('#modal-track-title').value.trim();
   const artist = document.querySelector('#modal-track-artist').value.trim();
@@ -3141,6 +3145,7 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
   };
 
   selectedProducerForTracks.tracks.unshift(newTrack);
+  await saveData(data);
   renderProducerTracksList();
   renderUniHubeAdmin();
 
@@ -3169,7 +3174,7 @@ document.querySelector('#btn-cancel-add-producer')?.addEventListener('click', ()
   const box = document.querySelector('#add-producer-box');
   if (box) box.style.display = 'none';
 });
-document.querySelector('#btn-save-new-producer')?.addEventListener('click', () => {
+document.querySelector('#btn-save-new-producer')?.addEventListener('click', async () => {
   const name = document.querySelector('#new-prod-name').value.trim();
   const role = document.querySelector('#new-prod-role').value.trim();
   const specialty = document.querySelector('#new-prod-specialty').value.trim();
@@ -3202,6 +3207,7 @@ document.querySelector('#btn-save-new-producer')?.addEventListener('click', () =
   if (!data.unihube.producers) data.unihube.producers = [];
   data.unihube.producers.push(newProd);
 
+  await saveData(data);
   renderUniHubeAdmin();
   document.querySelector('#add-producer-box').style.display = 'none';
   showNotice(`✓ Đã thêm "${name}" vào tổ đội Uni-HUBE!`);
@@ -3264,10 +3270,11 @@ function renderCollective48kAdmin() {
       }).join('');
 
       tbody.querySelectorAll('.prop-status-select').forEach(sel => {
-        sel.onchange = () => {
+        sel.onchange = async () => {
           const p = col48k.proposals.find(x => x.id === sel.dataset.id);
           if (p) {
             p.status = sel.value;
+            await saveData(data);
             showNotice(`✓ Đã cập nhật trạng thái đề xuất "${p.songTitle}" thành "${sel.value}".`);
             renderCollective48kAdmin();
           }
@@ -3275,9 +3282,10 @@ function renderCollective48kAdmin() {
       });
 
       tbody.querySelectorAll('.delete-proposal-btn').forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
           if (confirm('Xác nhận xóa đề xuất chiến dịch này?')) {
             col48k.proposals = col48k.proposals.filter(x => x.id !== btn.dataset.id);
+            await saveData(data);
             renderCollective48kAdmin();
             showNotice('✓ Đã xóa đề xuất chiến dịch.');
           }
@@ -3307,9 +3315,10 @@ function renderCollective48kAdmin() {
     `).join('');
 
     grid.querySelectorAll('.delete-casestudy-btn').forEach(btn => {
-      btn.onclick = () => {
+      btn.onclick = async () => {
         if (confirm('Xác nhận xóa Case Study này khỏi 48K Collective?')) {
           col48k.caseStudies = col48k.caseStudies.filter(x => x.id !== btn.dataset.id);
+          await saveData(data);
           renderCollective48kAdmin();
           showNotice('✓ Đã xóa Case Study.');
         }
@@ -3327,7 +3336,7 @@ document.querySelector('#btn-cancel-add-casestudy')?.addEventListener('click', (
   const box = document.querySelector('#add-casestudy-box');
   if (box) box.style.display = 'none';
 });
-document.querySelector('#btn-save-new-casestudy')?.addEventListener('click', () => {
+document.querySelector('#btn-save-new-casestudy')?.addEventListener('click', async () => {
   const title = document.querySelector('#new-cs-title').value.trim();
   const client = document.querySelector('#new-cs-client').value.trim();
   const tags = document.querySelector('#new-cs-tags').value.trim();
@@ -3354,6 +3363,7 @@ document.querySelector('#btn-save-new-casestudy')?.addEventListener('click', () 
   if (!data.collective48k.caseStudies) data.collective48k.caseStudies = [];
   data.collective48k.caseStudies.push(newCS);
 
+  await saveData(data);
   renderCollective48kAdmin();
   document.querySelector('#add-casestudy-box').style.display = 'none';
   showNotice(`✓ Đã thêm Case Study "${title}" vào 48K Collective!`);
