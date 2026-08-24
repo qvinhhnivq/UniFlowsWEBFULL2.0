@@ -32,7 +32,7 @@ create table public.profiles (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 1.2. BẢNG SITE SETTINGS (CẤU HÌNH THÔNG TIN TRANG WEB & NHIỀU EMAIL)
+-- 1.2. BẢNG SITE SETTINGS (CẤU HÌNH THÔNG TIN TRANG WEB & TỔNG THỂ)
 create table public.site_settings (
   id text primary key default 'main',
   tagline text default 'MAKE THE WORLD MOVE.',
@@ -42,6 +42,13 @@ create table public.site_settings (
   email text default 'hello@uniflowslabel.com',
   emails jsonb default '{"general":"hello@uniflowslabel.com","booking":"booking@uniflowslabel.com","demos":"demos@uniflowslabel.com","press":"press@uniflowslabel.com"}'::jsonb,
   city text default 'Hồ Chí Minh · Việt Nam',
+  announcements jsonb default '[]'::jsonb,
+  publishing jsonb default '{}'::jsonb,
+  unihube jsonb default '{}'::jsonb,
+  collective48k jsonb default '{}'::jsonb,
+  admin_accounts jsonb default '[]'::jsonb,
+  music_submissions jsonb default '[]'::jsonb,
+  artist_order jsonb default '[]'::jsonb,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
@@ -330,3 +337,20 @@ values
   'Chúng tôi tìm kiếm những người làm nhạc tò mò, có gu riêng và sẵn sàng tạo ra điều khác biệt cùng nghệ sĩ của UniFLOWs.',
   true
 );
+
+-- ==============================================================================
+-- 5. LỆNH MIGRATION CẬP NHẬT NHANH CÁC CỘT MỚI (NẾU ĐÃ CÓ DATABASE TỪ TRƯỚC)
+-- ==============================================================================
+alter table public.site_settings add column if not exists announcements jsonb default '[]'::jsonb;
+alter table public.site_settings add column if not exists publishing jsonb default '{}'::jsonb;
+alter table public.site_settings add column if not exists unihube jsonb default '{}'::jsonb;
+alter table public.site_settings add column if not exists collective48k jsonb default '{}'::jsonb;
+alter table public.site_settings add column if not exists admin_accounts jsonb default '[]'::jsonb;
+alter table public.site_settings add column if not exists music_submissions jsonb default '[]'::jsonb;
+alter table public.site_settings add column if not exists artist_order jsonb default '[]'::jsonb;
+
+alter table public.artists add column if not exists show_on_web boolean default true;
+alter table public.artists add column if not exists role_type text default 'distribution';
+alter table public.artists add column if not exists payout_cycle text default 'Hàng tháng (Monthly)';
+alter table public.artists add column if not exists contract_term text default '2024 - 2027';
+

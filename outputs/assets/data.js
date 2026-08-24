@@ -37,159 +37,235 @@ export const defaultData = {
   artists: [
     {
       id: 'lumi',
-      username: 'lumi',
-      email: 'lumi@uniflowslabel.com',
-      password: 'Lumi@2026',
       name: 'Lumi',
+      genre: 'Dream Pop / Indie',
+      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      bio: 'Lumi tạo nên không gian âm nhạc bay bổng với những thanh âm lơ lửng, ca từ mộng mị và sự hòa quyện tinh tế giữa giai điệu pop hiện đại và nét mộc mạc của indie pop.',
+      gallery: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80'
+      ],
+      showOnWeb: true,
       roleType: 'exclusive',
-      genre: 'Alternative R&B',
-      image: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=1000&q=85',
-      bio: 'Lumi pha trộn R&B mơ màng với những lát cắt rất thật của thành phố về đêm.',
-      gallery: ['https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=1000&q=85'],
-      monthlyStreams: '248.6K',
-      estimatedRevenue: '18,400,000',
-      payableBalance: '12,750,000',
-      publishingRevenue: '8,500,000',
-      publishingRoyaltyRate: '75%',
-      publishingContracts: [
+      monthlyStreams: '450,000',
+      estimatedRevenue: '25,000,000',
+      payableBalance: '18,500,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '85% Master',
+      contractTerm: '2024 - 2027',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
+      products: [
         {
-          id: 'sync-contract-1',
-          trackTitle: 'Vệt Sáng',
-          client: 'VTV / Đạo diễn Nguyễn Hà (Web Series “Ánh Đèn Đêm”)',
-          mediaType: 'Phim Truyền hình / Web-Drama',
-          territory: 'Việt Nam',
-          term: '2 Năm (2 Years)',
-          totalFee: 6000000,
-          artistSplitPct: 75,
-          artistEarning: 4500000,
-          status: 'Đã cấp phép & Đã thanh toán',
-          licensedDate: '15/08/2026'
+          id: 'rel-lumi-1',
+          title: 'Vệt Sáng',
+          type: 'Single',
+          slug: 'vet-sang',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com',
+            youtube: 'https://youtube.com',
+            soundcloud: 'https://soundcloud.com'
+          },
+          streams: '280,000',
+          revenue: '15,400,000',
+          playlists: ['New Music Friday', 'Indie Vietnam'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
         },
         {
-          id: 'sync-contract-2',
-          trackTitle: 'Live at The Flow',
-          client: 'Sun Life Vietnam (Fashion & Art Exhibition Event)',
-          mediaType: 'Sự kiện Trực tiếp / Triển lãm',
-          territory: 'Việt Nam',
-          term: '1 Năm (1 Year)',
-          totalFee: 5000000,
-          artistSplitPct: 80,
-          artistEarning: 4000000,
-          status: 'Đã cấp phép & Đã thanh toán',
-          licensedDate: '18/08/2026'
+          id: 'rel-lumi-2',
+          title: 'Mơ Giữa Ban Ngày',
+          type: 'Single',
+          slug: 'mo-giua-ban-ngay',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '170,000',
+          revenue: '9,600,000',
+          playlists: ['Hot Hits Vietnam'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
         }
+      ]
+    },
+    {
+      id: '48k',
+      name: '48K',
+      genre: 'Electronic / Future Bass',
+      image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80',
+      bio: 'Tập hợp các nhà sản xuất âm thanh điện tử tiên phong, mang năng lượng bùng nổ từ club đến các sân khấu lễ hội lớn với chất lượng chuẩn 48kHz lossless.',
+      gallery: [
+        'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80'
       ],
-      spotifyStreams: '150,000',
-      spotifyRevenue: '10,500,000',
-      appleStreams: '60,000',
-      appleRevenue: '4,600,000',
-      youtubeStreams: '28,000',
-      youtubeRevenue: '2,300,000',
-      otherStreams: '10,600',
-      otherRevenue: '1,000,000',
-      topCountry: 'Việt Nam',
-      topCity: 'Hồ Chí Minh',
-      topSource: 'Spotify Editorial & Algorithmic',
+      showOnWeb: true,
+      roleType: 'exclusive',
+      monthlyStreams: '620,000',
+      estimatedRevenue: '34,000,000',
+      payableBalance: '22,000,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '80% Master',
+      contractTerm: '2024 - 2028',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
       products: [
-        { title: 'Vệt Sáng', type: 'Single · 2026', slug: 'vet-sang', url: '#' },
-        { title: 'Live at The Flow', type: 'Live session · 2026', slug: 'live-at-the-flow', url: '#' }
+        {
+          id: 'rel-48k-1',
+          title: 'Digital Waves',
+          type: 'Single',
+          slug: 'digital-waves',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '390,000',
+          revenue: '21,500,000',
+          playlists: ['EDM Hits Vietnam', 'Dance Party'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        }
+      ]
+    },
+    {
+      id: 'vule',
+      name: 'Vũ Lê',
+      genre: 'R&B / Neo-Soul',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      bio: 'Giọng hát ấm áp kết hợp cùng hòa âm R&B hiện đại và ca từ giàu tính tự sự, tạo nên những giai điệu đêm muộn đầy cảm xúc.',
+      gallery: [
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80'
       ],
-      instagram: '',
-      youtube: '',
-      tiktok: ''
+      showOnWeb: true,
+      roleType: 'exclusive',
+      monthlyStreams: '290,000',
+      estimatedRevenue: '16,000,000',
+      payableBalance: '11,200,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '80% Master',
+      contractTerm: '2025 - 2028',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
+      products: [
+        {
+          id: 'rel-vule-1',
+          title: 'Lạc Nhịp',
+          type: 'Single',
+          slug: 'lac-nhip',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '290,000',
+          revenue: '16,000,000',
+          playlists: ['R&B Vietnam', 'Late Night Vibes'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        }
+      ]
     },
     {
       id: 'monotone',
-      username: 'monotone',
-      email: 'monotone@uniflowslabel.com',
-      password: 'Monotone@2026',
-      name: 'MONO//TONE',
+      name: 'Monotone',
+      genre: 'Indie Rock / Alternative',
+      image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+      bio: 'Âm hưởng guitar gai góc, tiếng trống dồn dập cùng tinh thần tự do phóng khoáng đại diện cho làn sóng indie rock mới tại Việt Nam.',
+      gallery: [
+        'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80'
+      ],
+      showOnWeb: true,
       roleType: 'exclusive',
-      genre: 'Future Pop',
-      image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1000&q=85',
-      bio: 'MONO//TONE là dự án pop điện tử dành cho những nhịp điệu không đứng yên.',
-      gallery: [],
-      monthlyStreams: '0',
-      estimatedRevenue: '0',
-      payableBalance: '0',
-      spotifyStreams: '0',
-      spotifyRevenue: '0',
-      appleStreams: '0',
-      appleRevenue: '0',
-      youtubeStreams: '0',
-      youtubeRevenue: '0',
-      otherStreams: '0',
-      otherRevenue: '0',
-      topCountry: 'Việt Nam',
-      topCity: 'Hồ Chí Minh',
-      topSource: 'DSP Organic Search',
+      monthlyStreams: '195,000',
+      estimatedRevenue: '10,800,000',
+      payableBalance: '7,500,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '80% Master',
+      contractTerm: '2024 - 2027',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
       products: [
-        { title: 'Dải Tần', type: 'EP · 2026', slug: 'dai-tan', url: '#' }
-      ],
-      instagram: '',
-      youtube: '',
-      tiktok: ''
-    },
-    {
-      id: 'kaii',
-      username: 'kaii',
-      email: 'kaii@uniflowslabel.com',
-      password: 'Kaii@2026',
-      name: 'KAII',
-      roleType: 'distribution',
-      genre: 'Hip-hop / Rap',
-      image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
-      bio: 'KAII kể những câu chuyện đời thường bằng flow sắc nét và trực diện.',
-      gallery: [],
-      monthlyStreams: '0',
-      estimatedRevenue: '0',
-      payableBalance: '0',
-      spotifyStreams: '0',
-      spotifyRevenue: '0',
-      appleStreams: '0',
-      appleRevenue: '0',
-      youtubeStreams: '0',
-      youtubeRevenue: '0',
-      otherStreams: '0',
-      otherRevenue: '0',
-      topCountry: 'Việt Nam',
-      topCity: 'Hồ Chí Minh',
-      topSource: 'DSP Organic Search',
-      products: [
-        { title: 'Đường Đua', type: 'Single · 2026', slug: 'duong-dua', url: '#' }
-      ],
-      instagram: '',
-      youtube: '',
-      tiktok: ''
+        {
+          id: 'rel-monotone-1',
+          title: 'Khoảng Lặng',
+          type: 'Single',
+          slug: 'khoang-lang',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '195,000',
+          revenue: '10,800,000',
+          playlists: ['Rock Vietnam', 'Indie Stage'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        }
+      ]
     }
   ],
   articles: [
     {
-      id: 'vet-sang',
-      date: '08.2026',
-      category: 'New release',
-      title: '“Vệt Sáng” — single mới từ Lumi đã chính thức lên sóng.',
-      excerpt: 'Một bản R&B đầy ánh sáng và khoảng lặng.',
-      cover: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=1000&q=85',
-      body: '“Vệt Sáng” là chương mới trong hành trình của Lumi. Ca khúc kể về khoảnh khắc ta đủ can đảm để bước ra khỏi những điều quen thuộc.',
+      id: 'art-1',
+      title: 'UniFLOWs Label công bố chiến lược phát triển âm nhạc thế hệ mới',
+      category: 'Tin Tức',
+      date: '22/08/2026',
+      author: 'UniFLOWs Editorial',
+      readTime: '3 phút đọc',
+      cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+      excerpt: 'Mở rộng hệ sinh thái phân phối toàn cầu, nâng cấp nền tảng quản trị quyền sở hữu trí tuệ và hỗ trợ nghệ sĩ độc lập tối đa doanh thu.',
+      body: 'UniFLOWs Label chính thức công bố lộ trình phát triển giai đoạn 2026 - 2030, tập trung vào ba trụ cột cốt lõi: Phân phối âm nhạc toàn cầu trên hơn 150+ nền tảng streaming, phát triển hệ thống cấp phép bản quyền Sync Licensing cho phim ảnh, quảng cáo (UniPUBLISHING), và xây dựng tổ đội sản xuất âm thanh chuyên sâu (Uni-HUBE).\n\nVới cam kết minh bạch 100% doanh thu đối soát theo thời gian thực, UniFLOWs tiếp tục là bệ phóng uy tín hàng đầu cho các nghệ sĩ và nhà sản xuất âm nhạc tại Việt Nam.',
       published: true
     },
     {
-      id: 'visual-live-session',
-      date: '08.2026',
-      category: 'Inside UniFLOWs',
-      title: 'Đằng sau một visual live session: khi ánh sáng trở thành nhạc cụ.',
-      excerpt: 'Một cuộc trò chuyện cùng đội ngũ sáng tạo.',
-      body: 'Mỗi khung hình đều được thiết kế để chuyển động cùng âm nhạc. Đội ngũ đã xây dựng không gian ghi hình từ ba nguồn sáng chủ đạo.',
+      id: 'art-2',
+      title: 'Ra mắt nền tảng UniPUBLISHING - Cấp phép bản quyền âm nhạc số 1',
+      category: 'Phát Hành',
+      date: '20/08/2026',
+      author: 'Ban Bản Quyền UniFLOWs',
+      readTime: '4 phút đọc',
+      cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+      excerpt: 'Giải pháp cấp phép âm nhạc trọn gói (Pre-cleared Master & Publishing Rights) dành cho TVC, phim điện ảnh, series truyền hình và creators.',
+      body: 'Nhằm giải quyết những phức tạp trong quy trình xin phép tác quyền âm nhạc thương mại, UniPUBLISHING ra đời với 100% danh mục tác phẩm đã được tiền xử lý bản quyền (Pre-cleared).\n\nKhách hàng là các đạo diễn, production house, agency quảng cáo và nhà sáng tạo nội dung có thể dễ dàng nghe thử, lựa chọn theo tâm trạng, thể loại và nhận chứng nhận cấp phép điện tử hợp pháp chỉ sau vài cú click.',
       published: true
     },
     {
-      id: 'producer-open-call',
-      date: '07.2026',
-      category: 'Open call',
-      title: 'UniFLOWs tìm kiếm những nhà sản xuất âm nhạc của ngày mai.',
-      excerpt: 'Mở đơn hợp tác sản xuất cho năm 2026.',
-      body: 'Chúng tôi tìm kiếm những người làm nhạc tò mò, có gu riêng và sẵn sàng tạo ra điều khác biệt cùng nghệ sĩ của UniFLOWs.',
+      id: 'art-3',
+      title: 'Uni-HUBE: Không gian hội tụ các nhà sản xuất và kỹ sư âm thanh hàng đầu',
+      category: 'Đội Ngũ',
+      date: '18/08/2026',
+      author: 'A&R Team',
+      readTime: '3 phút đọc',
+      cover: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80',
+      excerpt: 'Hội tụ các Music Producer, Mixing & Mastering Engineer 24-bit Lossless, Topline Songwriters định hình âm thanh hiện đại.',
+      body: 'Uni-HUBE là ngôi nhà chung kết nối các Music Producers, Songwriters, Mixing & Mastering Engineers và Beatmakers tài năng. Với tiêu chuẩn phòng thu đạt chuẩn Apple Digital Masters và Dolby Atmos, Uni-HUBE đồng hành cùng các nghệ sĩ từ bản thu demo đầu tiên đến sản phẩm master hoàn hảo nhất.',
       published: true
     }
   ],
@@ -209,80 +285,10 @@ export const defaultData = {
       full: { discountPct: 50, name: 'Cấp phép Toàn bộ Catalogue (Full Catalog License - Giảm 50%)' }
     },
     terms: 'Bao gồm Master Recording + Publishing Rights (100% Pre-cleared). Cấp phép sử dụng cho toàn cầu, bao gồm giấy phép điện tử và hóa đơn tài chính.',
-    customTracks: [
-      {
-        id: 'pub-ext-1',
-        title: 'Vệt Sáng',
-        artist: 'Lumi',
-        genre: 'Alternative R&B',
-        mood: 'Dreamy · Nocturnal · Cinematic',
-        bpm: '92 BPM · E Minor',
-        audioUrl: '',
-        isExternal: false,
-        enabled: true
-      },
-      {
-        id: 'pub-ext-2',
-        title: 'Dải Tần',
-        artist: 'MONO//TONE',
-        genre: 'Future Pop',
-        mood: 'Energetic · Neon · Modern',
-        bpm: '124 BPM · A Major',
-        audioUrl: '',
-        isExternal: false,
-        enabled: true
-      },
-      {
-        id: 'pub-ext-3',
-        title: 'Đường Đua',
-        artist: 'KAII',
-        genre: 'Hip-hop / Rap',
-        mood: 'Bold · Aggressive · Action',
-        bpm: '140 BPM · C Minor',
-        audioUrl: '',
-        isExternal: false,
-        enabled: true
-      },
-      {
-        id: 'pub-ext-4',
-        title: 'Live at The Flow (Visual Session)',
-        artist: 'Lumi',
-        genre: 'Acoustic / Soul',
-        mood: 'Warm · Intimate · Deep',
-        bpm: '78 BPM · D Minor',
-        audioUrl: '',
-        isExternal: false,
-        enabled: true
-      }
-    ],
-    syncLicenseRequests: [
-      {
-        id: 'sync-req-101',
-        trackTitle: 'Vệt Sáng',
-        artistName: 'Lumi',
-        clientName: 'Galaxy Studio / Phim “Chuyến Tàu Đêm”',
-        clientEmail: 'producer@galaxystudio.vn',
-        mediaType: 'Phim Điện ảnh / Chiếu rạp',
-        territory: 'Toàn cầu (Worldwide)',
-        term: 'Vĩnh viễn (In Perpetuity)',
-        totalFee: 22000000,
-        status: 'Chờ xét duyệt',
-        requestedDate: '22/08/2026'
-      },
-      {
-        id: 'sync-req-102',
-        trackTitle: 'Đường Đua',
-        artistName: 'KAII',
-        clientName: 'Ogilvy Vietnam (TVC Honda Winner X)',
-        clientEmail: 'licensing@ogilvy.vn',
-        mediaType: 'TVC / Quảng cáo Thương mại',
-        territory: 'Việt Nam',
-        term: '1 Năm (1 Year)',
-        totalFee: 15000000,
-        status: 'Chờ xét duyệt',
-        requestedDate: '22/08/2026'
-      }
-    ]
+    customTracks: [],
+    certificates: [],
+    songwriterSubmissions: [],
+    syncLicenseRequests: []
   },
   unihube: {
     heroTitle: 'Tổ Đội Sản Xuất Âm Nhạc & Kỹ Thuật Âm Thanh Đỉnh Cao',
@@ -313,151 +319,8 @@ export const defaultData = {
         price: 'Từ ₫ 1,500,000 / bài'
       }
     ],
-    producers: [
-      {
-        id: 'prod-alexandre',
-        name: 'Alexandre Vũ (K-Nova)',
-        role: 'Head of Production / Music Producer & Beatmaker',
-        specialty: 'R&B / Soul, Future Bass, Synth-Pop',
-        image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80',
-        credits: 'Lumi - "Vệt Sáng", MONO//TONE - "Dải Tần", Sony Music TVC 2025',
-        bio: '10+ năm kinh nghiệm sản xuất âm nhạc cho các nghệ sĩ hàng đầu và các chiến dịch quảng cáo TVC quốc tế.',
-        sampleAudio: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
-        priceRate: '₫ 15,000,000 / track',
-        status: 'Sẵn sàng nhận dự án',
-        tracks: [
-          {
-            title: 'Vệt Sáng',
-            artist: 'Lumi',
-            role: 'Music Producer / Beat & Arrangement',
-            links: [
-              { name: 'Spotify', url: 'https://open.spotify.com' },
-              { name: 'Apple Music', url: 'https://music.apple.com' },
-              { name: 'YouTube MV', url: 'https://youtube.com' }
-            ],
-            audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
-            streams: '2.4M Streams',
-            releaseYear: '2026'
-          },
-          {
-            title: 'Dải Tần',
-            artist: 'MONO//TONE',
-            role: 'Main Beatmaker & Vocal Producer',
-            links: [
-              { name: 'Apple Music', url: 'https://music.apple.com' },
-              { name: 'Spotify', url: 'https://open.spotify.com' }
-            ],
-            audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
-            streams: '1.8M Streams',
-            releaseYear: '2025'
-          },
-          {
-            title: 'City Lights (TVC)',
-            artist: 'Sony Vietnam',
-            role: 'Composer & Audio Producer',
-            links: [
-              { name: 'YouTube', url: 'https://youtube.com' },
-              { name: 'SoundCloud', url: 'https://soundcloud.com' }
-            ],
-            audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
-            streams: '5M+ Views',
-            releaseYear: '2025'
-          }
-        ]
-      },
-      {
-        id: 'prod-minhdang',
-        name: 'Minh Đăng (SoundWizard)',
-        role: 'Chief Sound Engineer / Mixing & Mastering Specialist',
-        specialty: 'Dolby Atmos, 24-bit Studio Mastering, Vocal Tuning',
-        image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80',
-        credits: 'KAII - "Đường Đua", Live at The Flow EP, Showcase Vietnam 2026',
-        bio: 'Kỹ sư âm thanh chứng nhận Apple Digital Masters, chuyên gia xử lý âm học và cân chỉnh không gian stereo sống động.',
-        sampleAudio: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
-        priceRate: '₫ 4,000,000 / mix & master',
-        status: 'Sẵn sàng nhận dự án',
-        tracks: [
-          {
-            title: 'Đường Đua (Dolby Atmos Master)',
-            artist: 'KAII',
-            role: 'Mixing & Mastering Engineer (Apple Digital Master)',
-            links: [
-              { name: 'Apple Music', url: 'https://music.apple.com' },
-              { name: 'Spotify', url: 'https://open.spotify.com' }
-            ],
-            audioUrl: 'https://cdn.freesound.org/previews/410/410515_5121236-lq.mp3',
-            streams: '950K Streams',
-            releaseYear: '2026'
-          },
-          {
-            title: 'Live at The Flow EP',
-            artist: 'UniFLOWs Roster',
-            role: 'Stereo Outboard Mastering',
-            links: [
-              { name: 'Spotify', url: 'https://open.spotify.com' },
-              { name: 'YouTube', url: 'https://youtube.com' }
-            ],
-            audioUrl: 'https://cdn.freesound.org/previews/518/518888_6142149-lq.mp3',
-            streams: '1.2M Streams',
-            releaseYear: '2025'
-          }
-        ]
-      },
-      {
-        id: 'prod-hoangyen',
-        name: 'Hoàng Yến (Elena Topline)',
-        role: 'Songwriter / Topline Vocalist & Composer',
-        specialty: 'Ballad, Indie Pop, Contemporary R&B, Vietnamese Lyrics',
-        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-        credits: 'Nhạc phim "Ánh Đèn Đêm", Hợp âm Mơ - Single, TVC Sun Life 2026',
-        bio: 'Nhạc sĩ sáng tác giai điệu bắt tai với chiều sâu cảm xúc và ca từ sâu sắc chạm tới trái tim người nghe.',
-        sampleAudio: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
-        priceRate: '₫ 9,000,000 / song',
-        status: 'Sẵn sàng nhận dự án',
-        tracks: [
-          {
-            title: 'Ánh Đèn Đêm (OST)',
-            artist: 'Elena Topline x UniFLOWs',
-            role: 'Songwriter & Topline Composer',
-            links: [
-              { name: 'YouTube MV', url: 'https://youtube.com' },
-              { name: 'Zing MP3', url: 'https://zingmp3.vn' }
-            ],
-            audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
-            streams: '1.5M Streams',
-            releaseYear: '2026'
-          },
-          {
-            title: 'Hợp Âm Mơ',
-            artist: 'Lumi ft. Elena',
-            role: 'Melody & Lyrics Writer',
-            links: [
-              { name: 'Spotify', url: 'https://open.spotify.com' },
-              { name: 'Apple Music', url: 'https://music.apple.com' }
-            ],
-            audioUrl: 'https://cdn.freesound.org/previews/448/448080_9159316-lq.mp3',
-            streams: '800K Streams',
-            releaseYear: '2025'
-          }
-        ]
-      }
-    ],
-    inquiries: [
-      {
-        id: 'inq-101',
-        clientName: 'Ca sĩ Tuấn Kiệt',
-        clientEmail: 'tuankiet.vocal@gmail.com',
-        clientPhone: '0908123456',
-        producerId: 'prod-alexandre',
-        producerName: 'Alexandre Vũ (K-Nova)',
-        serviceType: 'Sản xuất Ca khúc Trọn gói (Full Production)',
-        budget: '10 - 20 Triệu VNĐ (Sản xuất Single Tiêu chuẩn)',
-        deadline: '15/09/2026',
-        notes: 'Cần làm 1 bài Pop R&B giai điệu tươi sáng ra mắt vào mùa thu.',
-        status: 'Đang thảo luận',
-        createdAt: '22/08/2026'
-      }
-    ],
+    producers: [],
+    inquiries: [],
     budgetTiers: [
       'Dưới 5 Triệu VNĐ (Vocal Tuning / Demo / Beat Indie)',
       '5 - 10 Triệu VNĐ (Sáng tác Topline / Mixing & Mastering)',
@@ -498,96 +361,18 @@ export const defaultData = {
         stats: '150+ Quốc gia'
       }
     ],
-    caseStudies: [
-      {
-        id: 'cs-1',
-        title: 'Chiến dịch Ra mắt Single "Vệt Sáng" — Lumi',
-        client: 'Lumi / UniFLOWs Music',
-        tags: 'TikTok Trend + Editorial Playlist + PR Báo chí',
-        reach: '2.4M Streams · #1 New Music Friday · 35M Views TikTok',
-        image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
-        summary: 'Chiến dịch kết hợp viral sound trend biến hình cùng 50 bài báo PR trên các trang tin văn hóa giải trí, đưa ca khúc lọt Top Viral 50 Spotify Vietnam.'
-      },
-      {
-        id: 'cs-2',
-        title: 'Chiến dịch EP "Dải Tần" — MONO//TONE',
-        client: 'MONO//TONE x 48K Media',
-        tags: 'Dolby Atmos + Visualizer Showcase + DSP Banner',
-        reach: '1.8M Streams · Hero Banner Apple Music',
-        image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80',
-        summary: 'Định vị âm thanh pop điện tử thế hệ mới, phủ sóng toàn bộ các nền tảng streaming âm nhạc không gian (Spatial Audio).'
-      }
-    ],
-    proposals: [
-      {
-        id: 'prop-201',
-        clientName: 'Thái Sơn (Independent Artist)',
-        clientEmail: 'thaison.music@gmail.com',
-        clientPhone: '0912345678',
-        packageType: 'Gói Viral TikTok + PR Báo chí 360',
-        releaseDate: '01/10/2026',
-        targetGoal: '500,000 Streams & Lọt Top Viral Spotify',
-        budget: '25,000,000 VNĐ',
-        notes: 'Single Pop Ballad đầu tay kết hợp với MV Cinematic.',
-        status: 'Chờ phản hồi',
-        createdAt: '22/08/2026'
-      }
-    ]
+    caseStudies: [],
+    proposals: []
   },
-  musicSubmissions: [
-    {
-      id: 'sub-demo-101',
-      fullName: 'Nguyễn Hoàng Long',
-      artistName: 'Long Nguyen',
-      email: 'long.music@gmail.com',
-      phone: '0908123456',
-      city: 'Hồ Chí Minh · Việt Nam',
-      genres: ['Alternative R&B', 'Neo-Soul'],
-      spotifyUrl: 'https://open.spotify.com/artist/example-long',
-      appleMusicUrl: 'https://music.apple.com/artist/example-long',
-      demoUrl: 'https://soundcloud.com/demo-unreleased/thanh-pho-tat-den-ep',
-      tracklistNotes: '1. Thành Phố Tắt Đèn (Produced by Alexandre)\n2. Mưa Rơi Qua Phố\n3. Giấc Mơ Xa',
-      socials: {
-        instagram: 'https://instagram.com/long.official',
-        tiktok: 'https://tiktok.com/@long.tunes',
-        youtube: 'https://youtube.com/@longmusic',
-        other: ''
-      },
-      goals: 'Tìm kiếm Hãng đĩa quản lý & phát hành Album đầu tay, kết nối với Music Producer chuyên nghiệp tại Uni-HUBE và phân phối DSPs toàn cầu.',
-      bio: 'Nghệ sĩ kiêm nhạc sĩ độc lập theo đuổi âm nhạc R&B không gian từ 2022. Phong cách pha trộn giai điệu tự sự ấm áp với âm thanh hiện đại.',
-      proudestProject: 'Single "Thành Phố Tắt Đèn" (Đạt 150k organic streams trên Spotify)',
-      status: 'Chờ duyệt',
-      rating: 5,
-      adminNotes: 'Tone giọng R&B rất đặc trưng, giai điệu bắt tai, phong cách phù hợp với định hướng UniFLOWs. Đã chuyển cho A&R team thẩm định.',
-      submittedAt: '22/08/2026'
-    },
-    {
-      id: 'sub-demo-102',
-      fullName: 'Trần Minh Thảo',
-      artistName: 'Minh Thảo',
-      email: 'thao.ambient@gmail.com',
-      phone: '0918765432',
-      city: 'Hà Nội · Việt Nam',
-      genres: ['Indie Electronic', 'Dream Pop'],
-      spotifyUrl: '',
-      appleMusicUrl: '',
-      demoUrl: 'https://drive.google.com/drive/folders/demo-minh-thao-unreleased',
-      tracklistNotes: 'EP "Sương Mù" gồm 4 bài hát (Demo Rough Mix)',
-      socials: {
-        instagram: 'https://instagram.com/minhthao.wav',
-        tiktok: 'https://tiktok.com/@minhthao.music',
-        youtube: '',
-        other: ''
-      },
-      goals: 'Hợp tác sản xuất âm nhạc chuyên sâu, mixing mastering tại Uni-HUBE và tham gia mạng lưới cấp phép UniPUBLISHING.',
-      bio: 'Sáng tác và tự sản xuất các bài hát mang âm hưởng Dream Pop / Indie hoài niệm với chất giọng nhẹ nhàng, bay bổng.',
-      proudestProject: 'Demo "Những Ngày Mưa Tháng Tám"',
-      status: 'Đang thẩm định',
-      rating: 4,
-      adminNotes: 'Ý tưởng bài hát tốt, melody lạ, cần hỗ trợ phối khí và master chuyên nghiệp tại Uni-HUBE.',
-      submittedAt: '21/08/2026'
-    }
-  ]
+  musicSubmissions: []
+};
+
+const MOCK_IDS = {
+  artists: [],
+  tracks: [],
+  producers: [],
+  caseStudies: [],
+  submissions: []
 };
 
 export function getLocalCachedData() {
@@ -595,6 +380,24 @@ export function getLocalCachedData() {
     const raw = localStorage.getItem('uniflows-content');
     if (!raw) return JSON.parse(JSON.stringify(defaultData));
     const parsed = JSON.parse(raw);
+
+    // Deep sanitize old mock data from cache
+    if (Array.isArray(parsed.artists)) {
+      parsed.artists = parsed.artists.filter(a => !MOCK_IDS.artists.includes(a.id));
+    }
+    if (parsed.publishing && Array.isArray(parsed.publishing.customTracks)) {
+      parsed.publishing.customTracks = parsed.publishing.customTracks.filter(t => !MOCK_IDS.tracks.includes(t.id));
+    }
+    if (parsed.unihube && Array.isArray(parsed.unihube.producers)) {
+      parsed.unihube.producers = parsed.unihube.producers.filter(p => !MOCK_IDS.producers.includes(p.id));
+    }
+    if (parsed.collective48k && Array.isArray(parsed.collective48k.caseStudies)) {
+      parsed.collective48k.caseStudies = parsed.collective48k.caseStudies.filter(c => !MOCK_IDS.caseStudies.includes(c.id));
+    }
+    if (Array.isArray(parsed.musicSubmissions)) {
+      parsed.musicSubmissions = parsed.musicSubmissions.filter(s => !MOCK_IDS.submissions.includes(s.id));
+    }
+
     const result = { ...defaultData, ...parsed };
     if (Array.isArray(parsed.artists)) {
       result.artists = parsed.artists;
@@ -612,29 +415,36 @@ export async function getData() {
   }
 
   try {
-    const { data: settings } = await supabase
-      .from('site_settings')
-      .select('*')
-      .eq('id', 'main')
-      .single();
+    // Run queries in parallel with a 3.5s timeout protection to prevent UI freeze
+    const fetchPromise = Promise.all([
+      supabase.from('site_settings').select('*').eq('id', 'main').single(),
+      supabase.from('artists').select('*'),
+      supabase.from('releases').select('*'),
+      supabase.from('articles').select('*').order('created_at', { ascending: false })
+    ]);
 
-    const { data: artistsData } = await supabase
-      .from('artists')
-      .select('*, releases(*)');
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 3500));
+    const results = await Promise.race([fetchPromise, timeoutPromise]);
 
-    const { data: articlesData } = await supabase
-      .from('articles')
-      .select('*')
-      .order('created_at', { ascending: false });
+    if (!results) {
+      console.warn('Supabase fetch timed out, falling back to local cache');
+      return cached;
+    }
+
+    const [settingsRes, artistsRes, releasesRes, articlesRes] = results;
+    const settings = settingsRes?.data;
+    const artistsData = artistsRes?.data;
+    const releasesData = Array.isArray(releasesRes?.data) ? releasesRes.data : [];
+    const articlesData = articlesRes?.data;
 
     const merged = { ...cached };
 
     if (settings) {
-      merged.tagline = settings.tagline || merged.tagline;
-      merged.heroText = settings.hero_text || merged.heroText;
-      merged.aboutTitle = settings.about_title || merged.aboutTitle;
-      merged.aboutText = settings.about_text || merged.aboutText;
-      merged.email = settings.email || merged.email;
+      merged.tagline = settings.tagline || merged.tagline || defaultData.tagline;
+      merged.heroText = settings.hero_text || settings.heroText || merged.heroText || defaultData.heroText;
+      merged.aboutTitle = settings.about_title || settings.aboutTitle || merged.aboutTitle || defaultData.aboutTitle;
+      merged.aboutText = settings.about_text || settings.aboutText || merged.aboutText || defaultData.aboutText;
+      merged.email = settings.email || merged.email || defaultData.email;
       
       // Parse emails
       if (Array.isArray(settings.emails) && settings.emails.length > 0) {
@@ -658,29 +468,38 @@ export async function getData() {
 
       // Parse publishing data
       if (settings.publishing && typeof settings.publishing === 'object') {
-        merged.publishing = settings.publishing;
+        const pub = { ...defaultData.publishing, ...settings.publishing };
+        if (Array.isArray(pub.customTracks)) {
+          pub.customTracks = pub.customTracks.filter(t => !MOCK_IDS.tracks.includes(t.id));
+        }
+        merged.publishing = pub;
       } else if (cached.publishing && typeof cached.publishing === 'object') {
         merged.publishing = cached.publishing;
       } else {
         merged.publishing = defaultData.publishing;
       }
 
-      // Parse Uni-HUBE data (Preserve local items if Supabase column is empty or newly created)
-      if (settings.unihube && typeof settings.unihube === 'object' && Array.isArray(settings.unihube.producers) && settings.unihube.producers.length > 0) {
-        merged.unihube = settings.unihube;
-      } else if (cached.unihube && typeof cached.unihube === 'object' && Array.isArray(cached.unihube.producers) && cached.unihube.producers.length > 0) {
+      // Parse Uni-HUBE data
+      if (settings.unihube && typeof settings.unihube === 'object') {
+        const hube = { ...defaultData.unihube, ...settings.unihube };
+        if (Array.isArray(hube.producers)) {
+          hube.producers = hube.producers.filter(p => !MOCK_IDS.producers.includes(p.id));
+        }
+        merged.unihube = hube;
+      } else if (cached.unihube && typeof cached.unihube === 'object') {
         merged.unihube = cached.unihube;
       } else {
         merged.unihube = defaultData.unihube;
       }
-      if (!merged.unihube.budgetTiers || !Array.isArray(merged.unihube.budgetTiers) || merged.unihube.budgetTiers.length === 0) {
-        merged.unihube.budgetTiers = (cached.unihube && cached.unihube.budgetTiers) || defaultData.unihube.budgetTiers;
-      }
 
       // Parse 48K Collective data
-      if (settings.collective48k && typeof settings.collective48k === 'object' && Array.isArray(settings.collective48k.caseStudies) && settings.collective48k.caseStudies.length > 0) {
-        merged.collective48k = settings.collective48k;
-      } else if (cached.collective48k && typeof cached.collective48k === 'object' && Array.isArray(cached.collective48k.caseStudies) && cached.collective48k.caseStudies.length > 0) {
+      if (settings.collective48k && typeof settings.collective48k === 'object') {
+        const col48k = { ...defaultData.collective48k, ...settings.collective48k };
+        if (Array.isArray(col48k.caseStudies)) {
+          col48k.caseStudies = col48k.caseStudies.filter(c => !MOCK_IDS.caseStudies.includes(c.id));
+        }
+        merged.collective48k = col48k;
+      } else if (cached.collective48k && typeof cached.collective48k === 'object') {
         merged.collective48k = cached.collective48k;
       } else {
         merged.collective48k = defaultData.collective48k;
@@ -697,56 +516,25 @@ export async function getData() {
 
       // Parse music submissions (A&R Demos)
       if (Array.isArray(settings.music_submissions)) {
-        merged.musicSubmissions = settings.music_submissions;
+        merged.musicSubmissions = settings.music_submissions.filter(s => !MOCK_IDS.submissions.includes(s.id));
       } else if (cached.musicSubmissions && Array.isArray(cached.musicSubmissions)) {
-        merged.musicSubmissions = cached.musicSubmissions;
+        merged.musicSubmissions = cached.musicSubmissions.filter(s => !MOCK_IDS.submissions.includes(s.id));
       } else {
-        merged.musicSubmissions = defaultData.musicSubmissions;
+        merged.musicSubmissions = [];
       }
 
       merged.city = settings.city || merged.city;
     }
 
-    if (artistsData && artistsData.length > 0) {
-      const mappedSupabaseArtists = artistsData.map(a => {
-        const localCachedArtist = (cached.artists || []).find(x => x.id === a.id) || {};
-        const stats = (typeof a.stats === 'object' && a.stats) ? a.stats : {};
-        return {
-          id: a.id,
-          name: a.name,
-          username: a.username || stats.username || localCachedArtist.username || a.id,
-          password: a.password || stats.password || localCachedArtist.password || (localCachedArtist.name ? `${localCachedArtist.name}@2026` : 'Uniflows@2026'),
-          email: a.email || stats.email || localCachedArtist.email || '',
-          showOnWeb: a.show_on_web !== undefined ? a.show_on_web : (stats.showOnWeb !== undefined ? stats.showOnWeb : (localCachedArtist.showOnWeb !== undefined ? localCachedArtist.showOnWeb : true)),
-          roleType: a.role_type || stats.roleType || localCachedArtist.roleType || 'distribution',
-          genre: a.genre || 'Music',
-          image: a.image,
-          bio: a.bio,
-          gallery: Array.isArray(a.gallery) ? a.gallery : (typeof a.gallery === 'string' ? JSON.parse(a.gallery || '[]') : []),
-          instagram: a.instagram || '',
-          youtube: a.youtube || '',
-          tiktok: a.tiktok || '',
-          monthlyStreams: a.monthly_streams !== undefined ? a.monthly_streams : (localCachedArtist.monthlyStreams || '0'),
-          estimatedRevenue: a.estimated_revenue !== undefined ? a.estimated_revenue : (localCachedArtist.estimatedRevenue || '0'),
-          payableBalance: a.payable_balance !== undefined ? a.payable_balance : (localCachedArtist.payableBalance || '0'),
-          publishingRevenue: stats.publishingRevenue || localCachedArtist.publishingRevenue || '0',
-          publishingRoyaltyRate: stats.publishingRoyaltyRate || localCachedArtist.publishingRoyaltyRate || '75%',
-          publishingContracts: Array.isArray(stats.publishingContracts) ? stats.publishingContracts : (localCachedArtist.publishingContracts || []),
-          payoutCycle: a.payout_cycle || stats.payoutCycle || localCachedArtist.payoutCycle || 'Hàng tháng (Monthly)',
-          royaltyRate: a.royalty_rate || stats.royaltyRate || localCachedArtist.royaltyRate || '80% Master',
-          contractTerm: a.contract_term || stats.contractTerm || localCachedArtist.contractTerm || '2024 - 2027',
-          spotifyStreams: stats.spotifyStreams || localCachedArtist.spotifyStreams || '0',
-          spotifyRevenue: stats.spotifyRevenue || localCachedArtist.spotifyRevenue || '0',
-          appleStreams: stats.appleStreams || localCachedArtist.appleStreams || '0',
-          appleRevenue: stats.appleRevenue || localCachedArtist.appleRevenue || '0',
-          youtubeStreams: stats.youtubeStreams || localCachedArtist.youtubeStreams || '0',
-          youtubeRevenue: stats.youtubeRevenue || localCachedArtist.youtubeRevenue || '0',
-          otherStreams: stats.otherStreams || localCachedArtist.otherStreams || '0',
-          otherRevenue: stats.otherRevenue || localCachedArtist.otherRevenue || '0',
-          topCountry: stats.topCountry || localCachedArtist.topCountry || 'Việt Nam',
-          topCity: stats.topCity || localCachedArtist.topCity || 'Hồ Chí Minh',
-          topSource: stats.topSource || localCachedArtist.topSource || 'Spotify Editorial & Algorithmic',
-          products: (a.releases || []).map(r => {
+    if (artistsData) {
+      const mappedSupabaseArtists = artistsData
+        .filter(a => !MOCK_IDS.artists.includes(a.id))
+        .map(a => {
+          const localCachedArtist = (cached.artists || []).find(x => x.id === a.id) || {};
+          const stats = (typeof a.stats === 'object' && a.stats) ? a.stats : {};
+          
+          const directReleases = releasesData.filter(r => r.artist_id === a.id);
+          const mappedReleases = directReleases.map(r => {
             const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
             return {
               id: r.id,
@@ -761,26 +549,77 @@ export async function getData() {
               revenue: meta.revenue || '0',
               playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
               splits: Array.isArray(meta.splits) ? meta.splits : [],
+              userRole: meta.userRole || 'Main',
+              isSplit: meta.isSplit || false,
+              percentage: meta.percentage || 100,
               metadata: meta
             };
-          })
-        };
-      });
+          });
 
-      merged.artists = mappedSupabaseArtists;
+          const finalProducts = mappedReleases.length > 0
+            ? mappedReleases
+            : (Array.isArray(stats.products) && stats.products.length > 0
+                ? stats.products
+                : (Array.isArray(localCachedArtist.products) ? localCachedArtist.products : []));
+
+          return {
+            id: a.id,
+            name: a.name,
+            username: a.username || stats.username || localCachedArtist.username || a.id,
+            password: a.password || stats.password || localCachedArtist.password || (localCachedArtist.name ? `${localCachedArtist.name}@2026` : 'Uniflows@2026'),
+            email: a.email || stats.email || localCachedArtist.email || '',
+            showOnWeb: a.show_on_web !== undefined ? a.show_on_web : (stats.showOnWeb !== undefined ? stats.showOnWeb : (localCachedArtist.showOnWeb !== undefined ? localCachedArtist.showOnWeb : true)),
+            roleType: a.role_type || stats.roleType || localCachedArtist.roleType || 'distribution',
+            genre: a.genre || 'Music',
+            image: a.image,
+            bio: a.bio,
+            gallery: Array.isArray(a.gallery) ? a.gallery : (typeof a.gallery === 'string' ? JSON.parse(a.gallery || '[]') : []),
+            instagram: a.instagram || '',
+            youtube: a.youtube || '',
+            tiktok: a.tiktok || '',
+            monthlyStreams: a.monthly_streams !== undefined ? a.monthly_streams : (localCachedArtist.monthlyStreams || '0'),
+            estimatedRevenue: a.estimated_revenue !== undefined ? a.estimated_revenue : (localCachedArtist.estimatedRevenue || '0'),
+            payableBalance: a.payable_balance !== undefined ? a.payable_balance : (localCachedArtist.payableBalance || '0'),
+            publishingRevenue: stats.publishingRevenue || localCachedArtist.publishingRevenue || '0',
+            publishingRoyaltyRate: stats.publishingRoyaltyRate || localCachedArtist.publishingRoyaltyRate || '75%',
+            publishingContracts: Array.isArray(stats.publishingContracts) ? stats.publishingContracts : (localCachedArtist.publishingContracts || []),
+            payoutCycle: a.payout_cycle || stats.payoutCycle || localCachedArtist.payoutCycle || 'Hàng tháng (Monthly)',
+            royaltyRate: a.royalty_rate || stats.royaltyRate || localCachedArtist.royaltyRate || '80% Master',
+            contractTerm: a.contract_term || stats.contractTerm || localCachedArtist.contractTerm || '2024 - 2027',
+            spotifyStreams: stats.spotifyStreams || localCachedArtist.spotifyStreams || '0',
+            spotifyRevenue: stats.spotifyRevenue || localCachedArtist.spotifyRevenue || '0',
+            appleStreams: stats.appleStreams || localCachedArtist.appleStreams || '0',
+            appleRevenue: stats.appleRevenue || localCachedArtist.appleRevenue || '0',
+            youtubeStreams: stats.youtubeStreams || localCachedArtist.youtubeStreams || '0',
+            youtubeRevenue: stats.youtubeRevenue || localCachedArtist.youtubeRevenue || '0',
+            otherStreams: stats.otherStreams || localCachedArtist.otherStreams || '0',
+            otherRevenue: stats.otherRevenue || localCachedArtist.otherRevenue || '0',
+            topCountry: stats.topCountry || localCachedArtist.topCountry || 'Việt Nam',
+            topCity: stats.topCity || localCachedArtist.topCity || 'Hồ Chí Minh',
+            topSource: stats.topSource || localCachedArtist.topSource || 'Spotify Editorial & Algorithmic',
+            products: finalProducts
+          };
+        });
+
+      const artistOrder = settings?.artist_order || settings?.artistOrder || cached?.artist_order || cached?.artistOrder || [];
+      if (Array.isArray(artistOrder) && artistOrder.length > 0) {
+        mappedSupabaseArtists.sort((a, b) => {
+          let idxA = artistOrder.indexOf(a.id);
+          let idxB = artistOrder.indexOf(b.id);
+          if (idxA === -1) idxA = 999;
+          if (idxB === -1) idxB = 999;
+          return idxA - idxB;
+        });
+      }
+
+      merged.artists = mappedSupabaseArtists.length > 0 ? mappedSupabaseArtists : (cached.artists?.length > 0 ? cached.artists : defaultData.artists);
+      merged.artist_order = merged.artists.map(a => a.id);
     } else if (cached.artists && cached.artists.length > 0) {
-      merged.artists = cached.artists;
-    }
-
-    // Apply explicit artist ordering
-    const activeOrder = settingsData?.artist_order || cached.artist_order || cached.artists?.map(a => a.id);
-    if (Array.isArray(activeOrder) && activeOrder.length > 0 && Array.isArray(merged.artists)) {
-      const orderMap = new Map(activeOrder.map((id, index) => [id, index]));
-      merged.artists.sort((a, b) => {
-        const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
-        const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
-        return idxA - idxB;
-      });
+      merged.artists = cached.artists.filter(a => !MOCK_IDS.artists.includes(a.id));
+      merged.artist_order = merged.artists.map(a => a.id);
+    } else {
+      merged.artists = defaultData.artists;
+      merged.artist_order = defaultData.artists.map(a => a.id);
     }
 
     if (articlesData && articlesData.length > 0) {
@@ -796,6 +635,10 @@ export async function getData() {
         body: art.body,
         published: art.published
       }));
+    } else if (cached.articles && cached.articles.length > 0) {
+      merged.articles = cached.articles;
+    } else {
+      merged.articles = defaultData.articles;
     }
 
     localStorage.setItem('uniflows-content', JSON.stringify(merged));
@@ -815,7 +658,7 @@ export async function saveData(data) {
   if (!isSupabaseConfigured()) return true;
 
   try {
-    // 1. Save site_settings
+    // 1. Save site_settings safely
     const settingsPayload = {
       id: 'main',
       tagline: data.tagline,
@@ -835,91 +678,135 @@ export async function saveData(data) {
       updated_at: new Date().toISOString()
     };
 
-    const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
-    if (settingsError) {
-      delete settingsPayload.announcements;
-      delete settingsPayload.emails;
-      delete settingsPayload.publishing;
-      delete settingsPayload.unihube;
-      delete settingsPayload.collective48k;
-      delete settingsPayload.admin_accounts;
-      delete settingsPayload.music_submissions;
-      await supabase.from('site_settings').upsert(settingsPayload);
+    try {
+      const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
+      if (settingsError) {
+        console.warn('Upsert site_settings full error, trying without optional columns:', settingsError);
+        const safePayload = {
+          id: 'main',
+          tagline: data.tagline,
+          hero_text: data.heroText,
+          about_title: data.aboutTitle,
+          about_text: data.aboutText,
+          email: data.email,
+          city: data.city,
+          announcements: data.announcements || defaultData.announcements,
+          publishing: data.publishing || defaultData.publishing,
+          unihube: data.unihube || defaultData.unihube,
+          updated_at: new Date().toISOString()
+        };
+        await supabase.from('site_settings').upsert(safePayload);
+      }
+    } catch (sErr) {
+      console.warn('site_settings upsert caught error:', sErr);
     }
 
-    // 2. Save artists with complete stats json
-    for (const a of data.artists) {
-      const stats = {
-        username: a.username || a.id,
-        password: a.password || '',
-        email: a.email || '',
-        showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false',
-        roleType: a.roleType || 'distribution',
-        payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
-        royaltyRate: a.royaltyRate || '80% Master',
-        contractTerm: a.contractTerm || '2024 - 2027',
-        publishingRevenue: a.publishingRevenue || '0',
-        publishingRoyaltyRate: a.publishingRoyaltyRate || '75%',
-        publishingContracts: a.publishingContracts || [],
-        spotifyStreams: a.spotifyStreams || '0',
-        spotifyRevenue: a.spotifyRevenue || '0',
-        appleStreams: a.appleStreams || '0',
-        appleRevenue: a.appleRevenue || '0',
-        youtubeStreams: a.youtubeStreams || '0',
-        youtubeRevenue: a.youtubeRevenue || '0',
-        otherStreams: a.otherStreams || '0',
-        otherRevenue: a.otherRevenue || '0',
-        topCountry: a.topCountry || 'Việt Nam',
-        topCity: a.topCity || 'Hồ Chí Minh',
-        topSource: a.topSource || 'Spotify Editorial & Algorithmic'
-      };
+    // 2. Save artists & releases in parallel
+    if (Array.isArray(data.artists)) {
+      const artistPromises = data.artists.filter(a => !MOCK_IDS.artists.includes(a.id)).map(async a => {
+        const stats = {
+          username: a.username || a.id,
+          password: a.password || '',
+          email: a.email || '',
+          showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false',
+          roleType: a.roleType || 'distribution',
+          payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
+          royaltyRate: a.royaltyRate || '80% Master',
+          contractTerm: a.contractTerm || '2024 - 2027',
+          publishingRevenue: a.publishingRevenue || '0',
+          publishingRoyaltyRate: a.publishingRoyaltyRate || '75%',
+          publishingContracts: a.publishingContracts || [],
+          spotifyStreams: a.spotifyStreams || '0',
+          spotifyRevenue: a.spotifyRevenue || '0',
+          appleStreams: a.appleStreams || '0',
+          appleRevenue: a.appleRevenue || '0',
+          youtubeStreams: a.youtubeStreams || '0',
+          youtubeRevenue: a.youtubeRevenue || '0',
+          otherStreams: a.otherStreams || '0',
+          otherRevenue: a.otherRevenue || '0',
+          topCountry: a.topCountry || 'Việt Nam',
+          topCity: a.topCity || 'Hồ Chí Minh',
+          topSource: a.topSource || 'Spotify Editorial & Algorithmic',
+          products: a.products || []
+        };
 
-      const artistPayload = {
-        id: a.id,
-        name: a.name,
-        genre: a.genre,
-        image: a.image,
-        bio: a.bio,
-        gallery: a.gallery || [],
-        instagram: a.instagram || '',
-        youtube: a.youtube || '',
-        tiktok: a.tiktok || '',
-        monthly_streams: a.monthlyStreams || '0',
-        estimated_revenue: a.estimatedRevenue || '0',
-        payable_balance: a.payableBalance || '0',
-        stats: stats
-      };
+        const artistPayload = {
+          id: a.id,
+          name: a.name,
+          genre: a.genre || 'Music',
+          image: a.image,
+          bio: a.bio,
+          gallery: a.gallery || [],
+          instagram: a.instagram || '',
+          youtube: a.youtube || '',
+          tiktok: a.tiktok || '',
+          monthly_streams: String(a.monthlyStreams || '0'),
+          estimated_revenue: String(a.estimatedRevenue || '0'),
+          payable_balance: String(a.payableBalance || '0'),
+          stats: stats,
+          updated_at: new Date().toISOString()
+        };
 
-      const { error: artistError } = await supabase.from('artists').upsert(artistPayload);
-      if (artistError) {
-        console.warn('Lỗi upsert artist đầy đủ, thử lại với payload cơ bản:', artistError.message);
-        delete artistPayload.stats;
-        delete artistPayload.monthly_streams;
-        delete artistPayload.estimated_revenue;
-        delete artistPayload.payable_balance;
-        const { error: retryError } = await supabase.from('artists').upsert(artistPayload);
-        if (retryError) console.error('Lỗi khi lưu nghệ sĩ lên Supabase:', retryError.message);
-      }
+        await supabase.from('artists').upsert(artistPayload);
+
+        // Save products into releases table
+        if (Array.isArray(a.products)) {
+          for (const p of a.products) {
+            const relSlug = p.slug || String(p.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const relPayload = {
+              id: p.id || `rel-${Date.now()}-${relSlug}`,
+              artist_id: a.id,
+              title: p.title || 'Untitled Release',
+              type: p.type || 'Single',
+              slug: relSlug,
+              submission_status: p.submissionStatus || 'Đã phát hành',
+              links: p.links || {},
+              audio_url: p.audioUrl || '',
+              artwork_url: p.artworkUrl || a.image || '',
+              metadata: {
+                streams: p.streams || '0',
+                revenue: p.revenue || '0',
+                playlists: p.playlists || [],
+                splits: p.splits || [],
+                userRole: p.userRole || 'Main',
+                isSplit: p.isSplit || false,
+                percentage: p.percentage || 100,
+                ...(p.metadata || {})
+              }
+            };
+            try {
+              await supabase.from('releases').upsert(relPayload);
+            } catch (e) {
+              // ignore individual release upsert conflict
+            }
+          }
+        }
+      });
+
+      await Promise.allSettled(artistPromises);
     }
 
     // 3. Save articles
-    for (const art of data.articles) {
-      await supabase.from('articles').upsert({
-        id: art.id,
-        title: art.title,
-        category: art.category,
-        date: art.date,
-        author: art.author || 'UniFLOWs Editorial',
-        read_time: art.readTime || '3 phút đọc',
-        cover: art.cover || '',
-        excerpt: art.excerpt || '',
-        body: art.body || '',
-        published: art.published ?? true
-      });
+    if (Array.isArray(data.articles)) {
+      for (const art of data.articles) {
+        await supabase.from('articles').upsert({
+          id: art.id,
+          title: art.title,
+          category: art.category,
+          date: art.date,
+          author: art.author || 'UniFLOWs Editorial',
+          read_time: art.readTime || '3 phút đọc',
+          cover: art.cover || '',
+          excerpt: art.excerpt || '',
+          body: art.body || '',
+          published: art.published ?? true
+        });
+      }
     }
+
     return true;
   } catch (err) {
-    console.error('Lỗi khi lưu lên Supabase:', err);
+    console.error('Lỗi khi lưu dữ liệu lên Supabase:', err);
     return false;
   }
 }
