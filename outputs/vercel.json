@@ -86,32 +86,12 @@
   ],
   "rewrites": [
     {
-      "source": "/listen/:slug*",
-      "destination": "/listen.html"
-    },
-    {
-      "source": "/listen",
-      "destination": "/listen.html"
-    },
-    {
-      "source": "/l/:slug*",
-      "destination": "/listen.html"
-    },
-    {
-      "source": "/l",
-      "destination": "/listen.html"
-    },
-    {
-      "source": "/smartlink/:slug*",
-      "destination": "/listen.html"
-    },
-    {
-      "source": "/smartlink",
-      "destination": "/listen.html"
+      "source": "/s/(.*)",
+      "destination": "/s.html?s=$1"
     },
     {
       "source": "/s/:slug*",
-      "destination": "/s.html"
+      "destination": "/s.html?s=:slug*"
     },
     {
       "source": "/s",
@@ -122,12 +102,56 @@
       "destination": "/s.html"
     },
     {
+      "source": "/go/(.*)",
+      "destination": "/s.html?s=$1"
+    },
+    {
       "source": "/go/:slug*",
-      "destination": "/s.html"
+      "destination": "/s.html?s=:slug*"
+    },
+    {
+      "source": "/r/(.*)",
+      "destination": "/s.html?s=$1"
     },
     {
       "source": "/r/:slug*",
-      "destination": "/s.html"
+      "destination": "/s.html?s=:slug*"
+    },
+    {
+      "source": "/listen/(.*)",
+      "destination": "/listen.html?release=$1"
+    },
+    {
+      "source": "/listen/:slug*",
+      "destination": "/listen.html?release=:slug*"
+    },
+    {
+      "source": "/listen",
+      "destination": "/listen.html"
+    },
+    {
+      "source": "/l/(.*)",
+      "destination": "/listen.html?release=$1"
+    },
+    {
+      "source": "/l/:slug*",
+      "destination": "/listen.html?release=:slug*"
+    },
+    {
+      "source": "/l",
+      "destination": "/listen.html"
+    },
+    {
+      "source": "/smartlink/(.*)",
+      "destination": "/listen.html?release=$1"
+    },
+    {
+      "source": "/smartlink/:slug*",
+      "destination": "/listen.html?release=:slug*"
+    },
+    {
+      "source": "/smartlink",
+      "destination": "/listen.html"
     }
   ]
 }
