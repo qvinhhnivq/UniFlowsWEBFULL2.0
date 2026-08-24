@@ -19,23 +19,61 @@ function formatSocialUrl(u) {
   return str;
 }
 
+function getNavLinks() {
+  const host = window.location.hostname.toLowerCase();
+  const protocol = window.location.protocol;
+  const isCustomDomain = host.includes('uniflowslabel.');
+  
+  if (isCustomDomain) {
+    const parts = host.split('.');
+    const baseDomain = parts.slice(-2).join('.');
+    return {
+      home: `${protocol}//${baseDomain}/`,
+      artists: `${protocol}//${baseDomain}/artists`,
+      unihube: `${protocol}//unihub.${baseDomain}/`,
+      collective48k: `${protocol}//48k.${baseDomain}/`,
+      publishing: `${protocol}//publishing.${baseDomain}/`,
+      submitMusic: `${protocol}//${baseDomain}/submit-music`,
+      about: `${protocol}//${baseDomain}/about`,
+      news: `${protocol}//${baseDomain}/news`,
+      contact: `${protocol}//${baseDomain}/contact`,
+      artistLogin: `${protocol}//portal.${baseDomain}/`
+    };
+  }
+
+  return {
+    home: 'index',
+    artists: 'artists',
+    unihube: 'unihube',
+    collective48k: '48k',
+    publishing: 'unipublishing',
+    submitMusic: 'submit-music',
+    about: 'about',
+    news: 'news',
+    contact: 'contact',
+    artistLogin: 'artist-login'
+  };
+}
+
+const navLinks = getNavLinks();
+
 // Insert Header with Clean URLs
 if (!$('.nav')) {
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="nav">
-      <a href="index" class="brand">UNIFLOWs<small>label / est. 2024</small></a>
+      <a href="${navLinks.home}" class="brand">UNIFLOWs<small>label / est. 2024</small></a>
       <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
       <nav class="nav-links">
-        <a href="artists" data-i18n="nav_artists">Nghệ sĩ</a>
-        <a href="unihube" data-i18n="nav_unihube">Uni-HUBE</a>
-        <a href="48k" data-i18n="nav_48k">48K Collective</a>
-        <a href="unipublishing" data-i18n="nav_publishing">UniPUBLISHING</a>
-        <a href="submit-music" data-i18n="nav_submit_music" style="color:#0284c7;font-weight:700;">Gửi Demo</a>
-        <a href="about" data-i18n="nav_about">Về chúng tôi</a>
-        <a href="news" data-i18n="nav_news">Tạp chí</a>
-        <a href="contact" data-i18n="nav_contact">Liên hệ</a>
+        <a href="${navLinks.artists}" data-i18n="nav_artists">Nghệ sĩ</a>
+        <a href="${navLinks.unihube}" data-i18n="nav_unihube">Uni-HUBE</a>
+        <a href="${navLinks.collective48k}" data-i18n="nav_48k">48K Collective</a>
+        <a href="${navLinks.publishing}" data-i18n="nav_publishing">UniPUBLISHING</a>
+        <a href="${navLinks.submitMusic}" data-i18n="nav_submit_music" style="color:#0284c7;font-weight:700;">Gửi Demo</a>
+        <a href="${navLinks.about}" data-i18n="nav_about">Về chúng tôi</a>
+        <a href="${navLinks.news}" data-i18n="nav_news">Tạp chí</a>
+        <a href="${navLinks.contact}" data-i18n="nav_contact">Liên hệ</a>
         <button type="button" class="lang-toggle-btn button alt" style="padding:4px 10px;font-size:11px;border-radius:20px;cursor:pointer;margin-left:4px;box-shadow:none;">🇬🇧 English</button>
-        <a class="artist-login-link" href="artist-login" data-i18n="nav_artist_login">Artist login ↗</a>
+        <a class="artist-login-link" href="${navLinks.artistLogin}" data-i18n="nav_artist_login">Artist login ↗</a>
       </nav>
     </header>
   `);

@@ -43,7 +43,7 @@
           "value": "portal.(.*)"
         }
       ],
-      "destination": "/artist-portal",
+      "destination": "/artist-login",
       "permanent": false
     }
   ]
