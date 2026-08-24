@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Artist Login — UniFLOWs</title>
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
   <main class="admin">
@@ -30,7 +30,7 @@
       </div>
       <div class="actions">
         <button class="button" type="submit" id="artist-submit-btn">Đăng nhập Portal</button>
-        <a class="button alt" href="index">Quay lại website</a>
+        <a class="button alt" href="/">Quay lại website</a>
       </div>
       <p style="margin-top: 25px; font-size: 12px; opacity: 0.8; line-height: 1.5; border-top: 1px solid var(--line); padding-top: 15px;">
         Quên mật khẩu? Vui lòng liên hệ Admin Label hoặc gửi email tới <a href="mailto:distribution@uniflowslabel.com" style="color: inherit; text-decoration: underline; font-weight: 600;">distribution@uniflowslabel.com</a> để được cấp lại mật khẩu ngay.
@@ -39,12 +39,12 @@
   </main>
 
   <script type="module">
-    import { getData, getLocalCachedData } from './assets/data.js';
-    import { supabase, isSupabaseConfigured, getCurrentUserProfile } from './assets/supabase.js';
+    import { getData, getLocalCachedData } from '/assets/data.js';
+    import { supabase, isSupabaseConfigured, getCurrentUserProfile } from '/assets/supabase.js';
 
     // Auto-login if previously remembered
     if (localStorage.getItem('uniflows-artist') === 'true' || sessionStorage.getItem('uniflows-artist') === 'true') {
-      location.replace('portal');
+      location.replace('/portal');
     }
 
     const form = document.querySelector('#artist-login-form');
@@ -114,7 +114,7 @@
           
           if (rawPassword === expectedPass || rawPassword === 'Uniflows@2026' || rawPassword === 'UniFLOWs2026!') {
             saveAuthSession(matched.id, matched.name, matched.email || cleanInput, remember);
-            location.href = 'portal';
+            location.href = '/portal';
             return;
           } else {
             throw new Error(`Mật khẩu không chính xác cho tài khoản "${matched.name}". Vui lòng kiểm tra lại.`);
@@ -130,7 +130,7 @@
               const artistId = profile?.artist_id || cleanInput.split('@')[0];
               const artistName = profile?.display_name || artistId;
               saveAuthSession(artistId, artistName, cleanInput, remember);
-              location.href = 'portal';
+              location.href = '/portal';
               return;
             }
           } catch (sbErr) {

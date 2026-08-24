@@ -6,21 +6,23 @@ import { supabase, isSupabaseConfigured } from './supabase.js';
 
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
 const slugify = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-|-$/g, '');
+const cleanComp = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
 export async function initShortener() {
   const root = document.querySelector('[data-shortener-page]') || document.body;
   if (!root) return;
 
-  // 1. Check if user is navigating to a shortlink slug: e.g. /s/demo or ?s=demo
+  // 1. Check if user is navigating to a shortlink slug: e.g. /s/demo or ?s=demo or #demo
   const q = new URLSearchParams(location.search);
   const rawPath = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
   const parts = rawPath.split('/').filter(Boolean);
+  const hash = decodeURIComponent(location.hash || '').replace(/^#+/, '').trim();
 
-  let targetSlug = q.get('s') || q.get('slug') || q.get('alias') || q.get('to') || q.get('r') || q.get('go') || '';
+  let targetSlug = q.get('s') || q.get('slug') || q.get('alias') || q.get('to') || q.get('r') || q.get('go') || hash || '';
 
   if (!targetSlug && parts.length > 0) {
     const firstPart = parts[0].toLowerCase().replace(/\.html$/i, '');
-    if (['s', 'go', 'r', 'link', 'short'].includes(firstPart)) {
+    if (['s', 'go', 'r', 'link', 'short', 'l'].includes(firstPart)) {
       if (parts.length >= 2) {
         targetSlug = parts[1];
       }
@@ -32,12 +34,17 @@ export async function initShortener() {
   }
 
   const liveData = await getData();
-  const shortlinks = liveData.shortlinks || defaultData.shortlinks || [];
+  const shortlinks = [
+    ...(liveData.shortlinks || []),
+    ...(defaultData.shortlinks || [])
+  ];
   const artists = liveData.artists || defaultData.artists || [];
+  const articles = liveData.articles || defaultData.articles || [];
 
   // 2. If a slug is requested, perform instant resolver & redirect
   if (targetSlug) {
-    let matchedItem = shortlinks.find(x => slugify(x.slug) === targetSlug);
+    const targetComp = cleanComp(targetSlug);
+    let matchedItem = shortlinks.find(x => cleanComp(x.slug) === targetComp);
     let targetUrl = '';
     let targetTitle = '';
 
@@ -49,10 +56,10 @@ export async function initShortener() {
       matchedItem.clicks = (matchedItem.clicks || 0) + 1;
       saveData(liveData);
     } else {
-      // Check in releases list
+      // 1. Check in releases list (SmartLinks)
       for (const a of artists) {
         const prods = a.products || [];
-        const matchedRel = prods.find(p => slugify(p.slug || p.title) === targetSlug || p.id === targetSlug);
+        const matchedRel = prods.find(p => cleanComp(p.slug) === targetComp || cleanComp(p.title) === targetComp || p.id === targetSlug);
         if (matchedRel) {
           targetUrl = `${location.origin}/listen?release=${encodeURIComponent(matchedRel.slug || slugify(matchedRel.title))}`;
           targetTitle = `SmartLink: ${a.name} — ${matchedRel.title}`;
@@ -60,12 +67,48 @@ export async function initShortener() {
         }
       }
       
-      // Check in artists list
+      // 2. Check in artists list
       if (!targetUrl) {
-        const matchedArt = artists.find(a => slugify(a.id) === targetSlug || slugify(a.name) === targetSlug);
+        const matchedArt = artists.find(a => cleanComp(a.id) === targetComp || cleanComp(a.name) === targetComp);
         if (matchedArt) {
           targetUrl = `${location.origin}/artist?id=${encodeURIComponent(matchedArt.id)}`;
           targetTitle = `Hồ sơ Nghệ sĩ: ${matchedArt.name}`;
+        }
+      }
+
+      // 3. Check in articles list
+      if (!targetUrl) {
+        const matchedArt = articles.find(art => cleanComp(art.id) === targetComp || cleanComp(art.title) === targetComp);
+        if (matchedArt) {
+          targetUrl = `${location.origin}/article?id=${encodeURIComponent(matchedArt.id)}`;
+          targetTitle = `Bài viết: ${matchedArt.title}`;
+        }
+      }
+
+      // 4. Built-in Core Shortcuts
+      if (!targetUrl) {
+        const shortcuts = {
+          'demo': { url: `${location.origin}/submit-music`, title: 'Gửi Demo A&R UniFLOWs' },
+          'submit': { url: `${location.origin}/submit-music`, title: 'Gửi Demo A&R UniFLOWs' },
+          'submitmusic': { url: `${location.origin}/submit-music`, title: 'Gửi Demo A&R UniFLOWs' },
+          'hube': { url: `${location.origin}/unihube`, title: 'Uni-HUBE Production Team' },
+          'unihub': { url: `${location.origin}/unihube`, title: 'Uni-HUBE Production Team' },
+          'unihube': { url: `${location.origin}/unihube`, title: 'Uni-HUBE Production Team' },
+          '48k': { url: `${location.origin}/48kcollective`, title: '48K Music Marketing Collective' },
+          'collective': { url: `${location.origin}/48kcollective`, title: '48K Music Marketing Collective' },
+          'publishing': { url: `${location.origin}/unipublishing`, title: 'UniPUBLISHING Sync & Licensing' },
+          'unipublishing': { url: `${location.origin}/unipublishing`, title: 'UniPUBLISHING Sync & Licensing' },
+          'artists': { url: `${location.origin}/artists`, title: 'Roster Nghệ sĩ UniFLOWs' },
+          'about': { url: `${location.origin}/about`, title: 'Về UniFLOWs Label' },
+          'news': { url: `${location.origin}/news`, title: 'Tạp chí & Tin tức UniFLOWs' },
+          'contact': { url: `${location.origin}/contact`, title: 'Liên hệ Hãng Đĩa UniFLOWs' },
+          'portal': { url: `${location.origin}/artist-login`, title: 'Cổng Nghệ Sĩ UniFLOWs' },
+          'artistlogin': { url: `${location.origin}/artist-login`, title: 'Cổng Nghệ Sĩ UniFLOWs' }
+        };
+
+        if (shortcuts[targetComp]) {
+          targetUrl = shortcuts[targetComp].url;
+          targetTitle = shortcuts[targetComp].title;
         }
       }
     }
@@ -74,7 +117,7 @@ export async function initShortener() {
       renderRedirectingScreen(root, targetTitle, targetUrl);
       setTimeout(() => {
         window.location.replace(targetUrl);
-      }, 400);
+      }, 300);
       return;
     } else {
       renderShortlinkNotFound(root, targetSlug);
