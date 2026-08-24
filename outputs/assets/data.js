@@ -182,20 +182,25 @@ export async function getData() {
   }
 
   try {
-    const { data: settings } = await supabase
-      .from('site_settings')
-      .select('*')
-      .eq('id', 'main')
-      .single();
+    // Run queries in parallel with a 3.5s timeout protection to prevent UI freeze
+    const fetchPromise = Promise.all([
+      supabase.from('site_settings').select('*').eq('id', 'main').single(),
+      supabase.from('artists').select('*, releases(*)'),
+      supabase.from('articles').select('*').order('created_at', { ascending: false })
+    ]);
 
-    const { data: artistsData } = await supabase
-      .from('artists')
-      .select('*, releases(*)');
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 3500));
+    const results = await Promise.race([fetchPromise, timeoutPromise]);
 
-    const { data: articlesData } = await supabase
-      .from('articles')
-      .select('*')
-      .order('created_at', { ascending: false });
+    if (!results) {
+      console.warn('Supabase fetch timed out, falling back to local cache');
+      return cached;
+    }
+
+    const [settingsRes, artistsRes, articlesRes] = results;
+    const settings = settingsRes?.data;
+    const artistsData = artistsRes?.data;
+    const articlesData = articlesRes?.data;
 
     const merged = { ...cached };
 

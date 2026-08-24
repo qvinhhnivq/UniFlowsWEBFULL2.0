@@ -585,10 +585,10 @@
 
   <script type="module" src="assets/app.js"></script>
   <script type="module">
-    import { getData, saveData } from './assets/data.js';
+    import { getData, saveData, getLocalCachedData } from './assets/data.js';
 
     let liveData = await getData();
-    const pubData = liveData.publishing || {};
+    let pubData = liveData.publishing || {};
     const tracks = pubData.customTracks || [];
     const certificates = pubData.certificates || [];
 
@@ -916,49 +916,12 @@
       }
     });
 
-    // Render Order Tracking Status (Asynchronous Live Query)
-    async function renderOrderStatusResult(code) {
-      if (!trackingResultBox) return;
+    // ----------------------------------------------------
+    // 3. PUBLIC ORDER TRACKER & CERTIFICATE VERIFICATION
+    // ----------------------------------------------------
+    function displayOrderCard(order) {
+      if (!trackingResultBox || !order) return;
 
-      if (!code || !code.trim()) {
-        trackingResultBox.innerHTML = `
-          <div style="text-align:center;padding:32px 20px;color:#475569;">
-            <div style="font-size:36px;margin-bottom:8px;">📦</div>
-            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Tra cứu tiến độ xử lý Đơn Cấp Phép</strong>
-            <p style="font-size:13px;margin:6px auto 0;max-width:540px;font-weight:500;color:#334155;">Nhập Mã đơn hàng (Ví dụ: UNIPUB-ORD-XXXX) nhận được sau khi đặt đơn để xem tiến độ thẩm định, hợp đồng và hóa đơn VAT.</p>
-          </div>
-        `;
-        return;
-      }
-
-      trackingResultBox.innerHTML = `
-        <div style="text-align:center;padding:32px;color:#0f172a;">
-          <div style="font-size:32px;margin-bottom:8px;">⏳</div>
-          <strong style="font-size:14px;font-weight:bold;">Đang kiểm tra tiến độ từ cơ sở dữ liệu...</strong>
-        </div>
-      `;
-
-      const freshData = await getData();
-      const requests = freshData.publishing?.syncLicenseRequests || [];
-      const trimmedCode = code.trim().toLowerCase();
-      const order = requests.find(r => 
-        (r.refCode && r.refCode.toLowerCase().trim() === trimmedCode) ||
-        (r.id && r.id.toLowerCase().trim() === trimmedCode) ||
-        (r.refCode && r.refCode.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
-      );
-
-      if (!order) {
-        trackingResultBox.innerHTML = `
-          <div style="text-align:center;padding:32px 20px;color:#475569;">
-            <div style="font-size:36px;margin-bottom:8px;">⚠️</div>
-            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Không tìm thấy đơn hàng với mã: "${code}"</strong>
-            <p style="font-size:13px;margin:6px 0 0;font-weight:500;color:#334155;">Vui lòng kiểm tra lại mã đơn hoặc liên hệ Hotline/Email bộ phận Bản quyền để được hỗ trợ nhanh.</p>
-          </div>
-        `;
-        return;
-      }
-
-      // Compute visual status step
       let stepIndex = 1;
       let statusColor = '#d97706';
       let statusBg = '#fef3c7';
@@ -1061,6 +1024,76 @@
       `;
     }
 
+    function displayOrderNotFound(code) {
+      if (!trackingResultBox) return;
+      trackingResultBox.innerHTML = `
+        <div style="text-align:center;padding:32px 20px;color:#475569;">
+          <div style="font-size:36px;margin-bottom:8px;">⚠️</div>
+          <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Không tìm thấy đơn hàng với mã: "${code}"</strong>
+          <p style="font-size:13px;margin:6px 0 0;font-weight:500;color:#334155;">Vui lòng kiểm tra lại mã đơn hoặc liên hệ Hotline/Email bộ phận Bản quyền để được hỗ trợ nhanh.</p>
+        </div>
+      `;
+    }
+
+    async function renderOrderStatusResult(code) {
+      if (!trackingResultBox) return;
+
+      if (!code || !code.trim()) {
+        trackingResultBox.innerHTML = `
+          <div style="text-align:center;padding:32px 20px;color:#475569;">
+            <div style="font-size:36px;margin-bottom:8px;">📦</div>
+            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Tra cứu tiến độ xử lý Đơn Cấp Phép</strong>
+            <p style="font-size:13px;margin:6px auto 0;max-width:540px;font-weight:500;color:#334155;">Nhập Mã đơn hàng (Ví dụ: UNIPUB-ORD-XXXX) nhận được sau khi đặt đơn để xem tiến độ thẩm định, hợp đồng và hóa đơn VAT.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const trimmedCode = code.trim().toLowerCase();
+
+      // 1. Instant check in cached/memory data first (0ms)
+      const cached = getLocalCachedData();
+      const localList = (cached.publishing?.syncLicenseRequests) || (liveData.publishing?.syncLicenseRequests) || [];
+      const localMatch = localList.find(r => 
+        (r.refCode && r.refCode.toLowerCase().trim() === trimmedCode) ||
+        (r.id && r.id.toLowerCase().trim() === trimmedCode) ||
+        (r.refCode && r.refCode.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
+      );
+
+      if (localMatch) {
+        displayOrderCard(localMatch);
+        return;
+      }
+
+      // 2. Query server with spinner
+      trackingResultBox.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#0f172a;">
+          <div style="font-size:32px;margin-bottom:8px;">⏳</div>
+          <strong style="font-size:14px;font-weight:bold;">Đang kiểm tra tiến độ từ máy chủ...</strong>
+        </div>
+      `;
+
+      try {
+        const freshData = await getData();
+        liveData = freshData;
+        const requests = freshData.publishing?.syncLicenseRequests || [];
+        const order = requests.find(r => 
+          (r.refCode && r.refCode.toLowerCase().trim() === trimmedCode) ||
+          (r.id && r.id.toLowerCase().trim() === trimmedCode) ||
+          (r.refCode && r.refCode.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
+        );
+
+        if (order) {
+          displayOrderCard(order);
+        } else {
+          displayOrderNotFound(code);
+        }
+      } catch (err) {
+        console.error('Order query error:', err);
+        displayOrderNotFound(code);
+      }
+    }
+
     document.querySelector('#btn-search-order-status')?.addEventListener('click', () => {
       const code = document.querySelector('#pub-order-search-input')?.value.trim();
       renderOrderStatusResult(code);
@@ -1077,45 +1110,8 @@
     // ----------------------------------------------------
     // 4. PUBLIC CERTIFICATE & QR VERIFICATION TOOL
     // ----------------------------------------------------
-    async function renderCertificateResult(code) {
-      if (!trackingResultBox) return;
-
-      if (!code || !code.trim()) {
-        trackingResultBox.innerHTML = `
-          <div style="text-align:center;padding:32px 20px;color:#475569;">
-            <div style="font-size:36px;margin-bottom:8px;">🛡️</div>
-            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Tra cứu tính xác thực của Giấy phép bản quyền QR</strong>
-            <p style="font-size:13px;margin:6px auto 0;max-width:540px;font-weight:500;color:#334155;">Nhập mã chứng nhận cấp phép được ghi trên hợp đồng hoặc quét mã QR trên giấy phép điện tử.</p>
-          </div>
-        `;
-        return;
-      }
-
-      trackingResultBox.innerHTML = `
-        <div style="text-align:center;padding:32px;color:#0f172a;">
-          <div style="font-size:32px;margin-bottom:8px;">⏳</div>
-          <strong style="font-size:14px;font-weight:bold;">Đang kiểm tra chứng chỉ từ cơ sở dữ liệu...</strong>
-        </div>
-      `;
-
-      const freshData = await getData();
-      const certList = freshData.publishing?.certificates || [];
-      const trimmedCode = code.trim().toLowerCase();
-      const cert = certList.find(c => 
-        (c.code && c.code.toLowerCase().trim() === trimmedCode) ||
-        (c.code && c.code.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
-      );
-
-      if (!cert) {
-        trackingResultBox.innerHTML = `
-          <div style="text-align:center;padding:30px;color:#475569;">
-            <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
-            <strong style="display:block;font-size:15px;color:#0f172a;">Không tìm thấy chứng chỉ với mã: "${code}"</strong>
-            <p style="font-size:13px;margin:4px 0 0;font-weight:500;">Vui lòng kiểm tra lại mã trên hợp đồng hoặc liên hệ bộ phận cấp phép của UniPUBLISHING.</p>
-          </div>
-        `;
-        return;
-      }
+    function displayCertificateCard(cert) {
+      if (!trackingResultBox || !cert) return;
 
       trackingResultBox.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:16px;">
@@ -1179,6 +1175,74 @@
           🛡️ <strong>Kênh được ủy quyền bảo hộ:</strong> ${cert.authorizedChannels}
         </div>
       `;
+    }
+
+    function displayCertNotFound(code) {
+      if (!trackingResultBox) return;
+      trackingResultBox.innerHTML = `
+        <div style="text-align:center;padding:30px;color:#475569;">
+          <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+          <strong style="display:block;font-size:15px;color:#0f172a;">Không tìm thấy chứng chỉ với mã: "${code}"</strong>
+          <p style="font-size:13px;margin:4px 0 0;font-weight:500;">Vui lòng kiểm tra lại mã trên hợp đồng hoặc liên hệ bộ phận cấp phép của UniPUBLISHING.</p>
+        </div>
+      `;
+    }
+
+    async function renderCertificateResult(code) {
+      if (!trackingResultBox) return;
+
+      if (!code || !code.trim()) {
+        trackingResultBox.innerHTML = `
+          <div style="text-align:center;padding:32px 20px;color:#475569;">
+            <div style="font-size:36px;margin-bottom:8px;">🛡️</div>
+            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Tra cứu tính xác thực của Giấy phép bản quyền QR</strong>
+            <p style="font-size:13px;margin:6px auto 0;max-width:540px;font-weight:500;color:#334155;">Nhập mã chứng nhận cấp phép được ghi trên hợp đồng hoặc quét mã QR trên giấy phép điện tử.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const trimmedCode = code.trim().toLowerCase();
+
+      // 1. Instant check in cached/memory data first (0ms)
+      const cached = getLocalCachedData();
+      const localList = (cached.publishing?.certificates) || (liveData.publishing?.certificates) || [];
+      const localMatch = localList.find(c => 
+        (c.code && c.code.toLowerCase().trim() === trimmedCode) ||
+        (c.code && c.code.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
+      );
+
+      if (localMatch) {
+        displayCertificateCard(localMatch);
+        return;
+      }
+
+      // 2. Query server with spinner
+      trackingResultBox.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#0f172a;">
+          <div style="font-size:32px;margin-bottom:8px;">⏳</div>
+          <strong style="font-size:14px;font-weight:bold;">Đang kiểm tra chứng chỉ từ máy chủ...</strong>
+        </div>
+      `;
+
+      try {
+        const freshData = await getData();
+        liveData = freshData;
+        const certList = freshData.publishing?.certificates || [];
+        const cert = certList.find(c => 
+          (c.code && c.code.toLowerCase().trim() === trimmedCode) ||
+          (c.code && c.code.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
+        );
+
+        if (cert) {
+          displayCertificateCard(cert);
+        } else {
+          displayCertNotFound(code);
+        }
+      } catch (err) {
+        console.error('Cert query error:', err);
+        displayCertNotFound(code);
+      }
     }
 
     document.querySelector('#btn-verify-cert')?.addEventListener('click', () => {
