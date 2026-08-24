@@ -185,7 +185,8 @@ export async function getData() {
     // Run queries in parallel with a 3.5s timeout protection to prevent UI freeze
     const fetchPromise = Promise.all([
       supabase.from('site_settings').select('*').eq('id', 'main').single(),
-      supabase.from('artists').select('*, releases(*)'),
+      supabase.from('artists').select('*'),
+      supabase.from('releases').select('*'),
       supabase.from('articles').select('*').order('created_at', { ascending: false })
     ]);
 
@@ -197,9 +198,10 @@ export async function getData() {
       return cached;
     }
 
-    const [settingsRes, artistsRes, articlesRes] = results;
+    const [settingsRes, artistsRes, releasesRes, articlesRes] = results;
     const settings = settingsRes?.data;
     const artistsData = artistsRes?.data;
+    const releasesData = Array.isArray(releasesRes?.data) ? releasesRes.data : [];
     const articlesData = articlesRes?.data;
 
     const merged = { ...cached };
@@ -297,6 +299,36 @@ export async function getData() {
         .map(a => {
           const localCachedArtist = (cached.artists || []).find(x => x.id === a.id) || {};
           const stats = (typeof a.stats === 'object' && a.stats) ? a.stats : {};
+          
+          const directReleases = releasesData.filter(r => r.artist_id === a.id);
+          const mappedReleases = directReleases.map(r => {
+            const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+            return {
+              id: r.id,
+              title: r.title,
+              type: r.type || 'Single',
+              slug: r.slug || '',
+              submissionStatus: r.submission_status || 'Đã phát hành',
+              links: r.links || {},
+              audioUrl: r.audio_url || '',
+              artworkUrl: r.artwork_url || '',
+              streams: meta.streams || '0',
+              revenue: meta.revenue || '0',
+              playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
+              splits: Array.isArray(meta.splits) ? meta.splits : [],
+              userRole: meta.userRole || 'Main',
+              isSplit: meta.isSplit || false,
+              percentage: meta.percentage || 100,
+              metadata: meta
+            };
+          });
+
+          const finalProducts = mappedReleases.length > 0
+            ? mappedReleases
+            : (Array.isArray(stats.products) && stats.products.length > 0
+                ? stats.products
+                : (Array.isArray(localCachedArtist.products) ? localCachedArtist.products : []));
+
           return {
             id: a.id,
             name: a.name,
@@ -332,31 +364,7 @@ export async function getData() {
             topCountry: stats.topCountry || localCachedArtist.topCountry || 'Việt Nam',
             topCity: stats.topCity || localCachedArtist.topCity || 'Hồ Chí Minh',
             topSource: stats.topSource || localCachedArtist.topSource || 'Spotify Editorial & Algorithmic',
-            products: (Array.isArray(a.releases) && a.releases.length > 0)
-              ? a.releases.map(r => {
-                  const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
-                  return {
-                    id: r.id,
-                    title: r.title,
-                    type: r.type || 'Single',
-                    slug: r.slug || '',
-                    submissionStatus: r.submission_status || 'Đã phát hành',
-                    links: r.links || {},
-                    audioUrl: r.audio_url || '',
-                    artworkUrl: r.artwork_url || '',
-                    streams: meta.streams || '0',
-                    revenue: meta.revenue || '0',
-                    playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
-                    splits: Array.isArray(meta.splits) ? meta.splits : [],
-                    userRole: meta.userRole || 'Main',
-                    isSplit: meta.isSplit || false,
-                    percentage: meta.percentage || 100,
-                    metadata: meta
-                  };
-                })
-              : (Array.isArray(stats.products) && stats.products.length > 0
-                  ? stats.products
-                  : (Array.isArray(localCachedArtist.products) ? localCachedArtist.products : []))
+            products: finalProducts
           };
         });
 
