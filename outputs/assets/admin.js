@@ -1187,10 +1187,41 @@ async function loadReleasesQueue() {
               <h3 style="margin:4px 0 0;font-size:20px;">${esc(r.title)}</h3>
             </div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="button view-admin-meta-btn" data-meta-id="${esc(r.id)}" style="padding:6px 14px;font-size:11px;background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;display:inline-flex;align-items:center;gap:4px;">
+              🔍 Toàn Bộ Metadata
+            </button>
             <button type="button" class="button alt view-admin-epk-btn" data-epk-id="${esc(r.id)}" style="padding:6px 12px;font-size:11px;background:#f8fafc;border-color:var(--ink);font-weight:bold;">📄 Xem EPK</button>
             <a class="button alt" href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" style="padding:6px 12px;font-size:11px;">SmartLink ↗</a>
             <button class="button alt remove" type="button" data-delete-release="${esc(r.id)}" style="padding:6px 10px;font-size:11px;">✕ Xóa</button>
+          </div>
+        </div>
+
+        <!-- A&R SUBMISSION METADATA SNAPSHOT -->
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 16px;margin:12px 0;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:10px;font-size:12px;">
+          <div>
+            <span style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:bold;display:block;">✍️ Nhạc sĩ (Songwriters):</span>
+            <strong style="color:#0f172a;">${esc(meta.songwriters || 'Chưa cung cấp')}</strong>
+          </div>
+          <div>
+            <span style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:bold;display:block;">🎛️ Producer / Beatmaker:</span>
+            <strong style="color:#0f172a;">${esc(meta.producers || 'Chưa cung cấp')}</strong>
+          </div>
+          <div>
+            <span style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:bold;display:block;">💰 Royalty Splits:</span>
+            <strong style="color:#15803d;">${meta.splits?.length > 0 ? meta.splits.map(s => `${esc(s.artistName || s.artistId)} (${s.percentage}%)`).join(' + ') : '100% Nghệ sĩ chính'}</strong>
+          </div>
+          <div>
+            <span style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:bold;display:block;">📅 Ngày phát hành:</span>
+            <strong style="color:#0f172a;">${esc(meta.releaseDate || r.type?.split('·')[1]?.trim() || 'Chưa định ngày')}</strong>
+          </div>
+          <div>
+            <span style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:bold;display:block;">🌐 Ngôn ngữ & Explicit:</span>
+            <strong style="color:#0f172a;">${esc(meta.language || 'Tiếng Việt')} · ${meta.explicit === 'true' || meta.explicit === true ? '<span style="color:#dc2626;font-weight:bold;">[E] Explicit</span>' : '<span style="color:#16a34a;">Clean</span>'}</strong>
+          </div>
+          <div>
+            <span style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:bold;display:block;">🎬 Cấp phép Sync:</span>
+            <strong style="color:${meta.syncLicensingConsent ? '#16a34a' : '#64748b'};">${meta.syncLicensingConsent ? '🟢 Đã ủy quyền Sync' : '⚪ Tắt Sync'}</strong>
           </div>
         </div>
 
@@ -1665,6 +1696,14 @@ async function loadReleasesQueue() {
     btn.addEventListener('click', () => {
       const relId = btn.dataset.epkId;
       openAdminEPK(relId);
+    });
+  });
+
+  // Attach Metadata Inspector view events
+  releasesBox.querySelectorAll('.view-admin-meta-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const relId = btn.dataset.metaId;
+      openAdminMetadataModal(relId);
     });
   });
 
@@ -2531,6 +2570,279 @@ document.querySelector('#print-admin-epk-btn')?.addEventListener('click', () => 
   document.body.innerHTML = originalContent;
   location.reload();
 });
+
+// ==========================================
+// FULL RELEASE METADATA INSPECTOR (A&R REVIEW)
+// ==========================================
+window.openAdminMetadataModal = function(releaseId) {
+  const rel = releases.find(r => r.id === releaseId) || 
+    (data.artists || []).flatMap(a => (a.products || []).map(p => ({ ...p, artist_id: a.id }))).find(p => p.id === releaseId || p.slug === releaseId);
+  if (!rel) {
+    alert('Không tìm thấy thông tin bản phát hành để kiểm tra metadata.');
+    return;
+  }
+
+  const artistObj = (data.artists || []).find(a => a.id === rel.artist_id) || { name: rel.primary_artist || rel.artist_id || 'Nghệ sĩ' };
+  const artistName = rel.artists?.name || artistObj.name || rel.primary_artist || 'Nghệ sĩ';
+  const meta = (typeof rel.metadata === 'object' && rel.metadata) ? rel.metadata : {};
+  const artwork = rel.artwork_url || rel.artworkUrl || meta.artworkUrl || meta.artworkExternalUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80';
+  const audio = rel.audio_url || rel.audioUrl || meta.audioUrl || meta.audioExternalUrl || '';
+  const status = rel.submission_status || rel.submissionStatus || 'Đã phát hành';
+  const statusSelect = document.querySelector('#meta-modal-status-select');
+  const dialog = document.querySelector('#admin-metadata-dialog');
+  const modalBody = document.querySelector('#admin-metadata-modal-body');
+  const modalTitle = document.querySelector('#meta-modal-title');
+
+  if (statusSelect) statusSelect.value = status;
+  if (modalTitle) modalTitle.textContent = `🔍 Thẩm Định Metadata: ${rel.title} — ${artistName}`;
+
+  const splits = Array.isArray(meta.splits) && meta.splits.length > 0 ? meta.splits : [
+    { artistName: artistName, role: 'Nghệ sĩ chính (Primary Artist)', percentage: 100 }
+  ];
+
+  const lyrics = meta.lyricsText || 'Nghệ sĩ chưa cung cấp lời bài hát.';
+  const lrc = meta.lyricsLrc || '';
+  const notes = meta.notes || 'Không có ghi chú thêm từ nghệ sĩ.';
+  const songwriters = meta.songwriters || 'Chưa cập nhật';
+  const producers = meta.producers || 'Chưa cập nhật';
+  const phonogram = meta.phonogram || '© 2026 UniFLOWs Label';
+  const copyright = meta.copyright || artistName;
+  const isrc = meta.isrc || rel.upc || 'Pending / UniFLOWs Auto';
+  const upc = meta.upc || 'UniFLOWs Digital Ingestion';
+  const territories = meta.territories || 'Toàn cầu (Worldwide - 150+ Lãnh thổ)';
+  const releaseDate = meta.releaseDate || rel.releaseDate || rel.type?.split('·')[1]?.trim() || 'Chưa định ngày';
+  const preSaveDate = meta.preSaveDate || 'Không thiết lập';
+  const language = meta.language || 'Tiếng Việt';
+  const explicit = (meta.explicit === 'true' || meta.explicit === true) ? 'Explicit [E] (Có từ ngữ nhạy cảm)' : 'Clean (Không chứa từ ngữ nhạy cảm)';
+  const syncConsent = meta.syncLicensingConsent ? '🟢 ĐÃ ỦY QUYỀN (Sẵn sàng chào hàng cho TVC, Phim, Game)' : '⚪ Tắt (Không ủy quyền Sync Licensing)';
+
+  modalBody.innerHTML = `
+    <!-- Top Summary Banner -->
+    <div style="display:flex;gap:20px;align-items:flex-start;background:#0f172a;color:#fff;padding:20px;border-radius:10px;flex-wrap:wrap;">
+      <img src="${esc(artwork)}" alt="Artwork" style="width:140px;height:140px;object-fit:cover;border-radius:8px;border:2px solid rgba(255,255,255,0.2);box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+      <div style="flex:1;min-width:240px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;background:#2563eb;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;">${esc(rel.type || 'Single')}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;background:${status === 'Đã phát hành' ? '#10b981' : (status.includes('chờ') ? '#f59e0b' : '#ef4444')};color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;">● ${esc(status)}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:4px;">${esc(language)}</span>
+        </div>
+        <h2 style="margin:0 0 4px;font-size:24px;letter-spacing:-0.03em;color:#fff;">${esc(rel.title)}</h2>
+        <p style="margin:0 0 10px;font-size:14px;color:#94a3b8;font-weight:600;">Nghệ sĩ chính: <span style="color:#fff;">${esc(artistName)}</span> ${meta.featuredArtist ? `&bull; feat. <span style="color:#38bdf8;">${esc(meta.featuredArtist)}</span>` : ''}</p>
+        
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;">
+          ${audio ? `
+            <audio controls src="${esc(audio)}" style="height:34px;background:#1e293b;border-radius:20px;"></audio>
+            <a href="${esc(audio)}" target="_blank" download class="button" style="background:#fff;color:#000;padding:6px 12px;font-size:11px;font-weight:bold;border-radius:6px;box-shadow:none;">📥 Tải File Master Audio</a>
+          ` : '<span style="color:#f87171;font-size:12px;font-weight:bold;">⚠️ Chưa có file Master Audio</span>'}
+          <a href="${esc(artwork)}" target="_blank" class="button alt" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.3);padding:6px 12px;font-size:11px;font-weight:bold;border-radius:6px;">🖼️ Mở Artwork Gốc 3000px ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 1: Thông tin Định danh & Lịch phát hành -->
+    <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:18px;">
+      <h3 style="margin:0 0 14px;font-size:15px;color:#0f172a;letter-spacing:-0.02em;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
+        💿 1. Định Danh Tác Phẩm & Lịch Phát Hành (Release Specs)
+      </h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;font-size:12.5px;">
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Tên tác phẩm:</span><strong style="font-size:13.5px;color:#0f172a;">${esc(rel.title)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Định dạng (Format):</span><strong>${esc(rel.type || 'Single')}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Thể loại chính (Primary Genre):</span><strong>${esc(meta.genre || 'Pop / Indie')}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Ngày phát hành chính thức:</span><strong style="color:#2563eb;font-size:13.5px;">📅 ${esc(releaseDate)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Ngày kích hoạt Pre-save:</span><strong>${esc(preSaveDate)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Ngôn ngữ bài hát:</span><strong>${esc(language)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Nội dung nhạy cảm (Explicit):</span><strong>${esc(explicit)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Lãnh thổ phát hành:</span><strong>${esc(territories)}</strong></div>
+      </div>
+    </div>
+
+    <!-- Section 2: Tác quyền, Credits & Mã ISRC / UPC -->
+    <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:18px;">
+      <h3 style="margin:0 0 14px;font-size:15px;color:#0f172a;letter-spacing:-0.02em;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
+        🛡️ 2. Tác Quyền, Bản Quyền & Mã Định Danh ISRC / UPC
+      </h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;font-size:12.5px;">
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Nhạc sĩ sáng tác (Songwriters):</span><strong style="color:#0f172a;font-size:13px;">${esc(songwriters)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Nhà sản xuất (Music Producers):</span><strong style="color:#0f172a;font-size:13px;">${esc(producers)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Bản quyền bản ghi ℗ (Master Copyright):</span><strong>${esc(phonogram)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Tác quyền sáng tác © (Composition):</span><strong>${esc(copyright)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Mã ISRC:</span><strong style="font-family:'DM Mono',monospace;color:#1e40af;">${esc(isrc)}</strong></div>
+        <div><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Mã UPC / EAN:</span><strong style="font-family:'DM Mono',monospace;">${esc(upc)}</strong></div>
+        <div style="grid-column:1/-1;"><span style="color:#64748b;font-size:11px;display:block;font-weight:bold;text-transform:uppercase;">Ủy quyền Sync Licensing:</span><strong style="color:#16a34a;">${syncConsent}</strong></div>
+      </div>
+    </div>
+
+    <!-- Section 3: Bảng Phân Chia Doanh Thu (Royalty Splits Table) -->
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <h3 style="margin:0;font-size:15px;color:#166534;letter-spacing:-0.02em;">
+          💰 3. Bảng Phân Chia Doanh Thu Tác Quyền (Royalty Splits)
+        </h3>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:bold;color:#15803d;background:#dcfce7;padding:3px 10px;border-radius:12px;border:1px solid #86efac;">
+          Tổng cộng: 100%
+        </span>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;text-align:left;background:#fff;border-radius:6px;overflow:hidden;border:1px solid #bbf7d0;">
+          <thead>
+            <tr style="background:#dcfce7;color:#14532d;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;">
+              <th style="padding:10px 14px;">Đối tượng thụ hưởng</th>
+              <th style="padding:10px 14px;">Vai trò tham gia</th>
+              <th style="padding:10px 14px;text-align:right;">Tỷ lệ chia sẻ</th>
+              <th style="padding:10px 14px;width:160px;">Tỷ lệ trực quan</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${splits.map(s => `
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:10px 14px;font-weight:bold;color:#0f172a;">${esc(s.artistName || s.artistId)}</td>
+                <td style="padding:10px 14px;color:#475569;">${esc(s.role || 'Contributor')}</td>
+                <td style="padding:10px 14px;text-align:right;font-weight:bold;font-family:'DM Mono',monospace;color:#15803d;">${s.percentage}%</td>
+                <td style="padding:10px 14px;">
+                  <div style="background:#e2e8f0;height:8px;border-radius:4px;overflow:hidden;">
+                    <div style="background:#16a34a;height:100%;width:${s.percentage}%;"></div>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 4: Lời Bài Hát & LRC -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;">
+      <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:16px;">
+        <h4 style="margin:0 0 8px;font-size:13px;color:#0f172a;font-weight:bold;">📝 Lời bài hát chuẩn (Plain Lyrics)</h4>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;max-height:160px;overflow-y:auto;font-size:12px;line-height:1.6;white-space:pre-wrap;color:#334155;">
+          ${esc(lyrics)}
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:16px;">
+        <h4 style="margin:0 0 8px;font-size:13px;color:#0f172a;font-weight:bold;">⏱️ Đồng bộ thời gian (.LRC Time-synced)</h4>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;max-height:160px;overflow-y:auto;font-family:'DM Mono',monospace;font-size:11px;line-height:1.5;white-space:pre-wrap;color:#0369a1;">
+          ${esc(lrc || 'Chưa cung cấp file .LRC')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Ghi chú Pitching & Phản hồi A&R -->
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:18px;">
+      <h3 style="margin:0 0 10px;font-size:14px;color:#92400e;letter-spacing:-0.02em;">
+        🎯 5. Kế Hoạch Pitching & Ghi Chú A&R Review
+      </h3>
+      <div style="margin-bottom:14px;background:#fff;border:1px solid #fde68a;padding:12px;border-radius:6px;">
+        <span style="font-size:11px;color:#92400e;font-weight:bold;display:block;margin-bottom:4px;">Ghi chú chiến dịch từ nghệ sĩ:</span>
+        <p style="margin:0;font-size:12.5px;color:#78350f;line-height:1.5;">${esc(notes)}</p>
+      </div>
+
+      <div>
+        <label style="font-size:11px;color:#92400e;font-weight:bold;display:block;margin-bottom:6px;text-transform:uppercase;">
+          Phản hồi A&R gửi lại nghệ sĩ (Hiển thị trực tiếp trên Artist Portal):
+        </label>
+        <textarea id="meta-modal-ar-feedback" rows="3" placeholder="Ví dụ: [01:15] Đoạn điệp khúc vocal cần mix sáng hơn. Bản thu đạt chuẩn chất lượng DSPs..." style="width:100%;padding:10px;font-size:12.5px;border:1px solid #d97706;border-radius:6px;background:#fff;font-family:inherit;">${esc(meta.arFeedback || '')}</textarea>
+      </div>
+    </div>
+  `;
+
+  // Copy DSP Metadata Sheet in standard JSON/Text
+  const copyBtn = document.querySelector('#meta-modal-copy-json-btn');
+  if (copyBtn) {
+    copyBtn.onclick = () => {
+      const sheetData = `UNIFLOWs RECORDS — METADATA INGESTION SHEET
+--------------------------------------------------
+RELEASE TITLE: ${rel.title}
+FORMAT: ${rel.type || 'Single'}
+PRIMARY ARTIST: ${artistName}
+FEATURED ARTISTS: ${meta.featuredArtist || 'N/A'}
+PRIMARY GENRE: ${meta.genre || 'Pop'}
+RELEASE DATE: ${releaseDate}
+PRE-SAVE DATE: ${preSaveDate}
+LANGUAGE: ${language}
+EXPLICIT: ${explicit}
+SONGWRITERS: ${songwriters}
+PRODUCERS: ${producers}
+PHONOGRAM ℗: ${phonogram}
+COMPOSITION ©: ${copyright}
+ISRC: ${isrc}
+UPC: ${upc}
+TERRITORIES: ${territories}
+SYNC LICENSING: ${meta.syncLicensingConsent ? 'YES' : 'NO'}
+
+ROYALTY SPLITS:
+${splits.map(s => `- ${s.artistName} (${s.role}): ${s.percentage}%`).join('\n')}
+
+AUDIO MASTER: ${audio || 'N/A'}
+ARTWORK URL: ${artwork || 'N/A'}
+--------------------------------------------------`;
+      navigator.clipboard?.writeText(sheetData);
+      copyBtn.textContent = '✓ Đã Copy Sheet!';
+      setTimeout(() => { copyBtn.textContent = '📋 Copy Metadata Sheet'; }, 2000);
+    };
+  }
+
+  // Save Modal Action
+  const saveBtn = document.querySelector('#meta-modal-save-btn');
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      const newStatus = statusSelect?.value || status;
+      const newFeedback = document.querySelector('#meta-modal-ar-feedback')?.value.trim() || '';
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Đang lưu xét duyệt...';
+
+      // Update release in memory
+      rel.submission_status = newStatus;
+      rel.submissionStatus = newStatus;
+      if (!rel.metadata) rel.metadata = {};
+      rel.metadata.arFeedback = newFeedback;
+      rel.metadata.status = newStatus;
+
+      // Update in data.artists
+      const artistIndex = (data.artists || []).findIndex(a => a.id === rel.artist_id);
+      if (artistIndex >= 0) {
+        const prod = (data.artists[artistIndex].products || []).find(p => p.id === rel.id || p.slug === rel.slug);
+        if (prod) {
+          prod.submissionStatus = newStatus;
+          if (!prod.metadata) prod.metadata = {};
+          prod.metadata.arFeedback = newFeedback;
+          prod.metadata.status = newStatus;
+        }
+      }
+
+      await saveData(data);
+      await logAuditEvent('Xét Duyệt Metadata Bản Phát Hành', `Bản phát hành "${rel.title}" của "${artistName}" chuyển sang trạng thái "${newStatus}".`);
+      
+      // Notify artist
+      if (newStatus === 'Đã phát hành') {
+        await sendArtistNotification(
+          rel.artist_id,
+          '💿 Bản phát hành đã được phê duyệt!',
+          `Bản phát hành "${rel.title}" đã được duyệt phân phối chính thức trên các nền tảng streaming!${newFeedback ? `\n\n💬 Góp ý từ A&R:\n"${newFeedback}"` : ''}`,
+          'release'
+        );
+      } else if (newStatus === 'Yêu cầu chỉnh sửa') {
+        await sendArtistNotification(
+          rel.artist_id,
+          '⚠️ Yêu cầu chỉnh sửa bản phát hành',
+          `Bản phát hành "${rel.title}" cần chỉnh sửa theo yêu cầu của A&R:${newFeedback ? `\n\n💬 Lời nhắn từ A&R:\n"${newFeedback}"` : ' Vui lòng kiểm tra lại file Master hoặc Artwork.'}`,
+          'release'
+        );
+      }
+
+      showNotice(`✓ ĐÃ CẬP NHẬT XÉT DUYỆT! Bản phát hành "${rel.title}" hiện ở trạng thái "${newStatus}".`);
+
+      dialog.close();
+      renderReleasesAdmin();
+    };
+  }
+
+  dialog.showModal();
+};
+
+document.querySelector('#close-admin-metadata-btn')?.addEventListener('click', () => document.querySelector('#admin-metadata-dialog')?.close());
+document.querySelector('#cancel-admin-metadata-btn')?.addEventListener('click', () => document.querySelector('#admin-metadata-dialog')?.close());
 
 // ==========================================
 // AUDIT LOGS SECURITY SYSTEM
