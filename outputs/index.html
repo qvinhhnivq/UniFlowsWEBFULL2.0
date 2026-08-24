@@ -10,34 +10,6 @@
   <meta name="theme-color" content="#000000">
   <meta property="og:image" content="/og-image.jpg">
   <link rel="stylesheet" href="assets/app.css">
-  <script>
-    (function() {
-      var h = window.location.hostname.toLowerCase();
-      var p = window.location.pathname.toLowerCase();
-      if (p === '/' || p === '' || p === '/index' || p === '/index.html') {
-        var target = null;
-        if (h.startsWith('publishing.')) target = 'unipublishing.html';
-        else if (h.startsWith('unihub.') || h.startsWith('hube.')) target = 'unihube.html';
-        else if (h.startsWith('48k.')) target = '48kcollective.html';
-        else if (h.startsWith('portal.') || h.startsWith('artist.')) target = 'artist-login.html';
-
-        if (target) {
-          try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', target, false);
-            xhr.send(null);
-            if (xhr.status === 200 || xhr.status === 0) {
-              document.open();
-              document.write(xhr.responseText);
-              document.close();
-            }
-          } catch(e) {
-            window.location.replace(target.replace('.html', ''));
-          }
-        }
-      }
-    })();
-  </script>
 </head>
 <body data-page="index">
   <main>

@@ -291,7 +291,7 @@ function artistDetail() {
       ${(a.products || []).length > 0 ? (a.products || []).map(p => {
         const pSlug = p.slug || slug(p.title);
         return `
-          <a class="release" href="/listen?release=${encodeURIComponent(pSlug)}">
+          <a class="release" href="/listen/${encodeURIComponent(pSlug)}">
             <span>${esc(p.type)}</span>
             <strong>${esc(p.title)}</strong>
             <b>Smart link ↗</b>
@@ -334,8 +334,6 @@ function articleDetail() {
   });
 }
 
-let isDataLoaded = false;
-
 function smartPage() {
   let root = $('[data-smartlink-page]');
   if (!root) return;
@@ -344,12 +342,12 @@ function smartPage() {
   let rawPath = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
   let parts = rawPath.split('/').filter(Boolean);
 
-  let releaseSlug = q.get('release') || q.get('r') || q.get('slug') || q.get('id') || q.get('track') || '';
-  let artistId = q.get('artist') || q.get('a') || '';
+  let releaseSlug = q.get('release') || '';
+  let artistId = q.get('artist') || '';
 
-  // Clean path resolution: /listen/o-ki, /l/o-ki, /listen/artist-id/o-ki
+  // Clean path resolution: /listen/o-ki or /l/o-ki
   if (!releaseSlug) {
-    if (parts[0] === 'listen' || parts[0] === 'l' || parts[0] === 'listen.html') {
+    if (parts[0] === 'listen' || parts[0] === 'l') {
       if (parts.length >= 3) {
         artistId = parts[1];
         releaseSlug = parts[2];
@@ -360,39 +358,23 @@ function smartPage() {
   }
 
   if (releaseSlug) {
-    releaseSlug = releaseSlug.replace(/\.html$/i, '').trim();
+    releaseSlug = releaseSlug.replace(/\.html$/i, '');
   }
-
-  const cleanSlug = slug(releaseSlug);
 
   let a = null;
   let p = null;
 
-  const artistsList = data.artists || [];
-
   if (artistId) {
-    a = artistsList.find(x => x.id === artistId || slug(x.name) === slug(artistId));
+    a = (data.artists || []).find(x => x.id === artistId);
     if (a) {
-      p = a.products?.find(x => 
-        (x.slug && slug(x.slug) === cleanSlug) || 
-        slug(x.title) === cleanSlug || 
-        (x.id && String(x.id) === releaseSlug) ||
-        (x.slug && x.slug.toLowerCase() === releaseSlug.toLowerCase())
-      );
+      p = a.products?.find(x => (x.slug || slug(x.title)) === releaseSlug || slug(x.title) === slug(releaseSlug));
     }
   }
 
   // Search across all artists
   if (!p && releaseSlug) {
-    for (const art of artistsList) {
-      const found = (art.products || []).find(x => 
-        (x.slug && slug(x.slug) === cleanSlug) || 
-        slug(x.title) === cleanSlug || 
-        (x.id && String(x.id) === releaseSlug) ||
-        (x.slug && x.slug.toLowerCase() === releaseSlug.toLowerCase()) ||
-        slug(x.title).includes(cleanSlug) ||
-        cleanSlug.includes(slug(x.title))
-      );
+    for (const art of (data.artists || [])) {
+      const found = (art.products || []).find(x => (x.slug || slug(x.title)) === releaseSlug || slug(x.title) === slug(releaseSlug));
       if (found) {
         a = art;
         p = found;
@@ -401,67 +383,13 @@ function smartPage() {
     }
   }
 
-  // If no release was specified in URL, show catalogue hub instead of 404
-  if (!releaseSlug) {
-    const allReleases = [];
-    artistsList.forEach(art => {
-      const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
-      prods.forEach(pr => {
-        allReleases.push({
-          ...pr,
-          artistName: art.name,
-          artistImage: art.image
-        });
-      });
-    });
-
-    if (allReleases.length > 0) {
-      root.innerHTML = `
-        <section class="smart-page" style="max-width:600px;">
-          <a class="smart-logo" href="/">UNIFLOWs</a>
-          <h1 style="margin-top:6vh;font-size:clamp(32px, 6vw, 44px);letter-spacing:-0.03em;">SmartLink Hub</h1>
-          <p style="color:#aaa;margin-bottom:20px;font-size:14px;">Chọn một bản phát hành của nghệ sĩ UniFLOWs để nghe trực tiếp:</p>
-          <div class="smart-platforms" style="margin-top:0;">
-            ${allReleases.map(r => `
-              <a href="/listen/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;text-align:left;padding:12px 16px;">
-                <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:46px;height:46px;object-fit:cover;border-radius:4px;border:1px solid #444;" alt="${esc(r.title)}">
-                <div style="flex:1;min-width:0;">
-                  <strong style="display:block;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
-                  <span style="font-size:12px;color:#aaa;">${esc(r.artistName)} · ${esc(r.type || 'Single')}</span>
-                </div>
-                <span>↗</span>
-              </a>
-            `).join('')}
-          </div>
-          <a class="button alt" href="/" style="margin-top:20px;border:1px solid #fff;color:#fff;padding:8px 20px;font-weight:bold;">← Về trang chủ</a>
-        </section>
-      `;
-      return;
-    }
-  }
-
-  // If still not found and data is loading, show clean loader
   if (!a || !p) {
-    if (!isDataLoaded) {
-      root.innerHTML = `
-        <section class="smart-page">
-          <a class="smart-logo" href="/">UNIFLOWs</a>
-          <div style="margin-top:25vh;text-align:center;">
-            <div style="font-size:36px;margin-bottom:12px;animation:pulse 1.5s infinite;">🎵</div>
-            <p style="color:#aaa;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:1px;">ĐANG TẢI SMART LINK...</p>
-          </div>
-        </section>
-      `;
-      return;
-    }
-
     root.innerHTML = `
       <section class="smart-page">
-        <a class="smart-logo" href="/">UNIFLOWs</a>
-        <h1 style="margin-top:18vh;font-size:64px;letter-spacing:-0.05em;">404</h1>
-        <p class="smart-error" style="padding:0;margin:12px 0 20px;font-size:15px;color:#aaa;">Không tìm thấy bản phát hành Smart Link này.</p>
-        <a class="button alt" href="/listen" style="border:1px solid #fff;color:#fff;font-weight:bold;padding:10px 24px;border-radius:4px;margin-right:8px;">Xem danh sách SmartLinks</a>
-        <a class="button alt" href="/" style="border:1px solid #555;color:#aaa;font-weight:bold;padding:10px 24px;border-radius:4px;">Về trang chủ →</a>
+        <a class="smart-logo" href="index">UNIFLOWs</a>
+        <h1 style="margin-top:20vh">404</h1>
+        <p class="smart-error">Không tìm thấy bản phát hành Smart Link này.</p>
+        <a class="button alt" href="index" style="margin-top:20px;border:1px solid #fff;color:#fff;">Về trang chủ</a>
       </section>
     `;
     return;
@@ -492,7 +420,7 @@ function smartPage() {
 
   root.innerHTML = `
     <section class="smart-page">
-      <a class="smart-logo" href="/">UNIFLOWs</a>
+      <a class="smart-logo" href="index">UNIFLOWs</a>
       <img class="smart-art" src="${esc(p.artworkUrl || a.image)}" alt="${esc(p.title)}">
       <span class="eyebrow">${esc(a.name)} / ${esc(p.type)}</span>
       <h1>${esc(p.title)}</h1>
@@ -553,11 +481,6 @@ document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
 
 getData().then(liveData => {
   data = liveData;
-  isDataLoaded = true;
-  renderAll();
-}).catch(err => {
-  console.warn('getData error in app.js:', err);
-  isDataLoaded = true;
   renderAll();
 });
 

@@ -8,18 +8,8 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
+  <meta property="og:image" content="/og-image.jpg">
   <link rel="stylesheet" href="assets/app.css">
-  <script>
-    (function() {
-      var h = window.location.hostname.toLowerCase();
-      var p = window.location.pathname.toLowerCase();
-      if (p !== '/' && p !== '') {
-        if (h.startsWith('unihub.') || h.startsWith('hube.')) {
-          window.history.replaceState(null, '', '/' + window.location.search + window.location.hash);
-        }
-      }
-    })();
-  </script>
   <style>
     /* Uni-HUBE Accent Theme: Warm Amber / Gold */
     :root {

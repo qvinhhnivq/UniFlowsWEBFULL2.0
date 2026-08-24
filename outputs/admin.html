@@ -7,16 +7,8 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
-  <link rel="stylesheet" href="/assets/app.css">
-  <style>
-    dialog:not([open]) {
-      display: none !important;
-    }
-    dialog[open] {
-      display: flex !important;
-      flex-direction: column;
-    }
-  </style>
+  <meta name="theme-color" content="#000000">
+  <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
   <main class="admin" style="max-width: 1050px; padding-top: 4vw;">
@@ -671,14 +663,13 @@
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
               <thead>
                 <tr style="background:#0f172a;color:#fff;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;font-family:'DM Mono',monospace;">
-                  <th style="padding:10px 14px;">Mã Đơn / Ngày đặt</th>
+                  <th style="padding:10px 14px;">Ngày gửi</th>
                   <th style="padding:10px 14px;">Tác phẩm / Nghệ sĩ</th>
                   <th style="padding:10px 14px;">Bên mua & Dự án</th>
                   <th style="padding:10px 14px;">Loại hình & Lãnh thổ</th>
                   <th style="padding:10px 14px;">Phí Bản quyền</th>
-                  <th style="padding:10px 14px;min-width:180px;">Trạng thái Tiến độ</th>
-                  <th style="padding:10px 14px;min-width:220px;">Ghi chú gửi Khách</th>
-                  <th style="padding:10px 14px;text-align:right;">Thao tác</th>
+                  <th style="padding:10px 14px;text-align:center;">Trạng thái</th>
+                  <th style="padding:10px 14px;text-align:right;">Thao tác Duyệt</th>
                 </tr>
               </thead>
               <tbody id="sync-license-requests-tbody">
@@ -1127,7 +1118,7 @@
   <!-- ========================================== -->
   <!-- MODAL: QUẢN LÝ CA KHÚC TIÊU BIỂU CHO PRODUCER (UNI-HUBE) -->
   <!-- ========================================== -->
-  <dialog id="admin-producer-tracks-dialog" class="release-dialog-shell" style="display:none;max-width:760px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+  <dialog id="admin-producer-tracks-dialog" class="release-dialog-shell" style="max-width:760px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
     <div style="background:#0f172a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
       <div>
         <span class="eyebrow" style="color:#f59e0b;margin:0;font-size:10px;">Uni-HUBE Producer Discography</span>
