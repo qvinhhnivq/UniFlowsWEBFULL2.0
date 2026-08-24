@@ -587,10 +587,10 @@
   <script type="module">
     import { getData, saveData, getLocalCachedData } from './assets/data.js';
 
-    let liveData = await getData();
+    let liveData = getLocalCachedData();
     let pubData = liveData.publishing || {};
-    const tracks = pubData.customTracks || [];
-    const certificates = pubData.certificates || [];
+    let tracks = pubData.customTracks || [];
+    let certificates = pubData.certificates || [];
 
     // ----------------------------------------------------
     // 1. RENDER CATALOGUE WITH RIGHTS BADGE & STREAMING LINKS
@@ -1270,6 +1270,17 @@
     renderCatalogue();
     renderOrderStatusResult('');
     updatePriceCalculation();
+
+    // Background sync with Supabase for real-time consistency
+    getData().then(fresh => {
+      if (fresh) {
+        liveData = fresh;
+        pubData = liveData.publishing || {};
+        tracks = pubData.customTracks || [];
+        certificates = pubData.certificates || [];
+        renderCatalogue();
+      }
+    }).catch(e => console.warn('Background sync error:', e));
   </script>
 </body>
 </html>
