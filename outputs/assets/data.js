@@ -34,8 +34,241 @@ export const defaultData = {
       createdAt: '2026-08-20'
     }
   ],
-  artists: [],
-  articles: [],
+  artists: [
+    {
+      id: 'lumi',
+      name: 'Lumi',
+      genre: 'Dream Pop / Indie',
+      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      bio: 'Lumi tạo nên không gian âm nhạc bay bổng với những thanh âm lơ lửng, ca từ mộng mị và sự hòa quyện tinh tế giữa giai điệu pop hiện đại và nét mộc mạc của indie pop.',
+      gallery: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80'
+      ],
+      showOnWeb: true,
+      roleType: 'exclusive',
+      monthlyStreams: '450,000',
+      estimatedRevenue: '25,000,000',
+      payableBalance: '18,500,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '85% Master',
+      contractTerm: '2024 - 2027',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
+      products: [
+        {
+          id: 'rel-lumi-1',
+          title: 'Vệt Sáng',
+          type: 'Single',
+          slug: 'vet-sang',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com',
+            youtube: 'https://youtube.com',
+            soundcloud: 'https://soundcloud.com'
+          },
+          streams: '280,000',
+          revenue: '15,400,000',
+          playlists: ['New Music Friday', 'Indie Vietnam'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        },
+        {
+          id: 'rel-lumi-2',
+          title: 'Mơ Giữa Ban Ngày',
+          type: 'Single',
+          slug: 'mo-giua-ban-ngay',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '170,000',
+          revenue: '9,600,000',
+          playlists: ['Hot Hits Vietnam'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        }
+      ]
+    },
+    {
+      id: '48k',
+      name: '48K',
+      genre: 'Electronic / Future Bass',
+      image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80',
+      bio: 'Tập hợp các nhà sản xuất âm thanh điện tử tiên phong, mang năng lượng bùng nổ từ club đến các sân khấu lễ hội lớn với chất lượng chuẩn 48kHz lossless.',
+      gallery: [
+        'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80'
+      ],
+      showOnWeb: true,
+      roleType: 'exclusive',
+      monthlyStreams: '620,000',
+      estimatedRevenue: '34,000,000',
+      payableBalance: '22,000,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '80% Master',
+      contractTerm: '2024 - 2028',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
+      products: [
+        {
+          id: 'rel-48k-1',
+          title: 'Digital Waves',
+          type: 'Single',
+          slug: 'digital-waves',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '390,000',
+          revenue: '21,500,000',
+          playlists: ['EDM Hits Vietnam', 'Dance Party'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        }
+      ]
+    },
+    {
+      id: 'vule',
+      name: 'Vũ Lê',
+      genre: 'R&B / Neo-Soul',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      bio: 'Giọng hát ấm áp kết hợp cùng hòa âm R&B hiện đại và ca từ giàu tính tự sự, tạo nên những giai điệu đêm muộn đầy cảm xúc.',
+      gallery: [
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80'
+      ],
+      showOnWeb: true,
+      roleType: 'exclusive',
+      monthlyStreams: '290,000',
+      estimatedRevenue: '16,000,000',
+      payableBalance: '11,200,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '80% Master',
+      contractTerm: '2025 - 2028',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
+      products: [
+        {
+          id: 'rel-vule-1',
+          title: 'Lạc Nhịp',
+          type: 'Single',
+          slug: 'lac-nhip',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '290,000',
+          revenue: '16,000,000',
+          playlists: ['R&B Vietnam', 'Late Night Vibes'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        }
+      ]
+    },
+    {
+      id: 'monotone',
+      name: 'Monotone',
+      genre: 'Indie Rock / Alternative',
+      image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+      bio: 'Âm hưởng guitar gai góc, tiếng trống dồn dập cùng tinh thần tự do phóng khoáng đại diện cho làn sóng indie rock mới tại Việt Nam.',
+      gallery: [
+        'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80'
+      ],
+      showOnWeb: true,
+      roleType: 'exclusive',
+      monthlyStreams: '195,000',
+      estimatedRevenue: '10,800,000',
+      payableBalance: '7,500,000',
+      payoutCycle: 'Hàng tháng (Monthly)',
+      royaltyRate: '80% Master',
+      contractTerm: '2024 - 2027',
+      instagram: 'https://instagram.com/uniflowslabel',
+      youtube: 'https://youtube.com',
+      tiktok: 'https://tiktok.com',
+      products: [
+        {
+          id: 'rel-monotone-1',
+          title: 'Khoảng Lặng',
+          type: 'Single',
+          slug: 'khoang-lang',
+          submissionStatus: 'Đã phát hành',
+          artworkUrl: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=800&q=80',
+          audioUrl: '',
+          links: {
+            spotify: 'https://open.spotify.com',
+            apple: 'https://music.apple.com'
+          },
+          streams: '195,000',
+          revenue: '10,800,000',
+          playlists: ['Rock Vietnam', 'Indie Stage'],
+          splits: [],
+          userRole: 'Main',
+          isSplit: false,
+          percentage: 100
+        }
+      ]
+    }
+  ],
+  articles: [
+    {
+      id: 'art-1',
+      title: 'UniFLOWs Label công bố chiến lược phát triển âm nhạc thế hệ mới',
+      category: 'Tin Tức',
+      date: '22/08/2026',
+      author: 'UniFLOWs Editorial',
+      readTime: '3 phút đọc',
+      cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+      excerpt: 'Mở rộng hệ sinh thái phân phối toàn cầu, nâng cấp nền tảng quản trị quyền sở hữu trí tuệ và hỗ trợ nghệ sĩ độc lập tối đa doanh thu.',
+      body: 'UniFLOWs Label chính thức công bố lộ trình phát triển giai đoạn 2026 - 2030, tập trung vào ba trụ cột cốt lõi: Phân phối âm nhạc toàn cầu trên hơn 150+ nền tảng streaming, phát triển hệ thống cấp phép bản quyền Sync Licensing cho phim ảnh, quảng cáo (UniPUBLISHING), và xây dựng tổ đội sản xuất âm thanh chuyên sâu (Uni-HUBE).\n\nVới cam kết minh bạch 100% doanh thu đối soát theo thời gian thực, UniFLOWs tiếp tục là bệ phóng uy tín hàng đầu cho các nghệ sĩ và nhà sản xuất âm nhạc tại Việt Nam.',
+      published: true
+    },
+    {
+      id: 'art-2',
+      title: 'Ra mắt nền tảng UniPUBLISHING - Cấp phép bản quyền âm nhạc số 1',
+      category: 'Phát Hành',
+      date: '20/08/2026',
+      author: 'Ban Bản Quyền UniFLOWs',
+      readTime: '4 phút đọc',
+      cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+      excerpt: 'Giải pháp cấp phép âm nhạc trọn gói (Pre-cleared Master & Publishing Rights) dành cho TVC, phim điện ảnh, series truyền hình và creators.',
+      body: 'Nhằm giải quyết những phức tạp trong quy trình xin phép tác quyền âm nhạc thương mại, UniPUBLISHING ra đời với 100% danh mục tác phẩm đã được tiền xử lý bản quyền (Pre-cleared).\n\nKhách hàng là các đạo diễn, production house, agency quảng cáo và nhà sáng tạo nội dung có thể dễ dàng nghe thử, lựa chọn theo tâm trạng, thể loại và nhận chứng nhận cấp phép điện tử hợp pháp chỉ sau vài cú click.',
+      published: true
+    },
+    {
+      id: 'art-3',
+      title: 'Uni-HUBE: Không gian hội tụ các nhà sản xuất và kỹ sư âm thanh hàng đầu',
+      category: 'Đội Ngũ',
+      date: '18/08/2026',
+      author: 'A&R Team',
+      readTime: '3 phút đọc',
+      cover: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80',
+      excerpt: 'Hội tụ các Music Producer, Mixing & Mastering Engineer 24-bit Lossless, Topline Songwriters định hình âm thanh hiện đại.',
+      body: 'Uni-HUBE là ngôi nhà chung kết nối các Music Producers, Songwriters, Mixing & Mastering Engineers và Beatmakers tài năng. Với tiêu chuẩn phòng thu đạt chuẩn Apple Digital Masters và Dolby Atmos, Uni-HUBE đồng hành cùng các nghệ sĩ từ bản thu demo đầu tiên đến sản phẩm master hoàn hảo nhất.',
+      published: true
+    }
+  ],
   publishing: {
     basePrices: {
       commercial: 15000000,
@@ -379,17 +612,17 @@ export async function getData() {
         });
       }
 
-      merged.artists = mappedSupabaseArtists;
-      merged.artist_order = mappedSupabaseArtists.map(a => a.id);
-    } else if (cached.artists) {
+      merged.artists = mappedSupabaseArtists.length > 0 ? mappedSupabaseArtists : (cached.artists?.length > 0 ? cached.artists : defaultData.artists);
+      merged.artist_order = merged.artists.map(a => a.id);
+    } else if (cached.artists && cached.artists.length > 0) {
       merged.artists = cached.artists.filter(a => !MOCK_IDS.artists.includes(a.id));
       merged.artist_order = merged.artists.map(a => a.id);
     } else {
-      merged.artists = [];
-      merged.artist_order = [];
+      merged.artists = defaultData.artists;
+      merged.artist_order = defaultData.artists.map(a => a.id);
     }
 
-    if (articlesData) {
+    if (articlesData && articlesData.length > 0) {
       merged.articles = articlesData.map(art => ({
         id: art.id,
         title: art.title,
@@ -402,6 +635,10 @@ export async function getData() {
         body: art.body,
         published: art.published
       }));
+    } else if (cached.articles && cached.articles.length > 0) {
+      merged.articles = cached.articles;
+    } else {
+      merged.articles = defaultData.articles;
     }
 
     localStorage.setItem('uniflows-content', JSON.stringify(merged));
