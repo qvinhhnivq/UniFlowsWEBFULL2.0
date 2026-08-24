@@ -670,26 +670,36 @@ function renderReleaseListItems() {
   list.innerHTML = filtered.map(p => {
     const isTakedownRequested = p.submissionStatus === 'Yêu cầu gỡ / xóa bản phát hành';
     const isPending = p.submissionStatus?.includes('chờ');
+    const isRevision = p.submissionStatus === 'Yêu cầu chỉnh sửa' || p.submissionStatus?.includes('chỉnh sửa');
+    const isRejected = p.submissionStatus === 'Từ chối duyệt' || p.submissionStatus?.includes('chối');
     const isApproved = !p.submissionStatus || p.submissionStatus === 'Đã phát hành';
     const releaseSlug = p.slug || slug(p.title);
     const playlistsHtml = (p.playlists && p.playlists.length > 0)
       ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${p.playlists.map(pl => `<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:bold;">🌟 ${pl}</span>`).join('')}</div>`
       : '';
 
-    const statusBadge = isPending
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fef3c7;color:#b45309;border-radius:12px;font-size:11px;font-weight:bold;">⏳ Đang chờ UniFLOWs duyệt</span>`
-      : (isTakedownRequested
-        ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fee2e2;color:#b91c1c;border-radius:12px;font-size:11px;font-weight:bold;">🔴 Yêu cầu gỡ</span>`
-        : `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#dcfce7;color:#15803d;border-radius:12px;font-size:11px;font-weight:bold;">🟢 Live trên 150+ DSPs</span>`);
+    let statusBadge = '';
+    if (isPending) {
+      statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fef3c7;color:#b45309;border-radius:12px;font-size:11px;font-weight:bold;">⏳ Đang chờ UniFLOWs duyệt</span>`;
+    } else if (isRevision) {
+      statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;font-size:11px;font-weight:bold;">⚠️ Cần chỉnh sửa lại</span>`;
+    } else if (isRejected) {
+      statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fee2e2;color:#991b1b;border-radius:12px;font-size:11px;font-weight:bold;">❌ Bị từ chối</span>`;
+    } else if (isTakedownRequested) {
+      statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fee2e2;color:#b91c1c;border-radius:12px;font-size:11px;font-weight:bold;">🔴 Yêu cầu gỡ</span>`;
+    } else {
+      statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#dcfce7;color:#15803d;border-radius:12px;font-size:11px;font-weight:bold;">🟢 Live trên 150+ DSPs</span>`;
+    }
 
     const splitBadge = p.isSplit
       ? `<span style="display:inline-block;padding:3px 10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:12px;font-size:11px;font-weight:bold;">🤝 Split ${p.percentage}% (${esc(p.userRole)})</span>`
       : `<span style="display:inline-block;padding:3px 10px;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:12px;font-size:11px;font-weight:bold;">⭐ Nghệ sĩ chính (100%)</span>`;
 
     const artworkSrc = p.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
+    const arNote = p.metadata?.arFeedback || p.arFeedback || '';
 
     return `
-      <div class="portal-release-card">
+      <div class="portal-release-card" style="${isRevision ? 'border:2px solid #f87171;' : ''}">
         <img class="portal-release-thumb" src="${esc(artworkSrc)}" alt="${esc(p.title)}">
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
@@ -706,16 +716,19 @@ function renderReleaseListItems() {
             <span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:bold;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</span>
           </div>
           ${playlistsHtml}
-          ${(p.metadata && p.metadata.arFeedback) ? `
-            <div style="margin-top:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 12px;font-size:12px;color:#991b1b;">
-              <strong>💬 Góp ý từ A&R UniFLOWs:</strong> ${esc(p.metadata.arFeedback)}
+          ${arNote ? `
+            <div style="margin-top:10px;background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:10px 14px;font-size:13px;color:#9f1239;line-height:1.5;">
+              <strong style="display:flex;align-items:center;gap:6px;margin-bottom:3px;color:#be123c;">
+                <span>💬 Lời nhắn / Góp ý từ A&R UniFLOWs:</span>
+              </strong>
+              <div style="white-space:pre-wrap;">${esc(arNote)}</div>
             </div>
           ` : ''}
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           ${p.audioUrl ? `<a href="${esc(p.audioUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;font-weight:bold;">🎵 Master</a>` : ''}
           ${p.artworkUrl ? `<a href="${esc(p.artworkUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;">🖼 Artwork</a>` : ''}
-          <a href="${window.location.hostname.includes('uniflowslabel.com') ? window.location.protocol + '//uniflowslabel.com/listen?release=' + encodeURIComponent(releaseSlug) : '/listen?release=' + encodeURIComponent(releaseSlug)}" target="_blank" class="button" style="padding:6px 14px;font-size:11px;font-weight:bold;background:#000;color:#fff;">SmartLink ↗</a>
+          <a href="${window.location.hostname.includes('uniflowslabel.com') ? window.location.protocol + '//uniflowslabel.com/l/' + encodeURIComponent(releaseSlug) : '/listen?release=' + encodeURIComponent(releaseSlug)}" target="_blank" class="button" style="padding:6px 14px;font-size:11px;font-weight:bold;background:#000;color:#fff;">SmartLink ↗</a>
         </div>
         <div>
           ${(p.id && artist.roleType !== 'collab') ? (
@@ -853,7 +866,9 @@ async function renderReleases() {
         percentage: percentage,
         userRole: role,
         isSplit: percentage < 100 || !isPrimaryArtist,
-        playlists: Array.isArray(meta.playlists) ? meta.playlists : []
+        playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
+        metadata: meta,
+        arFeedback: meta.arFeedback || meta.ar_feedback || ''
       });
     }
   });

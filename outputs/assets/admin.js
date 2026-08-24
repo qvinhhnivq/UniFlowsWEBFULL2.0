@@ -1343,16 +1343,26 @@ async function loadReleasesQueue() {
           </div>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;gap:10px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <label style="font-size:12px;font-weight:bold;text-transform:uppercase;">Trạng thái:</label>
-            <select class="rel-status-select" style="padding:8px;border:1px solid var(--ink);font-weight:bold;background:#fff;">
-              <option value="Đang chờ UniFLOWs duyệt" ${status === 'Đang chờ UniFLOWs duyệt' ? 'selected' : ''}>⏳ Đang chờ UniFLOWs duyệt</option>
-              <option value="Đã phát hành" ${status === 'Đã phát hành' ? 'selected' : ''}>🟢 Đã phát hành (Live)</option>
-              <option value="Yêu cầu gỡ / xóa bản phát hành" ${status === 'Yêu cầu gỡ / xóa bản phát hành' ? 'selected' : ''}>🔴 Yêu cầu gỡ / xóa</option>
-            </select>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;gap:12px;">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:12px;font-weight:bold;text-transform:uppercase;">Trạng thái:</label>
+              <select class="rel-status-select" style="padding:8px 10px;border:1px solid var(--ink);font-weight:bold;background:#fff;border-radius:4px;">
+                <option value="Đang chờ UniFLOWs duyệt" ${status === 'Đang chờ UniFLOWs duyệt' ? 'selected' : ''}>⏳ Đang chờ UniFLOWs duyệt</option>
+                <option value="Đã phát hành" ${status === 'Đã phát hành' ? 'selected' : ''}>🟢 Đã phát hành (Live)</option>
+                <option value="Yêu cầu chỉnh sửa" ${status === 'Yêu cầu chỉnh sửa' ? 'selected' : ''}>⚠️ Yêu cầu chỉnh sửa (A&R Revision)</option>
+                <option value="Từ chối duyệt" ${status === 'Từ chối duyệt' ? 'selected' : ''}>❌ Từ chối duyệt (Rejected)</option>
+                <option value="Yêu cầu gỡ / xóa bản phát hành" ${status === 'Yêu cầu gỡ / xóa bản phát hành' ? 'selected' : ''}>🔴 Yêu cầu gỡ / xóa</option>
+              </select>
+            </div>
+
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:bold;cursor:pointer;background:#f0fdf4;padding:6px 10px;border:1px solid #86efac;border-radius:4px;">
+              <input type="checkbox" class="rel-show-on-web" ${(meta.showOnWeb !== false && r.show_on_web !== false) ? 'checked' : ''} style="cursor:pointer;">
+              <span>🌐 Hiển thị trên Website (Trang chủ & Danh mục)</span>
+            </label>
           </div>
-          <button class="button" type="button" data-save-release="${esc(r.id)}" style="padding:10px 18px;">Lưu bản phát hành</button>
+
+          <button class="button" type="button" data-save-release="${esc(r.id)}" style="padding:10px 20px;font-weight:bold;background:#000;color:#fff;">Lưu bản phát hành</button>
         </div>
       </div>
     `;
@@ -1571,6 +1581,7 @@ async function loadReleasesQueue() {
       const previewStart = parseFloat(card.querySelector('.rel-preview-start')?.value) || 0;
       const previewDuration = parseFloat(card.querySelector('.rel-preview-duration')?.value) || 30;
       const customSlug = card.querySelector('.rel-slug-input')?.value.trim() || '';
+      const showOnWeb = card.querySelector('.rel-show-on-web')?.checked ?? true;
 
       const targetRel = releases.find(r => r.id === relId);
       const existingMeta = (targetRel && typeof targetRel.metadata === 'object' && targetRel.metadata) ? targetRel.metadata : {};
@@ -1584,7 +1595,8 @@ async function loadReleasesQueue() {
         previewMode, 
         previewStart, 
         previewDuration, 
-        previewEnabled: (previewMode !== 'none') 
+        previewEnabled: (previewMode !== 'none'),
+        showOnWeb
       };
 
       btn.disabled = true; btn.textContent = 'Đang lưu...';
@@ -1598,6 +1610,7 @@ async function loadReleasesQueue() {
           metadata: updatedMetadata
         };
         if (customSlug) updatePayload.slug = customSlug;
+        if (typeof showOnWeb === 'boolean') updatePayload.show_on_web = showOnWeb;
 
         const { error } = await supabase.from('releases').update(updatePayload).eq('id', relId);
 
@@ -1608,21 +1621,35 @@ async function loadReleasesQueue() {
         }
       }
 
-      // Notify artist of release status change
+      // Notify artist of release status change with A&R feedback
       const relArtistId = targetRel?.artist_id;
       const relTitle = targetRel?.title || 'Bản phát hành';
       if (status === 'Đã phát hành') {
         await sendArtistNotification(
           relArtistId,
           '💿 Bản phát hành đã được duyệt',
-          `Sản phẩm "${relTitle}" đã được duyệt phát hành và chính thức phân phối trên các nền tảng streaming!`,
+          `Sản phẩm "${relTitle}" đã được duyệt phát hành và chính thức phân phối trên các nền tảng streaming!${arFeedback ? `\n\n💬 Ghi chú A&R: "${arFeedback}"` : ''}`,
+          'release'
+        );
+      } else if (status === 'Yêu cầu chỉnh sửa' || (status && status.includes('chỉnh sửa'))) {
+        await sendArtistNotification(
+          relArtistId,
+          '⚠️ Yêu cầu chỉnh sửa bản phát hành',
+          `Bản phát hành "${relTitle}" cần chỉnh sửa lại theo góp ý của A&R:${arFeedback ? `\n\n💬 Lời nhắn từ A&R:\n"${arFeedback}"` : ' Vui lòng kiểm tra lại file Master hoặc Artwork.'}\n\nVui lòng vào mục Phát Hành trên Portal để cập nhật và gửi lại.`,
+          'release'
+        );
+      } else if (status === 'Từ chối duyệt' || (status && status.includes('chối'))) {
+        await sendArtistNotification(
+          relArtistId,
+          '❌ Bản phát hành chưa được phê duyệt',
+          `Sản phẩm "${relTitle}" chưa được phê duyệt phát hành đợt này.${arFeedback ? `\n\n💬 Lý do từ A&R: "${arFeedback}"` : ''}`,
           'release'
         );
       } else if (status && status.includes('chờ')) {
         await sendArtistNotification(
           relArtistId,
           '⏳ Bản phát hành đang được A&R xử lý',
-          `Sản phẩm "${relTitle}" đang được ban biên tập và A&R UniFLOWs xem xét đối soát Master.`,
+          `Sản phẩm "${relTitle}" đang được ban biên tập và A&R UniFLOWs xem xét đối soát Master.${arFeedback ? `\n\n💬 Ghi chú A&R: "${arFeedback}"` : ''}`,
           'release'
         );
       }
