@@ -3500,7 +3500,11 @@ function openProducerTracksModal(prodId) {
   if (titleEl) titleEl.textContent = `🎵 Quản Lý Ca Khúc: ${p.name}`;
 
   renderProducerTracksList();
-  document.querySelector('#admin-producer-tracks-dialog')?.showModal();
+  const dlg = document.querySelector('#admin-producer-tracks-dialog');
+  if (dlg) {
+    dlg.style.display = 'flex';
+    dlg.showModal();
+  }
 }
 
 function renderProducerTracksList() {
@@ -3672,10 +3676,12 @@ document.querySelector('#btn-add-track-to-producer')?.addEventListener('click', 
 });
 
 document.querySelector('#close-producer-tracks-dialog-btn')?.addEventListener('click', () => {
-  document.querySelector('#admin-producer-tracks-dialog')?.close();
+  const dlg = document.querySelector('#admin-producer-tracks-dialog');
+  if (dlg) { dlg.style.display = 'none'; dlg.close(); }
 });
 document.querySelector('#btn-save-close-producer-tracks')?.addEventListener('click', () => {
-  document.querySelector('#admin-producer-tracks-dialog')?.close();
+  const dlg = document.querySelector('#admin-producer-tracks-dialog');
+  if (dlg) { dlg.style.display = 'none'; dlg.close(); }
 });
 
 // Add Service UI Handlers

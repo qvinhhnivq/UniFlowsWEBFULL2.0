@@ -3,6 +3,7 @@ import { getLocalCachedData, getData } from './data.js';
 
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
 const slug = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const normStr = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
 function formatSocialUrl(u) {
   if (!u) return '';
@@ -14,6 +15,15 @@ function formatSocialUrl(u) {
     str = 'https://' + str;
   }
   return str;
+}
+
+function getArtistProducts(art) {
+  if (!art) return [];
+  if (Array.isArray(art.products) && art.products.length > 0) return art.products;
+  const stats = (typeof art.stats === 'object' && art.stats) ? art.stats : (typeof art.stats === 'string' ? JSON.parse(art.stats || '{}') : {});
+  if (Array.isArray(stats.products) && stats.products.length > 0) return stats.products;
+  if (Array.isArray(art.releases) && art.releases.length > 0) return art.releases;
+  return [];
 }
 
 // ----------------------------------------------------------------------------
@@ -28,33 +38,32 @@ export async function initSmartLinkEngine() {
   const rawPath = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
   const parts = rawPath.split('/').filter(Boolean);
 
-  let releaseSlug = q.get('release') || q.get('r') || q.get('slug') || q.get('id') || q.get('track') || '';
-  let artistId = q.get('artist') || q.get('a') || '';
+  let releaseQuery = q.get('release') || q.get('r') || q.get('slug') || q.get('id') || q.get('track') || '';
+  let artistQuery = q.get('artist') || q.get('a') || '';
 
-  if (!releaseSlug && parts.length > 0) {
+  if (!releaseQuery && parts.length > 0) {
     const firstPart = parts[0].toLowerCase().replace(/\.html$/i, '');
     if (['listen', 'l', 'smartlink', 'song', 'track'].includes(firstPart)) {
       if (parts.length >= 3) {
-        artistId = parts[1];
-        releaseSlug = parts[2];
+        artistQuery = parts[1];
+        releaseQuery = parts[2];
       } else if (parts.length >= 2) {
-        releaseSlug = parts[1];
+        releaseQuery = parts[1];
       }
     } else if (parts.length === 1 && !firstPart.includes('.html')) {
-      // Direct root short slug e.g. /summertime-sadness
-      releaseSlug = parts[0];
+      releaseQuery = parts[0];
     }
   }
 
-  if (releaseSlug) {
-    releaseSlug = releaseSlug.replace(/\.html$/i, '').trim();
+  if (releaseQuery) {
+    releaseQuery = releaseQuery.replace(/\.html$/i, '').trim();
   }
 
-  // 2. Fast Render from Cache (0ms)
-  let cachedData = getLocalCachedData();
+  // 2. Fast Cached State
+  const cachedData = getLocalCachedData() || {};
   let rendered = false;
-  if (cachedData && cachedData.artists) {
-    rendered = tryRenderFromData(root, cachedData, releaseSlug, artistId);
+  if (cachedData.artists) {
+    rendered = tryRenderFromPool(root, extractAllReleases(cachedData.artists, []), releaseQuery);
   }
 
   if (!rendered) {
@@ -63,13 +72,13 @@ export async function initSmartLinkEngine() {
       <div class="smart-viewport" style="position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;">
         <div style="text-align:center;">
           <div style="font-size:32px;margin-bottom:12px;opacity:0.85;">💿</div>
-          <p style="color:#ffffff;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Đang tải SmartLink...</p>
+          <p style="color:#ffffff;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Đang kết nối SmartLink...</p>
         </div>
       </div>
     `;
   }
 
-  // 3. Direct Live Supabase Fetch (Guaranteed Fresh Release & Artist Data)
+  // 3. Live Supabase Query (Fetch from releases AND artists table)
   try {
     let dbReleases = [];
     let dbArtists = [];
@@ -84,133 +93,138 @@ export async function initSmartLinkEngine() {
       if (artRes.data) dbArtists = artRes.data;
     }
 
-    // Fallback to full getData if db empty
     if (dbReleases.length === 0 && dbArtists.length === 0) {
       const freshData = await getData();
       if (freshData) {
         dbArtists = freshData.artists || [];
-        dbArtists.forEach(art => {
-          (art.products || []).forEach(p => {
-            dbReleases.push({ ...p, artist_id: art.id, artists: { name: art.name, image: art.image } });
-          });
+      }
+    }
+
+    const pool = extractAllReleases(dbArtists, dbReleases);
+    tryRenderFromPool(root, pool, releaseQuery, true);
+  } catch (err) {
+    console.error('SmartLink live sync error:', err);
+    if (!rendered) {
+      const pool = extractAllReleases(cachedData.artists || [], []);
+      tryRenderFromPool(root, pool, releaseQuery, true);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// EXTRACT ALL RELEASES FROM ARTISTS & RELEASES TABLE
+// ----------------------------------------------------------------------------
+function extractAllReleases(artistsList = [], releasesList = []) {
+  const map = new Map();
+
+  // 1. Add DB releases
+  releasesList.forEach(r => {
+    const artName = r.artists?.name || artistsList.find(a => a.id === r.artist_id)?.name || 'UniFLOWs Artist';
+    const artImg = r.artists?.image || artistsList.find(a => a.id === r.artist_id)?.image || '';
+    const relKey = (r.slug || r.id || r.title).toLowerCase();
+
+    map.set(relKey, {
+      id: r.id,
+      title: r.title,
+      type: r.type || 'Single',
+      slug: r.slug || slug(r.title),
+      artworkUrl: r.artwork_url || artImg,
+      audioUrl: r.audio_url || '',
+      links: r.links || {},
+      metadata: r.metadata || {},
+      artist: {
+        id: r.artist_id,
+        name: artName,
+        image: artImg
+      }
+    });
+  });
+
+  // 2. Add products from artists
+  artistsList.forEach(art => {
+    const prods = getArtistProducts(art);
+    prods.forEach(p => {
+      const relSlug = p.slug || slug(p.title);
+      const relKey = (relSlug || p.id || p.title).toLowerCase();
+
+      if (!map.has(relKey)) {
+        map.set(relKey, {
+          id: p.id || `rel-${relSlug}`,
+          title: p.title,
+          type: p.type || 'Single',
+          slug: relSlug,
+          artworkUrl: p.artworkUrl || p.artwork_url || art.image,
+          audioUrl: p.audioUrl || p.audio_url || '',
+          links: p.links || {},
+          metadata: p.metadata || {},
+          artist: {
+            id: art.id,
+            name: art.name,
+            image: art.image
+          }
         });
       }
-    }
+    });
+  });
 
-    renderSmartLinkDirect(root, dbReleases, dbArtists, releaseSlug, artistId);
-  } catch (err) {
-    console.error('SmartLink live fetch failed:', err);
-    // Render fallback from cached data or 404
-    if (!rendered) {
-      renderNotFound(root, releaseSlug, cachedData?.artists || []);
-    }
-  }
+  return Array.from(map.values());
 }
 
 // ----------------------------------------------------------------------------
-// TRY RENDER FROM LOCAL DATA CACHE
+// MATCH RELEASE FROM POOL
 // ----------------------------------------------------------------------------
-function tryRenderFromData(root, data, releaseSlug, artistId) {
-  if (!releaseSlug) {
-    renderSmartLinkHub(root, data.artists || []);
+function tryRenderFromPool(root, pool, query, isFinal = false) {
+  if (!query) {
+    renderSmartLinkHub(root, pool);
     return true;
   }
 
-  const cleanSlug = slug(releaseSlug);
-  let matchedArtist = null;
-  let matchedRelease = null;
+  const cleanQ = slug(query);
+  const normQ = normStr(query);
 
-  for (const art of (data.artists || [])) {
-    const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
-    const found = prods.find(x => 
-      (x.slug && slug(x.slug) === cleanSlug) || 
-      slug(x.title) === cleanSlug || 
-      (x.id && String(x.id).toLowerCase() === releaseSlug.toLowerCase()) ||
-      (x.slug && x.slug.toLowerCase() === releaseSlug.toLowerCase()) ||
-      slug(x.title).includes(cleanSlug) ||
-      cleanSlug.includes(slug(x.title))
-    );
-    if (found) {
-      matchedArtist = art;
-      matchedRelease = found;
-      break;
-    }
-  }
-
-  if (matchedRelease && matchedArtist) {
-    renderReleaseCard(root, matchedArtist, matchedRelease);
-    return true;
-  }
-  return false;
-}
-
-// ----------------------------------------------------------------------------
-// RENDER SMARTLINK DIRECT (FROM LIVE SUPABASE)
-// ----------------------------------------------------------------------------
-function renderSmartLinkDirect(root, releasesList, artistsList, releaseSlug, artistId) {
-  if (!releaseSlug) {
-    renderSmartLinkHub(root, artistsList, releasesList);
-    return;
-  }
-
-  const cleanSlug = slug(releaseSlug);
-  let targetRelease = null;
-  let targetArtist = null;
-
-  // 1. Search in DB Releases
-  targetRelease = releasesList.find(r => 
-    (r.slug && slug(r.slug) === cleanSlug) ||
-    slug(r.title) === cleanSlug ||
-    (r.id && String(r.id).toLowerCase() === releaseSlug.toLowerCase()) ||
-    (r.slug && r.slug.toLowerCase() === releaseSlug.toLowerCase()) ||
-    slug(r.title).includes(cleanSlug) ||
-    cleanSlug.includes(slug(r.title))
+  // Exact Match
+  let match = pool.find(r => 
+    r.slug === query || 
+    slug(r.slug) === cleanQ || 
+    slug(r.title) === cleanQ || 
+    String(r.id).toLowerCase() === query.toLowerCase()
   );
 
-  if (targetRelease) {
-    if (targetRelease.artists && targetRelease.artists.name) {
-      targetArtist = targetRelease.artists;
-    } else {
-      targetArtist = artistsList.find(a => a.id === targetRelease.artist_id) || { name: 'UniFLOWs Artist', image: targetRelease.artwork_url };
-    }
+  // Normalized / Accentless Match
+  if (!match) {
+    match = pool.find(r => 
+      normStr(r.slug) === normQ || 
+      normStr(r.title) === normQ || 
+      normStr(r.id) === normQ
+    );
   }
 
-  // 2. Search in Artists products if not in DB releases
-  if (!targetRelease) {
-    for (const art of artistsList) {
-      const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
-      const found = prods.find(x => 
-        (x.slug && slug(x.slug) === cleanSlug) || 
-        slug(x.title) === cleanSlug || 
-        (x.id && String(x.id).toLowerCase() === releaseSlug.toLowerCase())
+  // Fuzzy Substring Match (e.g. "o-ki" matching "o-kia" or "Ơ Kìa")
+  if (!match) {
+    match = pool.find(r => {
+      const nSlug = normStr(r.slug);
+      const nTitle = normStr(r.title);
+      return (
+        (normQ.length >= 3 && (nSlug.includes(normQ) || nTitle.includes(normQ))) ||
+        (nTitle.length >= 3 && normQ.includes(nTitle)) ||
+        (nSlug.length >= 3 && normQ.includes(nSlug)) ||
+        slug(r.title).includes(cleanQ) ||
+        cleanQ.includes(slug(r.title))
       );
-      if (found) {
-        targetArtist = art;
-        targetRelease = found;
-        break;
-      }
-    }
+    });
   }
 
-  // 3. If Still Not Found -> 404
-  if (!targetRelease || !targetArtist) {
-    renderNotFound(root, releaseSlug, artistsList, releasesList);
-    return;
+  if (match) {
+    renderReleaseCard(root, match.artist, match);
+    return true;
   }
 
-  // Normalize Release fields
-  const normalizedRelease = {
-    id: targetRelease.id,
-    title: targetRelease.title,
-    type: targetRelease.type || 'Single',
-    slug: targetRelease.slug || slug(targetRelease.title),
-    artworkUrl: targetRelease.artwork_url || targetRelease.artworkUrl,
-    audioUrl: targetRelease.audio_url || targetRelease.audioUrl,
-    links: targetRelease.links || {},
-    metadata: targetRelease.metadata || {}
-  };
+  if (isFinal) {
+    renderNotFound(root, query, pool);
+    return true;
+  }
 
-  renderReleaseCard(root, targetArtist, normalizedRelease);
+  return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -432,29 +446,7 @@ function renderReleaseCard(root, artist, release) {
 // ----------------------------------------------------------------------------
 // RENDER NOT FOUND STATE (Luxury Monochrome)
 // ----------------------------------------------------------------------------
-function renderNotFound(root, requestedSlug, artistsList, releasesList = []) {
-  const allReleases = [];
-
-  if (releasesList.length > 0) {
-    releasesList.forEach(r => {
-      const artName = r.artists?.name || r.artist_id || 'Nghệ sĩ';
-      allReleases.push({
-        title: r.title,
-        type: r.type || 'Single',
-        slug: r.slug,
-        artworkUrl: r.artwork_url,
-        artistName: artName
-      });
-    });
-  } else {
-    artistsList.forEach(art => {
-      const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
-      prods.forEach(pr => {
-        allReleases.push({ ...pr, artistName: art.name, artistImage: art.image });
-      });
-    });
-  }
-
+function renderNotFound(root, requestedSlug, pool = []) {
   root.innerHTML = `
     <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#090a0f;"></div>
 
@@ -466,14 +458,14 @@ function renderNotFound(root, requestedSlug, artistsList, releasesList = []) {
         <strong style="font-size:15px;color:#ffffff;display:block;">Không tìm thấy bản phát hành "${esc(requestedSlug)}"</strong>
         <p style="color:rgba(255,255,255,0.6);font-size:13px;max-width:380px;margin:8px auto 24px;">Vui lòng kiểm tra lại liên kết hoặc khám phá các bài hát nổi bật khác của UniFLOWs:</p>
 
-        ${allReleases.length > 0 ? `
+        ${pool.length > 0 ? `
           <div style="width:100%;display:grid;gap:8px;margin-bottom:24px;">
-            ${allReleases.slice(0, 4).map(r => `
+            ${pool.slice(0, 4).map(r => `
               <a href="/l/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;text-decoration:none;color:#fff;">
-                <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=100&q=80')}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" alt="${esc(r.title)}">
+                <img src="${esc(r.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=100&q=80')}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" alt="${esc(r.title)}">
                 <div style="flex:1;min-width:0;text-align:left;">
                   <strong style="display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
-                  <span style="font-size:12px;color:rgba(255,255,255,0.6);">${esc(r.artistName)}</span>
+                  <span style="font-size:12px;color:rgba(255,255,255,0.6);">${esc(r.artist?.name || 'Nghệ sĩ')}</span>
                 </div>
                 <span style="color:#ffffff;font-size:12px;font-weight:bold;">NGHE ↗</span>
               </a>
@@ -490,29 +482,7 @@ function renderNotFound(root, requestedSlug, artistsList, releasesList = []) {
 // ----------------------------------------------------------------------------
 // RENDER MUSIC HUB (When visiting /listen with no slug)
 // ----------------------------------------------------------------------------
-function renderSmartLinkHub(root, artistsList, releasesList = []) {
-  const allReleases = [];
-
-  if (releasesList.length > 0) {
-    releasesList.forEach(r => {
-      const artName = r.artists?.name || r.artist_id || 'Nghệ sĩ';
-      allReleases.push({
-        title: r.title,
-        type: r.type || 'Single',
-        slug: r.slug,
-        artworkUrl: r.artwork_url,
-        artistName: artName
-      });
-    });
-  } else {
-    artistsList.forEach(art => {
-      const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
-      prods.forEach(pr => {
-        allReleases.push({ ...pr, artistName: art.name, artistImage: art.image });
-      });
-    });
-  }
-
+function renderSmartLinkHub(root, pool = []) {
   root.innerHTML = `
     <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#090a0f;"></div>
 
@@ -528,12 +498,12 @@ function renderSmartLinkHub(root, artistsList, releasesList = []) {
         <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:0 0 24px;">Khám phá toàn bộ bản phát hành chính thức từ nghệ sĩ UniFLOWs Label</p>
 
         <div style="width:100%;display:grid;gap:10px;margin-bottom:24px;">
-          ${allReleases.length > 0 ? allReleases.map(r => `
+          ${pool.length > 0 ? pool.map(r => `
             <a href="/l/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;text-decoration:none;color:#fff;transition:all 0.2s ease;">
-              <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:50px;height:50px;object-fit:cover;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" alt="${esc(r.title)}">
+              <img src="${esc(r.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:50px;height:50px;object-fit:cover;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" alt="${esc(r.title)}">
               <div style="flex:1;min-width:0;text-align:left;">
                 <strong style="display:block;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
-                <span style="font-size:12px;color:rgba(255,255,255,0.6);">${esc(r.artistName)} · <b>${esc(r.type || 'Single')}</b></span>
+                <span style="font-size:12px;color:rgba(255,255,255,0.6);">${esc(r.artist?.name || 'Nghệ sĩ')} · <b>${esc(r.type || 'Single')}</b></span>
               </div>
               <span style="background:#ffffff;color:#000000;font-size:10px;font-weight:900;letter-spacing:1px;padding:6px 14px;border-radius:20px;text-transform:uppercase;">NGHE ↗</span>
             </a>
