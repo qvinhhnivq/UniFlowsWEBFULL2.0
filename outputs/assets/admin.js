@@ -2664,126 +2664,135 @@ function renderSyncLicenseRequests() {
   }
 
   if (requests.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:#64748b;">Chưa có yêu cầu cấp phép Sync nào.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:20px;text-align:center;color:#64748b;">Chưa có yêu cầu cấp phép Sync nào.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = requests.map((req, idx) => {
     const isApproved = req.status === 'Đã cấp phép & Đã thanh toán';
+    const statusVal = req.status || 'Chờ tiếp nhận';
+
     return `
-      <tr style="border-bottom:1px solid #e2e8f0;background:${isApproved ? '#f8fafc' : '#fff'};">
-        <td style="padding:12px 14px;font-family:'DM Mono',monospace;font-size:12px;color:#64748b;">
-          ${esc(req.requestedDate || 'Hôm nay')}
+      <tr style="border-bottom:1px solid #e2e8f0;background:${isApproved ? '#f8fafc' : '#fff'};" data-req-idx="${idx}">
+        <td style="padding:12px 14px;font-family:'DM Mono',monospace;font-size:12px;color:#0f172a;">
+          <strong style="color:#0284c7;display:block;">${esc(req.refCode || req.id || 'UNIPUB-ORD')}</strong>
+          <small style="color:#64748b;">${esc(req.requestedDate || 'Hôm nay')}</small>
         </td>
         <td style="padding:12px 14px;">
-          <strong style="font-size:14px;display:block;">${esc(req.trackTitle)}</strong>
+          <strong style="font-size:14px;display:block;color:#0f172a;">${esc(req.trackTitle)}</strong>
           <span style="font-size:12px;color:#2563eb;">${esc(req.artistName || 'Nghệ sĩ Label')}</span>
         </td>
         <td style="padding:12px 14px;">
-          <strong style="font-size:13px;display:block;">${esc(req.clientName)}</strong>
-          <small style="color:#64748b;">${esc(req.clientEmail || '—')}</small>
+          <strong style="font-size:13px;display:block;color:#0f172a;">${esc(req.clientName)}</strong>
+          <small style="color:#64748b;">📧 ${esc(req.clientEmail || '—')} · 📞 ${esc(req.clientPhone || '—')}</small>
         </td>
         <td style="padding:12px 14px;font-size:12px;">
-          <span style="font-weight:600;display:block;">${esc(req.mediaType)}</span>
+          <span style="font-weight:600;display:block;color:#0f172a;">${esc(req.mediaType)}</span>
           <small style="color:#64748b;">${esc(req.territory || 'Việt Nam')} · ${esc(req.term || '1 Năm')}</small>
         </td>
-        <td style="padding:12px 14px;font-family:'DM Mono',monospace;font-weight:bold;color:#0f172a;font-size:14px;">
-          ₫ ${(req.totalFee || 0).toLocaleString('vi-VN')}
+        <td style="padding:12px 14px;font-family:'DM Mono',monospace;font-weight:bold;color:#0f172a;font-size:13px;">
+          ${typeof req.totalFee === 'number' ? '₫ ' + req.totalFee.toLocaleString('vi-VN') : esc(req.totalFee || '0')}
         </td>
-        <td style="padding:12px 14px;text-align:center;">
-          <span style="font-size:11px;font-weight:bold;padding:3px 8px;border-radius:12px;${isApproved ? 'background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;' : 'background:#fffbeb;color:#b45309;border:1px solid #fde68a;'}">
-            ${isApproved ? '🟢 Đã Cấp Phép & Cộng Tiền' : '🟡 Chờ Xét Duyệt'}
-          </span>
+        <td style="padding:12px 14px;">
+          <select class="req-status-select" data-idx="${idx}" style="padding:6px 10px;border-radius:4px;border:1px solid #0f172a;font-size:12px;font-weight:bold;background:#fff;width:100%;">
+            <option value="Chờ tiếp nhận" ${statusVal === 'Chờ tiếp nhận' || statusVal === 'Chờ xét duyệt' ? 'selected' : ''}>🟡 Chờ tiếp nhận</option>
+            <option value="Đang soạn hợp đồng" ${statusVal === 'Đang soạn hợp đồng' ? 'selected' : ''}>🔵 Đang soạn hợp đồng</option>
+            <option value="Đã gửi hợp đồng qua Email" ${statusVal === 'Đã gửi hợp đồng qua Email' ? 'selected' : ''}>📬 Đã gửi hợp đồng qua Email</option>
+            <option value="Chờ thanh toán" ${statusVal === 'Chờ thanh toán' ? 'selected' : ''}>🟣 Chờ thanh toán & VAT</option>
+            <option value="Đã cấp phép & Đã thanh toán" ${statusVal === 'Đã cấp phép & Đã thanh toán' ? 'selected' : ''}>🟢 Đã cấp phép & Đã thanh toán</option>
+            <option value="Từ chối cấp phép" ${statusVal === 'Từ chối cấp phép' ? 'selected' : ''}>🔴 Từ chối cấp phép</option>
+          </select>
         </td>
-        <td style="padding:12px 14px;text-align:right;">
-          ${!isApproved ? `
-            <button type="button" class="button btn-grant-sync-license" data-idx="${idx}" style="background:#059669;color:#fff;border-color:#059669;font-size:11px;padding:6px 12px;font-weight:bold;">
-              ⚡ Duyệt & Cộng Tiền Portal
-            </button>
-          ` : `
-            <span style="font-size:11px;color:#059669;font-weight:bold;">✓ Đã ghi nhận Portal</span>
-          `}
+        <td style="padding:12px 14px;">
+          <input type="text" class="req-admin-note" data-idx="${idx}" value="${esc(req.adminNotes || '')}" placeholder="Ghi chú dặn dò khách hàng khi tra cứu..." style="width:100%;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;font-size:12px;">
+        </td>
+        <td style="padding:12px 14px;text-align:right;white-space:nowrap;">
+          <button type="button" class="button btn-save-order-status" data-idx="${idx}" style="background:#0f172a;color:#fff;border-color:#0f172a;font-size:11px;padding:6px 10px;font-weight:bold;margin-right:4px;" title="Lưu cập nhật trạng thái và ghi chú">
+            💾 Lưu
+          </button>
+          <button type="button" class="button alt remove btn-delete-sync-req" data-idx="${idx}" style="padding:6px 8px;font-size:11px;" title="Xóa đơn này">
+            ✕
+          </button>
         </td>
       </tr>
     `;
   }).join('');
 
-  // Handle Grant License & Auto-Credit Artist Royalty
-  tbody.querySelectorAll('.btn-grant-sync-license').forEach(btn => {
+  // Handle Save Status & Note
+  tbody.querySelectorAll('.btn-save-order-status').forEach(btn => {
     btn.onclick = async () => {
       const idx = parseInt(btn.dataset.idx, 10);
       const req = requests[idx];
       if (!req) return;
 
+      const row = btn.closest('tr');
+      const newStatus = row.querySelector('.req-status-select')?.value || req.status;
+      const newNote = row.querySelector('.req-admin-note')?.value.trim() || '';
+
       btn.disabled = true;
-      btn.textContent = 'Đang xử lý...';
+      btn.textContent = 'Đang lưu...';
 
-      // 1. Find matching artist in data.artists
-      let matchedArtist = (data.artists || []).find(a => 
-        a.name.toLowerCase().trim() === req.artistName.toLowerCase().trim() ||
-        (a.products || []).some(p => p.title.toLowerCase().trim() === req.trackTitle.toLowerCase().trim())
-      );
+      req.status = newStatus;
+      req.adminNotes = newNote;
 
-      // Default split percentage (default 75% or artist's custom rate)
-      let splitPct = 75;
-      if (matchedArtist && matchedArtist.publishingRoyaltyRate) {
-        splitPct = parseInt(String(matchedArtist.publishingRoyaltyRate).replace(/[^0-9]/g, ''), 10) || 75;
-      }
-
-      const totalFee = req.totalFee || 0;
-      const artistEarning = Math.round(totalFee * (splitPct / 100));
-
-      // 2. Mark request as approved
-      req.status = 'Đã cấp phép & Đã thanh toán';
-      req.licensedDate = new Date().toLocaleDateString('vi-VN');
-      req.artistSplitPct = splitPct;
-      req.artistEarning = artistEarning;
-
-      // 3. Update matched artist's financial balance in Portal
-      if (matchedArtist) {
-        if (!matchedArtist.publishingContracts) matchedArtist.publishingContracts = [];
+      // If status changed to Approved, credit royalty to artist
+      if (newStatus === 'Đã cấp phép & Đã thanh toán' && !req.licensedDate) {
+        req.licensedDate = new Date().toLocaleDateString('vi-VN');
         
-        // Add contract ledger entry
-        matchedArtist.publishingContracts.unshift({
-          id: `sync-contract-${Date.now()}`,
-          trackTitle: req.trackTitle,
-          client: req.clientName,
-          mediaType: req.mediaType,
-          territory: req.territory || 'Việt Nam',
-          term: req.term || '1 Năm',
-          totalFee: totalFee,
-          artistSplitPct: splitPct,
-          artistEarning: artistEarning,
-          status: 'Đã cấp phép & Đã thanh toán',
-          licensedDate: new Date().toLocaleDateString('vi-VN')
-        });
+        let matchedArtist = (data.artists || []).find(a => 
+          a.name.toLowerCase().trim() === (req.artistName || '').toLowerCase().trim() ||
+          (a.products || []).some(p => p.title.toLowerCase().trim() === (req.trackTitle || '').toLowerCase().trim())
+        );
 
-        // Credit to publishingRevenue
-        const currentPubRev = parseInt(String(matchedArtist.publishingRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
-        matchedArtist.publishingRevenue = (currentPubRev + artistEarning).toLocaleString('vi-VN');
+        let splitPct = 75;
+        if (matchedArtist && matchedArtist.publishingRoyaltyRate) {
+          splitPct = parseInt(String(matchedArtist.publishingRoyaltyRate).replace(/[^0-9]/g, ''), 10) || 75;
+        }
 
-        // Credit to payableBalance (Available Cleared Balance for immediate payout)
-        const currentPayable = parseInt(String(matchedArtist.payableBalance || '0').replace(/[^0-9]/g, ''), 10) || 0;
-        matchedArtist.payableBalance = (currentPayable + artistEarning).toLocaleString('vi-VN');
+        const feeNum = typeof req.totalFee === 'number' ? req.totalFee : (parseInt(String(req.totalFee || '0').replace(/[^0-9]/g, ''), 10) || 0);
+        const artistEarning = Math.round(feeNum * (splitPct / 100));
 
-        // Add persistent in-portal notification
-        if (!matchedArtist.notifications) matchedArtist.notifications = [];
-        matchedArtist.notifications.unshift({
-          id: `notif-pub-${Date.now()}`,
-          title: '🎉 Nhận doanh thu Cấp phép Sync Licensing!',
-          content: `Hợp đồng cấp phép Sync cho tác phẩm "${req.trackTitle}" (${req.clientName}) đã được Admin duyệt thành công. Khoản thu ₫ ${artistEarning.toLocaleString('vi-VN')} (${splitPct}% Split) đã được cộng trực tiếp vào Số dư khả dụng của bạn!`,
-          date: new Date().toLocaleDateString('vi-VN'),
-          type: 'financial',
-          read: false
-        });
+        if (matchedArtist && artistEarning > 0) {
+          if (!matchedArtist.publishingContracts) matchedArtist.publishingContracts = [];
+          matchedArtist.publishingContracts.unshift({
+            id: `sync-contract-${Date.now()}`,
+            trackTitle: req.trackTitle,
+            client: req.clientName,
+            mediaType: req.mediaType,
+            territory: req.territory || 'Việt Nam',
+            term: req.term || '1 Năm',
+            totalFee: feeNum,
+            artistSplitPct: splitPct,
+            artistEarning: artistEarning,
+            status: 'Đã cấp phép & Đã thanh toán',
+            licensedDate: req.licensedDate
+          });
+
+          const currentPayable = parseInt(String(matchedArtist.payableBalance || '0').replace(/[^0-9]/g, ''), 10) || 0;
+          matchedArtist.payableBalance = (currentPayable + artistEarning).toLocaleString('vi-VN');
+        }
       }
 
       await saveData(data);
-      await logAuditEvent('Duyệt Cấp Phép Sync & Phân Bổ Tiền', `Tác phẩm: ${req.trackTitle} - Đơn vị: ${req.clientName} - Nghệ sĩ nhận: ₫ ${artistEarning.toLocaleString('vi-VN')}`);
-      
+      await logAuditEvent('Cập nhật trạng thái đơn cấp phép', `Mã đơn: ${req.refCode || req.id} - Trạng thái: ${newStatus}`);
+      showNotice(`✓ Đã cập nhật trạng thái đơn "${req.refCode || req.id}" thành "${newStatus}"! Khách hàng có thể tra cứu ngay.`);
       renderSyncLicenseRequests();
-      renderSelectedArtistEditor();
-      showNotice(`✓ Đã duyệt cấp phép thành công! Đã tự động cộng ₫ ${artistEarning.toLocaleString('vi-VN')} vào Số dư khả dụng của nghệ sĩ ${matchedArtist?.name || req.artistName}`);
+    };
+  });
+
+  // Handle Delete Request
+  tbody.querySelectorAll('.btn-delete-sync-req').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const req = requests[idx];
+      if (!req) return;
+
+      if (!confirm(`Xác nhận xóa đơn cấp phép "${req.refCode || req.id}" của ${req.clientName}?`)) return;
+
+      requests.splice(idx, 1);
+      await saveData(data);
+      showNotice(`✓ Đã xóa đơn cấp phép.`);
+      renderSyncLicenseRequests();
     };
   });
 }

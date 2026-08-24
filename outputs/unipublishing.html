@@ -437,27 +437,48 @@
       </div>
     </section>
 
-    <!-- SECTION 03: PUBLIC CERTIFICATE & QR VERIFICATION TOOL -->
+    <!-- SECTION 03: PUBLIC ORDER TRACKER & CERTIFICATE VERIFICATION -->
     <section id="verify-section" style="max-width:1150px;margin:0 auto;padding:40px 4vw 60px;">
       <div class="section-head" style="padding:0;margin-bottom:24px;">
         <div>
-          <span class="kicker">03 / Public Verification</span>
-          <h2 style="font-size:32px;letter-spacing:-0.04em;margin:4px 0 6px;color:#0f172a;">Tra Cứu & Xác Minh Giấy Phép Điện Tử QR</h2>
-          <p style="font-size:14px;color:#334155;margin:0;font-weight:500;">Nhập mã chứng chỉ (Certificate Code) để xác thực tính hợp pháp và quyền sở hữu giấy phép âm nhạc công khai.</p>
+          <span class="kicker">03 / Tracking & Verification</span>
+          <h2 style="font-size:32px;letter-spacing:-0.04em;margin:4px 0 6px;color:#0f172a;">Tra Cứu Tiến Độ Đơn Hàng & Giấy Phép QR</h2>
+          <p style="font-size:14px;color:#334155;margin:0;font-weight:500;">Theo dõi trạng thái xử lý hợp đồng bản quyền theo Mã đơn hàng hoặc tra cứu chứng chỉ điện tử công khai.</p>
         </div>
       </div>
 
-      <div style="background:#ffffff;border:2px solid #0f172a;padding:24px;border-radius:8px;margin-bottom:24px;">
+      <!-- Mode Switcher Tabs -->
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+        <button type="button" id="tab-btn-track-order" class="filter-chip active" style="padding:10px 20px;font-size:13px;font-weight:800;border-radius:6px;">
+          📦 1. Tra Cứu Tiến Độ Đơn Hàng (Order Tracker)
+        </button>
+        <button type="button" id="tab-btn-verify-cert" class="filter-chip" style="padding:10px 20px;font-size:13px;font-weight:800;border-radius:6px;">
+          🛡️ 2. Tra Cứu Giấy Phép QR (Certificate Verification)
+        </button>
+      </div>
+
+      <!-- Panel 1: Order Tracker Input -->
+      <div id="panel-track-order" style="background:#ffffff;border:2px solid #0f172a;padding:24px;border-radius:8px;margin-bottom:24px;">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <input type="text" id="pub-verify-input" placeholder="Nhập mã chứng chỉ (Ví dụ: UNIPUB-ORD-XXXX)..." value="" style="flex:1;min-width:240px;padding:12px 16px;font-size:14px;font-family:'DM Mono',monospace;font-weight:bold;background:#fff;border:2px solid #0f172a;border-radius:4px;color:#0f172a;">
+          <input type="text" id="pub-order-search-input" placeholder="Nhập Mã đơn hàng (Ví dụ: UNIPUB-ORD-XXXX)..." value="" style="flex:1;min-width:240px;padding:12px 16px;font-size:14px;font-family:'DM Mono',monospace;font-weight:bold;background:#fff;border:2px solid #0f172a;border-radius:4px;color:#0f172a;">
+          <button type="button" id="btn-search-order-status" class="button" style="padding:12px 24px;font-size:12px;font-weight:800;background:#0f172a;color:#ffffff;border-color:#0f172a;cursor:pointer;">
+            🔍 Tra Cứu Tiến Độ
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel 2: Certificate Input (Hidden by default) -->
+      <div id="panel-verify-cert" style="display:none;background:#ffffff;border:2px solid #0f172a;padding:24px;border-radius:8px;margin-bottom:24px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="pub-verify-input" placeholder="Nhập mã chứng chỉ (Ví dụ: UNI-LC-XXXX)..." value="" style="flex:1;min-width:240px;padding:12px 16px;font-size:14px;font-family:'DM Mono',monospace;font-weight:bold;background:#fff;border:2px solid #0f172a;border-radius:4px;color:#0f172a;">
           <button type="button" id="btn-verify-cert" class="button" style="padding:12px 24px;font-size:12px;font-weight:800;background:#0284c7;color:#ffffff;border-color:#0284c7;cursor:pointer;">
             🔍 Kiểm Tra Giấy Phép
           </button>
         </div>
       </div>
 
-      <!-- Rendered Certificate Card Box -->
-      <div id="pub-certificate-result" class="cert-card">
+      <!-- Rendered Result Box (Order Details or Certificate Card) -->
+      <div id="pub-tracking-result" class="cert-card">
         <!-- Injected dynamically -->
       </div>
     </section>
@@ -814,18 +835,178 @@
     });
 
     // ----------------------------------------------------
-    // 3. PUBLIC CERTIFICATE & QR VERIFICATION TOOL
+    // 3. PUBLIC ORDER TRACKER & CERTIFICATE VERIFICATION
     // ----------------------------------------------------
-    function renderCertificateResult(code) {
-      const resultBox = document.querySelector('#pub-certificate-result');
-      if (!resultBox) return;
+    const tabTrackOrderBtn = document.querySelector('#tab-btn-track-order');
+    const tabVerifyCertBtn = document.querySelector('#tab-btn-verify-cert');
+    const panelTrackOrder = document.querySelector('#panel-track-order');
+    const panelVerifyCert = document.querySelector('#panel-verify-cert');
+    const trackingResultBox = document.querySelector('#pub-tracking-result');
+
+    tabTrackOrderBtn?.addEventListener('click', () => {
+      tabTrackOrderBtn.classList.add('active');
+      tabVerifyCertBtn.classList.remove('active');
+      panelTrackOrder.style.display = 'block';
+      panelVerifyCert.style.display = 'none';
+      const currentCode = document.querySelector('#pub-order-search-input')?.value.trim();
+      renderOrderStatusResult(currentCode);
+    });
+
+    tabVerifyCertBtn?.addEventListener('click', () => {
+      tabVerifyCertBtn.classList.add('active');
+      tabTrackOrderBtn.classList.remove('active');
+      panelVerifyCert.style.display = 'block';
+      panelTrackOrder.style.display = 'none';
+      const currentCode = document.querySelector('#pub-verify-input')?.value.trim();
+      renderCertificateResult(currentCode);
+    });
+
+    // Render Order Tracking Status
+    function renderOrderStatusResult(code) {
+      if (!trackingResultBox) return;
 
       if (!code || !code.trim()) {
-        resultBox.innerHTML = `
+        trackingResultBox.innerHTML = `
           <div style="text-align:center;padding:32px 20px;color:#475569;">
-            <div style="font-size:32px;margin-bottom:8px;">🔍</div>
-            <strong style="display:block;font-size:15px;color:#0f172a;font-weight:800;">Tra cứu tính xác thực của Giấy phép bản quyền</strong>
-            <p style="font-size:13px;margin:4px 0 0;font-weight:500;color:#334155;">Nhập mã chứng nhận cấp phép được ghi trên hợp đồng hoặc quét mã QR trên giấy phép điện tử.</p>
+            <div style="font-size:36px;margin-bottom:8px;">📦</div>
+            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Tra cứu tiến độ xử lý Đơn Cấp Phép</strong>
+            <p style="font-size:13px;margin:6px auto 0;max-width:540px;font-weight:500;color:#334155;">Nhập Mã đơn hàng (Ví dụ: UNIPUB-ORD-XXXX) nhận được sau khi đặt đơn để xem tiến độ thẩm định, hợp đồng và hóa đơn VAT.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const requests = pubData.syncLicenseRequests || [];
+      const order = requests.find(r => (r.refCode || r.id || '').toLowerCase() === code.toLowerCase().trim());
+
+      if (!order) {
+        trackingResultBox.innerHTML = `
+          <div style="text-align:center;padding:32px 20px;color:#475569;">
+            <div style="font-size:36px;margin-bottom:8px;">⚠️</div>
+            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Không tìm thấy đơn hàng với mã: "${code}"</strong>
+            <p style="font-size:13px;margin:6px 0 0;font-weight:500;color:#334155;">Vui lòng kiểm tra lại mã đơn hoặc liên hệ Hotline/Email bộ phận Bản quyền để được hỗ trợ nhanh.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Compute visual status step
+      let stepIndex = 1;
+      let statusColor = '#d97706';
+      let statusBg = '#fef3c7';
+      let statusText = order.status || 'Chờ tiếp nhận';
+
+      if (statusText.includes('soạn') || statusText.includes('thảo')) {
+        stepIndex = 2;
+        statusColor = '#0284c7';
+        statusBg = '#e0f2fe';
+      } else if (statusText.includes('Email') || statusText.includes('thanh toán')) {
+        stepIndex = 3;
+        statusColor = '#7c3aed';
+        statusBg = '#f3e8ff';
+      } else if (statusText.includes('cấp phép') || statusText.includes('hoàn tất') || statusText.includes('Đã cấp phép')) {
+        stepIndex = 4;
+        statusColor = '#15803d';
+        statusBg = '#dcfce7';
+      } else if (statusText.includes('Từ chối') || statusText.includes('hủy')) {
+        stepIndex = 0;
+        statusColor = '#b91c1c';
+        statusBg = '#fee2e2';
+      }
+
+      trackingResultBox.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:20px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="background:${statusBg};color:${statusColor};border:1px solid ${statusColor};padding:4px 12px;border-radius:20px;font-family:'DM Mono',monospace;font-size:12px;font-weight:800;">
+                ● ${statusText.toUpperCase()}
+              </span>
+              <span style="font-family:'DM Mono',monospace;font-size:12px;color:#475569;font-weight:bold;">Ngày đặt: ${order.requestedDate || 'Gần đây'}</span>
+            </div>
+            <h3 style="font-size:22px;letter-spacing:-0.03em;margin:4px 0 0;color:#0f172a;font-weight:800;">
+              THÔNG TIN TIẾN ĐỘ ĐƠN CẤP PHÉP BẢN QUYỀN
+            </h3>
+            <span style="font-family:'DM Mono',monospace;font-size:14px;color:#0284c7;font-weight:bold;">Mã đơn: ${order.refCode || order.id}</span>
+          </div>
+
+          <div style="text-align:right;">
+            <span style="font-size:11px;font-family:'DM Mono',monospace;color:#475569;font-weight:bold;text-transform:uppercase;">Tổng phí dự tính:</span>
+            <strong style="display:block;font-size:22px;color:#0f172a;letter-spacing:-0.03em;font-weight:800;">${order.totalFee || 'Đang báo giá'}</strong>
+          </div>
+        </div>
+
+        <!-- 4-Step Visual Progress Stepper -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:8px;background:#f8fafc;border:1px solid #cbd5e1;padding:16px;border-radius:8px;margin-bottom:20px;">
+          <div style="padding:8px;border-radius:6px;background:${stepIndex >= 1 ? '#dcfce7' : '#fff'};border:1px solid ${stepIndex >= 1 ? '#86efac' : '#e2e8f0'};">
+            <span style="font-size:11px;font-family:'DM Mono',monospace;font-weight:bold;color:${stepIndex >= 1 ? '#15803d' : '#94a3b8'};">01. TIẾP NHẬN</span>
+            <strong style="display:block;font-size:12px;color:#0f172a;margin-top:2px;">${stepIndex >= 1 ? '✓ Đã tiếp nhận' : 'Chờ xử lý'}</strong>
+          </div>
+          <div style="padding:8px;border-radius:6px;background:${stepIndex >= 2 ? '#dcfce7' : '#fff'};border:1px solid ${stepIndex >= 2 ? '#86efac' : '#e2e8f0'};">
+            <span style="font-size:11px;font-family:'DM Mono',monospace;font-weight:bold;color:${stepIndex >= 2 ? '#15803d' : '#94a3b8'};">02. SOẠN HỢP ĐỒNG</span>
+            <strong style="display:block;font-size:12px;color:#0f172a;margin-top:2px;">${stepIndex >= 2 ? '✓ Đang soạn / Đã xong' : 'Chờ xử lý'}</strong>
+          </div>
+          <div style="padding:8px;border-radius:6px;background:${stepIndex >= 3 ? '#dcfce7' : '#fff'};border:1px solid ${stepIndex >= 3 ? '#86efac' : '#e2e8f0'};">
+            <span style="font-size:11px;font-family:'DM Mono',monospace;font-weight:bold;color:${stepIndex >= 3 ? '#15803d' : '#94a3b8'};">03. GỬI EMAIL & VAT</span>
+            <strong style="display:block;font-size:12px;color:#0f172a;margin-top:2px;">${stepIndex >= 3 ? '✓ Đã gửi Email' : 'Chờ xử lý'}</strong>
+          </div>
+          <div style="padding:8px;border-radius:6px;background:${stepIndex >= 4 ? '#dcfce7' : '#fff'};border:1px solid ${stepIndex >= 4 ? '#86efac' : '#e2e8f0'};">
+            <span style="font-size:11px;font-family:'DM Mono',monospace;font-weight:bold;color:${stepIndex >= 4 ? '#15803d' : '#94a3b8'};">04. CẤP PHÉP QR</span>
+            <strong style="display:block;font-size:12px;color:#0f172a;margin-top:2px;">${stepIndex >= 4 ? '✓ Hoàn tất' : 'Chờ xử lý'}</strong>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;font-size:13px;margin-bottom:16px;">
+          <div>
+            <span style="color:#475569;display:block;font-size:11px;text-transform:uppercase;font-weight:bold;">Tác phẩm yêu cầu:</span>
+            <strong style="font-size:15px;color:#0f172a;">${esc(order.trackTitle)}</strong>
+          </div>
+          <div>
+            <span style="color:#475569;display:block;font-size:11px;text-transform:uppercase;font-weight:bold;">Bên Đăng Ký (Bên B):</span>
+            <strong style="font-size:15px;color:#0f172a;">${esc(order.clientName)}</strong><br>
+            <span style="color:#475569;font-size:12px;">📧 ${esc(order.clientEmail || '')} · 📞 ${esc(order.clientPhone || '')}</span>
+          </div>
+          <div>
+            <span style="color:#475569;display:block;font-size:11px;text-transform:uppercase;font-weight:bold;">Hạng mục & Gói:</span>
+            <span style="color:#0f172a;font-weight:600;">${esc(order.mediaType)}</span>
+          </div>
+          <div>
+            <span style="color:#475569;display:block;font-size:11px;text-transform:uppercase;font-weight:bold;">Lãnh thổ & Thời hạn:</span>
+            <span style="color:#0f172a;font-weight:600;">${esc(order.territory)} · <strong>${esc(order.term)}</strong></span>
+          </div>
+        </div>
+
+        ${order.adminNotes ? `
+          <div style="background:#eff6ff;border-left:4px solid #0284c7;padding:12px 16px;border-radius:4px;font-size:13px;color:#0f172a;line-height:1.6;margin-top:14px;">
+            📢 <strong>Thông báo từ Ban Pháp Chế & Tác Quyền:</strong><br>
+            ${esc(order.adminNotes)}
+          </div>
+        ` : ''}
+
+        ${order.notes ? `
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:10px 14px;border-radius:4px;font-size:12px;color:#475569;margin-top:10px;">
+            📝 <strong>Ghi chú dự án từ bạn:</strong> ${esc(order.notes)}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    document.querySelector('#btn-search-order-status')?.addEventListener('click', () => {
+      const code = document.querySelector('#pub-order-search-input')?.value.trim();
+      renderOrderStatusResult(code);
+    });
+
+    // ----------------------------------------------------
+    // 4. PUBLIC CERTIFICATE & QR VERIFICATION TOOL
+    // ----------------------------------------------------
+    function renderCertificateResult(code) {
+      if (!trackingResultBox) return;
+
+      if (!code || !code.trim()) {
+        trackingResultBox.innerHTML = `
+          <div style="text-align:center;padding:32px 20px;color:#475569;">
+            <div style="font-size:36px;margin-bottom:8px;">🛡️</div>
+            <strong style="display:block;font-size:16px;color:#0f172a;font-weight:800;">Tra cứu tính xác thực của Giấy phép bản quyền QR</strong>
+            <p style="font-size:13px;margin:6px auto 0;max-width:540px;font-weight:500;color:#334155;">Nhập mã chứng nhận cấp phép được ghi trên hợp đồng hoặc quét mã QR trên giấy phép điện tử.</p>
           </div>
         `;
         return;
@@ -833,7 +1014,7 @@
 
       const cert = certificates.find(c => c.code.toLowerCase() === (code || '').toLowerCase().trim());
       if (!cert) {
-        resultBox.innerHTML = `
+        trackingResultBox.innerHTML = `
           <div style="text-align:center;padding:30px;color:#475569;">
             <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
             <strong style="display:block;font-size:15px;color:#0f172a;">Không tìm thấy chứng chỉ với mã: "${code}"</strong>
@@ -843,7 +1024,7 @@
         return;
       }
 
-      resultBox.innerHTML = `
+      trackingResultBox.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:16px;">
           <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
@@ -919,7 +1100,7 @@
 
     // Initial render
     renderCatalogue();
-    renderCertificateResult('');
+    renderOrderStatusResult('');
     updatePriceCalculation();
   </script>
 </body>
