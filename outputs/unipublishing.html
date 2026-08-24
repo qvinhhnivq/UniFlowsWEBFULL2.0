@@ -570,10 +570,15 @@
         <p style="font-size:14px;color:#334155;line-height:1.6;margin:0 0 20px;font-weight:500;">
           Cảm ơn bạn đã gửi yêu cầu cấp phép bản quyền. Đội ngũ Pháp chế & Tác quyền UniPUBLISHING sẽ liên hệ gửi dự thảo hợp đồng và hướng dẫn thanh toán trong vòng 24 giờ.
         </p>
-        <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:12px;border-radius:6px;margin-bottom:20px;font-family:'DM Mono',monospace;font-size:13px;font-weight:bold;">
-          Mã đơn hàng: <strong id="order-ref-code" style="color:#0284c7;">UNIPUB-ORD-2026</strong>
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;background:#f8fafc;border:2px solid #0f172a;padding:12px 16px;border-radius:6px;margin-bottom:20px;flex-wrap:wrap;">
+          <span style="font-size:13px;color:#0f172a;font-weight:700;">Mã đơn hàng:</span>
+          <strong id="order-ref-code" style="color:#0284c7;font-family:'DM Mono',monospace;font-size:16px;letter-spacing:0.5px;">UNIPUB-ORD-2026</strong>
+          <button type="button" id="btn-copy-modal-code" class="button" style="padding:6px 14px;font-size:11px;font-weight:800;background:#0f172a;color:#fff;border-color:#0f172a;cursor:pointer;">📋 Copy Mã</button>
         </div>
-        <button type="button" id="btn-close-order-modal" class="button" style="padding:12px 28px;font-size:12px;background:#0f172a;color:#ffffff;font-weight:800;cursor:pointer;">Hoàn tất</button>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button type="button" id="btn-view-order-now" class="button" style="padding:12px 24px;font-size:12px;background:#0284c7;color:#ffffff;border-color:#0284c7;font-weight:800;cursor:pointer;">🔍 Xem Tiến Độ Đơn →</button>
+          <button type="button" id="btn-close-order-modal" class="button alt" style="padding:12px 20px;font-size:12px;font-weight:800;cursor:pointer;">Đóng</button>
+        </div>
       </div>
     </div>
   </main>
@@ -861,8 +866,58 @@
       renderCertificateResult(currentCode);
     });
 
-    // Render Order Tracking Status
-    function renderOrderStatusResult(code) {
+    // Clipboard Copy Helper
+    function copyToClipboard(text, btnElement) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        if (btnElement) {
+          const orig = btnElement.innerHTML;
+          btnElement.innerHTML = '✓ Đã Copy!';
+          btnElement.style.background = '#15803d';
+          btnElement.style.color = '#ffffff';
+          setTimeout(() => {
+            btnElement.innerHTML = orig;
+            btnElement.style.background = '';
+            btnElement.style.color = '';
+          }, 2000);
+        }
+      }).catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (btnElement) {
+          const orig = btnElement.innerHTML;
+          btnElement.innerHTML = '✓ Đã Copy!';
+          setTimeout(() => { btnElement.innerHTML = orig; }, 2000);
+        }
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const copyBtn = e.target.closest('.btn-copy-inline');
+      if (copyBtn && copyBtn.dataset.copy) {
+        copyToClipboard(copyBtn.dataset.copy, copyBtn);
+      }
+      if (e.target.id === 'btn-copy-modal-code') {
+        const code = document.querySelector('#order-ref-code')?.textContent.trim();
+        copyToClipboard(code, e.target);
+      }
+      if (e.target.id === 'btn-view-order-now') {
+        const code = document.querySelector('#order-ref-code')?.textContent.trim();
+        document.querySelector('#order-success-modal').style.display = 'none';
+        tabTrackOrderBtn?.click();
+        const searchInput = document.querySelector('#pub-order-search-input');
+        if (searchInput) searchInput.value = code;
+        renderOrderStatusResult(code);
+        document.querySelector('#verify-section')?.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    // Render Order Tracking Status (Asynchronous Live Query)
+    async function renderOrderStatusResult(code) {
       if (!trackingResultBox) return;
 
       if (!code || !code.trim()) {
@@ -876,8 +931,21 @@
         return;
       }
 
-      const requests = pubData.syncLicenseRequests || [];
-      const order = requests.find(r => (r.refCode || r.id || '').toLowerCase() === code.toLowerCase().trim());
+      trackingResultBox.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#0f172a;">
+          <div style="font-size:32px;margin-bottom:8px;">⏳</div>
+          <strong style="font-size:14px;font-weight:bold;">Đang kiểm tra tiến độ từ cơ sở dữ liệu...</strong>
+        </div>
+      `;
+
+      const freshData = await getData();
+      const requests = freshData.publishing?.syncLicenseRequests || [];
+      const trimmedCode = code.trim().toLowerCase();
+      const order = requests.find(r => 
+        (r.refCode && r.refCode.toLowerCase().trim() === trimmedCode) ||
+        (r.id && r.id.toLowerCase().trim() === trimmedCode) ||
+        (r.refCode && r.refCode.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
+      );
 
       if (!order) {
         trackingResultBox.innerHTML = `
@@ -926,7 +994,10 @@
             <h3 style="font-size:22px;letter-spacing:-0.03em;margin:4px 0 0;color:#0f172a;font-weight:800;">
               THÔNG TIN TIẾN ĐỘ ĐƠN CẤP PHÉP BẢN QUYỀN
             </h3>
-            <span style="font-family:'DM Mono',monospace;font-size:14px;color:#0284c7;font-weight:bold;">Mã đơn: ${order.refCode || order.id}</span>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <span style="font-family:'DM Mono',monospace;font-size:14px;color:#0284c7;font-weight:bold;">Mã đơn: ${order.refCode || order.id}</span>
+              <button type="button" class="button btn-copy-inline" data-copy="${order.refCode || order.id}" style="padding:2px 8px;font-size:10px;font-weight:800;background:#0f172a;color:#fff;border-color:#0f172a;cursor:pointer;">📋 Copy</button>
+            </div>
           </div>
 
           <div style="text-align:right;">
@@ -995,10 +1066,18 @@
       renderOrderStatusResult(code);
     });
 
+    document.querySelector('#pub-order-search-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const code = document.querySelector('#pub-order-search-input')?.value.trim();
+        renderOrderStatusResult(code);
+      }
+    });
+
     // ----------------------------------------------------
     // 4. PUBLIC CERTIFICATE & QR VERIFICATION TOOL
     // ----------------------------------------------------
-    function renderCertificateResult(code) {
+    async function renderCertificateResult(code) {
       if (!trackingResultBox) return;
 
       if (!code || !code.trim()) {
@@ -1012,7 +1091,21 @@
         return;
       }
 
-      const cert = certificates.find(c => c.code.toLowerCase() === (code || '').toLowerCase().trim());
+      trackingResultBox.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#0f172a;">
+          <div style="font-size:32px;margin-bottom:8px;">⏳</div>
+          <strong style="font-size:14px;font-weight:bold;">Đang kiểm tra chứng chỉ từ cơ sở dữ liệu...</strong>
+        </div>
+      `;
+
+      const freshData = await getData();
+      const certList = freshData.publishing?.certificates || [];
+      const trimmedCode = code.trim().toLowerCase();
+      const cert = certList.find(c => 
+        (c.code && c.code.toLowerCase().trim() === trimmedCode) ||
+        (c.code && c.code.toLowerCase().replace(/[^a-z0-9]/g, '') === trimmedCode.replace(/[^a-z0-9]/g, ''))
+      );
+
       if (!cert) {
         trackingResultBox.innerHTML = `
           <div style="text-align:center;padding:30px;color:#475569;">
@@ -1034,7 +1127,10 @@
             <h3 style="font-size:22px;letter-spacing:-0.03em;margin:4px 0 0;color:#0f172a;font-weight:800;">
               CHỨNG NHẬN CẤP PHÉP BẢN QUYỀN ĐIỆN TỬ
             </h3>
-            <span style="font-family:'DM Mono',monospace;font-size:13px;color:#0284c7;font-weight:bold;">Certificate ID: ${cert.code}</span>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <span style="font-family:'DM Mono',monospace;font-size:13px;color:#0284c7;font-weight:bold;">Certificate ID: ${cert.code}</span>
+              <button type="button" class="button btn-copy-inline" data-copy="${cert.code}" style="padding:2px 8px;font-size:10px;font-weight:800;background:#0f172a;color:#fff;border-color:#0f172a;cursor:pointer;">📋 Copy Mã</button>
+            </div>
           </div>
 
           <!-- SVG QR Code Display -->
@@ -1088,6 +1184,14 @@
     document.querySelector('#btn-verify-cert')?.addEventListener('click', () => {
       const code = document.querySelector('#pub-verify-input')?.value.trim();
       renderCertificateResult(code);
+    });
+
+    document.querySelector('#pub-verify-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const code = document.querySelector('#pub-verify-input')?.value.trim();
+        renderCertificateResult(code);
+      }
     });
 
     // FAQ Accordion

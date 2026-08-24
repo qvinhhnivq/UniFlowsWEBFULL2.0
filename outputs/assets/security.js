@@ -5,6 +5,14 @@
  */
 
 (function initUniSecurity() {
+  // Completely allow right-click, copy, selection, and shortcuts for Admin and Portal
+  const path = window.location.pathname.toLowerCase();
+  const isAdmin = path.includes('admin') || sessionStorage.getItem('uniflows-admin') === 'true' || localStorage.getItem('uniflows-admin') === 'true';
+  const isPortal = path.includes('portal') || path.includes('artist-portal') || sessionStorage.getItem('uniflows-artist-auth');
+  if (isAdmin || isPortal) {
+    return;
+  }
+
   // 1. Disable Right Click Context Menu
   document.addEventListener('contextmenu', (e) => {
     // Allow right click ONLY on standard input/textarea if user is editing their own text
