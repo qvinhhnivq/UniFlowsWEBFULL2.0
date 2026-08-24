@@ -332,24 +332,31 @@ export async function getData() {
             topCountry: stats.topCountry || localCachedArtist.topCountry || 'Việt Nam',
             topCity: stats.topCity || localCachedArtist.topCity || 'Hồ Chí Minh',
             topSource: stats.topSource || localCachedArtist.topSource || 'Spotify Editorial & Algorithmic',
-            products: (a.releases || []).map(r => {
-              const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
-              return {
-                id: r.id,
-                title: r.title,
-                type: r.type || 'Single',
-                slug: r.slug || '',
-                submissionStatus: r.submission_status || 'Đã phát hành',
-                links: r.links || {},
-                audioUrl: r.audio_url || '',
-                artworkUrl: r.artwork_url || '',
-                streams: meta.streams || '0',
-                revenue: meta.revenue || '0',
-                playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
-                splits: Array.isArray(meta.splits) ? meta.splits : [],
-                metadata: meta
-              };
-            })
+            products: (Array.isArray(a.releases) && a.releases.length > 0)
+              ? a.releases.map(r => {
+                  const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+                  return {
+                    id: r.id,
+                    title: r.title,
+                    type: r.type || 'Single',
+                    slug: r.slug || '',
+                    submissionStatus: r.submission_status || 'Đã phát hành',
+                    links: r.links || {},
+                    audioUrl: r.audio_url || '',
+                    artworkUrl: r.artwork_url || '',
+                    streams: meta.streams || '0',
+                    revenue: meta.revenue || '0',
+                    playlists: Array.isArray(meta.playlists) ? meta.playlists : [],
+                    splits: Array.isArray(meta.splits) ? meta.splits : [],
+                    userRole: meta.userRole || 'Main',
+                    isSplit: meta.isSplit || false,
+                    percentage: meta.percentage || 100,
+                    metadata: meta
+                  };
+                })
+              : (Array.isArray(stats.products) && stats.products.length > 0
+                  ? stats.products
+                  : (Array.isArray(localCachedArtist.products) ? localCachedArtist.products : []))
           };
         });
 
@@ -424,7 +431,7 @@ export async function saveData(data) {
       await supabase.from('site_settings').upsert(settingsPayload);
     }
 
-    // 2. Save artists with complete stats json
+    // 2. Save artists with complete stats json and releases
     if (Array.isArray(data.artists)) {
       for (const a of data.artists) {
         if (MOCK_IDS.artists.includes(a.id)) continue;
@@ -450,7 +457,8 @@ export async function saveData(data) {
           otherRevenue: a.otherRevenue || '0',
           topCountry: a.topCountry || 'Việt Nam',
           topCity: a.topCity || 'Hồ Chí Minh',
-          topSource: a.topSource || 'Spotify Editorial & Algorithmic'
+          topSource: a.topSource || 'Spotify Editorial & Algorithmic',
+          products: a.products || []
         };
 
         const artistPayload = {
@@ -471,6 +479,39 @@ export async function saveData(data) {
         };
 
         await supabase.from('artists').upsert(artistPayload);
+
+        // 3. Also upsert releases into releases table
+        if (Array.isArray(a.products)) {
+          for (const p of a.products) {
+            const relSlug = p.slug || String(p.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const relPayload = {
+              id: p.id || `rel-${Date.now()}-${relSlug}`,
+              artist_id: a.id,
+              title: p.title || 'Untitled Release',
+              type: p.type || 'Single',
+              slug: relSlug,
+              submission_status: p.submissionStatus || 'Đã phát hành',
+              links: p.links || {},
+              audio_url: p.audioUrl || '',
+              artwork_url: p.artworkUrl || a.image || '',
+              metadata: {
+                streams: p.streams || '0',
+                revenue: p.revenue || '0',
+                playlists: p.playlists || [],
+                splits: p.splits || [],
+                userRole: p.userRole || 'Main',
+                isSplit: p.isSplit || false,
+                percentage: p.percentage || 100,
+                ...(p.metadata || {})
+              }
+            };
+            try {
+              await supabase.from('releases').upsert(relPayload);
+            } catch (e) {
+              console.warn('Could not upsert individual release:', e);
+            }
+          }
+        }
       }
     }
 
