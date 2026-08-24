@@ -1125,7 +1125,7 @@ document.querySelector('#admin-refresh-copyright-btn')?.addEventListener('click'
 document.querySelector('#admin-refresh-greenlist-btn')?.addEventListener('click', () => loadAdminGreenlistRequests());
 
 // ----------------------------------------------------
-// RELEASE REVIEWER & SMARTLINK MANAGER (WITH DIRECT ARTWORK URL)
+// RELEASE REVIEWER & SMARTLINK MANAGER (WITH FULL METADATA DOSSIER)
 // ----------------------------------------------------
 async function loadReleasesQueue() {
   if (!releasesBox) return;
@@ -1165,7 +1165,7 @@ async function loadReleasesQueue() {
   }
 
   if (filtered.length === 0) {
-    releasesBox.innerHTML = '<p class="empty" style="padding:15px;background:#fff;border:1px solid var(--line);">Không tìm thấy bản phát hành nào theo bộ lọc này.</p>';
+    releasesBox.innerHTML = '<p class="empty" style="padding:20px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">Không tìm thấy bản phát hành nào theo bộ lọc này.</p>';
     return;
   }
 
@@ -1174,63 +1174,173 @@ async function loadReleasesQueue() {
     const status = r.submission_status || 'Đã phát hành';
     const links = r.links || {};
     const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+    const credits = (typeof r.credits === 'object' && r.credits) ? r.credits : {};
     const releaseSlug = r.slug || slug(r.title);
-    const artworkPreview = r.artwork_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
+    const artworkPreview = r.artwork_url || meta.artworkExternalUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
+    const primaryArtist = meta.primaryArtist || credits.primaryArtist || artistName;
+    const featuredArtist = meta.featuredArtist || credits.featuredArtist || '';
+    const genre = meta.genre || 'Music';
+    const language = meta.language || 'Tiếng Việt';
+    const isExplicit = (meta.explicit === 'true' || meta.explicit === true);
+    const songwriters = meta.songwriters || credits.songwriters || '';
+    const producers = meta.producers || credits.producers || '';
+    const phonogram = meta.phonogram || credits.phonogram || '© 2026 UniFLOWs Label';
+    const copyright = meta.copyright || credits.copyright || '';
+    const tracksList = meta.tracks || '';
+    const upcCode = meta.upc || '';
+    const territories = meta.territories || 'Toàn cầu (Worldwide)';
+    const releaseDate = meta.releaseDate || '';
+    const preSaveDate = meta.preSaveDate || '';
+    const artistNotes = meta.notes || '';
+    const lyricsText = meta.lyricsText || '';
+    const lyricsLrc = meta.lyricsLrc || '';
+
+    // Status colors
+    let statusBadgeColor = '#10b981';
+    let statusBgColor = '#ecfdf5';
+    let statusBorderColor = '#a7f3d0';
+    if (status.includes('chờ')) {
+      statusBadgeColor = '#d97706'; statusBgColor = '#fffbeb'; statusBorderColor = '#fde68a';
+    } else if (status.includes('chỉnh sửa')) {
+      statusBadgeColor = '#ea580c'; statusBgColor = '#fff7ed'; statusBorderColor = '#ffedd5';
+    } else if (status.includes('chối') || status.includes('gỡ')) {
+      statusBadgeColor = '#dc2626'; statusBgColor = '#fef2f2'; statusBorderColor = '#fecaca';
+    }
 
     return `
-      <div class="item-editor" data-release-id="${esc(r.id)}" style="background:#fff;border:1px solid var(--ink);padding:20px;margin-bottom:15px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px;">
-          <div style="display:flex;gap:14px;align-items:center;">
-            <img class="rel-thumb-preview" src="${esc(artworkPreview)}" alt="Artwork" style="width:60px;height:60px;object-fit:cover;border:1px solid var(--ink);border-radius:3px;">
+      <div class="item-editor" data-release-id="${esc(r.id)}" style="background:#fff;border:2px solid var(--ink);border-radius:10px;padding:22px;margin-bottom:24px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+        
+        <!-- 01. HEADER: Artwork, Title, Format & Fast Actions -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:2px solid #f1f5f9;padding-bottom:16px;">
+          <div style="display:flex;gap:16px;align-items:center;">
+            <a href="${esc(artworkPreview)}" target="_blank" title="Bấm để xem ảnh gốc full HD">
+              <img class="rel-thumb-preview" src="${esc(artworkPreview)}" alt="Artwork" style="width:72px;height:72px;object-fit:cover;border:2px solid var(--ink);border-radius:6px;box-shadow:2px 2px 0 var(--ink);">
+            </a>
             <div>
-              <span class="eyebrow">${esc(artistName)} · ${esc(r.type || 'Single')}</span>
-              <h3 style="margin:4px 0 0;font-size:20px;">${esc(r.title)}</h3>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+                <span style="font-family:'DM Mono',monospace;font-size:11px;background:#0f172a;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;text-transform:uppercase;">${esc(r.type || meta.type || 'Single')}</span>
+                <span style="font-family:'DM Mono',monospace;font-size:11px;background:${statusBgColor};color:${statusBadgeColor};border:1px solid ${statusBorderColor};padding:2px 8px;border-radius:4px;font-weight:bold;">${esc(status)}</span>
+                ${isExplicit ? '<span style="font-size:10px;font-weight:bold;background:#ef4444;color:#fff;padding:2px 6px;border-radius:3px;">[E] EXPLICIT</span>' : '<span style="font-size:10px;font-weight:bold;background:#10b981;color:#fff;padding:2px 6px;border-radius:3px;">CLEAN</span>'}
+                <span style="font-size:11px;color:#64748b;">${esc(genre)} · ${esc(language)}</span>
+              </div>
+              <h3 style="margin:0;font-size:22px;letter-spacing:-0.03em;color:#0f172a;">${esc(r.title)}</h3>
+              <p style="margin:2px 0 0;font-size:13px;color:#475569;font-weight:600;">
+                ${esc(primaryArtist)} ${featuredArtist ? `<span style="font-weight:normal;color:#64748b;">(feat. ${esc(featuredArtist)})</span>` : ''}
+              </p>
             </div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button type="button" class="button alt view-admin-epk-btn" data-epk-id="${esc(r.id)}" style="padding:6px 12px;font-size:11px;background:#f8fafc;border-color:var(--ink);font-weight:bold;">📄 Xem EPK</button>
-            <a class="button alt" href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" style="padding:6px 12px;font-size:11px;">SmartLink ↗</a>
-            <button class="button alt remove" type="button" data-delete-release="${esc(r.id)}" style="padding:6px 10px;font-size:11px;">✕ Xóa</button>
+
+          <!-- Quick Action Buttons -->
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="button view-admin-dossier-btn" data-dossier-id="${esc(r.id)}" style="background:#2563eb;color:#fff;border-color:#2563eb;padding:7px 14px;font-size:11px;font-weight:bold;">
+              📋 Xem Toàn Bộ Hồ Sơ Metadata
+            </button>
+            <button type="button" class="button alt quick-approve-btn" data-rel-id="${esc(r.id)}" style="background:#ecfdf5;border-color:#10b981;color:#047857;padding:7px 12px;font-size:11px;font-weight:bold;">
+              🟢 Duyệt Ngay
+            </button>
+            <button type="button" class="button alt view-admin-epk-btn" data-epk-id="${esc(r.id)}" style="padding:7px 12px;font-size:11px;background:#f8fafc;border-color:var(--ink);font-weight:bold;">
+              📄 Xem EPK
+            </button>
+            <a class="button alt" href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" style="padding:7px 12px;font-size:11px;">
+              SmartLink ↗
+            </a>
+            <button class="button alt remove" type="button" data-delete-release="${esc(r.id)}" style="padding:7px 10px;font-size:11px;">
+              ✕ Xóa
+            </button>
           </div>
         </div>
 
-        <!-- 00: PRE-CLEARANCE CONTENT ID & COPYRIGHT CHECK -->
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;margin:12px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:4px;">
-              🛡️ CONTENT ID PRE-CLEARANCE: CLEAN (100% SẠCH)
-            </span>
-            <small style="color:#64748b;font-size:11px;">Quét dấu vân tay âm thanh Audio Fingerprint · Không phát hiện sample trùng lặp vi phạm</small>
+        <!-- 02. FULL METADATA & RIGHTS DOSSIER LEDGER (EDITABLE & INSPECTABLE) -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #cbd5e1;padding-bottom:8px;">
+            <strong style="font-size:13px;color:#1e293b;text-transform:uppercase;letter-spacing:0.5px;">📜 1. Hồ Sơ Bản Quyền, Credits & Mã Quản Lý (ISRC / UPC)</strong>
+            <span style="font-size:11px;color:#64748b;">Nghệ sĩ nộp từ Portal · Có thể chỉnh sửa đối soát</span>
           </div>
-          <span style="font-size:11px;font-family:'DM Mono',monospace;color:#0284c7;background:#e0f2fe;padding:2px 6px;border-radius:3px;">
-            ${meta.syncLicensingConsent ? '🎬 Đã bật Sync Licensing' : 'Sync: Tắt'}
-          </span>
+
+          <div class="mini-grid" style="margin-bottom:12px;">
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Nhạc sĩ sáng tác (Songwriters / Composers) *</label>
+              <input class="rel-meta-songwriters" value="${esc(songwriters)}" placeholder="Tên tác giả lời và giai điệu" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Nhà sản xuất âm nhạc (Music Producers / Beatmakers) *</label>
+              <input class="rel-meta-producers" value="${esc(producers)}" placeholder="Tên producer, hòa âm phối khí" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+          </div>
+
+          <div class="mini-grid" style="margin-bottom:12px;">
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Bản ghi âm ℗ (Phonogram Master Copyright) *</label>
+              <input class="rel-meta-phonogram" value="${esc(phonogram)}" placeholder="© 2026 UniFLOWs Label" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Tác quyền tác phẩm © (Composition Copyright) *</label>
+              <input class="rel-meta-copyright" value="${esc(copyright)}" placeholder="Chủ sở hữu quyền tác giả" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+          </div>
+
+          <div class="mini-grid" style="margin-bottom:12px;">
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Mã ISRC & Danh sách Track</label>
+              <input class="rel-meta-tracks" value="${esc(tracksList)}" placeholder="VN-UF0-26-00001" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Mã UPC / EAN (Mã sản phẩm số)</label>
+              <input class="rel-meta-upc" value="${esc(upcCode)}" placeholder="Để trống nếu hệ thống cấp tự động" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Lãnh thổ phân phối</label>
+              <input class="rel-meta-territories" value="${esc(territories)}" placeholder="Toàn cầu (Worldwide - 150+ Nền tảng)" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;color:#334155;">Ngày phát hành chính thức (Release Date)</label>
+              <input type="date" class="rel-meta-release-date" value="${esc(releaseDate)}" style="background:#fff;padding:8px;font-size:12px;">
+            </div>
+          </div>
+
+          ${artistNotes ? `
+          <div style="margin-top:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 12px;">
+            <strong style="display:block;font-size:11px;color:#1e40af;margin-bottom:3px;text-transform:uppercase;">💡 Ghi Chú Chiến Dịch & Kế Hoạch Pitching Từ Nghệ Sĩ:</strong>
+            <p style="margin:0;font-size:12px;color:#1e3a8a;white-space:pre-wrap;">${esc(artistNotes)}</p>
+          </div>
+          ` : ''}
         </div>
 
-        <!-- 01: WAVEFORM A&R AUDIO PLAYER & TIMED FEEDBACK -->
-        <div style="background:#0f172a;border-radius:8px;padding:16px;margin:12px 0;color:#fff;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <!-- 03. AUDIO MASTER PLAYER & WAVEFORM A&R REVIEW -->
+        <div style="background:#0f172a;border-radius:8px;padding:18px;margin:16px 0;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:18px;">🎧</span>
+              <span style="font-size:20px;">🎧</span>
               <div>
-                <strong style="font-size:13px;display:block;color:#f8fafc;">Waveform A&R Review & Góp ý Demo</strong>
-                <small style="color:#94a3b8;font-size:11px;">Nghe thử Master Audio trực tiếp và để lại góp ý theo mốc thời gian (timestamp)</small>
+                <strong style="font-size:14px;display:block;color:#f8fafc;">Audio Master & Waveform A&R Inspector</strong>
+                <small style="color:#94a3b8;font-size:11px;">Phát trực tiếp file Master WAV / FLAC / MP3 và để lại phản hồi thời gian thực</small>
               </div>
             </div>
-            ${r.audio_url ? `<audio controls src="${esc(r.audio_url)}" style="height:32px;max-width:280px;"></audio>` : '<small style="color:#f87171;">Chưa có file Audio Master</small>'}
+            ${r.audio_url ? `
+              <div style="display:flex;align-items:center;gap:8px;">
+                <audio controls src="${esc(r.audio_url)}" style="height:36px;max-width:300px;"></audio>
+                <a href="${esc(r.audio_url)}" target="_blank" download class="button alt" style="background:#1e293b;border-color:#475569;color:#fff;padding:6px 10px;font-size:11px;">⬇ Tải Master</a>
+              </div>
+            ` : '<small style="color:#f87171;background:rgba(239,68,68,0.1);padding:4px 10px;border-radius:4px;border:1px solid rgba(239,68,68,0.3);">Chưa có file Audio Master</small>'}
           </div>
 
-          <div style="display:grid;gap:8px;margin-top:12px;">
-            <label style="font-size:11px;color:#94a3b8;font-weight:bold;text-transform:uppercase;">Ghi chú & Phản hồi A&R gửi nghệ sĩ (Nghệ sĩ sẽ thấy trong Portal):</label>
-            <textarea class="rel-ar-feedback" rows="2" placeholder="Ví dụ: [01:15] Đoạn điệp khúc vocal cần mix sáng hơn. [02:30] Giảm bass outro để tránh vỡ tiếng..." style="background:#1e293b;border:1px solid #334155;color:#f8fafc;padding:8px;font-size:12px;border-radius:4px;">${esc(meta.arFeedback || '')}</textarea>
+          <div style="display:grid;gap:8px;margin-top:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label style="font-size:11px;color:#94a3b8;font-weight:bold;text-transform:uppercase;">Ghi chú & Lời nhắn A&R gửi nghệ sĩ (Hiển thị ngay trên Artist Portal):</label>
+              <span style="font-size:10px;color:#64748b;">Ví dụ: [01:15] Vocal đoạn điệp khúc mix sáng hơn, [02:30] Giảm bass outro...</span>
+            </div>
+            <textarea class="rel-ar-feedback" rows="2" placeholder="Nhập nhận xét A&R, lý do yêu cầu chỉnh sửa hoặc chúc mừng nghệ sĩ..." style="background:#1e293b;border:1px solid #334155;color:#f8fafc;padding:10px;font-size:12px;border-radius:6px;width:100%;">${esc(meta.arFeedback || '')}</textarea>
           </div>
         </div>
 
-        <!-- Direct Artwork URL & Audio Controls (Upload OR Paste Link) -->
-        <div class="mini-grid" style="margin:12px 0;">
+        <!-- 04. MEDIA LINKS & ASSET EDITORS -->
+        <div class="mini-grid" style="margin:16px 0;">
           <div class="field">
-            <label style="font-weight:bold;">Ảnh bìa Artwork (Dán Link hoặc Tải ảnh từ máy)</label>
-            <input class="rel-artwork-url" value="${esc(r.artwork_url || '')}" placeholder="https://...">
+            <label style="font-weight:bold;font-size:11px;">Link Ảnh bìa Artwork (3000 × 3000 px)</label>
+            <input class="rel-artwork-url" value="${esc(r.artwork_url || meta.artworkExternalUrl || '')}" placeholder="https://...">
             <div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <input type="file" accept="image/*" class="rel-artwork-file-input" style="font-size:11px;">
               <span class="rel-artwork-status" style="font-size:11px;color:#008800;"></span>
@@ -1238,8 +1348,8 @@ async function loadReleasesQueue() {
           </div>
 
           <div class="field">
-            <label style="font-weight:bold;">Master Audio (Dán Link Drive hoặc Tải file từ máy)</label>
-            <input class="rel-audio-url" value="${esc(r.audio_url || '')}" placeholder="https://drive.google.com/...">
+            <label style="font-weight:bold;font-size:11px;">Link File Master Audio (Drive / Dropbox / WAV)</label>
+            <input class="rel-audio-url" value="${esc(r.audio_url || meta.audioExternalUrl || '')}" placeholder="https://drive.google.com/...">
             <div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <input type="file" accept="audio/*" class="rel-audio-file-input" style="font-size:11px;">
               <span class="rel-audio-status" style="font-size:11px;color:#008800;"></span>
@@ -1247,17 +1357,40 @@ async function loadReleasesQueue() {
           </div>
         </div>
 
-        <!-- Audio Preview & Shortlink Settings -->
-        <div style="background:#f1f5f9;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;margin:12px 0;">
-          <h4 style="margin:0 0 8px;font-size:12px;text-transform:uppercase;color:#0f172a;font-weight:800;">🎛️ Cài Đặt Audio Preview & Đường Dẫn Rút Gọn (ShortLink)</h4>
+        <!-- 05. LYRICS & SYNC LICENSING INSPECTOR -->
+        ${(lyricsText || lyricsLrc || meta.syncLicensingConsent) ? `
+        <div style="background:#fefce8;border:1px solid #fef08a;padding:14px;border-radius:8px;margin:16px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <h4 style="margin:0;font-size:13px;text-transform:uppercase;color:#854d0e;font-weight:bold;">📝 2. Lời Bài Hát & Giấy Phép Khai Thác Sync Licensing</h4>
+            <span style="font-size:11px;font-weight:bold;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:4px;">
+              ${meta.syncLicensingConsent ? '🎬 Đã ủy quyền Sync (Phim/TVC/Game)' : 'Sync: Tắt'}
+            </span>
+          </div>
+
+          <div class="mini-grid">
+            <div>
+              <label style="font-size:11px;font-weight:bold;color:#854d0e;display:block;margin-bottom:4px;">Lời bài hát chuẩn (Plain Lyrics):</label>
+              <textarea class="rel-lyrics-text" rows="3" style="width:100%;font-size:11px;background:#fff;border:1px solid #fde047;border-radius:4px;padding:8px;color:#713f12;">${esc(lyricsText)}</textarea>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:bold;color:#854d0e;display:block;margin-bottom:4px;">Lời đồng bộ thời gian (.LRC Lyrics):</label>
+              <textarea class="rel-lyrics-lrc" rows="3" style="width:100%;font-size:11px;background:#fff;border:1px solid #fde047;border-radius:4px;padding:8px;color:#713f12;font-family:'DM Mono',monospace;">${esc(lyricsLrc)}</textarea>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- 06. AUDIO PREVIEW & SMARTLINK SETTINGS -->
+        <div style="background:#f1f5f9;border:1px solid #cbd5e1;padding:14px;border-radius:8px;margin:16px 0;">
+          <h4 style="margin:0 0 10px;font-size:12px;text-transform:uppercase;color:#0f172a;font-weight:800;">🎛️ 3. Cài Đặt Audio Preview & Đường Dẫn Rút Gọn SmartLink</h4>
           
-          <div class="mini-grid" style="margin-bottom:6px;">
+          <div class="mini-grid">
             <div class="field">
-              <label style="font-size:11px;font-weight:bold;">Chế độ Nghe Thử trên SmartLink (Audio Preview):</label>
+              <label style="font-size:11px;font-weight:bold;">Chế độ Nghe Thử trên SmartLink:</label>
               <select class="rel-preview-mode" style="padding:6px;font-size:12px;border:1px solid var(--ink);background:#fff;width:100%;">
-                <option value="none" ${meta.previewMode === 'none' ? 'selected' : ''}>🚫 Tắt (Không cho nghe trước / Ẩn player)</option>
-                <option value="custom" ${(!meta.previewMode || meta.previewMode === 'custom') ? 'selected' : ''}>⏱️ Đoạn trích hay nhất (Snippet Preview)</option>
-                <option value="full" ${meta.previewMode === 'full' ? 'selected' : ''}>🎵 Cho nghe toàn bộ bài hát</option>
+                <option value="none" ${meta.previewMode === 'none' ? 'selected' : ''}>🚫 Tắt (Không phát audio)</option>
+                <option value="custom" ${(!meta.previewMode || meta.previewMode === 'custom') ? 'selected' : ''}>⏱️ Đoạn trích hay nhất (Snippet)</option>
+                <option value="full" ${meta.previewMode === 'full' ? 'selected' : ''}>🎵 Nghe toàn bộ bài hát</option>
               </select>
             </div>
 
@@ -1267,24 +1400,24 @@ async function loadReleasesQueue() {
             </div>
 
             <div class="field">
-              <label style="font-size:11px;font-weight:bold;">Thời lượng nghe thử (Duration):</label>
+              <label style="font-size:11px;font-weight:bold;">Thời lượng (Duration):</label>
               <input type="number" min="5" max="180" class="rel-preview-duration" value="${meta.previewDuration !== undefined ? meta.previewDuration : 30}" placeholder="30 (giây)">
             </div>
 
             <div class="field">
-              <label style="font-size:11px;font-weight:bold;">Slug Rút Gọn (Shortlink Slug):</label>
+              <label style="font-size:11px;font-weight:bold;">Slug Rút Gọn (Shortlink):</label>
               <div style="display:flex;align-items:center;gap:4px;">
-                <span style="font-family:'DM Mono',monospace;font-size:11px;color:#64748b;">/l/</span>
-                <input class="rel-slug-input" value="${esc(r.slug || releaseSlug)}" placeholder="ten-bai-hat" style="flex:1;padding:6px;border:1px solid var(--ink);background:#fff;font-size:12px;">
+                <span style="font-family:'DM Mono',monospace;font-size:11px;color:#64748b;">/s/</span>
+                <input class="rel-slug-input" value="${esc(r.slug || releaseSlug)}" placeholder="vetsang" style="flex:1;padding:6px;border:1px solid var(--ink);background:#fff;font-size:12px;">
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Links to Streaming Platforms -->
-        <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;margin:12px 0;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-            <h4 style="margin:0;font-size:12px;text-transform:uppercase;color:#0f172a;font-weight:800;">🔗 Link Nền tảng Streaming (Dành cho SmartLink)</h4>
+        <!-- 07. STREAMING PLATFORM LINKS -->
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:14px;border-radius:8px;margin:16px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <h4 style="margin:0;font-size:12px;text-transform:uppercase;color:#0f172a;font-weight:800;">🔗 4. Link Nền Tảng Streaming (Dành cho SmartLink)</h4>
             <div style="display:flex;gap:6px;">
               <a href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" class="button alt" style="padding:4px 8px;font-size:11px;background:#fff;border-color:var(--ink);">👁 Xem SmartLink ↗</a>
               <button type="button" class="button alt add-custom-platform-btn" style="padding:4px 10px;font-size:11px;font-weight:bold;background:#fff;border:1px solid #0f172a;">+ Thêm Nền Tảng Khác</button>
@@ -1303,38 +1436,19 @@ async function loadReleasesQueue() {
           </div>
 
           <div class="custom-platforms-container" style="border-top:1px dashed #cbd5e1;padding-top:8px;">
-            <strong style="display:block;font-size:11px;color:#475569;margin-bottom:6px;text-transform:uppercase;">Nền tảng Tuỳ Chọn Khác (Deezer, Tidal, Bandcamp, Audiomack, Beatport, v.v.):</strong>
+            <strong style="display:block;font-size:11px;color:#475569;margin-bottom:6px;text-transform:uppercase;">Nền tảng Tuỳ Chọn Khác (Deezer, Tidal, Bandcamp, Audiomack, Beatport...):</strong>
             <div class="custom-platforms-list">
               ${renderCustomPlatformsList(links.customPlatforms || [])}
             </div>
           </div>
         </div>
 
-        <!-- Lyrics & Publishing View -->
-        ${(meta.lyricsText || meta.lyricsLrc) ? `
-        <div style="background:#fefce8;border:1px solid #fef08a;padding:12px;border-radius:6px;margin:12px 0;">
-          <h4 style="margin:0 0 6px;font-size:12px;text-transform:uppercase;color:#854d0e;">📝 Lời bài hát & LRC đã nộp</h4>
-          <div style="max-height:100px;overflow-y:auto;font-size:11px;color:#713f12;background:#fff;padding:8px;border:1px solid #fde047;border-radius:4px;white-space:pre-wrap;">${esc(meta.lyricsLrc || meta.lyricsText)}</div>
-        </div>
-        ` : ''}
-
-        <!-- Financial Statement & Playlists for this track -->
-        <h4 style="margin:12px 0 6px;font-size:12px;text-transform:uppercase;color:#555;">📈 Số liệu bài hát & Editorial Playlists</h4>
-        <div class="mini-grid">
-          <div class="field"><label>Lượt Streams bài này</label><input class="rel-streams" value="${esc(meta.streams || '0')}" placeholder="Ví dụ: 50000"></div>
-          <div class="field"><label>Doanh thu bài này (₫)</label><input class="rel-revenue" value="${esc(meta.revenue || '0')}" placeholder="Ví dụ: 10000000"></div>
-          <div class="field" style="grid-column:1/-1;">
-            <label>Editorial Playlists (Phân cách bằng dấu phẩy)</label>
-            <input class="rel-playlists" value="${esc(Array.isArray(meta.playlists) ? meta.playlists.join(', ') : '')}" placeholder="Ví dụ: V-Pop Không Thể Thiếu, Radar Vietnam, New Music Friday">
-          </div>
-        </div>
-
-        <!-- Royalty Splits Section -->
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;margin:14px 0;border-radius:4px;">
+        <!-- 08. ROYALTY SPLITS SECTION -->
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:16px;margin:16px 0;border-radius:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
             <div>
-              <h4 style="margin:0;font-size:12px;text-transform:uppercase;color:#166534;">🤝 Phân chia Doanh thu & Tác quyền (Royalty Splits)</h4>
-              <p style="margin:2px 0 0;font-size:11px;color:#15803d;">Cài đặt % chia doanh thu cho các nghệ sĩ tham gia (Collab) hoặc đối tác (Partner). Tài khoản được gán sẽ chỉ xem stats bài này theo đúng %.</p>
+              <h4 style="margin:0;font-size:12px;text-transform:uppercase;color:#166534;font-weight:bold;">🤝 5. Phân Chia Doanh Thu Tác Quyền (Royalty Splits)</h4>
+              <p style="margin:2px 0 0;font-size:11px;color:#15803d;">Cài đặt % chia doanh thu cho các nghệ sĩ tham gia (Collab) hoặc đối tác (Partner).</p>
             </div>
             <button type="button" class="button alt add-split-btn" style="padding:4px 10px;font-size:11px;background:#fff;border:1px solid #166534;color:#166534;font-weight:bold;">+ Thêm đối tác / Collab</button>
           </div>
@@ -1343,11 +1457,25 @@ async function loadReleasesQueue() {
           </div>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;gap:12px;">
+        <!-- 09. METRICS & EDITORIAL PLAYLISTS -->
+        <div style="background:#fff;border:1px solid #cbd5e1;padding:14px;border-radius:8px;margin:16px 0;">
+          <h4 style="margin:0 0 8px;font-size:12px;text-transform:uppercase;color:#555;">📈 6. Số Liệu Stream & Editorial Playlists</h4>
+          <div class="mini-grid">
+            <div class="field"><label>Lượt Streams bài này</label><input class="rel-streams" value="${esc(meta.streams || '0')}" placeholder="Ví dụ: 50000"></div>
+            <div class="field"><label>Doanh thu bài này (₫)</label><input class="rel-revenue" value="${esc(meta.revenue || '0')}" placeholder="Ví dụ: 10000000"></div>
+            <div class="field" style="grid-column:1/-1;">
+              <label>Editorial Playlists (Phân cách bằng dấu phẩy)</label>
+              <input class="rel-playlists" value="${esc(Array.isArray(meta.playlists) ? meta.playlists.join(', ') : '')}" placeholder="Ví dụ: V-Pop Không Thể Thiếu, Radar Vietnam, New Music Friday">
+            </div>
+          </div>
+        </div>
+
+        <!-- 10. FOOTER ACTIONS: STATUS & SAVE -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:2px solid #f1f5f9;padding-top:14px;flex-wrap:wrap;gap:12px;">
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:6px;">
               <label style="font-size:12px;font-weight:bold;text-transform:uppercase;">Trạng thái:</label>
-              <select class="rel-status-select" style="padding:8px 10px;border:1px solid var(--ink);font-weight:bold;background:#fff;border-radius:4px;">
+              <select class="rel-status-select" style="padding:8px 12px;border:2px solid var(--ink);font-weight:bold;background:#fff;border-radius:6px;font-size:13px;">
                 <option value="Đang chờ UniFLOWs duyệt" ${status === 'Đang chờ UniFLOWs duyệt' ? 'selected' : ''}>⏳ Đang chờ UniFLOWs duyệt</option>
                 <option value="Đã phát hành" ${status === 'Đã phát hành' ? 'selected' : ''}>🟢 Đã phát hành (Live)</option>
                 <option value="Yêu cầu chỉnh sửa" ${status === 'Yêu cầu chỉnh sửa' ? 'selected' : ''}>⚠️ Yêu cầu chỉnh sửa (A&R Revision)</option>
@@ -1356,17 +1484,712 @@ async function loadReleasesQueue() {
               </select>
             </div>
 
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:bold;cursor:pointer;background:#f0fdf4;padding:6px 10px;border:1px solid #86efac;border-radius:4px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:bold;cursor:pointer;background:#f0fdf4;padding:6px 12px;border:1px solid #86efac;border-radius:6px;">
               <input type="checkbox" class="rel-show-on-web" ${(meta.showOnWeb !== false && r.show_on_web !== false) ? 'checked' : ''} style="cursor:pointer;">
-              <span>🌐 Hiển thị trên Website (Trang chủ & Danh mục)</span>
+              <span>🌐 Hiển thị trên Website công khai</span>
             </label>
           </div>
 
-          <button class="button" type="button" data-save-release="${esc(r.id)}" style="padding:10px 20px;font-weight:bold;background:#000;color:#fff;">Lưu bản phát hành</button>
+          <div style="display:flex;gap:8px;">
+            <button class="button" type="button" data-save-release="${esc(r.id)}" style="padding:10px 24px;font-weight:bold;background:#0f172a;color:#fff;border-color:#0f172a;font-size:13px;">
+              💾 Lưu Cập Nhật Bản Phát Hành
+            </button>
+          </div>
         </div>
       </div>
     `;
   }).join('');
+
+  // Helper to render custom platforms
+  function renderCustomPlatformsList(customList = []) {
+    if (!Array.isArray(customList) || customList.length === 0) {
+      return `<p class="no-custom-platforms" style="font-size:11px;color:#888;margin:4px 0;">Chưa có nền tảng tuỳ chọn nào. Bấm "+ Thêm Nền Tảng Khác" để bổ sung.</p>`;
+    }
+    return customList.map((cp) => `
+      <div class="custom-platform-row" style="display:grid;grid-template-columns:1.5fr 3fr auto;gap:8px;align-items:center;margin-bottom:6px;">
+        <input type="text" class="custom-plat-name" value="${esc(cp.name || '')}" placeholder="Tên Nền Tảng (VD: Tidal, Bandcamp...)" style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <input type="text" class="custom-plat-url" value="${esc(cp.url || '')}" placeholder="https://..." style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <button type="button" class="button alt remove-custom-plat-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // Helper to render splits list
+  function renderSplitsList(releaseItem, splitsList = []) {
+    if (!Array.isArray(splitsList) || splitsList.length === 0) {
+      const mainA = data.artists.find(a => a.id === releaseItem.artist_id);
+      splitsList = [
+        {
+          artistId: releaseItem.artist_id,
+          artistName: mainA?.name || releaseItem.artist_id,
+          percentage: 100,
+          role: 'Nghệ sĩ chính (Main Artist)'
+        }
+      ];
+    }
+
+    return splitsList.map((s) => `
+      <div class="split-row" style="display:grid;grid-template-columns:2fr 1fr 1.5fr auto;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;">
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Nghệ sĩ / Đối tác nhận tiền</label>
+          <select class="split-artist-select" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);background:#fff;">
+            <option value="">-- Chọn tài khoản --</option>
+            ${data.artists.map(a => `<option value="${esc(a.id)}" ${a.id === s.artistId ? 'selected' : ''}>${esc(a.name)} (${esc(a.id)})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Tỷ lệ Split (%)</label>
+          <input type="number" min="0" max="100" class="split-percent-input" value="${s.percentage !== undefined ? s.percentage : 0}" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="%">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Vai trò tham gia</label>
+          <input class="split-role-input" value="${esc(s.role || 'Collab / Feature')}" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="vd: Feat, Producer, Partner">
+        </div>
+        <div style="padding-top:16px;">
+          <button type="button" class="button alt remove-split-row-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Attach Dossier Modal Event
+  releasesBox.querySelectorAll('.view-admin-dossier-btn').forEach(btn => {
+    btn.onclick = () => openAdminReleaseDossier(btn.dataset.dossierId);
+  });
+
+  // Attach Quick Approve Event
+  releasesBox.querySelectorAll('.quick-approve-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const relId = btn.dataset.relId;
+      const targetRel = releases.find(r => r.id === relId);
+      if (!targetRel) return;
+
+      if (!confirm(`Xác nhận PHÊ DUYỆT bản phát hành "${targetRel.title}"? Sản phẩm sẽ được kích hoạt phân phối ngay lập tức.`)) return;
+
+      btn.disabled = true; btn.textContent = 'Đang duyệt...';
+      const card = btn.closest('[data-release-id]');
+      if (card) {
+        const sel = card.querySelector('.rel-status-select');
+        if (sel) sel.value = 'Đã phát hành';
+        const saveBtn = card.querySelector('[data-save-release]');
+        if (saveBtn) saveBtn.click();
+      }
+    };
+  });
+
+  // Attach Add Split Row handlers
+  releasesBox.querySelectorAll('.add-split-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('[data-release-id]');
+      const container = card?.querySelector('.splits-container');
+      if (!container) return;
+
+      const newRow = document.createElement('div');
+      newRow.className = 'split-row';
+      newRow.style = 'display:grid;grid-template-columns:2fr 1fr 1.5fr auto;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;';
+      newRow.innerHTML = `
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Nghệ sĩ / Đối tác nhận tiền</label>
+          <select class="split-artist-select" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);background:#fff;">
+            <option value="">-- Chọn tài khoản --</option>
+            ${data.artists.map(a => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.id)})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Tỷ lệ Split (%)</label>
+          <input type="number" min="0" max="100" class="split-percent-input" value="0" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="%">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:bold;color:#475569;display:block;margin-bottom:2px;">Vai trò tham gia</label>
+          <input class="split-role-input" value="Collab / Feature" style="width:100%;padding:6px;font-size:12px;border:1px solid var(--ink);" placeholder="vd: Feat, Producer, Partner">
+        </div>
+        <div style="padding-top:16px;">
+          <button type="button" class="button alt remove-split-row-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+        </div>
+      `;
+      newRow.querySelector('.remove-split-row-btn').onclick = () => newRow.remove();
+      container.appendChild(newRow);
+    });
+  });
+
+  // Attach Add & Remove Custom Platform handlers
+  releasesBox.querySelectorAll('.add-custom-platform-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('[data-release-id]');
+      const list = card?.querySelector('.custom-platforms-list');
+      if (!list) return;
+
+      const noMsg = list.querySelector('.no-custom-platforms');
+      if (noMsg) noMsg.remove();
+
+      const row = document.createElement('div');
+      row.className = 'custom-platform-row';
+      row.style = 'display:grid;grid-template-columns:1.5fr 3fr auto;gap:8px;align-items:center;margin-bottom:6px;';
+      row.innerHTML = `
+        <input type="text" class="custom-plat-name" placeholder="Tên Nền Tảng (VD: Tidal, Deezer...)" style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <input type="text" class="custom-plat-url" placeholder="https://..." style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <button type="button" class="button alt remove-custom-plat-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+      `;
+      row.querySelector('.remove-custom-plat-btn').onclick = () => row.remove();
+      list.appendChild(row);
+    });
+  });
+
+  releasesBox.querySelectorAll('.remove-custom-plat-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.target.closest('.custom-platform-row')?.remove();
+    });
+  });
+
+  // Attach Artwork & Audio file upload handlers
+  releasesBox.querySelectorAll('.rel-artwork-file-input').forEach(input => {
+    input.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const card = e.target.closest('[data-release-id]');
+      const urlInput = card?.querySelector('.rel-artwork-url');
+      const statusEl = card?.querySelector('.rel-artwork-status');
+      const previewEl = card?.querySelector('.rel-thumb-preview');
+
+      if (statusEl) statusEl.textContent = 'Đang tải ảnh lên...';
+      try {
+        const publicUrl = await uploadArtworkFile(file, `release_art_${Date.now()}`);
+        if (urlInput) urlInput.value = publicUrl;
+        if (previewEl) previewEl.src = publicUrl;
+        if (statusEl) statusEl.textContent = '✓ Đã tải ảnh thành công!';
+      } catch (err) {
+        if (statusEl) statusEl.textContent = `Lỗi: ${err.message}`;
+      }
+    });
+  });
+
+  releasesBox.querySelectorAll('.rel-audio-file-input').forEach(input => {
+    input.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const card = e.target.closest('[data-release-id]');
+      const urlInput = card?.querySelector('.rel-audio-url');
+      const statusEl = card?.querySelector('.rel-audio-status');
+
+      if (statusEl) statusEl.textContent = 'Đang tải audio lên...';
+      try {
+        const publicUrl = await uploadAudioFile(file, `release_audio_${Date.now()}`);
+        if (urlInput) urlInput.value = publicUrl;
+        if (statusEl) statusEl.textContent = '✓ Đã tải audio thành công!';
+      } catch (err) {
+        if (statusEl) statusEl.textContent = `Lỗi: ${err.message}`;
+      }
+    });
+  });
+
+  // Attach Save Release events
+  releasesBox.querySelectorAll('[data-save-release]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const relId = e.target.dataset.saveRelease;
+      const card = e.target.closest('[data-release-id]');
+      if (!card) return;
+
+      const artwork_url = card.querySelector('.rel-artwork-url')?.value.trim();
+      const audio_url = card.querySelector('.rel-audio-url')?.value.trim();
+      const status = card.querySelector('.rel-status-select')?.value;
+      const streams = card.querySelector('.rel-streams')?.value.trim() || '0';
+      const revenue = card.querySelector('.rel-revenue')?.value.trim() || '0';
+      const rawPlaylists = card.querySelector('.rel-playlists')?.value.trim() || '';
+      const playlists = rawPlaylists.split(',').map(s => s.trim()).filter(Boolean);
+
+      const arFeedback = card.querySelector('.rel-ar-feedback')?.value.trim() || '';
+
+      // Read Metadata fields
+      const songwriters = card.querySelector('.rel-meta-songwriters')?.value.trim() || '';
+      const producers = card.querySelector('.rel-meta-producers')?.value.trim() || '';
+      const phonogram = card.querySelector('.rel-meta-phonogram')?.value.trim() || '';
+      const copyright = card.querySelector('.rel-meta-copyright')?.value.trim() || '';
+      const tracks = card.querySelector('.rel-meta-tracks')?.value.trim() || '';
+      const upc = card.querySelector('.rel-meta-upc')?.value.trim() || '';
+      const territories = card.querySelector('.rel-meta-territories')?.value.trim() || '';
+      const releaseDate = card.querySelector('.rel-meta-release-date')?.value || '';
+      const lyricsText = card.querySelector('.rel-lyrics-text')?.value.trim() || '';
+      const lyricsLrc = card.querySelector('.rel-lyrics-lrc')?.value.trim() || '';
+
+      // Read Custom Platforms
+      const customPlatforms = [];
+      card.querySelectorAll('.custom-platform-row').forEach(row => {
+        const name = row.querySelector('.custom-plat-name')?.value.trim();
+        const url = row.querySelector('.custom-plat-url')?.value.trim();
+        if (name && url) {
+          customPlatforms.push({ name, url });
+        }
+      });
+
+      const links = {
+        spotify: card.querySelector('.rel-link-spotify')?.value.trim() || '',
+        apple: card.querySelector('.rel-link-apple')?.value.trim() || '',
+        youtube: card.querySelector('.rel-link-youtube')?.value.trim() || '',
+        soundcloud: card.querySelector('.rel-link-soundcloud')?.value.trim() || '',
+        zingmp3: card.querySelector('.rel-link-zing')?.value.trim() || '',
+        nct: card.querySelector('.rel-link-nct')?.value.trim() || '',
+        tiktok: card.querySelector('.rel-link-tiktok')?.value.trim() || '',
+        amazon: card.querySelector('.rel-link-amazon')?.value.trim() || '',
+        customPlatforms
+      };
+
+      // Read Splits
+      const splits = [];
+      card.querySelectorAll('.split-row').forEach(row => {
+        const sel = row.querySelector('.split-artist-select');
+        const artistId = sel?.value;
+        const artistName = sel?.selectedOptions[0]?.text?.split(' (')[0] || artistId;
+        const percentage = parseFloat(row.querySelector('.split-percent-input')?.value) || 0;
+        const role = row.querySelector('.split-role-input')?.value.trim() || 'Collab';
+        if (artistId && percentage > 0) {
+          splits.push({ artistId, artistName, percentage, role });
+        }
+      });
+
+      const previewMode = card.querySelector('.rel-preview-mode')?.value || 'custom';
+      const previewStart = parseFloat(card.querySelector('.rel-preview-start')?.value) || 0;
+      const previewDuration = parseFloat(card.querySelector('.rel-preview-duration')?.value) || 30;
+      const customSlug = card.querySelector('.rel-slug-input')?.value.trim() || '';
+      const showOnWeb = card.querySelector('.rel-show-on-web')?.checked ?? true;
+
+      const targetRel = releases.find(r => r.id === relId);
+      const existingMeta = (targetRel && typeof targetRel.metadata === 'object' && targetRel.metadata) ? targetRel.metadata : {};
+      const updatedMetadata = { 
+        ...existingMeta, 
+        songwriters,
+        producers,
+        phonogram,
+        copyright,
+        tracks,
+        upc,
+        territories,
+        releaseDate,
+        lyricsText,
+        lyricsLrc,
+        streams, 
+        revenue, 
+        playlists, 
+        splits, 
+        arFeedback, 
+        previewMode, 
+        previewStart, 
+        previewDuration, 
+        previewEnabled: (previewMode !== 'none'),
+        showOnWeb
+      };
+
+      const updatedCredits = {
+        ...(targetRel?.credits || {}),
+        songwriters,
+        producers,
+        phonogram,
+        copyright
+      };
+
+      btn.disabled = true; btn.textContent = 'Đang lưu...';
+
+      if (isSupabaseConfigured()) {
+        const updatePayload = {
+          artwork_url,
+          audio_url,
+          submission_status: status,
+          links,
+          metadata: updatedMetadata
+        };
+        if (customSlug) updatePayload.slug = customSlug;
+        if (typeof showOnWeb === 'boolean') updatePayload.show_on_web = showOnWeb;
+
+        const { error } = await supabase.from('releases').update(updatePayload).eq('id', relId);
+
+        if (error) {
+          alert('Lỗi cập nhật Supabase: ' + error.message);
+          btn.disabled = false; btn.textContent = 'Lưu bản phát hành';
+          return;
+        }
+      }
+
+      // Update local array
+      if (targetRel) {
+        targetRel.artwork_url = artwork_url;
+        targetRel.audio_url = audio_url;
+        targetRel.submission_status = status;
+        targetRel.links = links;
+        targetRel.metadata = updatedMetadata;
+        targetRel.credits = updatedCredits;
+        if (customSlug) targetRel.slug = customSlug;
+      }
+
+      // Notify artist of release status change with A&R feedback
+      const relArtistId = targetRel?.artist_id;
+      const relTitle = targetRel?.title || 'Bản phát hành';
+      if (status === 'Đã phát hành') {
+        await sendArtistNotification(
+          relArtistId,
+          '💿 Bản phát hành đã được duyệt',
+          `Sản phẩm "${relTitle}" đã được duyệt phát hành và chính thức phân phối trên các nền tảng streaming!${arFeedback ? `\n\n💬 Ghi chú A&R: "${arFeedback}"` : ''}`,
+          'release'
+        );
+      } else if (status === 'Yêu cầu chỉnh sửa' || (status && status.includes('chỉnh sửa'))) {
+        await sendArtistNotification(
+          relArtistId,
+          '⚠️ Yêu cầu chỉnh sửa bản phát hành',
+          `Bản phát hành "${relTitle}" cần chỉnh sửa lại theo góp ý của A&R:${arFeedback ? `\n\n💬 Lời nhắn từ A&R:\n"${arFeedback}"` : ' Vui lòng kiểm tra lại file Master hoặc Artwork.'}\n\nVui lòng vào mục Phát Hành trên Portal để cập nhật và gửi lại.`,
+          'release'
+        );
+      } else if (status === 'Từ chối duyệt' || (status && status.includes('chối'))) {
+        await sendArtistNotification(
+          relArtistId,
+          '❌ Bản phát hành chưa được phê duyệt',
+          `Sản phẩm "${relTitle}" chưa được phê duyệt phát hành đợt này.${arFeedback ? `\n\n💬 Lý do từ A&R: "${arFeedback}"` : ''}`,
+          'release'
+        );
+      }
+
+      btn.disabled = false; btn.textContent = 'Lưu bản phát hành';
+      showNotice('✓ Đã cập nhật bản phát hành, hồ sơ Metadata và góp ý A&R thành công!');
+      loadReleasesQueue();
+    });
+  });
+
+  // Attach EPK view events
+  releasesBox.querySelectorAll('.view-admin-epk-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const relId = btn.dataset.epkId;
+      openAdminEPK(relId);
+    });
+  });
+
+  // Attach Delete Release events
+  releasesBox.querySelectorAll('[data-delete-release]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      if (!confirm('Bạn có chắc chắn muốn xóa bản phát hành này khỏi catalogue?')) return;
+      const relId = e.target.dataset.deleteRelease;
+      btn.disabled = true;
+      if (isSupabaseConfigured()) {
+        const { error } = await supabase.from('releases').delete().eq('id', relId);
+        if (error) alert('Lỗi xóa Supabase: ' + error.message);
+      }
+      showNotice('✓ Đã xóa bản phát hành thành công!');
+      loadReleasesQueue();
+    });
+  });
+}
+
+// ----------------------------------------------------
+// FULL RELEASE METADATA DOSSIER MODAL
+// ----------------------------------------------------
+function openAdminReleaseDossier(relId) {
+  const dialog = document.querySelector('#admin-release-dossier-dialog');
+  const content = document.querySelector('#admin-dossier-content');
+  const btnApprove = document.querySelector('#dossier-quick-approve-btn');
+  const btnRevise = document.querySelector('#dossier-quick-revise-btn');
+  const btnClose = document.querySelector('#close-admin-dossier-btn');
+  const btnCancel = document.querySelector('#cancel-admin-dossier-btn');
+
+  if (!dialog || !content) return;
+
+  const r = releases.find(x => x.id === relId);
+  if (!r) {
+    alert('Không tìm thấy thông tin bản phát hành!');
+    return;
+  }
+
+  const artistName = r.artists?.name || data.artists.find(a => a.id === r.artist_id)?.name || r.artist_id || 'Nghệ sĩ';
+  const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+  const credits = (typeof r.credits === 'object' && r.credits) ? r.credits : {};
+  const artwork = r.artwork_url || meta.artworkExternalUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80';
+  const primaryArtist = meta.primaryArtist || credits.primaryArtist || artistName;
+  const featuredArtist = meta.featuredArtist || credits.featuredArtist || '';
+  const splits = Array.isArray(meta.splits) ? meta.splits : [];
+
+  content.innerHTML = `
+    <!-- Top Hero Banner -->
+    <div style="display:flex;gap:20px;align-items:center;background:#0f172a;color:#fff;padding:22px;border-radius:10px;margin-bottom:24px;">
+      <a href="${esc(artwork)}" target="_blank" title="Bấm để mở ảnh gốc">
+        <img src="${esc(artwork)}" alt="Artwork" style="width:110px;height:110px;object-fit:cover;border-radius:8px;border:2px solid #334155;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+      </a>
+      <div style="flex:1;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;background:#3b82f6;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;text-transform:uppercase;">${esc(r.type || meta.type || 'Single')}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;background:#10b981;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;">${esc(r.submission_status || 'Đã phát hành')}</span>
+          ${meta.explicit ? '<span style="font-size:10px;font-weight:bold;background:#ef4444;color:#fff;padding:2px 6px;border-radius:3px;">[E] EXPLICIT</span>' : '<span style="font-size:10px;font-weight:bold;background:#10b981;color:#fff;padding:2px 6px;border-radius:3px;">CLEAN</span>'}
+        </div>
+        <h2 style="margin:0 0 4px;font-size:26px;letter-spacing:-0.03em;color:#fff;">${esc(r.title)}</h2>
+        <p style="margin:0;font-size:15px;color:#cbd5e1;font-weight:600;">
+          ${esc(primaryArtist)} ${featuredArtist ? `<span style="font-weight:normal;color:#94a3b8;">(feat. ${esc(featuredArtist)})</span>` : ''}
+        </p>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8;margin-top:6px;">
+          Thể loại: <b style="color:#f8fafc;">${esc(meta.genre || 'Music')}</b> · Ngôn ngữ: <b style="color:#f8fafc;">${esc(meta.language || 'Tiếng Việt')}</b> · Ngày phát hành: <b style="color:#f8fafc;">${esc(meta.releaseDate || 'Chưa chọn')}</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Player Preview -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:24px;">🎧</span>
+        <div>
+          <strong style="font-size:14px;color:#0f172a;display:block;">Master Audio WAV / FLAC Lossless</strong>
+          <small style="color:#64748b;font-size:12px;">Nghe thử bản master gửi từ phòng thu của nghệ sĩ</small>
+        </div>
+      </div>
+      ${r.audio_url ? `
+        <div style="display:flex;align-items:center;gap:10px;">
+          <audio controls src="${esc(r.audio_url)}" style="height:38px;"></audio>
+          <a href="${esc(r.audio_url)}" target="_blank" download class="button alt" style="padding:6px 12px;font-size:11px;">⬇ Tải Master</a>
+        </div>
+      ` : '<span style="color:#ef4444;font-weight:bold;font-size:12px;">Chưa có file Audio Master</span>'}
+    </div>
+
+    <!-- 2-Column Metadata Grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));gap:20px;margin-bottom:24px;">
+      
+      <!-- Box 1: Copyright & Legal Credits -->
+      <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:18px;">
+        <h4 style="margin:0 0 12px;font-size:14px;color:#0f172a;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #0f172a;padding-bottom:6px;">
+          📜 Bản Quyền & Tác Giả (Credits & Copyright)
+        </h4>
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:8px 0;color:#64748b;width:140px;">Nhạc sĩ sáng tác:</td>
+            <td style="padding:8px 0;font-weight:bold;color:#0f172a;">${esc(meta.songwriters || credits.songwriters || 'Chưa cung cấp')}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:8px 0;color:#64748b;">Nhà sản xuất (Producer):</td>
+            <td style="padding:8px 0;font-weight:bold;color:#0f172a;">${esc(meta.producers || credits.producers || 'Chưa cung cấp')}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:8px 0;color:#64748b;">Bản ghi âm ℗:</td>
+            <td style="padding:8px 0;color:#0f172a;">${esc(meta.phonogram || credits.phonogram || '© 2026 UniFLOWs Label')}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:8px 0;color:#64748b;">Tác quyền ©:</td>
+            <td style="padding:8px 0;color:#0f172a;">${esc(meta.copyright || credits.copyright || 'Chưa có')}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:8px 0;color:#64748b;">Mã ISRC:</td>
+            <td style="padding:8px 0;font-family:'DM Mono',monospace;color:#0284c7;font-weight:bold;">${esc(meta.tracks || 'Chưa cấp (UniFLOWs tự động gán)')}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:8px 0;color:#64748b;">Mã UPC / EAN:</td>
+            <td style="padding:8px 0;font-family:'DM Mono',monospace;color:#0284c7;">${esc(meta.upc || 'Tự động gán')}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#64748b;">Lãnh thổ:</td>
+            <td style="padding:8px 0;color:#0f172a;">${esc(meta.territories || 'Toàn cầu (150+ Quốc gia)')}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Box 2: Royalty Splits & Sync Licensing -->
+      <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:18px;">
+        <h4 style="margin:0 0 12px;font-size:14px;color:#0f172a;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #16a34a;padding-bottom:6px;">
+          🤝 Phân Chia Doanh Thu (Royalty Splits)
+        </h4>
+        
+        ${splits.length > 0 ? `
+          <div style="display:grid;gap:8px;margin-bottom:14px;">
+            ${splits.map(s => `
+              <div style="display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;padding:8px 12px;border-radius:6px;font-size:13px;">
+                <div>
+                  <strong style="color:#166534;display:block;">${esc(s.artistName || s.artistId)}</strong>
+                  <small style="color:#15803d;font-size:11px;">${esc(s.role || 'Contributor')}</small>
+                </div>
+                <span style="font-family:'DM Mono',monospace;font-weight:bold;font-size:14px;color:#166534;background:#fff;padding:2px 8px;border-radius:4px;border:1px solid #86efac;">
+                  ${s.percentage}%
+                </span>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <p style="font-size:12px;color:#64748b;margin:0 0 14px;">100% Doanh thu thuộc về nghệ sĩ chính <b>${esc(primaryArtist)}</b>.</p>
+        `}
+
+        <div style="background:#fefce8;border:1px solid #fef08a;padding:10px 12px;border-radius:6px;">
+          <strong style="font-size:11px;color:#854d0e;display:block;text-transform:uppercase;margin-bottom:2px;">🎬 Quyền Chào Hàng Sync Licensing:</strong>
+          <span style="font-size:12px;color:#713f12;">
+            ${meta.syncLicensingConsent ? '✓ ĐÃ ĐỒNG Ý: Ủy quyền cho UniFLOWs chào hàng vào Phim điện ảnh, TVC & Games.' : '✕ CHƯA BẬT: Nghệ sĩ chưa ủy quyền chào hàng Sync.'}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lyrics Accordion / View -->
+    ${(meta.lyricsText || meta.lyricsLrc) ? `
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:18px;margin-bottom:20px;">
+      <h4 style="margin:0 0 12px;font-size:14px;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;">
+        📝 Lời Bài Hát & LRC Time-Synced Lyrics
+      </h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-size:11px;font-weight:bold;color:#92400e;display:block;margin-bottom:4px;">Lời chuẩn (Plain Text):</label>
+          <div style="background:#fff;border:1px solid #fde68a;border-radius:4px;padding:10px;font-size:12px;max-height:160px;overflow-y:auto;white-space:pre-wrap;color:#78350f;">${esc(meta.lyricsText || 'Chưa cung cấp')}</div>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:bold;color:#92400e;display:block;margin-bottom:4px;">Đồng bộ thời gian (.LRC Time-Synced):</label>
+          <div style="background:#fff;border:1px solid #fde68a;border-radius:4px;padding:10px;font-size:11px;font-family:'DM Mono',monospace;max-height:160px;overflow-y:auto;white-space:pre-wrap;color:#78350f;">${esc(meta.lyricsLrc || 'Chưa cung cấp')}</div>
+        </div>
+      </div>
+    </div>
+    ` : ''}
+
+    <!-- A&R Feedback Box -->
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:16px;">
+      <label style="font-size:12px;font-weight:bold;color:#0f172a;display:block;margin-bottom:4px;text-transform:uppercase;">
+        💬 Góp ý & Lời nhắn A&R gửi về Artist Portal:
+      </label>
+      <textarea id="modal-dossier-ar-feedback" rows="2" style="width:100%;padding:10px;font-size:12px;border:1px solid var(--ink);border-radius:6px;box-sizing:border-box;" placeholder="Nhập lời nhắn phản hồi hoặc yêu cầu chỉnh sửa gửi trực tiếp cho nghệ sĩ...">${esc(meta.arFeedback || '')}</textarea>
+    </div>
+  `;
+
+  // Hook up Quick Approve in modal
+  if (btnApprove) {
+    btnApprove.onclick = async () => {
+      const feedback = document.querySelector('#modal-dossier-ar-feedback')?.value.trim() || '';
+      if (!confirm(`Xác nhận DUYỆT bản phát hành "${r.title}"?`)) return;
+
+      btnApprove.disabled = true; btnApprove.textContent = 'Đang duyệt...';
+      const card = document.querySelector(`[data-release-id="${r.id}"]`);
+      if (card) {
+        const sel = card.querySelector('.rel-status-select');
+        const feedbackInput = card.querySelector('.rel-ar-feedback');
+        if (sel) sel.value = 'Đã phát hành';
+        if (feedbackInput) feedbackInput.value = feedback;
+        const saveBtn = card.querySelector('[data-save-release]');
+        if (saveBtn) saveBtn.click();
+      }
+      dialog.close();
+    };
+  }
+
+  // Hook up Quick Revise in modal
+  if (btnRevise) {
+    btnRevise.onclick = async () => {
+      const feedback = document.querySelector('#modal-dossier-ar-feedback')?.value.trim();
+      if (!feedback) {
+        alert('Vui lòng nhập lời nhắn góp ý hoặc lý do yêu cầu chỉnh sửa ở ô trên!');
+        document.querySelector('#modal-dossier-ar-feedback')?.focus();
+        return;
+      }
+
+      if (!confirm(`Yêu cầu nghệ sĩ chỉnh sửa lại bản phát hành "${r.title}"?`)) return;
+
+      btnRevise.disabled = true; btnRevise.textContent = 'Đang gửi...';
+      const card = document.querySelector(`[data-release-id="${r.id}"]`);
+      if (card) {
+        const sel = card.querySelector('.rel-status-select');
+        const feedbackInput = card.querySelector('.rel-ar-feedback');
+        if (sel) sel.value = 'Yêu cầu chỉnh sửa';
+        if (feedbackInput) feedbackInput.value = feedback;
+        const saveBtn = card.querySelector('[data-save-release]');
+        if (saveBtn) saveBtn.click();
+      }
+      dialog.close();
+    };
+  }
+
+  if (btnClose) btnClose.onclick = () => dialog.close();
+  if (btnCancel) btnCancel.onclick = () => dialog.close();
+
+  dialog.showModal();
+}
+
+// ----------------------------------------------------
+// EDITORIAL PITCHING & PLAYLIST KANBAN TRACKER
+// ----------------------------------------------------
+function renderPitchingBoard() {
+  const colQueue = document.querySelector('#kanban-col-queue');
+  const colSubmitted = document.querySelector('#kanban-col-submitted');
+  const colPlaced = document.querySelector('#kanban-col-placed');
+  const colPassed = document.querySelector('#kanban-col-passed');
+
+  if (!colQueue || !colSubmitted || !colPlaced || !colPassed) return;
+
+  const cols = {
+    queue: [],
+    submitted: [],
+    placed: [],
+    passed: []
+  };
+
+  releases.forEach(r => {
+    const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+    const status = meta.pitchingStatus || (r.submission_status === 'Đang chờ UniFLOWs duyệt' ? 'queue' : 'submitted');
+    if (cols[status]) {
+      cols[status].push(r);
+    } else {
+      cols.queue.push(r);
+    }
+  });
+
+  // Update counts
+  const setTxt = (id, txt) => {
+    const el = document.querySelector(id);
+    if (el) el.textContent = txt;
+  };
+  setTxt('#kanban-count-queue', cols.queue.length.toString());
+  setTxt('#kanban-count-submitted', cols.submitted.length.toString());
+  setTxt('#kanban-count-placed', cols.placed.length.toString());
+  setTxt('#kanban-count-passed', cols.passed.length.toString());
+
+  // Helper to render card
+  const renderCard = (r, curStatus) => {
+    const artistName = r.artists?.name || data.artists.find(a => a.id === r.artist_id)?.name || r.artist_id || 'Nghệ sĩ';
+    const artwork = r.artwork_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80';
+    const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+    const targetPlaylists = meta.pitchingPlaylists || (Array.isArray(meta.playlists) ? meta.playlists.join(', ') : 'Chưa gán playlist');
+
+    return `
+      <div class="pitch-card" data-rel-id="${esc(r.id)}" style="background:#fff;border:1px solid var(--ink);border-radius:8px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <img src="${esc(artwork)}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid #cbd5e1;">
+          <div style="overflow:hidden;">
+            <strong style="font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
+            <small style="color:#64748b;font-size:11px;">${esc(artistName)}</small>
+          </div>
+        </div>
+        
+        <div style="background:#f1f5f9;border-radius:4px;padding:6px 8px;margin-bottom:8px;font-size:11px;color:#334155;">
+          <b>🎯 Mục tiêu:</b> <span class="pitch-target-text">${esc(targetPlaylists)}</span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;border-top:1px dashed #e2e8f0;padding-top:8px;">
+          <select class="pitch-move-select" data-rel-id="${esc(r.id)}" style="font-size:11px;padding:4px 6px;border:1px solid var(--ink);background:#fff;border-radius:4px;">
+            <option value="queue" ${curStatus === 'queue' ? 'selected' : ''}>⏳ Chờ Pitching</option>
+            <option value="submitted" ${curStatus === 'submitted' ? 'selected' : ''}>🚀 Đang gửi</option>
+            <option value="placed" ${curStatus === 'placed' ? 'selected' : ''}>🌟 Vào Playlist</option>
+            <option value="passed" ${curStatus === 'passed' ? 'selected' : ''}>❌ Passed</option>
+          </select>
+        </div>
+      </div>
+    `;
+  };
+
+  colQueue.innerHTML = cols.queue.length > 0 ? cols.queue.map(r => renderCard(r, 'queue')).join('') : '<p class="empty" style="font-size:12px;">Không có bài chờ pitching.</p>';
+  colSubmitted.innerHTML = cols.submitted.length > 0 ? cols.submitted.map(r => renderCard(r, 'submitted')).join('') : '<p class="empty" style="font-size:12px;">Không có bài đang gửi.</p>';
+  colPlaced.innerHTML = cols.placed.length > 0 ? cols.placed.map(r => renderCard(r, 'placed')).join('') : '<p class="empty" style="font-size:12px;">Chưa có bài nào vào playlist.</p>';
+  colPassed.innerHTML = cols.passed.length > 0 ? cols.passed.map(r => renderCard(r, 'passed')).join('') : '<p class="empty" style="font-size:12px;">Không có bài bị từ chối.</p>';
+
+  // Attach Kanban move listeners
+  document.querySelectorAll('.pitch-move-select').forEach(sel => {
+    sel.addEventListener('change', async (e) => {
+      const relId = e.target.dataset.relId;
+      const newStatus = e.target.value;
+      const targetRel = releases.find(r => r.id === relId);
+      if (!targetRel) return;
+
+      const meta = (typeof targetRel.metadata === 'object' && targetRel.metadata) ? targetRel.metadata : {};
+      meta.pitchingStatus = newStatus;
+      targetRel.metadata = meta;
+
+      if (isSupabaseConfigured()) {
+        await supabase.from('releases').update({ metadata: meta }).eq('id', relId);
+      }
+      showNotice(`✓ Đã chuyển trạng thái Pitching của "${targetRel.title}"!`);
+      renderPitchingBoard();
+    });
+  });
+}
 
   // Helper to render custom platforms
   function renderCustomPlatformsList(customList = []) {
