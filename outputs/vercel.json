@@ -3,6 +3,22 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/listen/:path*",
+      "destination": "/listen.html"
+    },
+    {
+      "source": "/listen",
+      "destination": "/listen.html"
+    },
+    {
+      "source": "/l/:path*",
+      "destination": "/listen.html"
+    },
+    {
+      "source": "/l",
+      "destination": "/listen.html"
+    },
+    {
       "source": "/",
       "has": [
         {
