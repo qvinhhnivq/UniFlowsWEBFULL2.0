@@ -135,11 +135,11 @@ export const defaultData = {
 };
 
 const MOCK_IDS = {
-  artists: ['lumi', 'monotone', 'kaii', 'the-flow'],
-  tracks: ['pub-ext-1', 'pub-ext-2', 'pub-ext-3', 'pub-ext-4'],
-  producers: ['prod-alexandre', 'prod-minhdang', 'prod-hoangyen'],
-  caseStudies: ['cs-1', 'cs-2'],
-  submissions: ['sub-demo-101', 'sub-demo-102']
+  artists: [],
+  tracks: [],
+  producers: [],
+  caseStudies: [],
+  submissions: []
 };
 
 export function getLocalCachedData() {
@@ -368,7 +368,7 @@ export async function getData() {
           };
         });
 
-      const artistOrder = settingsData?.artist_order || settingsData?.artistOrder || cached?.artist_order || cached?.artistOrder || [];
+      const artistOrder = settings?.artist_order || settings?.artistOrder || cached?.artist_order || cached?.artistOrder || [];
       if (Array.isArray(artistOrder) && artistOrder.length > 0) {
         mappedSupabaseArtists.sort((a, b) => {
           let idxA = artistOrder.indexOf(a.id);
