@@ -324,7 +324,7 @@ function renderReleaseCard(root, artist, release) {
   let clickCount = Number(localStorage.getItem(clickStorageKey) || 0);
 
   const artworkSrc = p.artworkUrl || a.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=90';
-  const shareCleanUrl = `${location.origin}/l/${encodeURIComponent(finalReleaseSlug)}`;
+  const shareCleanUrl = `${location.origin}/listen?release=${encodeURIComponent(finalReleaseSlug)}`;
 
   root.innerHTML = `
     <!-- Blur Backdrop Cover -->
@@ -386,7 +386,7 @@ function renderReleaseCard(root, artist, release) {
         <!-- Share & Shortlink Badge -->
         <div style="margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;">
           <button id="smart-btn-share" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#ffffff;padding:11px 26px;border-radius:30px;font-size:12px;font-family:'DM Mono',monospace;text-transform:uppercase;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-            CHIA SẺ LINK RÚT GỌN (l/${esc(finalReleaseSlug)})
+            CHIA SẺ SMARTLINK ↗
           </button>
           <small id="smart-click-badge" style="color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.5px;">
             ${clickCount > 0 ? `${clickCount.toLocaleString('vi-VN')} lượt mở link` : ''}
@@ -493,7 +493,7 @@ function renderNotFound(root, requestedSlug, pool = []) {
         ${pool.length > 0 ? `
           <div style="width:100%;display:grid;gap:8px;margin-bottom:24px;">
             ${pool.slice(0, 4).map(r => `
-              <a href="/l/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;text-decoration:none;color:#fff;">
+              <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;text-decoration:none;color:#fff;">
                 <img src="${esc(r.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=100&q=80')}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" alt="${esc(r.title)}">
                 <div style="flex:1;min-width:0;text-align:left;">
                   <strong style="display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
@@ -531,7 +531,7 @@ function renderSmartLinkHub(root, pool = []) {
 
         <div style="width:100%;display:grid;gap:10px;margin-bottom:24px;">
           ${pool.length > 0 ? pool.map(r => `
-            <a href="/l/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;text-decoration:none;color:#fff;transition:all 0.2s ease;">
+            <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;text-decoration:none;color:#fff;transition:all 0.2s ease;">
               <img src="${esc(r.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:50px;height:50px;object-fit:cover;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" alt="${esc(r.title)}">
               <div style="flex:1;min-width:0;text-align:left;">
                 <strong style="display:block;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>

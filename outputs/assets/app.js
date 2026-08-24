@@ -2,6 +2,27 @@ import { getData, getLocalCachedData } from './data.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import './security.js';
 
+// Auto-redirect subdomains cleanly to main domain canonical paths
+(function autoRedirectSubdomains() {
+  const host = window.location.hostname.toLowerCase();
+  if (host.endsWith('uniflowslabel.com') && host !== 'uniflowslabel.com' && host !== 'www.uniflowslabel.com') {
+    const protocol = window.location.protocol;
+    const search = window.location.search || '';
+    const hash = window.location.hash || '';
+    if (host.startsWith('unihub.') || host.startsWith('hube.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/unihube${search}${hash}`);
+    } else if (host.startsWith('publishing.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/unipublishing${search}${hash}`);
+    } else if (host.startsWith('48k.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/48kcollective${search}${hash}`);
+    } else if (host.startsWith('portal.') || host.startsWith('artist.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/artist-login${search}${hash}`);
+    } else {
+      window.location.replace(`${protocol}//uniflowslabel.com/${search}${hash}`);
+    }
+  }
+})();
+
 let data = getLocalCachedData();
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
@@ -20,7 +41,6 @@ function formatSocialUrl(u) {
 }
 
 function getNavLinks() {
-  const host = window.location.hostname.toLowerCase();
   const protocol = window.location.protocol;
   const isFileOrStaticHtml = protocol === 'file:' || 
     window.location.pathname.endsWith('.html');
@@ -40,29 +60,7 @@ function getNavLinks() {
       contact: 'contact.html',
       artistLogin: 'artist-login.html',
       producer: 'producer.html',
-      smartlink: 'listen.html'
-    };
-  }
-
-  const isCustomDomain = host.includes('uniflowslabel.');
-  if (isCustomDomain) {
-    const parts = host.split('.');
-    const baseDomain = parts.slice(-2).join('.');
-    return {
-      home: `${protocol}//${baseDomain}/`,
-      artists: `${protocol}//${baseDomain}/artists`,
-      artist: `${protocol}//${baseDomain}/artist`,
-      unihube: `${protocol}//unihub.${baseDomain}/`,
-      collective48k: `${protocol}//48k.${baseDomain}/`,
-      publishing: `${protocol}//publishing.${baseDomain}/`,
-      submitMusic: `${protocol}//${baseDomain}/submit-music`,
-      about: `${protocol}//${baseDomain}/about`,
-      news: `${protocol}//${baseDomain}/news`,
-      article: `${protocol}//${baseDomain}/article`,
-      contact: `${protocol}//${baseDomain}/contact`,
-      artistLogin: `${protocol}//portal.${baseDomain}/`,
-      producer: `${protocol}//unihub.${baseDomain}/producer`,
-      smartlink: `${protocol}//${baseDomain}/l/`
+      smartlink: 'listen.html?release='
     };
   }
 
@@ -80,7 +78,7 @@ function getNavLinks() {
     contact: '/contact',
     artistLogin: '/artist-login',
     producer: '/producer',
-    smartlink: '/l/'
+    smartlink: '/listen?release='
   };
 }
 
