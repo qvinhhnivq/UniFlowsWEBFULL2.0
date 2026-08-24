@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>UniFLOWs — Đang kết nối...</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/assets/app.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;600;700;800;900&display=swap');
+    body {
+      background: #090a0f;
+      color: #fff;
+      margin: 0;
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+    }
+  </style>
+</head>
+<body data-shortener-page>
+  <main id="shortener-root" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div style="font-family:'DM Mono',monospace;font-size:12px;color:rgba(255,255,255,0.6);letter-spacing:1px;text-align:center;">
+      <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.2);border-top-color:#d8ff48;border-radius:50%;margin:0 auto 16px;animation:spin 0.8s linear infinite;"></div>
+      Đang kết nối tới UniFLOWs Engine...
+    </div>
+  </main>
+  <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+
+  <script type="module">
+    import { getData, defaultData } from '/assets/data.js';
+
+    const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+    const cleanComp = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    async function handle404Routing() {
+      const rawPath = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
+      const parts = rawPath.split('/').filter(Boolean);
+      const q = new URLSearchParams(location.search);
+      const root = document.querySelector('#shortener-root') || document.body;
+
+      let targetSlug = q.get('s') || q.get('slug') || q.get('alias') || q.get('release') || '';
+
+      if (!targetSlug && parts.length > 0) {
+        const first = parts[0].toLowerCase();
+        if (['s', 'go', 'r', 'link', 'short', 'l', 'listen', 'smartlink'].includes(first)) {
+          if (parts.length >= 2) {
+            targetSlug = parts[1];
+          }
+        } else if (parts.length === 1) {
+          targetSlug = parts[0];
+        }
+      }
+
+      if (!targetSlug) {
+        renderStandard404(root);
+        return;
+      }
+
+      const targetComp = cleanComp(targetSlug);
+      const liveData = await getData();
+      const shortlinks = [...(liveData.shortlinks || []), ...(defaultData.shortlinks || [])];
+      const artists = liveData.artists || defaultData.artists || [];
+      const articles = liveData.articles || defaultData.articles || [];
+
+      // 1. Match custom shortlink
+      let matchedShort = shortlinks.find(x => cleanComp(x.slug) === targetComp);
+      if (matchedShort && matchedShort.targetUrl) {
+        window.location.replace(matchedShort.targetUrl);
+        return;
+      }
+
+      // 2. Match release / SmartLink
+      for (const a of artists) {
+        const prods = a.products || [];
+        const matchedRel = prods.find(p => cleanComp(p.slug) === targetComp || cleanComp(p.title) === targetComp || p.id === targetSlug);
+        if (matchedRel) {
+          window.location.replace(`/listen?release=${encodeURIComponent(matchedRel.slug || matchedRel.id)}`);
+          return;
+        }
+      }
+
+      // 3. Match artist
+      const matchedArt = artists.find(a => cleanComp(a.id) === targetComp || cleanComp(a.name) === targetComp);
+      if (matchedArt) {
+        window.location.replace(`/artist?id=${encodeURIComponent(matchedArt.id)}`);
+        return;
+      }
+
+      // 4. Match article
+      const matchedArticle = articles.find(art => cleanComp(art.id) === targetComp || cleanComp(art.title) === targetComp);
+      if (matchedArticle) {
+        window.location.replace(`/article?id=${encodeURIComponent(matchedArticle.id)}`);
+        return;
+      }
+
+      // 5. Shortcuts
+      const shortcuts = {
+        'demo': '/submit-music',
+        'submit': '/submit-music',
+        'submitmusic': '/submit-music',
+        'hube': '/unihube',
+        'unihub': '/unihube',
+        'unihube': '/unihube',
+        '48k': '/48kcollective',
+        'collective': '/48kcollective',
+        'publishing': '/unipublishing',
+        'unipublishing': '/unipublishing',
+        'artists': '/artists',
+        'about': '/about',
+        'news': '/news',
+        'contact': '/contact',
+        'portal': '/artist-login',
+        'artistlogin': '/artist-login',
+        'admin': '/admin'
+      };
+
+      if (shortcuts[targetComp]) {
+        window.location.replace(shortcuts[targetComp]);
+        return;
+      }
+
+      // If nothing matched, show friendly 404
+      renderStandard404(root, targetSlug);
+    }
+
+    function renderStandard404(root, slug = '') {
+      root.innerHTML = `
+        <div style="background:rgba(20,20,24,0.7);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:36px 28px;text-align:center;max-width:440px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,0.8);">
+          <a href="/" style="font-weight:900;letter-spacing:-0.04em;color:#ffffff;text-decoration:none;font-size:18px;">UNIFLOWs</a>
+          <h1 style="font-size:52px;letter-spacing:-0.05em;color:#fff;margin:24px 0 8px;font-weight:900;">404</h1>
+          <strong style="font-size:15px;color:#fff;display:block;">${slug ? `Không tìm thấy nội dung "${esc(slug)}"` : 'Trang không tồn tại'}</strong>
+          <p style="font-size:13px;color:rgba(255,255,255,0.6);margin:8px auto 24px;max-width:320px;">Đường link có thể đã hết hạn hoặc bạn nhập chưa chính xác.</p>
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <a href="/s" style="padding:11px 22px;background:#d8ff48;color:#000;border-radius:20px;font-size:11px;font-weight:800;font-family:'DM Mono',monospace;text-transform:uppercase;text-decoration:none;">Tạo Link Mới</a>
+            <a href="/" style="padding:11px 22px;background:rgba(255,255,255,0.1);color:#fff;border-radius:20px;font-size:11px;font-weight:800;font-family:'DM Mono',monospace;text-transform:uppercase;text-decoration:none;">Về Trang Chủ</a>
+          </div>
+        </div>
+      `;
+    }
+
+    handle404Routing();
+  </script>
+</body>
+</html>
