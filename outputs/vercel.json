@@ -3,6 +3,52 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/unihube",
+      "has": [
+        {
+          "type": "host",
+          "value": "unihub.(.*)"
+        }
+      ],
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/unipublishing",
+      "has": [
+        {
+          "type": "host",
+          "value": "publishing.(.*)"
+        }
+      ],
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/48k",
+      "has": [
+        {
+          "type": "host",
+          "value": "48k.(.*)"
+        }
+      ],
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/artist-login",
+      "has": [
+        {
+          "type": "host",
+          "value": "portal.(.*)"
+        }
+      ],
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
       "source": "/",
       "has": [
         {
@@ -10,8 +56,7 @@
           "value": "unihub.(.*)"
         }
       ],
-      "destination": "/unihube",
-      "permanent": false
+      "destination": "/unihube.html"
     },
     {
       "source": "/",
@@ -21,8 +66,7 @@
           "value": "publishing.(.*)"
         }
       ],
-      "destination": "/unipublishing",
-      "permanent": false
+      "destination": "/unipublishing.html"
     },
     {
       "source": "/",
@@ -32,8 +76,7 @@
           "value": "48k.(.*)"
         }
       ],
-      "destination": "/48k",
-      "permanent": false
+      "destination": "/48k.html"
     },
     {
       "source": "/",
@@ -43,8 +86,7 @@
           "value": "portal.(.*)"
         }
       ],
-      "destination": "/artist-login",
-      "permanent": false
+      "destination": "/artist-login.html"
     }
   ]
 }

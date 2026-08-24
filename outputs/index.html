@@ -10,23 +10,6 @@
   <meta name="theme-color" content="#000000">
   <meta property="og:image" content="/og-image.jpg">
   <link rel="stylesheet" href="assets/app.css">
-  <script>
-    (function() {
-      const host = window.location.hostname.toLowerCase();
-      const path = window.location.pathname.toLowerCase();
-      if (path === '/' || path === '/index' || path === '/index.html' || path === '') {
-        if (host.startsWith('unihub.') || host.startsWith('hube.')) {
-          window.location.replace('/unihube');
-        } else if (host.startsWith('publishing.')) {
-          window.location.replace('/unipublishing');
-        } else if (host.startsWith('48k.')) {
-          window.location.replace('/48k');
-        } else if (host.startsWith('portal.') || host.startsWith('artist.')) {
-          window.location.replace('/artist-login');
-        }
-      }
-    })();
-  </script>
 </head>
 <body data-page="index">
   <main>
