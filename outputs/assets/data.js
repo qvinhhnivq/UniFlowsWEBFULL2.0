@@ -706,30 +706,30 @@ export async function getData() {
       }
 
       // Parse publishing data
-      if (settings.publishing && typeof settings.publishing === 'object') {
+      if (settings.publishing && typeof settings.publishing === 'object' && Object.keys(settings.publishing).length > 0) {
         merged.publishing = settings.publishing;
-      } else if (cached.publishing && typeof cached.publishing === 'object') {
+      } else if (cached.publishing && typeof cached.publishing === 'object' && Object.keys(cached.publishing).length > 0) {
         merged.publishing = cached.publishing;
       } else {
         merged.publishing = defaultData.publishing;
       }
 
-      // Parse Uni-HUBE data (Preserve local items if Supabase column is empty or newly created)
-      if (settings.unihube && typeof settings.unihube === 'object' && Array.isArray(settings.unihube.producers) && settings.unihube.producers.length > 0) {
+      // Parse Uni-HUBE data
+      if (settings.unihube && typeof settings.unihube === 'object' && Object.keys(settings.unihube).length > 0) {
         merged.unihube = settings.unihube;
-      } else if (cached.unihube && typeof cached.unihube === 'object' && Array.isArray(cached.unihube.producers) && cached.unihube.producers.length > 0) {
+      } else if (cached.unihube && typeof cached.unihube === 'object' && Object.keys(cached.unihube).length > 0) {
         merged.unihube = cached.unihube;
       } else {
         merged.unihube = defaultData.unihube;
       }
-      if (!merged.unihube.budgetTiers || !Array.isArray(merged.unihube.budgetTiers) || merged.unihube.budgetTiers.length === 0) {
+      if (!merged.unihube.budgetTiers || !Array.isArray(merged.unihube.budgetTiers)) {
         merged.unihube.budgetTiers = (cached.unihube && cached.unihube.budgetTiers) || defaultData.unihube.budgetTiers;
       }
 
       // Parse 48K Collective data
-      if (settings.collective48k && typeof settings.collective48k === 'object' && Array.isArray(settings.collective48k.caseStudies) && settings.collective48k.caseStudies.length > 0) {
+      if (settings.collective48k && typeof settings.collective48k === 'object' && Object.keys(settings.collective48k).length > 0) {
         merged.collective48k = settings.collective48k;
-      } else if (cached.collective48k && typeof cached.collective48k === 'object' && Array.isArray(cached.collective48k.caseStudies) && cached.collective48k.caseStudies.length > 0) {
+      } else if (cached.collective48k && typeof cached.collective48k === 'object' && Object.keys(cached.collective48k).length > 0) {
         merged.collective48k = cached.collective48k;
       } else {
         merged.collective48k = defaultData.collective48k;

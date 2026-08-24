@@ -15,14 +15,25 @@
       var h = window.location.hostname.toLowerCase();
       var p = window.location.pathname.toLowerCase();
       if (p === '/' || p === '' || p === '/index' || p === '/index.html') {
-        if (h.startsWith('publishing.')) {
-          window.location.replace('/unipublishing');
-        } else if (h.startsWith('unihub.') || h.startsWith('hube.')) {
-          window.location.replace('/unihube');
-        } else if (h.startsWith('48k.')) {
-          window.location.replace('/48k');
-        } else if (h.startsWith('portal.') || h.startsWith('artist.')) {
-          window.location.replace('/artist-login');
+        var target = null;
+        if (h.startsWith('publishing.')) target = 'unipublishing.html';
+        else if (h.startsWith('unihub.') || h.startsWith('hube.')) target = 'unihube.html';
+        else if (h.startsWith('48k.')) target = '48kcollective.html';
+        else if (h.startsWith('portal.') || h.startsWith('artist.')) target = 'artist-login.html';
+
+        if (target) {
+          try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', target, false);
+            xhr.send(null);
+            if (xhr.status === 200 || xhr.status === 0) {
+              document.open();
+              document.write(xhr.responseText);
+              document.close();
+            }
+          } catch(e) {
+            window.location.replace(target.replace('.html', ''));
+          }
         }
       }
     })();
