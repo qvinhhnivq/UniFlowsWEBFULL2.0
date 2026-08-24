@@ -1,5 +1,9 @@
-import { supabase, isSupabaseConfigured } from './supabase.js';
-import { getLocalCachedData, getData } from './data.js';
+// ============================================================================
+// UNIFLOWS STANDALONE SMARTLINK ENGINE (High Reliability / Zero Module Dependency)
+// ============================================================================
+
+const SUPABASE_URL = 'https://oizygltqzavvymvmikzt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9penlnbHRxemF2dnltdm1pa3p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNzMyOTcsImV4cCI6MjEwMjY0OTI5N30.LMaHfdvZ39LYYFAde35D4Q25Ua3H0LhE2s0_KnC5e_4';
 
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
 const slug = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -17,23 +21,23 @@ function formatSocialUrl(u) {
   return str;
 }
 
-function getArtistProducts(art) {
-  if (!art) return [];
-  if (Array.isArray(art.products) && art.products.length > 0) return art.products;
-  const stats = (typeof art.stats === 'object' && art.stats) ? art.stats : (typeof art.stats === 'string' ? JSON.parse(art.stats || '{}') : {});
-  if (Array.isArray(stats.products) && stats.products.length > 0) return stats.products;
-  if (Array.isArray(art.releases) && art.releases.length > 0) return art.releases;
-  return [];
+function getLocalCached() {
+  try {
+    const raw = localStorage.getItem('uniflows-content');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
 
 // ----------------------------------------------------------------------------
-// MAIN SMARTLINK BOOTSTRAP
+// MAIN BOOTSTRAP
 // ----------------------------------------------------------------------------
 export async function initSmartLinkEngine() {
   const root = document.querySelector('[data-smartlink-page]') || document.body;
   if (!root) return;
 
-  // 1. Parse Release Slug / ID from all possible URL patterns
+  // 1. Parse Release Slug / ID from all possible URL formats
   const q = new URLSearchParams(location.search);
   const rawPath = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
   const parts = rawPath.split('/').filter(Boolean);
@@ -59,11 +63,12 @@ export async function initSmartLinkEngine() {
     releaseQuery = releaseQuery.replace(/\.html$/i, '').trim();
   }
 
-  // 2. Fast Cached State
-  const cachedData = getLocalCachedData() || {};
+  // 2. Fast 0ms render from Local Storage
+  const cached = getLocalCached() || {};
   let rendered = false;
-  if (cachedData.artists) {
-    rendered = tryRenderFromPool(root, extractAllReleases(cachedData.artists, []), releaseQuery);
+  const initialPool = buildReleasePool(cached.artists || [], [], cached.publishing?.customTracks || []);
+  if (initialPool.length > 0) {
+    rendered = tryRenderMatch(root, initialPool, releaseQuery);
   }
 
   if (!rendered) {
@@ -78,52 +83,48 @@ export async function initSmartLinkEngine() {
     `;
   }
 
-  // 3. Live Supabase Query (Fetch from releases AND artists table)
+  // 3. Ultra-fast REST Direct Fetch from Supabase (Zero SDK overhead)
   try {
-    let dbReleases = [];
-    let dbArtists = [];
+    const headers = {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+    };
 
-    if (isSupabaseConfigured()) {
-      const [relRes, artRes] = await Promise.all([
-        supabase.from('releases').select('*, artists(*)').order('created_at', { ascending: false }),
-        supabase.from('artists').select('*')
-      ]);
+    const [relRes, artRes, setRes] = await Promise.allSettled([
+      fetch(`${SUPABASE_URL}/rest/v1/releases?select=*&order=created_at.desc`, { headers }).then(r => r.ok ? r.json() : []),
+      fetch(`${SUPABASE_URL}/rest/v1/artists?select=*`, { headers }).then(r => r.ok ? r.json() : []),
+      fetch(`${SUPABASE_URL}/rest/v1/site_settings?id=eq.main&select=*`, { headers }).then(r => r.ok ? r.json() : [])
+    ]);
 
-      if (relRes.data) dbReleases = relRes.data;
-      if (artRes.data) dbArtists = artRes.data;
-    }
+    const dbReleases = relRes.status === 'fulfilled' ? relRes.value : [];
+    const dbArtists = artRes.status === 'fulfilled' ? artRes.value : [];
+    const settings = (setRes.status === 'fulfilled' && Array.isArray(setRes.value) && setRes.value[0]) ? setRes.value[0] : {};
+    const customTracks = settings.publishing?.customTracks || cached.publishing?.customTracks || [];
 
-    if (dbReleases.length === 0 && dbArtists.length === 0) {
-      const freshData = await getData();
-      if (freshData) {
-        dbArtists = freshData.artists || [];
-      }
-    }
-
-    const pool = extractAllReleases(dbArtists, dbReleases);
-    tryRenderFromPool(root, pool, releaseQuery, true);
+    const fullPool = buildReleasePool(dbArtists, dbReleases, customTracks);
+    tryRenderMatch(root, fullPool, releaseQuery, true);
   } catch (err) {
-    console.error('SmartLink live sync error:', err);
+    console.error('SmartLink REST fetch error:', err);
     if (!rendered) {
-      const pool = extractAllReleases(cachedData.artists || [], []);
-      tryRenderFromPool(root, pool, releaseQuery, true);
+      tryRenderMatch(root, initialPool, releaseQuery, true);
     }
   }
 }
 
 // ----------------------------------------------------------------------------
-// EXTRACT ALL RELEASES FROM ARTISTS & RELEASES TABLE
+// BUILD UNIFIED RELEASE POOL
 // ----------------------------------------------------------------------------
-function extractAllReleases(artistsList = [], releasesList = []) {
-  const map = new Map();
+function buildReleasePool(artists = [], releases = [], customTracks = []) {
+  const pool = new Map();
 
-  // 1. Add DB releases
-  releasesList.forEach(r => {
-    const artName = r.artists?.name || artistsList.find(a => a.id === r.artist_id)?.name || 'UniFLOWs Artist';
-    const artImg = r.artists?.image || artistsList.find(a => a.id === r.artist_id)?.image || '';
-    const relKey = (r.slug || r.id || r.title).toLowerCase();
+  // 1. Releases from Supabase `releases` table
+  releases.forEach(r => {
+    const artObj = r.artists || artists.find(a => a.id === r.artist_id) || {};
+    const artName = artObj.name || r.artist_id || 'UniFLOWs Artist';
+    const artImg = artObj.image || r.artwork_url || '';
+    const key = (r.slug || r.id || r.title || '').toLowerCase();
 
-    map.set(relKey, {
+    pool.set(key, {
       id: r.id,
       title: r.title,
       type: r.type || 'Single',
@@ -133,22 +134,24 @@ function extractAllReleases(artistsList = [], releasesList = []) {
       links: r.links || {},
       metadata: r.metadata || {},
       artist: {
-        id: r.artist_id,
+        id: r.artist_id || artObj.id,
         name: artName,
         image: artImg
       }
     });
   });
 
-  // 2. Add products from artists
-  artistsList.forEach(art => {
-    const prods = getArtistProducts(art);
+  // 2. Releases from `artists.stats.products` or `artists.products`
+  artists.forEach(art => {
+    const stats = (typeof art.stats === 'object' && art.stats) ? art.stats : (typeof art.stats === 'string' ? JSON.parse(art.stats || '{}') : {});
+    const prods = Array.isArray(art.products) ? art.products : (Array.isArray(stats.products) ? stats.products : []);
+
     prods.forEach(p => {
       const relSlug = p.slug || slug(p.title);
-      const relKey = (relSlug || p.id || p.title).toLowerCase();
+      const key = (relSlug || p.id || p.title || '').toLowerCase();
 
-      if (!map.has(relKey)) {
-        map.set(relKey, {
+      if (!pool.has(key)) {
+        pool.set(key, {
           id: p.id || `rel-${relSlug}`,
           title: p.title,
           type: p.type || 'Single',
@@ -167,13 +170,42 @@ function extractAllReleases(artistsList = [], releasesList = []) {
     });
   });
 
-  return Array.from(map.values());
+  // 3. Publishing custom tracks
+  customTracks.forEach(t => {
+    const trackSlug = slug(t.title);
+    const key = (trackSlug || t.id || t.title || '').toLowerCase();
+
+    if (!pool.has(key)) {
+      pool.set(key, {
+        id: t.id,
+        title: t.title,
+        type: t.genre || 'Single',
+        slug: trackSlug,
+        artworkUrl: t.artworkUrl || '',
+        audioUrl: t.audioUrl || '',
+        links: {
+          spotify: t.spotifyUrl,
+          apple: t.appleMusicUrl,
+          youtube: t.youtubeUrl,
+          soundcloud: t.soundcloudUrl
+        },
+        metadata: {},
+        artist: {
+          id: 'pub',
+          name: t.artist || 'UniFLOWs Artist',
+          image: t.artworkUrl || ''
+        }
+      });
+    }
+  });
+
+  return Array.from(pool.values());
 }
 
 // ----------------------------------------------------------------------------
-// MATCH RELEASE FROM POOL
+// SMART FUZZY MATCH ENGINE
 // ----------------------------------------------------------------------------
-function tryRenderFromPool(root, pool, query, isFinal = false) {
+function tryRenderMatch(root, pool, query, isFinal = false) {
   if (!query) {
     renderSmartLinkHub(root, pool);
     return true;
@@ -182,7 +214,7 @@ function tryRenderFromPool(root, pool, query, isFinal = false) {
   const cleanQ = slug(query);
   const normQ = normStr(query);
 
-  // Exact Match
+  // 1. Exact Match
   let match = pool.find(r => 
     r.slug === query || 
     slug(r.slug) === cleanQ || 
@@ -190,7 +222,7 @@ function tryRenderFromPool(root, pool, query, isFinal = false) {
     String(r.id).toLowerCase() === query.toLowerCase()
   );
 
-  // Normalized / Accentless Match
+  // 2. Normalized Match (Ignoring diacritics & spaces)
   if (!match) {
     match = pool.find(r => 
       normStr(r.slug) === normQ || 
@@ -199,7 +231,7 @@ function tryRenderFromPool(root, pool, query, isFinal = false) {
     );
   }
 
-  // Fuzzy Substring Match (e.g. "o-ki" matching "o-kia" or "Ơ Kìa")
+  // 3. Fuzzy Substring Match (e.g. "o-ki" matching "o-kia" or "Ơ Kìa" or "oki")
   if (!match) {
     match = pool.find(r => {
       const nSlug = normStr(r.slug);

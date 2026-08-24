@@ -599,8 +599,50 @@
 
     let liveData = getLocalCachedData();
     let pubData = liveData.publishing || {};
-    let tracks = pubData.customTracks || [];
+    let tracks = getUnifiedPublishingTracks(liveData);
     let certificates = pubData.certificates || [];
+
+    function getUnifiedPublishingTracks(dataObj) {
+      const pub = dataObj.publishing || {};
+      const custom = Array.isArray(pub.customTracks) ? pub.customTracks : [];
+      const trackMap = new Map();
+
+      // 1. Add Custom/Sync Tracks
+      custom.forEach(t => {
+        const key = (t.title + '---' + t.artist).toLowerCase();
+        trackMap.set(key, { ...t, enabled: t.enabled !== false });
+      });
+
+      // 2. Add Label Artists Releases
+      (dataObj.artists || []).forEach(art => {
+        const stats = (typeof art.stats === 'object' && art.stats) ? art.stats : {};
+        const prods = Array.isArray(art.products) ? art.products : (Array.isArray(stats.products) ? stats.products : []);
+        prods.forEach(p => {
+          const key = (p.title + '---' + art.name).toLowerCase();
+          if (!trackMap.has(key)) {
+            trackMap.set(key, {
+              id: p.id || `pub-rel-${Date.now()}`,
+              title: p.title,
+              artist: art.name,
+              composer: art.name,
+              genre: p.type || art.genre || 'Single',
+              mood: 'Cinematic · Original Master',
+              bpm: '120 BPM · Master Quality',
+              audioUrl: p.audioUrl || '',
+              spotifyUrl: p.links?.spotify || '',
+              appleMusicUrl: p.links?.apple || p.links?.applemusic || '',
+              youtubeUrl: p.links?.youtube || p.links?.youtubemusic || '',
+              soundcloudUrl: p.links?.soundcloud || '',
+              rightsScope: 'full',
+              isExternal: false,
+              enabled: true
+            });
+          }
+        });
+      });
+
+      return Array.from(trackMap.values());
+    }
 
     // ----------------------------------------------------
     // 1. RENDER CATALOGUE WITH RIGHTS BADGE & STREAMING LINKS
@@ -1286,7 +1328,7 @@
       if (fresh) {
         liveData = fresh;
         pubData = liveData.publishing || {};
-        tracks = pubData.customTracks || [];
+        tracks = getUnifiedPublishingTracks(fresh);
         certificates = pubData.certificates || [];
         renderCatalogue();
       }

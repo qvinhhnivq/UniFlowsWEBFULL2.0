@@ -421,7 +421,7 @@ export async function saveData(data) {
   if (!isSupabaseConfigured()) return true;
 
   try {
-    // 1. Save site_settings
+    // 1. Save site_settings safely
     const settingsPayload = {
       id: 'main',
       tagline: data.tagline,
@@ -441,22 +441,32 @@ export async function saveData(data) {
       updated_at: new Date().toISOString()
     };
 
-    const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
-    if (settingsError) {
-      delete settingsPayload.announcements;
-      delete settingsPayload.emails;
-      delete settingsPayload.publishing;
-      delete settingsPayload.unihube;
-      delete settingsPayload.collective48k;
-      delete settingsPayload.admin_accounts;
-      delete settingsPayload.music_submissions;
-      await supabase.from('site_settings').upsert(settingsPayload);
+    try {
+      const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
+      if (settingsError) {
+        console.warn('Upsert site_settings full error, trying without optional columns:', settingsError);
+        const safePayload = {
+          id: 'main',
+          tagline: data.tagline,
+          hero_text: data.heroText,
+          about_title: data.aboutTitle,
+          about_text: data.aboutText,
+          email: data.email,
+          city: data.city,
+          announcements: data.announcements || defaultData.announcements,
+          publishing: data.publishing || defaultData.publishing,
+          unihube: data.unihube || defaultData.unihube,
+          updated_at: new Date().toISOString()
+        };
+        await supabase.from('site_settings').upsert(safePayload);
+      }
+    } catch (sErr) {
+      console.warn('site_settings upsert caught error:', sErr);
     }
 
-    // 2. Save artists with complete stats json and releases
+    // 2. Save artists & releases in parallel
     if (Array.isArray(data.artists)) {
-      for (const a of data.artists) {
-        if (MOCK_IDS.artists.includes(a.id)) continue;
+      const artistPromises = data.artists.filter(a => !MOCK_IDS.artists.includes(a.id)).map(async a => {
         const stats = {
           username: a.username || a.id,
           password: a.password || '',
@@ -502,7 +512,7 @@ export async function saveData(data) {
 
         await supabase.from('artists').upsert(artistPayload);
 
-        // 3. Also upsert releases into releases table
+        // Save products into releases table
         if (Array.isArray(a.products)) {
           for (const p of a.products) {
             const relSlug = p.slug || String(p.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -530,13 +540,13 @@ export async function saveData(data) {
             try {
               await supabase.from('releases').upsert(relPayload);
             } catch (e) {
-              console.warn('Could not upsert individual release:', e);
+              // ignore individual release upsert conflict
             }
           }
         }
-      }
-    }
+      });
 
+      await Promise.allSettled(artistPromises);
     return true;
   } catch (err) {
     console.error('Lỗi khi lưu dữ liệu lên Supabase:', err);
