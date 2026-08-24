@@ -20,38 +20,17 @@ function formatSocialUrl(u) {
 }
 
 function getNavLinks() {
-  const host = window.location.hostname.toLowerCase();
-  const protocol = window.location.protocol;
-  const isCustomDomain = host.includes('uniflowslabel.');
-  
-  if (isCustomDomain) {
-    const parts = host.split('.');
-    const baseDomain = parts.slice(-2).join('.');
-    return {
-      home: `${protocol}//${baseDomain}/`,
-      artists: `${protocol}//${baseDomain}/artists`,
-      unihube: `${protocol}//unihub.${baseDomain}/`,
-      collective48k: `${protocol}//48k.${baseDomain}/`,
-      publishing: `${protocol}//publishing.${baseDomain}/`,
-      submitMusic: `${protocol}//${baseDomain}/submit-music`,
-      about: `${protocol}//${baseDomain}/about`,
-      news: `${protocol}//${baseDomain}/news`,
-      contact: `${protocol}//${baseDomain}/contact`,
-      artistLogin: `${protocol}//portal.${baseDomain}/`
-    };
-  }
-
   return {
-    home: 'index',
-    artists: 'artists',
-    unihube: 'unihube',
-    collective48k: '48k',
-    publishing: 'unipublishing',
-    submitMusic: 'submit-music',
-    about: 'about',
-    news: 'news',
-    contact: 'contact',
-    artistLogin: 'artist-login'
+    home: '/',
+    artists: '/artists',
+    unihube: '/unihube',
+    collective48k: '/48kcollective',
+    publishing: '/unipublishing',
+    submitMusic: '/submit-music',
+    about: '/about',
+    news: '/news',
+    contact: '/contact',
+    artistLogin: '/artist-login'
   };
 }
 

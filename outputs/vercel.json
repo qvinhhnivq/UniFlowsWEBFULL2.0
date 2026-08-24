@@ -3,48 +3,34 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/unihube",
-      "has": [
-        {
-          "type": "host",
-          "value": "unihub.(.*)"
-        }
-      ],
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/unipublishing",
-      "has": [
-        {
-          "type": "host",
-          "value": "publishing.(.*)"
-        }
-      ],
-      "destination": "/",
-      "permanent": false
-    },
-    {
       "source": "/48k",
-      "has": [
-        {
-          "type": "host",
-          "value": "48k.(.*)"
-        }
-      ],
-      "destination": "/",
-      "permanent": false
+      "destination": "/48kcollective",
+      "permanent": true
     },
     {
-      "source": "/artist-login",
-      "has": [
-        {
-          "type": "host",
-          "value": "portal.(.*)"
-        }
-      ],
-      "destination": "/",
-      "permanent": false
+      "source": "/unihub",
+      "destination": "/unihube",
+      "permanent": true
+    },
+    {
+      "source": "/publishing",
+      "destination": "/unipublishing",
+      "permanent": true
+    },
+    {
+      "source": "/portal",
+      "destination": "/artist-login",
+      "permanent": true
+    },
+    {
+      "source": "/submit-demo",
+      "destination": "/submit-music",
+      "permanent": true
+    },
+    {
+      "source": "/artist-portal",
+      "destination": "/artist-login",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -76,7 +62,7 @@
           "value": "48k.(.*)"
         }
       ],
-      "destination": "/48k.html"
+      "destination": "/48kcollective.html"
     },
     {
       "source": "/",
