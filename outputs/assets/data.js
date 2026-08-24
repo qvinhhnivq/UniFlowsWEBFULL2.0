@@ -368,11 +368,25 @@ export async function getData() {
           };
         });
 
+      const artistOrder = settingsData?.artist_order || settingsData?.artistOrder || cached?.artist_order || cached?.artistOrder || [];
+      if (Array.isArray(artistOrder) && artistOrder.length > 0) {
+        mappedSupabaseArtists.sort((a, b) => {
+          let idxA = artistOrder.indexOf(a.id);
+          let idxB = artistOrder.indexOf(b.id);
+          if (idxA === -1) idxA = 999;
+          if (idxB === -1) idxB = 999;
+          return idxA - idxB;
+        });
+      }
+
       merged.artists = mappedSupabaseArtists;
+      merged.artist_order = mappedSupabaseArtists.map(a => a.id);
     } else if (cached.artists) {
       merged.artists = cached.artists.filter(a => !MOCK_IDS.artists.includes(a.id));
+      merged.artist_order = merged.artists.map(a => a.id);
     } else {
       merged.artists = [];
+      merged.artist_order = [];
     }
 
     if (articlesData) {

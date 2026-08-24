@@ -31,14 +31,18 @@ export async function initSmartLinkEngine() {
   let releaseSlug = q.get('release') || q.get('r') || q.get('slug') || q.get('id') || q.get('track') || '';
   let artistId = q.get('artist') || q.get('a') || '';
 
-  if (!releaseSlug) {
-    if (parts[0] === 'listen' || parts[0] === 'l' || parts[0] === 'listen.html' || parts[0] === 'l.html' || parts[0] === 'smartlink.html') {
+  if (!releaseSlug && parts.length > 0) {
+    const firstPart = parts[0].toLowerCase().replace(/\.html$/i, '');
+    if (['listen', 'l', 'smartlink', 'song', 'track'].includes(firstPart)) {
       if (parts.length >= 3) {
         artistId = parts[1];
         releaseSlug = parts[2];
       } else if (parts.length >= 2) {
         releaseSlug = parts[1];
       }
+    } else if (parts.length === 1 && !firstPart.includes('.html')) {
+      // Direct root short slug e.g. /summertime-sadness
+      releaseSlug = parts[0];
     }
   }
 
@@ -46,117 +50,167 @@ export async function initSmartLinkEngine() {
     releaseSlug = releaseSlug.replace(/\.html$/i, '').trim();
   }
 
-  // 2. Render Fast Cached State first (0ms)
-  let liveData = getLocalCachedData();
-  renderSmartLinkView(root, liveData, releaseSlug, artistId, true);
+  // 2. Fast Render from Cache (0ms)
+  let cachedData = getLocalCachedData();
+  let rendered = false;
+  if (cachedData && cachedData.artists) {
+    rendered = tryRenderFromData(root, cachedData, releaseSlug, artistId);
+  }
 
-  // 3. Fetch Fresh Data in Background & Re-render
+  if (!rendered) {
+    root.innerHTML = `
+      <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#090a0f;"></div>
+      <div class="smart-viewport" style="position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;">
+        <div style="text-align:center;">
+          <div style="font-size:32px;margin-bottom:12px;opacity:0.85;">💿</div>
+          <p style="color:#ffffff;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Đang tải SmartLink...</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // 3. Direct Live Supabase Fetch (Guaranteed Fresh Release & Artist Data)
   try {
-    const fresh = await getData();
-    if (fresh) {
-      liveData = fresh;
-      renderSmartLinkView(root, liveData, releaseSlug, artistId, false);
+    let dbReleases = [];
+    let dbArtists = [];
+
+    if (isSupabaseConfigured()) {
+      const [relRes, artRes] = await Promise.all([
+        supabase.from('releases').select('*, artists(*)').order('created_at', { ascending: false }),
+        supabase.from('artists').select('*')
+      ]);
+
+      if (relRes.data) dbReleases = relRes.data;
+      if (artRes.data) dbArtists = artRes.data;
     }
-  } catch (e) {
-    console.warn('SmartLink background fetch:', e);
+
+    // Fallback to full getData if db empty
+    if (dbReleases.length === 0 && dbArtists.length === 0) {
+      const freshData = await getData();
+      if (freshData) {
+        dbArtists = freshData.artists || [];
+        dbArtists.forEach(art => {
+          (art.products || []).forEach(p => {
+            dbReleases.push({ ...p, artist_id: art.id, artists: { name: art.name, image: art.image } });
+          });
+        });
+      }
+    }
+
+    renderSmartLinkDirect(root, dbReleases, dbArtists, releaseSlug, artistId);
+  } catch (err) {
+    console.error('SmartLink live fetch failed:', err);
+    // Render fallback from cached data or 404
+    if (!rendered) {
+      renderNotFound(root, releaseSlug, cachedData?.artists || []);
+    }
   }
 }
 
 // ----------------------------------------------------------------------------
-// RENDER VIEW CONTROLLER
+// TRY RENDER FROM LOCAL DATA CACHE
 // ----------------------------------------------------------------------------
-function renderSmartLinkView(root, data, releaseSlug, artistId, isInitialTick) {
-  const artistsList = data.artists || [];
-  const cleanSlug = slug(releaseSlug);
-
-  // Mode A: Hub view if no release slug is requested in URL
+function tryRenderFromData(root, data, releaseSlug, artistId) {
   if (!releaseSlug) {
-    renderSmartLinkHub(root, artistsList);
-    return;
+    renderSmartLinkHub(root, data.artists || []);
+    return true;
   }
 
-  // Mode B: Find Target Release
+  const cleanSlug = slug(releaseSlug);
   let matchedArtist = null;
   let matchedRelease = null;
 
-  if (artistId) {
-    matchedArtist = artistsList.find(x => x.id === artistId || slug(x.name) === slug(artistId));
-    if (matchedArtist) {
-      const prods = Array.isArray(matchedArtist.products) ? matchedArtist.products : (Array.isArray(matchedArtist.releases) ? matchedArtist.releases : []);
-      matchedRelease = prods.find(x => 
-        (x.slug && slug(x.slug) === cleanSlug) || 
-        slug(x.title) === cleanSlug || 
-        (x.id && String(x.id).toLowerCase() === releaseSlug.toLowerCase()) ||
-        (x.slug && x.slug.toLowerCase() === releaseSlug.toLowerCase())
-      );
+  for (const art of (data.artists || [])) {
+    const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
+    const found = prods.find(x => 
+      (x.slug && slug(x.slug) === cleanSlug) || 
+      slug(x.title) === cleanSlug || 
+      (x.id && String(x.id).toLowerCase() === releaseSlug.toLowerCase()) ||
+      (x.slug && x.slug.toLowerCase() === releaseSlug.toLowerCase()) ||
+      slug(x.title).includes(cleanSlug) ||
+      cleanSlug.includes(slug(x.title))
+    );
+    if (found) {
+      matchedArtist = art;
+      matchedRelease = found;
+      break;
     }
   }
 
-  if (!matchedRelease) {
+  if (matchedRelease && matchedArtist) {
+    renderReleaseCard(root, matchedArtist, matchedRelease);
+    return true;
+  }
+  return false;
+}
+
+// ----------------------------------------------------------------------------
+// RENDER SMARTLINK DIRECT (FROM LIVE SUPABASE)
+// ----------------------------------------------------------------------------
+function renderSmartLinkDirect(root, releasesList, artistsList, releaseSlug, artistId) {
+  if (!releaseSlug) {
+    renderSmartLinkHub(root, artistsList, releasesList);
+    return;
+  }
+
+  const cleanSlug = slug(releaseSlug);
+  let targetRelease = null;
+  let targetArtist = null;
+
+  // 1. Search in DB Releases
+  targetRelease = releasesList.find(r => 
+    (r.slug && slug(r.slug) === cleanSlug) ||
+    slug(r.title) === cleanSlug ||
+    (r.id && String(r.id).toLowerCase() === releaseSlug.toLowerCase()) ||
+    (r.slug && r.slug.toLowerCase() === releaseSlug.toLowerCase()) ||
+    slug(r.title).includes(cleanSlug) ||
+    cleanSlug.includes(slug(r.title))
+  );
+
+  if (targetRelease) {
+    if (targetRelease.artists && targetRelease.artists.name) {
+      targetArtist = targetRelease.artists;
+    } else {
+      targetArtist = artistsList.find(a => a.id === targetRelease.artist_id) || { name: 'UniFLOWs Artist', image: targetRelease.artwork_url };
+    }
+  }
+
+  // 2. Search in Artists products if not in DB releases
+  if (!targetRelease) {
     for (const art of artistsList) {
       const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
       const found = prods.find(x => 
         (x.slug && slug(x.slug) === cleanSlug) || 
         slug(x.title) === cleanSlug || 
-        (x.id && String(x.id).toLowerCase() === releaseSlug.toLowerCase()) ||
-        (x.slug && x.slug.toLowerCase() === releaseSlug.toLowerCase()) ||
-        slug(x.title).includes(cleanSlug) ||
-        cleanSlug.includes(slug(x.title))
+        (x.id && String(x.id).toLowerCase() === releaseSlug.toLowerCase())
       );
       if (found) {
-        matchedArtist = art;
-        matchedRelease = found;
+        targetArtist = art;
+        targetRelease = found;
         break;
       }
     }
   }
 
-  // Check Publishing Custom Tracks as fallback
-  if (!matchedRelease && data.publishing?.customTracks) {
-    const pubTrack = data.publishing.customTracks.find(t => 
-      slug(t.title) === cleanSlug || 
-      (t.id && String(t.id).toLowerCase() === releaseSlug.toLowerCase()) ||
-      slug(t.title).includes(cleanSlug)
-    );
-    if (pubTrack) {
-      matchedArtist = { name: pubTrack.artist || 'UniFLOWs Artist', image: pubTrack.artworkUrl || '' };
-      matchedRelease = {
-        title: pubTrack.title,
-        type: pubTrack.genre || 'Single',
-        artworkUrl: pubTrack.artworkUrl || '',
-        links: {
-          spotify: pubTrack.spotifyUrl,
-          apple: pubTrack.appleMusicUrl,
-          youtube: pubTrack.youtubeUrl,
-          soundcloud: pubTrack.soundcloudUrl
-        }
-      };
-    }
-  }
-
-  // Not Found State
-  if (!matchedRelease || !matchedArtist) {
-    if (isInitialTick) {
-      root.innerHTML = `
-        <div class="smart-bg-container">
-          <div class="smart-bg-layer" style="background:#090a0f;"></div>
-          <div class="smart-page" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
-            <div style="text-align:center;">
-              <div style="font-size:28px;margin-bottom:12px;opacity:0.8;">💿</div>
-              <p style="color:#ffffff;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Đang tải SmartLink...</p>
-            </div>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    renderNotFound(root, releaseSlug, artistsList);
+  // 3. If Still Not Found -> 404
+  if (!targetRelease || !targetArtist) {
+    renderNotFound(root, releaseSlug, artistsList, releasesList);
     return;
   }
 
-  // Render Full SmartLink Page
-  renderReleaseCard(root, matchedArtist, matchedRelease);
+  // Normalize Release fields
+  const normalizedRelease = {
+    id: targetRelease.id,
+    title: targetRelease.title,
+    type: targetRelease.type || 'Single',
+    slug: targetRelease.slug || slug(targetRelease.title),
+    artworkUrl: targetRelease.artwork_url || targetRelease.artworkUrl,
+    audioUrl: targetRelease.audio_url || targetRelease.audioUrl,
+    links: targetRelease.links || {},
+    metadata: targetRelease.metadata || {}
+  };
+
+  renderReleaseCard(root, targetArtist, normalizedRelease);
 }
 
 // ----------------------------------------------------------------------------
@@ -211,14 +265,16 @@ function renderReleaseCard(root, artist, release) {
         });
       }
     }
-   const meta = (typeof p.metadata === 'object' && p.metadata) ? p.metadata : {};
+  });
+
+  const meta = (typeof p.metadata === 'object' && p.metadata) ? p.metadata : {};
   const isPreviewDisabled = meta.previewEnabled === false || p.previewEnabled === false || meta.previewMode === 'none' || p.previewMode === 'none';
   const previewStart = parseFloat(p.previewStart || meta.previewStart || 0);
   const previewDuration = parseFloat(p.previewDuration || meta.previewDuration || 30);
   const previewMode = p.previewMode || meta.previewMode || 'custom';
 
   const finalReleaseSlug = p.slug || slug(p.title);
-  const clickStorageKey = `uniflows-smart-clicks-${a.id}-${finalReleaseSlug}`;
+  const clickStorageKey = `uniflows-smart-clicks-${a.id || 'art'}-${finalReleaseSlug}`;
   let clickCount = Number(localStorage.getItem(clickStorageKey) || 0);
 
   const artworkSrc = p.artworkUrl || a.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=90';
@@ -376,14 +432,28 @@ function renderReleaseCard(root, artist, release) {
 // ----------------------------------------------------------------------------
 // RENDER NOT FOUND STATE (Luxury Monochrome)
 // ----------------------------------------------------------------------------
-function renderNotFound(root, requestedSlug, artistsList) {
+function renderNotFound(root, requestedSlug, artistsList, releasesList = []) {
   const allReleases = [];
-  artistsList.forEach(art => {
-    const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
-    prods.forEach(pr => {
-      allReleases.push({ ...pr, artistName: art.name, artistImage: art.image });
+
+  if (releasesList.length > 0) {
+    releasesList.forEach(r => {
+      const artName = r.artists?.name || r.artist_id || 'Nghệ sĩ';
+      allReleases.push({
+        title: r.title,
+        type: r.type || 'Single',
+        slug: r.slug,
+        artworkUrl: r.artwork_url,
+        artistName: artName
+      });
     });
-  });
+  } else {
+    artistsList.forEach(art => {
+      const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
+      prods.forEach(pr => {
+        allReleases.push({ ...pr, artistName: art.name, artistImage: art.image });
+      });
+    });
+  }
 
   root.innerHTML = `
     <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#090a0f;"></div>
@@ -399,7 +469,7 @@ function renderNotFound(root, requestedSlug, artistsList) {
         ${allReleases.length > 0 ? `
           <div style="width:100%;display:grid;gap:8px;margin-bottom:24px;">
             ${allReleases.slice(0, 4).map(r => `
-              <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;text-decoration:none;color:#fff;">
+              <a href="/l/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;text-decoration:none;color:#fff;">
                 <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=100&q=80')}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" alt="${esc(r.title)}">
                 <div style="flex:1;min-width:0;text-align:left;">
                   <strong style="display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
@@ -420,14 +490,28 @@ function renderNotFound(root, requestedSlug, artistsList) {
 // ----------------------------------------------------------------------------
 // RENDER MUSIC HUB (When visiting /listen with no slug)
 // ----------------------------------------------------------------------------
-function renderSmartLinkHub(root, artistsList) {
+function renderSmartLinkHub(root, artistsList, releasesList = []) {
   const allReleases = [];
-  artistsList.forEach(art => {
-    const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
-    prods.forEach(pr => {
-      allReleases.push({ ...pr, artistName: art.name, artistImage: art.image });
+
+  if (releasesList.length > 0) {
+    releasesList.forEach(r => {
+      const artName = r.artists?.name || r.artist_id || 'Nghệ sĩ';
+      allReleases.push({
+        title: r.title,
+        type: r.type || 'Single',
+        slug: r.slug,
+        artworkUrl: r.artwork_url,
+        artistName: artName
+      });
     });
-  });
+  } else {
+    artistsList.forEach(art => {
+      const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
+      prods.forEach(pr => {
+        allReleases.push({ ...pr, artistName: art.name, artistImage: art.image });
+      });
+    });
+  }
 
   root.innerHTML = `
     <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#090a0f;"></div>
@@ -445,7 +529,7 @@ function renderSmartLinkHub(root, artistsList) {
 
         <div style="width:100%;display:grid;gap:10px;margin-bottom:24px;">
           ${allReleases.length > 0 ? allReleases.map(r => `
-            <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;text-decoration:none;color:#fff;transition:all 0.2s ease;">
+            <a href="/l/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;text-decoration:none;color:#fff;transition:all 0.2s ease;">
               <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:50px;height:50px;object-fit:cover;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" alt="${esc(r.title)}">
               <div style="flex:1;min-width:0;text-align:left;">
                 <strong style="display:block;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>

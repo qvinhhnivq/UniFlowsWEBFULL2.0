@@ -4,19 +4,27 @@
   "rewrites": [
     {
       "source": "/listen/:slug*",
-      "destination": "/listen/index.html"
+      "destination": "/listen.html"
     },
     {
       "source": "/listen",
-      "destination": "/listen/index.html"
+      "destination": "/listen.html"
     },
     {
       "source": "/l/:slug*",
-      "destination": "/listen/index.html"
+      "destination": "/listen.html"
     },
     {
       "source": "/l",
-      "destination": "/listen/index.html"
+      "destination": "/listen.html"
+    },
+    {
+      "source": "/smartlink/:slug*",
+      "destination": "/listen.html"
+    },
+    {
+      "source": "/smartlink",
+      "destination": "/listen.html"
     },
     {
       "source": "/",
