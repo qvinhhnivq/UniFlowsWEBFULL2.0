@@ -10,15 +10,6 @@
   <meta name="theme-color" content="#000000">
   <meta property="og:image" content="/og-image.jpg">
   <link rel="stylesheet" href="assets/app.css">
-  <script>
-    (function() {
-      var h = window.location.hostname.toLowerCase();
-      var p = window.location.pathname.toLowerCase();
-      if ((h.startsWith('portal.') || h.startsWith('artist.')) && (p === '/' || p === '' || p === '/index' || p === '/index.html')) {
-        window.location.replace('/artist-login');
-      }
-    })();
-  </script>
 </head>
 <body data-page="index">
   <main>
