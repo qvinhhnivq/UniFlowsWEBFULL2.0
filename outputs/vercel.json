@@ -2,9 +2,89 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/listen/:slug*", "destination": "/listen" },
-    { "source": "/l/:slug*", "destination": "/l" },
-    { "source": "/artist/:slug*", "destination": "/artist" },
-    { "source": "/article/:slug*", "destination": "/article" }
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "unihub.(.*)"
+        }
+      ],
+      "destination": "/unihube.html"
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "unihub.(.*)"
+        }
+      ],
+      "destination": "/unihube.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "publishing.(.*)"
+        }
+      ],
+      "destination": "/unipublishing.html"
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "publishing.(.*)"
+        }
+      ],
+      "destination": "/unipublishing.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "48k.(.*)"
+        }
+      ],
+      "destination": "/48k.html"
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "48k.(.*)"
+        }
+      ],
+      "destination": "/48k.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "portal.(.*)"
+        }
+      ],
+      "destination": "/artist-portal.html"
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "portal.(.*)"
+        }
+      ],
+      "destination": "/artist-portal.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/$1.html"
+    }
   ]
 }
