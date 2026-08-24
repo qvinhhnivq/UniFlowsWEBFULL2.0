@@ -1189,7 +1189,7 @@ async function loadReleasesQueue() {
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <button type="button" class="button alt view-admin-epk-btn" data-epk-id="${esc(r.id)}" style="padding:6px 12px;font-size:11px;background:#f8fafc;border-color:var(--ink);font-weight:bold;">📄 Xem EPK</button>
-            <a class="button alt" href="${window.location.hostname.includes('uniflowslabel.com') ? window.location.protocol + '//uniflowslabel.com/listen/' + encodeURIComponent(releaseSlug) : '/listen/' + encodeURIComponent(releaseSlug)}" target="_blank" style="padding:6px 12px;font-size:11px;">SmartLink ↗</a>
+            <a class="button alt" href="${window.location.hostname.includes('uniflowslabel.com') ? window.location.protocol + '//uniflowslabel.com/listen?release=' + encodeURIComponent(releaseSlug) : '/listen?release=' + encodeURIComponent(releaseSlug)}" target="_blank" style="padding:6px 12px;font-size:11px;">SmartLink ↗</a>
             <button class="button alt remove" type="button" data-delete-release="${esc(r.id)}" style="padding:6px 10px;font-size:11px;">✕ Xóa</button>
           </div>
         </div>

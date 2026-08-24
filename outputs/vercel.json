@@ -3,20 +3,20 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/listen/(.*)",
-      "destination": "/listen.html"
+      "source": "/listen/:slug*",
+      "destination": "/listen/index.html"
     },
     {
       "source": "/listen",
-      "destination": "/listen.html"
+      "destination": "/listen/index.html"
     },
     {
-      "source": "/l/(.*)",
-      "destination": "/listen.html"
+      "source": "/l/:slug*",
+      "destination": "/listen/index.html"
     },
     {
       "source": "/l",
-      "destination": "/listen.html"
+      "destination": "/listen/index.html"
     },
     {
       "source": "/",

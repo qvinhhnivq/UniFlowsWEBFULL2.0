@@ -291,7 +291,7 @@ function artistDetail() {
       ${(a.products || []).length > 0 ? (a.products || []).map(p => {
         const pSlug = p.slug || slug(p.title);
         return `
-          <a class="release" href="/listen/${encodeURIComponent(pSlug)}">
+          <a class="release" href="/listen?release=${encodeURIComponent(pSlug)}">
             <span>${esc(p.type)}</span>
             <strong>${esc(p.title)}</strong>
             <b>Smart link ↗</b>
