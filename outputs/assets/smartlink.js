@@ -211,14 +211,18 @@ function renderReleaseCard(root, artist, release) {
         });
       }
     }
-  });
+   const meta = (typeof p.metadata === 'object' && p.metadata) ? p.metadata : {};
+  const isPreviewDisabled = meta.previewEnabled === false || p.previewEnabled === false || meta.previewMode === 'none' || p.previewMode === 'none';
+  const previewStart = parseFloat(p.previewStart || meta.previewStart || 0);
+  const previewDuration = parseFloat(p.previewDuration || meta.previewDuration || 30);
+  const previewMode = p.previewMode || meta.previewMode || 'custom';
 
   const finalReleaseSlug = p.slug || slug(p.title);
   const clickStorageKey = `uniflows-smart-clicks-${a.id}-${finalReleaseSlug}`;
   let clickCount = Number(localStorage.getItem(clickStorageKey) || 0);
 
   const artworkSrc = p.artworkUrl || a.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=90';
-  const shareCleanUrl = `${location.origin}/listen?release=${encodeURIComponent(finalReleaseSlug)}`;
+  const shareCleanUrl = `${location.origin}/l/${encodeURIComponent(finalReleaseSlug)}`;
 
   root.innerHTML = `
     <!-- Blur Backdrop Cover -->
@@ -249,13 +253,13 @@ function renderReleaseCard(root, artist, release) {
           </div>
         </div>
 
-        <!-- Audio Preview Player (If available) -->
-        ${p.audioUrl ? `
+        <!-- Audio Preview Player (Only when enabled by artist/admin) -->
+        ${(!isPreviewDisabled && p.audioUrl) ? `
           <div class="liquid-player" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:12px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);">
             <button type="button" id="smart-play-btn" style="background:#ffffff;color:#000000;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);transition:transform 0.15s ease;">▶</button>
             <div style="flex:1;text-align:left;">
-              <span style="font-size:13px;font-weight:800;color:#ffffff;display:block;letter-spacing:-0.01em;">Audio Master Preview</span>
-              <span style="font-size:11px;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.6);">24-Bit Lossless Quality</span>
+              <span style="font-size:13px;font-weight:800;color:#ffffff;display:block;letter-spacing:-0.01em;">Audio Preview ${previewMode === 'custom' ? `(${previewDuration}s Snippet)` : ''}</span>
+              <span style="font-size:11px;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.6);">${previewStart > 0 ? `Đoạn từ ${Math.floor(previewStart/60)}:${String(Math.floor(previewStart%60)).padStart(2,'0')}` : '24-Bit Lossless Quality'}</span>
             </div>
             <audio id="smart-audio-el" src="${esc(p.audioUrl)}" preload="none"></audio>
           </div>
@@ -277,10 +281,10 @@ function renderReleaseCard(root, artist, release) {
           `}
         </div>
 
-        <!-- Share & Click Counter -->
+        <!-- Share & Shortlink Badge -->
         <div style="margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;">
           <button id="smart-btn-share" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#ffffff;padding:11px 26px;border-radius:30px;font-size:12px;font-family:'DM Mono',monospace;text-transform:uppercase;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-            CHIA SẺ SMARTLINK
+            CHIA SẺ LINK RÚT GỌN (l/${esc(finalReleaseSlug)})
           </button>
           <small id="smart-click-badge" style="color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.5px;">
             ${clickCount > 0 ? `${clickCount.toLocaleString('vi-VN')} lượt mở link` : ''}
@@ -289,7 +293,7 @@ function renderReleaseCard(root, artist, release) {
 
         <!-- Footer -->
         <div style="margin-top:28px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);width:100%;text-align:center;">
-          <a href="/" style="color:rgba(255,255,255,0.45);font-size:11px;text-decoration:none;font-family:'DM Mono',monospace;letter-spacing:0.5px;transition:color 0.2s;">© 2026 UNIFLOWS LABEL</a>
+          <a href="/" style="color:rgba(255,255,255,0.45);font-size:11px;text-decoration:none;font-family:'DM Mono',monospace;letter-spacing:0.5px;transition:color 0.2s;">© 2026 UNIFLOWs LABEL</a>
         </div>
 
       </div>
@@ -320,7 +324,7 @@ function renderReleaseCard(root, artist, release) {
       await navigator.clipboard?.writeText(shareCleanUrl);
       if (btn) {
         const orig = btn.textContent;
-        btn.textContent = '✓ ĐÃ SAO CHÉP LIÊN KẾT';
+        btn.textContent = '✓ ĐÃ SAO CHÉP LIÊN KẾT!';
         btn.style.background = '#ffffff';
         btn.style.color = '#000000';
         btn.style.borderColor = '#ffffff';
@@ -334,21 +338,37 @@ function renderReleaseCard(root, artist, release) {
     }
   });
 
-  // Attach Audio Player Preview
+  // Attach Audio Player Preview with Snippet start & duration control
   const playBtn = root.querySelector('#smart-play-btn');
   const audioEl = root.querySelector('#smart-audio-el');
   if (playBtn && audioEl) {
+    let previewTimer = null;
     playBtn.onclick = () => {
       if (audioEl.paused) {
+        if (previewStart > 0 && Math.abs(audioEl.currentTime - previewStart) > 2) {
+          audioEl.currentTime = previewStart;
+        }
         audioEl.play();
         playBtn.textContent = '❚❚';
+
+        if (previewDuration > 0 && previewMode === 'custom') {
+          clearTimeout(previewTimer);
+          const remainingSecs = Math.max(1, (previewStart + previewDuration) - audioEl.currentTime);
+          previewTimer = setTimeout(() => {
+            audioEl.pause();
+            audioEl.currentTime = previewStart;
+            playBtn.textContent = '▶';
+          }, remainingSecs * 1000);
+        }
       } else {
         audioEl.pause();
+        clearTimeout(previewTimer);
         playBtn.textContent = '▶';
       }
     };
     audioEl.onended = () => {
       playBtn.textContent = '▶';
+      clearTimeout(previewTimer);
     };
   }
 }

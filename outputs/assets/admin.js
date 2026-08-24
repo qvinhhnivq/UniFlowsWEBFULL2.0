@@ -1247,6 +1247,40 @@ async function loadReleasesQueue() {
           </div>
         </div>
 
+        <!-- Audio Preview & Shortlink Settings -->
+        <div style="background:#f1f5f9;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;margin:12px 0;">
+          <h4 style="margin:0 0 8px;font-size:12px;text-transform:uppercase;color:#0f172a;font-weight:800;">🎛️ Cài Đặt Audio Preview & Đường Dẫn Rút Gọn (ShortLink)</h4>
+          
+          <div class="mini-grid" style="margin-bottom:6px;">
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;">Chế độ Nghe Thử trên SmartLink (Audio Preview):</label>
+              <select class="rel-preview-mode" style="padding:6px;font-size:12px;border:1px solid var(--ink);background:#fff;width:100%;">
+                <option value="none" ${meta.previewMode === 'none' ? 'selected' : ''}>🚫 Tắt (Không cho nghe trước / Ẩn player)</option>
+                <option value="custom" ${(!meta.previewMode || meta.previewMode === 'custom') ? 'selected' : ''}>⏱️ Đoạn trích hay nhất (Snippet Preview)</option>
+                <option value="full" ${meta.previewMode === 'full' ? 'selected' : ''}>🎵 Cho nghe toàn bộ bài hát</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;">Giây bắt đầu (Start Time):</label>
+              <input type="number" min="0" class="rel-preview-start" value="${meta.previewStart !== undefined ? meta.previewStart : 30}" placeholder="30 (giây)">
+            </div>
+
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;">Thời lượng nghe thử (Duration):</label>
+              <input type="number" min="5" max="180" class="rel-preview-duration" value="${meta.previewDuration !== undefined ? meta.previewDuration : 30}" placeholder="30 (giây)">
+            </div>
+
+            <div class="field">
+              <label style="font-size:11px;font-weight:bold;">Slug Rút Gọn (Shortlink Slug):</label>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-family:'DM Mono',monospace;font-size:11px;color:#64748b;">/l/</span>
+                <input class="rel-slug-input" value="${esc(r.slug || releaseSlug)}" placeholder="ten-bai-hat" style="flex:1;padding:6px;border:1px solid var(--ink);background:#fff;font-size:12px;">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Links to Streaming Platforms -->
         <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;margin:12px 0;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
@@ -1533,20 +1567,39 @@ async function loadReleasesQueue() {
         }
       });
 
+      const previewMode = card.querySelector('.rel-preview-mode')?.value || 'custom';
+      const previewStart = parseFloat(card.querySelector('.rel-preview-start')?.value) || 0;
+      const previewDuration = parseFloat(card.querySelector('.rel-preview-duration')?.value) || 30;
+      const customSlug = card.querySelector('.rel-slug-input')?.value.trim() || '';
+
       const targetRel = releases.find(r => r.id === relId);
       const existingMeta = (targetRel && typeof targetRel.metadata === 'object' && targetRel.metadata) ? targetRel.metadata : {};
-      const updatedMetadata = { ...existingMeta, streams, revenue, playlists, splits, arFeedback };
+      const updatedMetadata = { 
+        ...existingMeta, 
+        streams, 
+        revenue, 
+        playlists, 
+        splits, 
+        arFeedback, 
+        previewMode, 
+        previewStart, 
+        previewDuration, 
+        previewEnabled: (previewMode !== 'none') 
+      };
 
       btn.disabled = true; btn.textContent = 'Đang lưu...';
 
       if (isSupabaseConfigured()) {
-        const { error } = await supabase.from('releases').update({
+        const updatePayload = {
           artwork_url,
           audio_url,
           submission_status: status,
           links,
           metadata: updatedMetadata
-        }).eq('id', relId);
+        };
+        if (customSlug) updatePayload.slug = customSlug;
+
+        const { error } = await supabase.from('releases').update(updatePayload).eq('id', relId);
 
         if (error) {
           alert('Lỗi cập nhật Supabase: ' + error.message);
