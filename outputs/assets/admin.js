@@ -4261,7 +4261,169 @@ function renderMusicSubmissionsAdmin() {
 document.querySelector('#admin-submission-status-filter')?.addEventListener('change', renderMusicSubmissionsAdmin);
 document.querySelector('#admin-submission-search')?.addEventListener('input', renderMusicSubmissionsAdmin);
 
+// ============================================================================
+// 13. TRÌNH RÚT GỌN LINK & QR CODE (SHORTURL ENGINE)
+// ============================================================================
+function renderShortlinksAdmin() {
+  const tbody = document.querySelector('#admin-shortlinks-tbody');
+  const countBadge = document.querySelector('#admin-shortlinks-count-badge');
+  if (!tbody) return;
+
+  const shortlinks = data.shortlinks || [];
+  if (countBadge) countBadge.textContent = `${shortlinks.length} links`;
+
+  if (shortlinks.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="padding:30px; text-align:center; color:#64748b;">
+          Chưa có link rút gọn nào được tạo. Hãy nhập link ở trên để tạo link ngắn!
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const origin = location.origin;
+
+  tbody.innerHTML = shortlinks.map((item, idx) => {
+    const fullShortUrl = `${origin}/s/${encodeURIComponent(item.slug)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(fullShortUrl)}`;
+
+    return `
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:12px 16px;">
+          <strong style="display:block; font-size:13px; color:#0f172a;">${esc(item.title || item.slug)}</strong>
+          <span style="font-size:11px; color:#64748b; font-family:'DM Mono',monospace;">Ngày tạo: ${esc(item.createdAt || 'Mới')}</span>
+        </td>
+        <td style="padding:12px 16px;">
+          <a href="/s/${encodeURIComponent(item.slug)}" target="_blank" style="font-family:'DM Mono',monospace; font-weight:bold; color:#10b981; font-size:13px; text-decoration:underline;">
+            /s/${esc(item.slug)} ↗
+          </a>
+        </td>
+        <td style="padding:12px 16px;">
+          <a href="${esc(item.targetUrl)}" target="_blank" style="color:#475569; font-size:12px; display:block; max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${esc(item.targetUrl)}">
+            ${esc(item.targetUrl)}
+          </a>
+        </td>
+        <td style="padding:12px 16px; text-align:center;">
+          <span style="font-family:'DM Mono',monospace; font-weight:bold; font-size:12px; background:#f1f5f9; padding:3px 8px; border-radius:4px; color:#1e293b;">
+            ${(item.clicks || 0).toLocaleString('vi-VN')}
+          </span>
+        </td>
+        <td style="padding:12px 16px; text-align:right; white-space:nowrap;">
+          <div style="display:inline-flex; gap:6px;">
+            <button type="button" class="btn-copy-shortlink-admin" data-url="${fullShortUrl}" style="padding:5px 10px; font-size:11px; background:#fff; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer; font-weight:bold;">
+              📋 Copy
+            </button>
+            <a href="${qrUrl}" download="qr_${esc(item.slug)}.png" target="_blank" style="padding:5px 10px; font-size:11px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; text-decoration:none; color:#0f172a; font-weight:bold; display:inline-flex; align-items:center;">
+              📷 QR
+            </a>
+            <button type="button" class="btn-delete-shortlink-admin" data-idx="${idx}" style="padding:5px 10px; font-size:11px; background:#fff1f0; border:1px solid #ffa39e; border-radius:6px; color:#cf1322; cursor:pointer; font-weight:bold;">
+              ✕ Xóa
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Attach Copy
+  tbody.querySelectorAll('.btn-copy-shortlink-admin').forEach(btn => {
+    btn.onclick = () => {
+      navigator.clipboard?.writeText(btn.dataset.url);
+      const orig = btn.textContent;
+      btn.textContent = '✓ Đã chép';
+      btn.style.borderColor = '#10b981';
+      btn.style.color = '#10b981';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.borderColor = '#cbd5e1';
+        btn.style.color = 'inherit';
+      }, 1500);
+    };
+  });
+
+  // Attach Delete
+  tbody.querySelectorAll('.btn-delete-shortlink-admin').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const item = data.shortlinks[idx];
+      if (!item) return;
+
+      if (!confirm(`Xác nhận xóa link rút gọn "/s/${item.slug}"?`)) return;
+
+      data.shortlinks.splice(idx, 1);
+      await saveData(data);
+      await logAuditEvent('Xóa ShortURL', `Đã xóa link rút gọn /s/${item.slug}`);
+      showNotice(`✓ Đã xóa link rút gọn /s/${item.slug}`);
+      renderShortlinksAdmin();
+    };
+  });
+}
+
+function initShortlinksAdmin() {
+  const btnCreate = document.querySelector('#btn-admin-create-shortlink');
+  const btnRandom = document.querySelector('#btn-admin-random-slug');
+  const inputUrl = document.querySelector('#admin-short-url');
+  const inputSlug = document.querySelector('#admin-short-slug');
+  const inputTitle = document.querySelector('#admin-short-title');
+
+  btnRandom?.addEventListener('click', () => {
+    const rand = Math.random().toString(36).substring(2, 8);
+    if (inputSlug) inputSlug.value = rand;
+  });
+
+  btnCreate?.addEventListener('click', async () => {
+    const targetUrl = inputUrl?.value.trim();
+    let rawSlug = inputSlug?.value.trim();
+    const title = inputTitle?.value.trim() || rawSlug;
+
+    if (!targetUrl) {
+      alert('Vui lòng nhập đường link gốc cần rút gọn!');
+      inputUrl?.focus();
+      return;
+    }
+
+    if (!rawSlug) {
+      rawSlug = Math.random().toString(36).substring(2, 8);
+    }
+
+    const cleanSlug = slug(rawSlug);
+
+    if (!data.shortlinks) data.shortlinks = [];
+    const existingIdx = data.shortlinks.findIndex(x => slug(x.slug) === cleanSlug);
+
+    const newShortItem = {
+      id: `short-${Date.now()}`,
+      slug: cleanSlug,
+      targetUrl,
+      title,
+      clicks: 0,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    if (existingIdx >= 0) {
+      data.shortlinks[existingIdx] = newShortItem;
+    } else {
+      data.shortlinks.unshift(newShortItem);
+    }
+
+    await saveData(data);
+    await logAuditEvent('Tạo ShortURL Mới', `Đã tạo link rút gọn /s/${cleanSlug} trỏ tới ${targetUrl}`);
+    showNotice(`✓ Đã tạo link rút gọn "uniflowslabel.com/s/${cleanSlug}" thành công!`);
+
+    if (inputUrl) inputUrl.value = '';
+    if (inputSlug) inputSlug.value = '';
+    if (inputTitle) inputTitle.value = '';
+
+    renderShortlinksAdmin();
+  });
+}
+
 initAccountProvisioning();
+initShortlinksAdmin();
 render();
+renderShortlinksAdmin();
+
 
 

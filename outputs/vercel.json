@@ -108,6 +108,26 @@
     {
       "source": "/smartlink",
       "destination": "/listen.html"
+    },
+    {
+      "source": "/s/:slug*",
+      "destination": "/s.html"
+    },
+    {
+      "source": "/s",
+      "destination": "/s.html"
+    },
+    {
+      "source": "/shortener",
+      "destination": "/s.html"
+    },
+    {
+      "source": "/go/:slug*",
+      "destination": "/s.html"
+    },
+    {
+      "source": "/r/:slug*",
+      "destination": "/s.html"
     }
   ]
 }

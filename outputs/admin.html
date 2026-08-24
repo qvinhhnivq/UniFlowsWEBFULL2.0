@@ -39,6 +39,7 @@
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-unihube" style="border-left: 2px solid #d97706; background:#fffbeb;">🎛️ 10 / Uni-HUBE (Sản xuất)</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-collective48k" style="border-left: 2px solid #7c3aed; background:#faf5ff;">⚡ 11 / 48K Collective (Agency)</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-submissions" style="border-left: 2px solid #0284c7; background:#f0f9ff; font-weight:bold;">🎵 12 / Nhận Demo & Tuyển Chọn A&R</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-shortlinks" style="border-left: 2px solid #10b981; background:#ecfdf5; font-weight:bold;">🔗 13 / Trình Rút Gọn Link (ShortURL)</button>
     </nav>
 
     <div id="notice" class="notice"></div>
@@ -1002,6 +1003,76 @@
         <!-- Submissions Feed / List Container -->
         <div id="admin-submissions-feed" style="display: flex; flex-direction: column; gap: 18px;">
           <!-- Dynamically Injected -->
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 13: TRÌNH RÚT GỌN LINK (SHORTURL ENGINE) -->
+      <!-- ========================================== -->
+      <section id="admin-tab-shortlinks" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;">Trình Rút Gọn Link Toàn Hãng (ShortURL Engine)</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Tạo link ngắn <b>uniflowslabel.com/s/ten-link</b> cho bài hát, bài viết, form A&R, Drive EPK và theo dõi số lượt click.</p>
+          </div>
+          <span class="kicker">Link Shortener & QR</span>
+        </div>
+
+        <!-- Create ShortURL Card -->
+        <div style="background:#fff; border:2px solid var(--ink); box-shadow:4px 4px 0 var(--ink); border-radius:8px; padding:22px; margin-bottom:25px;">
+          <h3 style="margin:0 0 12px; font-size:16px; letter-spacing:-0.03em;">⚡ Tạo Link Rút Gọn Mới</h3>
+          
+          <div class="field" style="margin-bottom:12px;">
+            <label style="font-weight:bold; font-size:11px;">1. Đường Link Gốc (Target URL) *</label>
+            <input type="url" id="admin-short-url" required placeholder="https://uniflowslabel.com/listen?release=vet-sang hoặc https://open.spotify.com/..." style="padding:10px; width:100%;">
+          </div>
+
+          <div class="mini-grid" style="margin-bottom:14px;">
+            <div class="field">
+              <label style="font-weight:bold; font-size:11px;">2. Bí danh Viết Tắt (Slug) *</label>
+              <div style="display:flex; align-items:center; border:1px solid var(--ink); background:#fff;">
+                <span style="font-family:'DM Mono',monospace; font-size:12px; padding:0 10px; color:#64748b; background:#f1f5f9; border-right:1px solid #cbd5e1; line-height:38px;">/s/</span>
+                <input type="text" id="admin-short-slug" required placeholder="vetsang" style="flex:1; border:none; padding:10px; font-weight:bold;">
+                <button type="button" id="btn-admin-random-slug" style="background:#f8fafc; border:none; border-left:1px solid #cbd5e1; padding:0 12px; font-size:11px; font-weight:bold; cursor:pointer; height:38px;">🎲 Ngẫu nhiên</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label style="font-weight:bold; font-size:11px;">3. Tên Ghi Chú Chiến Dịch</label>
+              <input type="text" id="admin-short-title" placeholder="Single Vệt Sáng (Instagram Bio)" style="padding:10px;">
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="button" id="btn-admin-create-shortlink" class="button" style="background:#10b981; color:#fff; border-color:#10b981; font-weight:bold; padding:10px 22px;">
+              + Tạo Link Rút Gọn & QR Code
+            </button>
+          </div>
+        </div>
+
+        <!-- Shortlinks List Table -->
+        <div style="background:#fff; border:1px solid var(--ink); border-radius:8px; overflow:hidden;">
+          <div style="padding:14px 18px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:14px;">Danh Sách Link Rút Gọn Đang Hoạt Động</strong>
+            <span id="admin-shortlinks-count-badge" style="font-family:'DM Mono',monospace; font-size:11px; background:rgba(255,255,255,0.15); padding:3px 8px; border-radius:4px;">0 links</span>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+              <thead>
+                <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase;">
+                  <th style="padding:12px 16px;">Tên / Chiến dịch</th>
+                  <th style="padding:12px 16px;">Link Rút Gọn</th>
+                  <th style="padding:12px 16px;">Link Đích (Target URL)</th>
+                  <th style="padding:12px 16px; text-align:center;">Clicks</th>
+                  <th style="padding:12px 16px; text-align:right;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="admin-shortlinks-tbody">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

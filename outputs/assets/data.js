@@ -364,7 +364,33 @@ export const defaultData = {
     caseStudies: [],
     proposals: []
   },
-  musicSubmissions: []
+  musicSubmissions: [],
+  shortlinks: [
+    {
+      id: 'short-demo',
+      slug: 'demo',
+      targetUrl: 'https://uniflowslabel.com/submit-music',
+      title: 'Form Gửi Demo A&R',
+      clicks: 0,
+      createdAt: '2026-08-24'
+    },
+    {
+      id: 'short-hube',
+      slug: 'hube',
+      targetUrl: 'https://uniflowslabel.com/unihube',
+      title: 'Uni-HUBE Production Team',
+      clicks: 0,
+      createdAt: '2026-08-24'
+    },
+    {
+      id: 'short-48k',
+      slug: '48k',
+      targetUrl: 'https://uniflowslabel.com/48kcollective',
+      title: '48K Music Marketing Collective',
+      clicks: 0,
+      createdAt: '2026-08-24'
+    }
+  ]
 };
 
 const MOCK_IDS = {
@@ -523,6 +549,15 @@ export async function getData() {
         merged.musicSubmissions = [];
       }
 
+      // Parse shortlinks
+      if (Array.isArray(settings.shortlinks)) {
+        merged.shortlinks = settings.shortlinks;
+      } else if (cached.shortlinks && Array.isArray(cached.shortlinks)) {
+        merged.shortlinks = cached.shortlinks;
+      } else {
+        merged.shortlinks = defaultData.shortlinks || [];
+      }
+
       merged.city = settings.city || merged.city;
     }
 
@@ -673,6 +708,7 @@ export async function saveData(data) {
       collective48k: data.collective48k || defaultData.collective48k,
       admin_accounts: data.adminAccounts || defaultData.adminAccounts,
       music_submissions: data.musicSubmissions || defaultData.musicSubmissions,
+      shortlinks: data.shortlinks || defaultData.shortlinks || [],
       artist_order: data.artist_order || (data.artists || []).map(a => a.id),
       city: data.city,
       updated_at: new Date().toISOString()
@@ -690,6 +726,7 @@ export async function saveData(data) {
           about_text: data.aboutText,
           email: data.email,
           city: data.city,
+          shortlinks: data.shortlinks || defaultData.shortlinks || [],
           announcements: data.announcements || defaultData.announcements,
           publishing: data.publishing || defaultData.publishing,
           unihube: data.unihube || defaultData.unihube,

@@ -48,6 +48,7 @@ create table public.site_settings (
   collective48k jsonb default '{}'::jsonb,
   admin_accounts jsonb default '[]'::jsonb,
   music_submissions jsonb default '[]'::jsonb,
+  shortlinks jsonb default '[]'::jsonb,
   artist_order jsonb default '[]'::jsonb,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
@@ -347,6 +348,7 @@ alter table public.site_settings add column if not exists unihube jsonb default 
 alter table public.site_settings add column if not exists collective48k jsonb default '{}'::jsonb;
 alter table public.site_settings add column if not exists admin_accounts jsonb default '[]'::jsonb;
 alter table public.site_settings add column if not exists music_submissions jsonb default '[]'::jsonb;
+alter table public.site_settings add column if not exists shortlinks jsonb default '[]'::jsonb;
 alter table public.site_settings add column if not exists artist_order jsonb default '[]'::jsonb;
 
 alter table public.artists add column if not exists show_on_web boolean default true;
