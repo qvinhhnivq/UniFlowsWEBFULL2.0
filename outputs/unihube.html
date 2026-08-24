@@ -9,17 +9,6 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="assets/app.css">
-  <script>
-    (function() {
-      var h = window.location.hostname.toLowerCase();
-      var p = window.location.pathname.toLowerCase();
-      if (p !== '/' && p !== '') {
-        if (h.startsWith('unihub.') || h.startsWith('hube.')) {
-          window.history.replaceState(null, '', '/' + window.location.search + window.location.hash);
-        }
-      }
-    })();
-  </script>
   <style>
     /* Uni-HUBE Accent Theme: Warm Amber / Gold */
     :root {
@@ -369,7 +358,7 @@
         }
 
         producersContainer.innerHTML = filtered.map(p => `
-          <a class="artist" href="producer?id=${p.id}">
+          <a class="artist" href="/producer?id=${encodeURIComponent(p.id)}">
             <img src="${p.image || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80'}" alt="${p.name}">
             <div class="artist-info">
               <span>${p.role}</span>

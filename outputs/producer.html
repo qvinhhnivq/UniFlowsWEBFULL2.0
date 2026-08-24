@@ -123,7 +123,7 @@
       const producer = (unihube.producers || []).find(p => p.id === prodId) || (unihube.producers || [])[0];
 
       if (!producer) {
-        root.innerHTML = `<div style="padding:10vw 3vw;text-align:center;"><h2>${lang === 'en' ? 'Producer profile not found.' : 'Không tìm thấy thông tin nhà sản xuất.'}</h2><a href="unihube" class="button">← ${lang === 'en' ? 'Back to Uni-HUBE' : 'Quay lại Uni-HUBE'}</a></div>`;
+        root.innerHTML = `<div style="padding:10vw 3vw;text-align:center;"><h2>${lang === 'en' ? 'Producer profile not found.' : 'Không tìm thấy thông tin nhà sản xuất.'}</h2><a href="/unihube" class="button">← ${lang === 'en' ? 'Back to Uni-HUBE' : 'Quay lại Uni-HUBE'}</a></div>`;
         return;
       }
 
@@ -171,7 +171,7 @@
               <a href="#booking-section" class="button" style="background: var(--ink); color: #fff; padding: 14px 24px;">
                 ${t('producer_book_now', { name: firstName })}
               </a>
-              <a href="unihube" class="button alt" style="padding: 14px 20px;">
+              <a href="/unihube" class="button alt" style="padding: 14px 20px;">
                 ${t('producer_back_roster')}
               </a>
             </div>

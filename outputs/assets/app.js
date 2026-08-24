@@ -2,6 +2,27 @@ import { getData, getLocalCachedData } from './data.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import './security.js';
 
+// Auto-escape any trapping subdomains (e.g. unihub.uniflowslabel.com -> uniflowslabel.com/unihube)
+(function autoRedirectSubdomains() {
+  const host = window.location.hostname.toLowerCase();
+  if (host.endsWith('uniflowslabel.com') && host !== 'uniflowslabel.com' && host !== 'www.uniflowslabel.com') {
+    const protocol = window.location.protocol;
+    const search = window.location.search || '';
+    const hash = window.location.hash || '';
+    if (host.startsWith('unihub.') || host.startsWith('hube.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/unihube${search}${hash}`);
+    } else if (host.startsWith('publishing.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/unipublishing${search}${hash}`);
+    } else if (host.startsWith('48k.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/48kcollective${search}${hash}`);
+    } else if (host.startsWith('portal.') || host.startsWith('artist.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/artist-login${search}${hash}`);
+    } else {
+      window.location.replace(`${protocol}//uniflowslabel.com/${search}${hash}`);
+    }
+  }
+})();
+
 let data = getLocalCachedData();
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
@@ -167,7 +188,7 @@ function artists() {
   const exploreText = t('explore_artist');
 
   const cardsHtml = visibleArtists.map((a, i) => `
-    <a class="artist" href="artist?id=${encodeURIComponent(a.id)}" style="animation: fadeIn 0.35s ease ${i * 0.05}s both;">
+    <a class="artist" href="/artist?id=${encodeURIComponent(a.id)}" style="animation: fadeIn 0.35s ease ${i * 0.05}s both;">
       <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80')}" alt="${esc(a.name)}">
       <div class="artist-info">
         <span>${esc(a.genre || 'Music')}</span>
@@ -226,7 +247,7 @@ function articleCards() {
         <span class="date">${esc(a.category)} / ${esc(a.date)}</span>
         <h3>${esc(a.title)}</h3>
         <p>${esc(a.excerpt || '')}</p>
-        <a class="card-link" href="article?id=${encodeURIComponent(a.id)}">Đọc bài đầy đủ →</a>
+        <a class="card-link" href="/article?id=${encodeURIComponent(a.id)}">Đọc bài đầy đủ →</a>
       </article>
     `).join('') || '<p class="empty">Không tìm thấy bài viết phù hợp.</p>';
   };
