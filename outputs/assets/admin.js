@@ -1248,12 +1248,32 @@ async function loadReleasesQueue() {
         </div>
 
         <!-- Links to Streaming Platforms -->
-        <h4 style="margin:12px 0 6px;font-size:12px;text-transform:uppercase;color:#555;">🔗 Link Nền tảng Streaming (Dành cho SmartLink)</h4>
-        <div class="mini-grid">
-          <div class="field"><label>Spotify URL</label><input class="rel-link-spotify" value="${esc(links.spotify || '')}" placeholder="https://open.spotify.com/..."></div>
-          <div class="field"><label>Apple Music URL</label><input class="rel-link-apple" value="${esc(links.apple || '')}" placeholder="https://music.apple.com/..."></div>
-          <div class="field"><label>YouTube Music URL</label><input class="rel-link-youtube" value="${esc(links.youtube || '')}" placeholder="https://music.youtube.com/..."></div>
-          <div class="field"><label>Zing MP3 URL</label><input class="rel-link-zing" value="${esc(links.zingmp3 || '')}" placeholder="https://zingmp3.vn/..."></div>
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;margin:12px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+            <h4 style="margin:0;font-size:12px;text-transform:uppercase;color:#0f172a;font-weight:800;">🔗 Link Nền tảng Streaming (Dành cho SmartLink)</h4>
+            <div style="display:flex;gap:6px;">
+              <a href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" class="button alt" style="padding:4px 8px;font-size:11px;background:#fff;border-color:var(--ink);">👁 Xem SmartLink ↗</a>
+              <button type="button" class="button alt add-custom-platform-btn" style="padding:4px 10px;font-size:11px;font-weight:bold;background:#fff;border:1px solid #0f172a;">+ Thêm Nền Tảng Khác</button>
+            </div>
+          </div>
+          
+          <div class="mini-grid" style="margin-bottom:10px;">
+            <div class="field"><label style="font-size:11px;">🟢 Spotify URL</label><input class="rel-link-spotify" value="${esc(links.spotify || '')}" placeholder="https://open.spotify.com/track/..."></div>
+            <div class="field"><label style="font-size:11px;">🔴 Apple Music URL</label><input class="rel-link-apple" value="${esc(links.apple || links.applemusic || '')}" placeholder="https://music.apple.com/album/..."></div>
+            <div class="field"><label style="font-size:11px;">▶️ YouTube Music URL</label><input class="rel-link-youtube" value="${esc(links.youtube || links.youtubemusic || '')}" placeholder="https://music.youtube.com/watch?v=..."></div>
+            <div class="field"><label style="font-size:11px;">🟠 SoundCloud URL</label><input class="rel-link-soundcloud" value="${esc(links.soundcloud || '')}" placeholder="https://soundcloud.com/..."></div>
+            <div class="field"><label style="font-size:11px;">🟣 Zing MP3 URL</label><input class="rel-link-zing" value="${esc(links.zingmp3 || links.zing || '')}" placeholder="https://zingmp3.vn/bai-hat/..."></div>
+            <div class="field"><label style="font-size:11px;">🟢 Nhaccuatui (NCT) URL</label><input class="rel-link-nct" value="${esc(links.nct || '')}" placeholder="https://www.nhaccuatui.com/bai-hat/..."></div>
+            <div class="field"><label style="font-size:11px;">🎵 TikTok Sound URL</label><input class="rel-link-tiktok" value="${esc(links.tiktok || '')}" placeholder="https://www.tiktok.com/music/..."></div>
+            <div class="field"><label style="font-size:11px;">📦 Amazon Music URL</label><input class="rel-link-amazon" value="${esc(links.amazon || links.amazonmusic || '')}" placeholder="https://music.amazon.com/..."></div>
+          </div>
+
+          <div class="custom-platforms-container" style="border-top:1px dashed #cbd5e1;padding-top:8px;">
+            <strong style="display:block;font-size:11px;color:#475569;margin-bottom:6px;text-transform:uppercase;">Nền tảng Tuỳ Chọn Khác (Deezer, Tidal, Bandcamp, Audiomack, Beatport, v.v.):</strong>
+            <div class="custom-platforms-list">
+              ${renderCustomPlatformsList(links.customPlatforms || [])}
+            </div>
+          </div>
         </div>
 
         <!-- Lyrics & Publishing View -->
@@ -1303,6 +1323,20 @@ async function loadReleasesQueue() {
       </div>
     `;
   }).join('');
+
+  // Helper to render custom platforms
+  function renderCustomPlatformsList(customList = []) {
+    if (!Array.isArray(customList) || customList.length === 0) {
+      return `<p class="no-custom-platforms" style="font-size:11px;color:#888;margin:4px 0;">Chưa có nền tảng tuỳ chọn nào. Bấm "+ Thêm Nền Tảng Khác" để bổ sung.</p>`;
+    }
+    return customList.map((cp) => `
+      <div class="custom-platform-row" style="display:grid;grid-template-columns:1.5fr 3fr auto;gap:8px;align-items:center;margin-bottom:6px;">
+        <input type="text" class="custom-plat-name" value="${esc(cp.name || '')}" placeholder="Tên Nền Tảng (VD: Tidal, Bandcamp...)" style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <input type="text" class="custom-plat-url" value="${esc(cp.url || '')}" placeholder="https://..." style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <button type="button" class="button alt remove-custom-plat-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+      </div>
+    `).join('');
+  }
 
   // Helper to render splits list
   function renderSplitsList(releaseItem, splitsList = []) {
@@ -1377,9 +1411,32 @@ async function loadReleasesQueue() {
     });
   });
 
-  releasesBox.querySelectorAll('.remove-split-row-btn').forEach(btn => {
+  // Attach Add & Remove Custom Platform handlers
+  releasesBox.querySelectorAll('.add-custom-platform-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      e.target.closest('.split-row')?.remove();
+      const card = e.target.closest('[data-release-id]');
+      const list = card?.querySelector('.custom-platforms-list');
+      if (!list) return;
+
+      const noMsg = list.querySelector('.no-custom-platforms');
+      if (noMsg) noMsg.remove();
+
+      const row = document.createElement('div');
+      row.className = 'custom-platform-row';
+      row.style = 'display:grid;grid-template-columns:1.5fr 3fr auto;gap:8px;align-items:center;margin-bottom:6px;';
+      row.innerHTML = `
+        <input type="text" class="custom-plat-name" placeholder="Tên Nền Tảng (VD: Tidal, Deezer...)" style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <input type="text" class="custom-plat-url" placeholder="https://..." style="padding:6px 8px;font-size:11px;border:1px solid var(--ink);background:#fff;">
+        <button type="button" class="button alt remove-custom-plat-btn" style="padding:6px 10px;font-size:11px;color:#dc2626;border:1px solid #fca5a5;">✕</button>
+      `;
+      row.querySelector('.remove-custom-plat-btn').onclick = () => row.remove();
+      list.appendChild(row);
+    });
+  });
+
+  releasesBox.querySelectorAll('.remove-custom-plat-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.target.closest('.custom-platform-row')?.remove();
     });
   });
 
@@ -1441,11 +1498,26 @@ async function loadReleasesQueue() {
 
       const arFeedback = card.querySelector('.rel-ar-feedback')?.value.trim() || '';
 
+      // Read Custom Platforms
+      const customPlatforms = [];
+      card.querySelectorAll('.custom-platform-row').forEach(row => {
+        const name = row.querySelector('.custom-plat-name')?.value.trim();
+        const url = row.querySelector('.custom-plat-url')?.value.trim();
+        if (name && url) {
+          customPlatforms.push({ name, url });
+        }
+      });
+
       const links = {
         spotify: card.querySelector('.rel-link-spotify')?.value.trim() || '',
         apple: card.querySelector('.rel-link-apple')?.value.trim() || '',
         youtube: card.querySelector('.rel-link-youtube')?.value.trim() || '',
-        zingmp3: card.querySelector('.rel-link-zing')?.value.trim() || ''
+        soundcloud: card.querySelector('.rel-link-soundcloud')?.value.trim() || '',
+        zingmp3: card.querySelector('.rel-link-zing')?.value.trim() || '',
+        nct: card.querySelector('.rel-link-nct')?.value.trim() || '',
+        tiktok: card.querySelector('.rel-link-tiktok')?.value.trim() || '',
+        amazon: card.querySelector('.rel-link-amazon')?.value.trim() || '',
+        customPlatforms
       };
 
       // Read Splits
