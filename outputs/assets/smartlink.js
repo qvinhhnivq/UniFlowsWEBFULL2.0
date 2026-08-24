@@ -16,32 +16,6 @@ function formatSocialUrl(u) {
   return str;
 }
 
-// Built-in Platform Icons & Brand Colors
-const PLATFORM_ICONS = {
-  spotify: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.503 17.308c-.216.353-.674.468-1.027.252-2.822-1.724-6.374-2.114-10.558-1.158-.403.093-.804-.158-.897-.562-.093-.404.158-.805.562-.898 4.582-1.047 8.513-.6 11.668 1.34.353.215.468.673.252 1.026zm1.47-3.267c-.272.443-.852.584-1.295.312-3.23-1.986-8.155-2.56-11.977-1.4-.498.151-1.026-.134-1.177-.633-.152-.498.134-1.026.633-1.177 4.372-1.328 9.794-.683 13.504 1.603.443.272.584.852.312 1.295zm.126-3.41c-3.873-2.3-10.264-2.512-13.974-1.385-.594.18-1.222-.156-1.403-.75-.18-.593.156-1.222.75-1.403 4.263-1.294 11.314-1.046 15.77 1.6 4.536 2.69 1.488 1.066.857 1.938-.27 1.026-.857 1.938z"/></svg>`,
-  apple: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#FA243C"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.93-2.85-.9.04-1.99.6-2.61 1.35-.55.63-1.03 1.66-.9 2.68 1 .08 2.01-.51 2.58-1.18z"/></svg>`,
-  youtube: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
-  soundcloud: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#FF5500"><path d="M1.175 12.225c-.051 0-.094.045-.101.101l-.268 2.846.268 2.766c.007.056.05.097.101.097.053 0 .096-.041.102-.097l.31-2.766-.31-2.846a.097.097 0 0 0-.102-.101zm1.53-.943c-.067 0-.121.054-.127.121l-.312 3.789.312 3.633c.006.067.06.12.127.12.068 0 .123-.053.129-.12l.366-3.633-.366-3.789a.125.125 0 0 0-.129-.121zm1.614-.847c-.083 0-.15.066-.157.148l-.348 4.636.348 4.41c.007.082.074.148.157.148.084 0 .151-.066.158-.148l.42-4.41-.42-4.636a.154.154 0 0 0-.158-.148zm1.684-.298c-.1 0-.18.08-.188.18l-.38 4.934.38 4.664c.008.1.088.18.188.18.101 0 .182-.08.19-.18l.466-4.664-.466-4.934a.185.185 0 0 0-.19-.18zm1.74-.294c-.114 0-.207.092-.216.206l-.412 5.228.412 4.908c.009.114.102.206.216.206.115 0 .209-.092.218-.206l.504-4.908-.504-5.228a.213.213 0 0 0-.218-.206zm1.802-.27c-.13 0-.236.105-.246.234l-.443 5.498.443 5.127c.01.13.116.234.246.234.13 0 .236-.105.247-.234l.539-5.127-.539-5.498a.24.24 0 0 0-.247-.234zm1.85-.098c-.145 0-.263.118-.275.263l-.47 5.596.47 5.217c.012.146.13.263.275.263.146 0 .264-.117.276-.263l.57-5.217-.57-5.596a.269.269 0 0 0-.276-.263zm1.905-.098c-.16 0-.29.13-.303.29l-.496 5.694.496 5.289c.013.16.143.29.303.29.16 0 .29-.13.304-.29l.6-5.289-.6-5.694a.297.297 0 0 0-.304-.29zm11.399 2.502c-.37 0-.726.066-1.056.188-.344-2.52-2.492-4.469-5.093-4.469-.733 0-1.429.158-2.054.441a.36.36 0 0 0-.196.324v9.643c0 .198.161.359.359.359h7.94c2.093 0 3.79-1.697 3.79-3.79 0-2.094-1.697-3.791-3.79-3.791z"/></svg>`,
-  zing: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#6C5CE7"><circle cx="12" cy="12" r="11" stroke="#6C5CE7" stroke-width="2"/><text x="12" y="16" font-size="12" font-weight="900" text-anchor="middle" fill="#6C5CE7" font-family="sans-serif">Z</text></svg>`,
-  nct: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#2ECC71"><circle cx="12" cy="12" r="11" stroke="#2ECC71" stroke-width="2"/><text x="12" y="15" font-size="9" font-weight="900" text-anchor="middle" fill="#2ECC71" font-family="sans-serif">NCT</text></svg>`,
-  tiktok: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#EE1D52"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.32 0 .62.05.9.14V8.98a6.37 6.37 0 0 0-.9-.07A6.33 6.33 0 0 0 3 15.24a6.33 6.33 0 0 0 6.34 6.33 6.34 6.34 0 0 0 6.34-6.33V8.87a8.16 8.16 0 0 0 4.91 1.54V6.96a4.85 4.85 0 0 1-1-.27z"/></svg>`,
-  amazon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#FF9900"><path d="M13.88 15.65c-2.38 1.83-5.83 2.81-8.8 2.81-4.17 0-7.93-1.63-10.76-4.35-.22-.21-.02-.5.25-.34 3.07 1.8 6.94 2.88 10.51 2.88 2.63 0 5.49-.66 8.08-2.04.39-.21.72.29.72 1.04zm1.25-1.12c-.31-.41-2.02-.19-2.79-.1-.23.03-.27-.16-.06-.31 1.37-.99 3.61-.71 3.88-.37.28.35-.07 2.6-1.37 3.68-.2.17-.39.08-.3-.14.3-.77.95-2.35.64-2.76z"/></svg>`,
-  default: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#cbff00"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`
-};
-
-function getPlatformIcon(key) {
-  const k = key.toLowerCase();
-  if (k.includes('spotify')) return PLATFORM_ICONS.spotify;
-  if (k.includes('apple')) return PLATFORM_ICONS.apple;
-  if (k.includes('youtube')) return PLATFORM_ICONS.youtube;
-  if (k.includes('sound') || k.includes('sc')) return PLATFORM_ICONS.soundcloud;
-  if (k.includes('zing')) return PLATFORM_ICONS.zing;
-  if (k.includes('nct') || k.includes('nhac')) return PLATFORM_ICONS.nct;
-  if (k.includes('tik')) return PLATFORM_ICONS.tiktok;
-  if (k.includes('amazon')) return PLATFORM_ICONS.amazon;
-  return PLATFORM_ICONS.default;
-}
-
 // ----------------------------------------------------------------------------
 // MAIN SMARTLINK BOOTSTRAP
 // ----------------------------------------------------------------------------
@@ -58,7 +32,7 @@ export async function initSmartLinkEngine() {
   let artistId = q.get('artist') || q.get('a') || '';
 
   if (!releaseSlug) {
-    if (parts[0] === 'listen' || parts[0] === 'l' || parts[0] === 'listen.html' || parts[0] === 'l.html') {
+    if (parts[0] === 'listen' || parts[0] === 'l' || parts[0] === 'listen.html' || parts[0] === 'l.html' || parts[0] === 'smartlink.html') {
       if (parts.length >= 3) {
         artistId = parts[1];
         releaseSlug = parts[2];
@@ -164,11 +138,13 @@ function renderSmartLinkView(root, data, releaseSlug, artistId, isInitialTick) {
   if (!matchedRelease || !matchedArtist) {
     if (isInitialTick) {
       root.innerHTML = `
-        <div class="smart-page">
-          <a class="smart-logo" href="/">UNIFLOWs</a>
-          <div style="margin-top:25vh;text-align:center;">
-            <div style="font-size:36px;margin-bottom:12px;animation:pulse 1.5s infinite;">🎵</div>
-            <p style="color:#aaa;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:1px;">ĐANG TẢI SMART LINK...</p>
+        <div class="smart-bg-container">
+          <div class="smart-bg-layer" style="background:#090a0f;"></div>
+          <div class="smart-page" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
+            <div style="text-align:center;">
+              <div style="font-size:28px;margin-bottom:12px;opacity:0.8;">💿</div>
+              <p style="color:#ffffff;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Đang tải SmartLink...</p>
+            </div>
           </div>
         </div>
       `;
@@ -184,7 +160,7 @@ function renderSmartLinkView(root, data, releaseSlug, artistId, isInitialTick) {
 }
 
 // ----------------------------------------------------------------------------
-// RENDER RELEASE CARD
+// RENDER LUXURY LIQUID GLASS RELEASE CARD (Black & White Minimalist)
 // ----------------------------------------------------------------------------
 function renderReleaseCard(root, artist, release) {
   const p = release;
@@ -193,16 +169,16 @@ function renderReleaseCard(root, artist, release) {
   const rawLinks = p.links || {};
   const platforms = [];
 
-  // 1. Preset Platforms
+  // 1. Preset Platforms (Pure Text, NO icons)
   const PRESETS = [
-    { key: 'spotify', name: 'Spotify', action: 'Nghe ngay', url: formatSocialUrl(rawLinks.spotify) },
-    { key: 'apple', name: 'Apple Music', action: 'Nghe ngay', url: formatSocialUrl(rawLinks.apple || rawLinks.applemusic) },
-    { key: 'youtube', name: 'YouTube Music', action: 'Nghe / Xem', url: formatSocialUrl(rawLinks.youtube || rawLinks.youtubemusic) },
-    { key: 'soundcloud', name: 'SoundCloud', action: 'Nghe ngay', url: formatSocialUrl(rawLinks.soundcloud) },
-    { key: 'zing', name: 'Zing MP3', action: 'Nghe ngay', url: formatSocialUrl(rawLinks.zingmp3 || rawLinks.zing) },
-    { key: 'nct', name: 'Nhaccuatui (NCT)', action: 'Nghe ngay', url: formatSocialUrl(rawLinks.nct) },
-    { key: 'tiktok', name: 'TikTok Sound', action: 'Dùng Sound', url: formatSocialUrl(rawLinks.tiktok) },
-    { key: 'amazon', name: 'Amazon Music', action: 'Nghe ngay', url: formatSocialUrl(rawLinks.amazon || rawLinks.amazonmusic) }
+    { name: 'SPOTIFY', action: 'PLAY', url: formatSocialUrl(rawLinks.spotify) },
+    { name: 'APPLE MUSIC', action: 'PLAY', url: formatSocialUrl(rawLinks.apple || rawLinks.applemusic) },
+    { name: 'YOUTUBE MUSIC', action: 'PLAY', url: formatSocialUrl(rawLinks.youtube || rawLinks.youtubemusic) },
+    { name: 'SOUNDCLOUD', action: 'PLAY', url: formatSocialUrl(rawLinks.soundcloud) },
+    { name: 'ZING MP3', action: 'PLAY', url: formatSocialUrl(rawLinks.zingmp3 || rawLinks.zing) },
+    { name: 'NHACCUATUI (NCT)', action: 'PLAY', url: formatSocialUrl(rawLinks.nct) },
+    { name: 'TIKTOK', action: 'USE SOUND', url: formatSocialUrl(rawLinks.tiktok) },
+    { name: 'AMAZON MUSIC', action: 'PLAY', url: formatSocialUrl(rawLinks.amazon || rawLinks.amazonmusic) }
   ];
 
   PRESETS.forEach(item => {
@@ -215,9 +191,8 @@ function renderReleaseCard(root, artist, release) {
       const formatted = formatSocialUrl(c.url);
       if (c.name && formatted) {
         platforms.push({
-          key: slug(c.name),
-          name: c.name,
-          action: c.action || 'Nghe ngay',
+          name: c.name.toUpperCase(),
+          action: (c.action || 'PLAY').toUpperCase(),
           url: formatted
         });
       }
@@ -230,9 +205,8 @@ function renderReleaseCard(root, artist, release) {
       const formatted = formatSocialUrl(v);
       if (formatted && typeof v === 'string') {
         platforms.push({
-          key: slug(k),
-          name: k.charAt(0).toUpperCase() + k.slice(1),
-          action: 'Mở link',
+          name: k.toUpperCase(),
+          action: 'PLAY',
           url: formatted
         });
       }
@@ -243,63 +217,83 @@ function renderReleaseCard(root, artist, release) {
   const clickStorageKey = `uniflows-smart-clicks-${a.id}-${finalReleaseSlug}`;
   let clickCount = Number(localStorage.getItem(clickStorageKey) || 0);
 
-  const artworkSrc = p.artworkUrl || a.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=90';
+  const artworkSrc = p.artworkUrl || a.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=90';
   const shareCleanUrl = `${location.origin}/listen?release=${encodeURIComponent(finalReleaseSlug)}`;
 
   root.innerHTML = `
-    <div class="smart-page">
-      <header style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <a class="smart-logo" href="/" style="font-weight:800;letter-spacing:-1px;color:#fff;text-decoration:none;font-size:18px;">UNIFLOWs</a>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;color:#888;background:#1a1a1a;padding:4px 10px;border-radius:12px;border:1px solid #333;">Official SmartLink</span>
-      </header>
+    <!-- Blur Backdrop Cover -->
+    <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;z-index:0;pointer-events:none;">
+      <div class="smart-bg-blur" style="position:absolute;top:-20%;left:-20%;width:140%;height:140%;background:url('${esc(artworkSrc)}') center/cover no-repeat;filter:blur(70px) brightness(0.28) saturate(1.3);transform:scale(1.15);"></div>
+      <div class="smart-bg-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%);"></div>
+    </div>
 
-      <div class="smart-artwork-wrapper" style="position:relative;width:min(320px, 78vw);aspect-ratio:1;margin:15px auto 24px;">
-        <img class="smart-art" src="${esc(artworkSrc)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;border:1px solid #333;box-shadow:0 15px 35px rgba(0,0,0,0.6), 8px 8px 0 rgba(203,255,0,0.85);">
-      </div>
-
-      <span class="eyebrow" style="font-family:'DM Mono',monospace;font-size:12px;color:#cbff00;text-transform:uppercase;letter-spacing:1.5px;font-weight:bold;">${esc(a.name)} · ${esc(p.type || 'Single')}</span>
-      <h1 style="font-size:clamp(32px, 7vw, 54px);line-height:1.05;letter-spacing:-0.04em;margin:10px 0 6px;color:#fff;font-weight:800;">${esc(p.title)}</h1>
-      <p style="color:#a1a1aa;font-size:14px;margin:0 0 24px;">Nghe trên nền tảng bạn yêu thích</p>
-
-      ${p.audioUrl ? `
-        <div class="smart-audio-player" style="width:100%;background:#18181b;border:1px solid #27272a;border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-          <button type="button" id="smart-play-btn" style="background:#cbff00;color:#000;border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:14px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
-          <div style="flex:1;">
-            <span style="font-size:12px;font-weight:bold;color:#fff;display:block;">Audio Preview Master</span>
-            <span style="font-size:10px;font-family:'DM Mono',monospace;color:#71717a;">24-Bit Lossless Quality</span>
-          </div>
-          <audio id="smart-audio-el" src="${esc(p.audioUrl)}" preload="none"></audio>
+    <!-- Main Liquid Glass Card -->
+    <div class="smart-viewport" style="position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px 60px;">
+      
+      <div class="liquid-card" style="width:min(460px, 92vw);background:rgba(20, 20, 24, 0.6);backdrop-filter:blur(32px) saturate(190%);-webkit-backdrop-filter:blur(32px) saturate(190%);border:1px solid rgba(255, 255, 255, 0.14);border-radius:28px;box-shadow:0 30px 70px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.2);padding:32px 24px 36px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+        
+        <!-- Header -->
+        <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+          <a href="/" style="font-weight:900;letter-spacing:-0.04em;color:#ffffff;text-decoration:none;font-size:16px;opacity:0.95;">UNIFLOWs</a>
+          <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.08);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);text-transform:uppercase;font-weight:600;">OFFICIAL RELEASE</span>
         </div>
-      ` : ''}
 
-      <div class="smart-platforms" style="width:100%;display:grid;gap:8px;">
-        ${platforms.length > 0 ? platforms.map(item => `
-          <a class="platform-link-item" href="${item.url}" target="_blank" rel="noopener noreferrer" data-platform-click="${esc(item.name)}" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#141416;border:1px solid #262626;border-radius:8px;text-decoration:none;color:#fff;transition:all 0.2s ease;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              ${getPlatformIcon(item.key)}
-              <strong style="font-size:15px;color:#fff;">${esc(item.name)}</strong>
-            </div>
-            <span style="font-size:12px;font-weight:bold;background:#262626;color:#cbff00;padding:6px 14px;border-radius:6px;border:1px solid #333;">${esc(item.action || 'Nghe')} ↗</span>
-          </a>
-        `).join('') : `
-          <div style="padding:24px;border:1px dashed #3f3f46;border-radius:8px;font-size:13px;color:#a1a1aa;text-align:center;">
-            🎧 Bản phát hành đang được đồng bộ link streaming lên 150+ nền tảng...
+        <!-- Artwork Cover with Elevated Title -->
+        <div class="artwork-container" style="position:relative;width:min(340px, 80vw);aspect-ratio:1;margin:0 auto 20px;border-radius:20px;overflow:hidden;box-shadow:0 20px 45px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.18);">
+          <img src="${esc(artworkSrc)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;display:block;">
+          
+          <!-- Gradient Shadow Over Artwork Bottom -->
+          <div style="position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:20px 18px;text-align:left;">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.75);text-transform:uppercase;font-weight:700;margin-bottom:4px;">${esc(a.name)} · ${esc(p.type || 'Single')}</span>
+            <h1 style="font-size:clamp(22px, 5.5vw, 28px);line-height:1.1;letter-spacing:-0.03em;color:#ffffff;font-weight:900;margin:0;text-shadow:0 2px 10px rgba(0,0,0,0.8);">${esc(p.title)}</h1>
           </div>
-        `}
+        </div>
+
+        <!-- Audio Preview Player (If available) -->
+        ${p.audioUrl ? `
+          <div class="liquid-player" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:12px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);">
+            <button type="button" id="smart-play-btn" style="background:#ffffff;color:#000000;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);transition:transform 0.15s ease;">▶</button>
+            <div style="flex:1;text-align:left;">
+              <span style="font-size:13px;font-weight:800;color:#ffffff;display:block;letter-spacing:-0.01em;">Audio Master Preview</span>
+              <span style="font-size:11px;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.6);">24-Bit Lossless Quality</span>
+            </div>
+            <audio id="smart-audio-el" src="${esc(p.audioUrl)}" preload="none"></audio>
+          </div>
+        ` : ''}
+
+        <!-- Liquid Glass Streaming Platforms Grid (Taller, No Icons, B&W Theme) -->
+        <div class="liquid-platforms" style="width:100%;display:grid;gap:10px;">
+          ${platforms.length > 0 ? platforms.map(item => `
+            <a class="liquid-platform-row" href="${item.url}" target="_blank" rel="noopener noreferrer" data-platform-click="${esc(item.name)}" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;min-height:62px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;text-decoration:none;transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);box-shadow:0 4px 14px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);">
+              <div style="text-align:left;">
+                <span style="font-size:15px;font-weight:800;letter-spacing:0.5px;color:#ffffff;display:block;">${esc(item.name)}</span>
+              </div>
+              <span class="liquid-play-btn" style="background:#ffffff;color:#000000;font-size:11px;font-weight:900;letter-spacing:1px;padding:8px 18px;border-radius:24px;text-transform:uppercase;box-shadow:0 3px 10px rgba(0,0,0,0.3);transition:all 0.18s ease;">${esc(item.action || 'PLAY')} ↗</span>
+            </a>
+          `).join('') : `
+            <div style="padding:28px 18px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.16);border-radius:16px;font-size:13px;color:rgba(255,255,255,0.7);text-align:center;">
+              Đang cập nhật link streaming trên các nền tảng...
+            </div>
+          `}
+        </div>
+
+        <!-- Share & Click Counter -->
+        <div style="margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;">
+          <button id="smart-btn-share" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#ffffff;padding:11px 26px;border-radius:30px;font-size:12px;font-family:'DM Mono',monospace;text-transform:uppercase;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+            CHIA SẺ SMARTLINK
+          </button>
+          <small id="smart-click-badge" style="color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.5px;">
+            ${clickCount > 0 ? `${clickCount.toLocaleString('vi-VN')} lượt mở link` : ''}
+          </small>
+        </div>
+
+        <!-- Footer -->
+        <div style="margin-top:28px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);width:100%;text-align:center;">
+          <a href="/" style="color:rgba(255,255,255,0.45);font-size:11px;text-decoration:none;font-family:'DM Mono',monospace;letter-spacing:0.5px;transition:color 0.2s;">© 2026 UNIFLOWS LABEL</a>
+        </div>
+
       </div>
 
-      <div style="margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;">
-        <button id="smart-btn-share" style="background:transparent;border:1px solid #3f3f46;color:#e4e4e7;padding:10px 24px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;text-transform:uppercase;cursor:pointer;transition:all 0.2s ease;">
-          🔗 Chia sẻ Smart Link
-        </button>
-        <small id="smart-click-badge" style="color:#71717a;font-family:'DM Mono',monospace;font-size:11px;">
-          ${clickCount > 0 ? `🔥 ${clickCount.toLocaleString('vi-VN')} lượt mở link` : ''}
-        </small>
-      </div>
-
-      <footer style="margin-top:40px;border-top:1px solid #27272a;padding-top:20px;width:100%;text-align:center;">
-        <a href="/" style="color:#71717a;font-size:12px;text-decoration:none;transition:color 0.2s;">© 2026 UniFLOWs Label · Powered by UniSmartLink</a>
-      </footer>
     </div>
   `;
 
@@ -309,7 +303,7 @@ function renderReleaseCard(root, artist, release) {
       clickCount++;
       localStorage.setItem(clickStorageKey, clickCount);
       const badge = root.querySelector('#smart-click-badge');
-      if (badge) badge.textContent = `🔥 ${clickCount.toLocaleString('vi-VN')} lượt mở link`;
+      if (badge) badge.textContent = `${clickCount.toLocaleString('vi-VN')} lượt mở link`;
     };
   });
 
@@ -326,13 +320,15 @@ function renderReleaseCard(root, artist, release) {
       await navigator.clipboard?.writeText(shareCleanUrl);
       if (btn) {
         const orig = btn.textContent;
-        btn.textContent = '✓ ĐÃ COPY LIÊN KẾT!';
-        btn.style.borderColor = '#cbff00';
-        btn.style.color = '#cbff00';
+        btn.textContent = '✓ ĐÃ SAO CHÉP LIÊN KẾT';
+        btn.style.background = '#ffffff';
+        btn.style.color = '#000000';
+        btn.style.borderColor = '#ffffff';
         setTimeout(() => {
           btn.textContent = orig;
-          btn.style.borderColor = '#3f3f46';
-          btn.style.color = '#e4e4e7';
+          btn.style.background = 'rgba(255,255,255,0.08)';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = 'rgba(255,255,255,0.2)';
         }, 2200);
       }
     }
@@ -346,22 +342,19 @@ function renderReleaseCard(root, artist, release) {
       if (audioEl.paused) {
         audioEl.play();
         playBtn.textContent = '❚❚';
-        playBtn.style.background = '#fff';
       } else {
         audioEl.pause();
         playBtn.textContent = '▶';
-        playBtn.style.background = '#cbff00';
       }
     };
     audioEl.onended = () => {
       playBtn.textContent = '▶';
-      playBtn.style.background = '#cbff00';
     };
   }
 }
 
 // ----------------------------------------------------------------------------
-// RENDER NOT FOUND STATE
+// RENDER NOT FOUND STATE (Luxury Monochrome)
 // ----------------------------------------------------------------------------
 function renderNotFound(root, requestedSlug, artistsList) {
   const allReleases = [];
@@ -373,31 +366,32 @@ function renderNotFound(root, requestedSlug, artistsList) {
   });
 
   root.innerHTML = `
-    <div class="smart-page">
-      <a class="smart-logo" href="/" style="font-weight:800;letter-spacing:-1px;color:#fff;text-decoration:none;font-size:18px;">UNIFLOWs</a>
-      <div style="margin:40px 0 20px;text-align:center;">
-        <h1 style="font-size:64px;letter-spacing:-0.05em;color:#fff;margin:0 0 10px;">404</h1>
-        <strong style="font-size:16px;color:#cbff00;display:block;">Không tìm thấy bản phát hành "${esc(requestedSlug)}"</strong>
-        <p style="color:#a1a1aa;font-size:13px;max-width:440px;margin:8px auto 20px;">Vui lòng kiểm tra lại liên kết hoặc khám phá các bài hát nổi bật khác của UniFLOWs bên dưới:</p>
-      </div>
+    <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#090a0f;"></div>
 
-      ${allReleases.length > 0 ? `
-        <div class="smart-platforms" style="width:100%;display:grid;gap:8px;">
-          ${allReleases.slice(0, 5).map(r => `
-            <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141416;border:1px solid #262626;border-radius:8px;text-decoration:none;color:#fff;">
-              <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=100&q=80')}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid #333;" alt="${esc(r.title)}">
-              <div style="flex:1;min-width:0;">
-                <strong style="display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
-                <span style="font-size:12px;color:#888;">${esc(r.artistName)} · ${esc(r.type || 'Single')}</span>
-              </div>
-              <span style="color:#cbff00;font-size:14px;">↗</span>
-            </a>
-          `).join('')}
-        </div>
-      ` : ''}
+    <div class="smart-viewport" style="position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px 60px;">
+      <div class="liquid-card" style="width:min(460px, 92vw);background:rgba(20, 20, 24, 0.7);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:1px solid rgba(255, 255, 255, 0.14);border-radius:28px;box-shadow:0 30px 70px rgba(0,0,0,0.8);padding:36px 24px;text-align:center;">
+        <a href="/" style="font-weight:900;letter-spacing:-0.04em;color:#ffffff;text-decoration:none;font-size:16px;">UNIFLOWs</a>
+        
+        <h1 style="font-size:56px;letter-spacing:-0.05em;color:#ffffff;margin:28px 0 10px;font-weight:900;">404</h1>
+        <strong style="font-size:15px;color:#ffffff;display:block;">Không tìm thấy bản phát hành "${esc(requestedSlug)}"</strong>
+        <p style="color:rgba(255,255,255,0.6);font-size:13px;max-width:380px;margin:8px auto 24px;">Vui lòng kiểm tra lại liên kết hoặc khám phá các bài hát nổi bật khác của UniFLOWs:</p>
 
-      <div style="margin-top:24px;">
-        <a href="/" style="display:inline-block;padding:10px 24px;border:1px solid #fff;color:#fff;text-decoration:none;font-weight:bold;border-radius:4px;font-size:12px;">← Về trang chủ UniFLOWs</a>
+        ${allReleases.length > 0 ? `
+          <div style="width:100%;display:grid;gap:8px;margin-bottom:24px;">
+            ${allReleases.slice(0, 4).map(r => `
+              <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;text-decoration:none;color:#fff;">
+                <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=100&q=80')}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" alt="${esc(r.title)}">
+                <div style="flex:1;min-width:0;text-align:left;">
+                  <strong style="display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
+                  <span style="font-size:12px;color:rgba(255,255,255,0.6);">${esc(r.artistName)}</span>
+                </div>
+                <span style="color:#ffffff;font-size:12px;font-weight:bold;">NGHE ↗</span>
+              </a>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <a href="/" style="display:inline-block;padding:12px 28px;background:#ffffff;color:#000000;text-decoration:none;font-weight:800;border-radius:30px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">← VỀ TRANG CHỦ</a>
       </div>
     </div>
   `;
@@ -416,35 +410,38 @@ function renderSmartLinkHub(root, artistsList) {
   });
 
   root.innerHTML = `
-    <div class="smart-page">
-      <header style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-        <a class="smart-logo" href="/" style="font-weight:800;letter-spacing:-1px;color:#fff;text-decoration:none;font-size:18px;">UNIFLOWs</a>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;color:#cbff00;background:#1a1a1a;padding:4px 10px;border-radius:12px;border:1px solid #333;">SmartLink Music Hub</span>
-      </header>
+    <div class="smart-bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#090a0f;"></div>
 
-      <h1 style="font-size:clamp(32px, 6vw, 48px);line-height:1.05;letter-spacing:-0.04em;margin:10px 0 8px;color:#fff;font-weight:800;">Tất cả SmartLinks</h1>
-      <p style="color:#a1a1aa;font-size:14px;margin:0 0 24px;">Khám phá toàn bộ bản phát hành chính thức từ nghệ sĩ UniFLOWs Label</p>
+    <div class="smart-viewport" style="position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px 60px;">
+      <div class="liquid-card" style="width:min(500px, 92vw);background:rgba(20, 20, 24, 0.7);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:1px solid rgba(255, 255, 255, 0.14);border-radius:28px;box-shadow:0 30px 70px rgba(0,0,0,0.8);padding:36px 24px;text-align:center;">
+        
+        <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <a href="/" style="font-weight:900;letter-spacing:-0.04em;color:#ffffff;text-decoration:none;font-size:16px;">UNIFLOWs</a>
+          <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.08);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);">MUSIC HUB</span>
+        </div>
 
-      <div class="smart-platforms" style="width:100%;display:grid;gap:10px;">
-        ${allReleases.length > 0 ? allReleases.map(r => `
-          <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:#141416;border:1px solid #262626;border-radius:8px;text-decoration:none;color:#fff;transition:transform 0.15s ease;">
-            <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid #333;box-shadow:2px 2px 0 rgba(203,255,0,0.6);" alt="${esc(r.title)}">
-            <div style="flex:1;min-width:0;">
-              <strong style="display:block;font-size:16px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
-              <span style="font-size:12px;color:#888;">${esc(r.artistName)} · <b>${esc(r.type || 'Single')}</b></span>
+        <h1 style="font-size:clamp(26px, 6vw, 36px);letter-spacing:-0.03em;color:#ffffff;font-weight:900;margin:10px 0 6px;">Tất cả SmartLinks</h1>
+        <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:0 0 24px;">Khám phá toàn bộ bản phát hành chính thức từ nghệ sĩ UniFLOWs Label</p>
+
+        <div style="width:100%;display:grid;gap:10px;margin-bottom:24px;">
+          ${allReleases.length > 0 ? allReleases.map(r => `
+            <a href="/listen?release=${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;text-decoration:none;color:#fff;transition:all 0.2s ease;">
+              <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:50px;height:50px;object-fit:cover;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" alt="${esc(r.title)}">
+              <div style="flex:1;min-width:0;text-align:left;">
+                <strong style="display:block;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
+                <span style="font-size:12px;color:rgba(255,255,255,0.6);">${esc(r.artistName)} · <b>${esc(r.type || 'Single')}</b></span>
+              </div>
+              <span style="background:#ffffff;color:#000000;font-size:10px;font-weight:900;letter-spacing:1px;padding:6px 14px;border-radius:20px;text-transform:uppercase;">NGHE ↗</span>
+            </a>
+          `).join('') : `
+            <div style="padding:40px 20px;text-align:center;color:rgba(255,255,255,0.5);border:1px dashed rgba(255,255,255,0.15);border-radius:16px;">
+              Đang cập nhật danh mục bản phát hành...
             </div>
-            <span style="font-size:12px;font-weight:bold;background:#262626;color:#cbff00;padding:6px 12px;border-radius:6px;border:1px solid #333;">Nghe ↗</span>
-          </a>
-        `).join('') : `
-          <div style="padding:40px 20px;text-align:center;color:#888;border:1px dashed #333;border-radius:8px;">
-            Đang cập nhật danh mục bản phát hành...
-          </div>
-        `}
-      </div>
+          `}
+        </div>
 
-      <footer style="margin-top:40px;border-top:1px solid #27272a;padding-top:20px;width:100%;text-align:center;">
-        <a href="/" style="color:#71717a;font-size:12px;text-decoration:none;">← Quay lại Trang Chủ UniFLOWs</a>
-      </footer>
+        <a href="/" style="color:rgba(255,255,255,0.5);font-size:11px;text-decoration:none;font-family:'DM Mono',monospace;letter-spacing:0.5px;">← Quay lại Trang Chủ UniFLOWs</a>
+      </div>
     </div>
   `;
 }
