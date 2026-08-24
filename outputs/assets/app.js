@@ -2,27 +2,6 @@ import { getData, getLocalCachedData } from './data.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import './security.js';
 
-// Auto-escape any trapping subdomains (e.g. unihub.uniflowslabel.com -> uniflowslabel.com/unihube)
-(function autoRedirectSubdomains() {
-  const host = window.location.hostname.toLowerCase();
-  if (host.endsWith('uniflowslabel.com') && host !== 'uniflowslabel.com' && host !== 'www.uniflowslabel.com') {
-    const protocol = window.location.protocol;
-    const search = window.location.search || '';
-    const hash = window.location.hash || '';
-    if (host.startsWith('unihub.') || host.startsWith('hube.')) {
-      window.location.replace(`${protocol}//uniflowslabel.com/unihube${search}${hash}`);
-    } else if (host.startsWith('publishing.')) {
-      window.location.replace(`${protocol}//uniflowslabel.com/unipublishing${search}${hash}`);
-    } else if (host.startsWith('48k.')) {
-      window.location.replace(`${protocol}//uniflowslabel.com/48kcollective${search}${hash}`);
-    } else if (host.startsWith('portal.') || host.startsWith('artist.')) {
-      window.location.replace(`${protocol}//uniflowslabel.com/artist-login${search}${hash}`);
-    } else {
-      window.location.replace(`${protocol}//uniflowslabel.com/${search}${hash}`);
-    }
-  }
-})();
-
 let data = getLocalCachedData();
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
@@ -41,35 +20,67 @@ function formatSocialUrl(u) {
 }
 
 function getNavLinks() {
-  const isFileOrStaticHtml = window.location.protocol === 'file:' || 
+  const host = window.location.hostname.toLowerCase();
+  const protocol = window.location.protocol;
+  const isFileOrStaticHtml = protocol === 'file:' || 
     window.location.pathname.endsWith('.html');
 
   if (isFileOrStaticHtml) {
     return {
       home: 'index.html',
       artists: 'artists.html',
+      artist: 'artist.html',
       unihube: 'unihube.html',
       collective48k: '48kcollective.html',
       publishing: 'unipublishing.html',
       submitMusic: 'submit-music.html',
       about: 'about.html',
       news: 'news.html',
+      article: 'article.html',
       contact: 'contact.html',
-      artistLogin: 'artist-login.html'
+      artistLogin: 'artist-login.html',
+      producer: 'producer.html',
+      smartlink: 'listen.html'
+    };
+  }
+
+  const isCustomDomain = host.includes('uniflowslabel.');
+  if (isCustomDomain) {
+    const parts = host.split('.');
+    const baseDomain = parts.slice(-2).join('.');
+    return {
+      home: `${protocol}//${baseDomain}/`,
+      artists: `${protocol}//${baseDomain}/artists`,
+      artist: `${protocol}//${baseDomain}/artist`,
+      unihube: `${protocol}//unihub.${baseDomain}/`,
+      collective48k: `${protocol}//48k.${baseDomain}/`,
+      publishing: `${protocol}//publishing.${baseDomain}/`,
+      submitMusic: `${protocol}//${baseDomain}/submit-music`,
+      about: `${protocol}//${baseDomain}/about`,
+      news: `${protocol}//${baseDomain}/news`,
+      article: `${protocol}//${baseDomain}/article`,
+      contact: `${protocol}//${baseDomain}/contact`,
+      artistLogin: `${protocol}//portal.${baseDomain}/`,
+      producer: `${protocol}//unihub.${baseDomain}/producer`,
+      smartlink: `${protocol}//${baseDomain}/l/`
     };
   }
 
   return {
     home: '/',
     artists: '/artists',
+    artist: '/artist',
     unihube: '/unihube',
     collective48k: '/48kcollective',
     publishing: '/unipublishing',
     submitMusic: '/submit-music',
     about: '/about',
     news: '/news',
+    article: '/article',
     contact: '/contact',
-    artistLogin: '/artist-login'
+    artistLogin: '/artist-login',
+    producer: '/producer',
+    smartlink: '/l/'
   };
 }
 
@@ -188,7 +199,7 @@ function artists() {
   const exploreText = t('explore_artist');
 
   const cardsHtml = visibleArtists.map((a, i) => `
-    <a class="artist" href="/artist?id=${encodeURIComponent(a.id)}" style="animation: fadeIn 0.35s ease ${i * 0.05}s both;">
+    <a class="artist" href="${navLinks.artist}?id=${encodeURIComponent(a.id)}" style="animation: fadeIn 0.35s ease ${i * 0.05}s both;">
       <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80')}" alt="${esc(a.name)}">
       <div class="artist-info">
         <span>${esc(a.genre || 'Music')}</span>
@@ -247,7 +258,7 @@ function articleCards() {
         <span class="date">${esc(a.category)} / ${esc(a.date)}</span>
         <h3>${esc(a.title)}</h3>
         <p>${esc(a.excerpt || '')}</p>
-        <a class="card-link" href="/article?id=${encodeURIComponent(a.id)}">Đọc bài đầy đủ →</a>
+        <a class="card-link" href="${navLinks.article}?id=${encodeURIComponent(a.id)}">Đọc bài đầy đủ →</a>
       </article>
     `).join('') || '<p class="empty">Không tìm thấy bài viết phù hợp.</p>';
   };
@@ -309,7 +320,7 @@ function artistDetail() {
       ${(a.products || []).length > 0 ? (a.products || []).map(p => {
         const pSlug = p.slug || slug(p.title);
         return `
-          <a class="release" href="/l/${encodeURIComponent(pSlug)}">
+          <a class="release" href="${navLinks.smartlink}${encodeURIComponent(pSlug)}">
             <span>${esc(p.type)}</span>
             <strong>${esc(p.title)}</strong>
             <b>Smart link ↗</b>

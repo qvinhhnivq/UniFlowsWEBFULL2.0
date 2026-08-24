@@ -1,6 +1,4 @@
-// ============================================================================
-// UNIFLOWS STANDALONE SMARTLINK ENGINE (High Reliability / Zero Module Dependency)
-// ============================================================================
+import { defaultData } from './data.js';
 
 const SUPABASE_URL = 'https://oizygltqzavvymvmikzt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9penlnbHRxemF2dnltdm1pa3p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNzMyOTcsImV4cCI6MjEwMjY0OTI5N30.LMaHfdvZ39LYYFAde35D4Q25Ua3H0LhE2s0_KnC5e_4';
@@ -63,10 +61,12 @@ export async function initSmartLinkEngine() {
     releaseQuery = releaseQuery.replace(/\.html$/i, '').trim();
   }
 
-  // 2. Fast 0ms render from Local Storage
+  // 2. Fast 0ms render from Local Storage & defaultData
   const cached = getLocalCached() || {};
+  const artistsList = (cached.artists && cached.artists.length > 0) ? cached.artists : (defaultData.artists || []);
+  const customTracksList = cached.publishing?.customTracks || defaultData.publishing?.customTracks || [];
   let rendered = false;
-  const initialPool = buildReleasePool(cached.artists || [], [], cached.publishing?.customTracks || []);
+  const initialPool = buildReleasePool(artistsList, [], customTracksList);
   if (initialPool.length > 0) {
     rendered = tryRenderMatch(root, initialPool, releaseQuery);
   }
