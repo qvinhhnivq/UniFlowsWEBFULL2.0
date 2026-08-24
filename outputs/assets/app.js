@@ -401,6 +401,45 @@ function smartPage() {
     }
   }
 
+  // If no release was specified in URL, show catalogue hub instead of 404
+  if (!releaseSlug) {
+    const allReleases = [];
+    artistsList.forEach(art => {
+      const prods = Array.isArray(art.products) ? art.products : (Array.isArray(art.releases) ? art.releases : []);
+      prods.forEach(pr => {
+        allReleases.push({
+          ...pr,
+          artistName: art.name,
+          artistImage: art.image
+        });
+      });
+    });
+
+    if (allReleases.length > 0) {
+      root.innerHTML = `
+        <section class="smart-page" style="max-width:600px;">
+          <a class="smart-logo" href="/">UNIFLOWs</a>
+          <h1 style="margin-top:6vh;font-size:clamp(32px, 6vw, 44px);letter-spacing:-0.03em;">SmartLink Hub</h1>
+          <p style="color:#aaa;margin-bottom:20px;font-size:14px;">Chọn một bản phát hành của nghệ sĩ UniFLOWs để nghe trực tiếp:</p>
+          <div class="smart-platforms" style="margin-top:0;">
+            ${allReleases.map(r => `
+              <a href="/listen/${encodeURIComponent(r.slug || slug(r.title))}" style="display:flex;align-items:center;gap:12px;text-align:left;padding:12px 16px;">
+                <img src="${esc(r.artworkUrl || r.artistImage || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=150&q=80')}" style="width:46px;height:46px;object-fit:cover;border-radius:4px;border:1px solid #444;" alt="${esc(r.title)}">
+                <div style="flex:1;min-width:0;">
+                  <strong style="display:block;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</strong>
+                  <span style="font-size:12px;color:#aaa;">${esc(r.artistName)} · ${esc(r.type || 'Single')}</span>
+                </div>
+                <span>↗</span>
+              </a>
+            `).join('')}
+          </div>
+          <a class="button alt" href="/" style="margin-top:20px;border:1px solid #fff;color:#fff;padding:8px 20px;font-weight:bold;">← Về trang chủ</a>
+        </section>
+      `;
+      return;
+    }
+  }
+
   // If still not found and data is loading, show clean loader
   if (!a || !p) {
     if (!isDataLoaded) {
@@ -408,7 +447,7 @@ function smartPage() {
         <section class="smart-page">
           <a class="smart-logo" href="/">UNIFLOWs</a>
           <div style="margin-top:25vh;text-align:center;">
-            <div style="font-size:36px;margin-bottom:12px;">🎵</div>
+            <div style="font-size:36px;margin-bottom:12px;animation:pulse 1.5s infinite;">🎵</div>
             <p style="color:#aaa;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:1px;">ĐANG TẢI SMART LINK...</p>
           </div>
         </section>
@@ -421,7 +460,8 @@ function smartPage() {
         <a class="smart-logo" href="/">UNIFLOWs</a>
         <h1 style="margin-top:18vh;font-size:64px;letter-spacing:-0.05em;">404</h1>
         <p class="smart-error" style="padding:0;margin:12px 0 20px;font-size:15px;color:#aaa;">Không tìm thấy bản phát hành Smart Link này.</p>
-        <a class="button alt" href="/" style="border:1px solid #fff;color:#fff;font-weight:bold;padding:10px 24px;border-radius:4px;">Về trang chủ →</a>
+        <a class="button alt" href="/listen" style="border:1px solid #fff;color:#fff;font-weight:bold;padding:10px 24px;border-radius:4px;margin-right:8px;">Xem danh sách SmartLinks</a>
+        <a class="button alt" href="/" style="border:1px solid #555;color:#aaa;font-weight:bold;padding:10px 24px;border-radius:4px;">Về trang chủ →</a>
       </section>
     `;
     return;

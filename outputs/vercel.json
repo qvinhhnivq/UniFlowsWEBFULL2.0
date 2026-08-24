@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/listen/:path*",
+      "source": "/listen/(.*)",
       "destination": "/listen.html"
     },
     {
@@ -11,7 +11,7 @@
       "destination": "/listen.html"
     },
     {
-      "source": "/l/:path*",
+      "source": "/l/(.*)",
       "destination": "/listen.html"
     },
     {
