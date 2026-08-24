@@ -3,72 +3,6 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "unihub.uniflowslabel.com"
-        }
-      ],
-      "destination": "https://uniflowslabel.com/unihube",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "hube.uniflowslabel.com"
-        }
-      ],
-      "destination": "https://uniflowslabel.com/unihube",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "publishing.uniflowslabel.com"
-        }
-      ],
-      "destination": "https://uniflowslabel.com/unipublishing",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "48k.uniflowslabel.com"
-        }
-      ],
-      "destination": "https://uniflowslabel.com/48kcollective",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "portal.uniflowslabel.com"
-        }
-      ],
-      "destination": "https://uniflowslabel.com/artist-login",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "artist.uniflowslabel.com"
-        }
-      ],
-      "destination": "https://uniflowslabel.com/artist-login",
-      "permanent": false
-    },
-    {
       "source": "/48k",
       "destination": "/48kcollective",
       "permanent": false
@@ -79,12 +13,117 @@
       "permanent": false
     },
     {
+      "source": "/uni-hube",
+      "destination": "/unihube",
+      "permanent": false
+    },
+    {
       "source": "/publishing",
       "destination": "/unipublishing",
       "permanent": false
     }
   ],
   "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "48k.uniflowslabel.com"
+        }
+      ],
+      "destination": "/48kcollective.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "48kcollective.uniflowslabel.com"
+        }
+      ],
+      "destination": "/48kcollective.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "uni-hube.uniflowslabel.com"
+        }
+      ],
+      "destination": "/unihube.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "unihube.uniflowslabel.com"
+        }
+      ],
+      "destination": "/unihube.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "hube.uniflowslabel.com"
+        }
+      ],
+      "destination": "/unihube.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "unihub.uniflowslabel.com"
+        }
+      ],
+      "destination": "/unihube.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "publishing.uniflowslabel.com"
+        }
+      ],
+      "destination": "/unipublishing.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "unipublishing.uniflowslabel.com"
+        }
+      ],
+      "destination": "/unipublishing.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "portal.uniflowslabel.com"
+        }
+      ],
+      "destination": "/artist-login.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "artist.uniflowslabel.com"
+        }
+      ],
+      "destination": "/artist-login.html"
+    },
     {
       "source": "/s/(.*)",
       "destination": "/s.html?s=$1"
