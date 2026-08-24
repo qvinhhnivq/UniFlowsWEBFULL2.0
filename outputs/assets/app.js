@@ -16,7 +16,8 @@ import './security.js';
     } else if (host.startsWith('48k.')) {
       window.location.replace(`${protocol}//uniflowslabel.com/48kcollective${search}${hash}`);
     } else if (host.startsWith('portal.') || host.startsWith('artist.')) {
-      window.location.replace(`${protocol}//uniflowslabel.com/artist-login${search}${hash}`);
+      const isAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
+      window.location.replace(`${protocol}//uniflowslabel.com/${isAuth ? 'portal' : 'artist-login'}${search}${hash}`);
     } else {
       window.location.replace(`${protocol}//uniflowslabel.com/${search}${hash}`);
     }

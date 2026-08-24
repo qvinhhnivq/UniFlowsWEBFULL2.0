@@ -82,11 +82,6 @@
       "source": "/publishing",
       "destination": "/unipublishing",
       "permanent": false
-    },
-    {
-      "source": "/portal",
-      "destination": "/artist-login",
-      "permanent": false
     }
   ],
   "rewrites": [
