@@ -2,24 +2,24 @@ import { getData, getLocalCachedData } from './data.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import './security.js';
 
-// In-domain Subdomain Route Resolver (Keeps subdomain in URL)
-(function resolveSubdomainRouting() {
+// Auto-redirect subdomains cleanly to main domain canonical paths
+(function autoRedirectSubdomains() {
   const host = window.location.hostname.toLowerCase();
-  const path = window.location.pathname.toLowerCase();
-  const search = window.location.search || '';
-  const hash = window.location.hash || '';
-  const isRootOrIndex = path === '/' || path === '' || path === '/index' || path === '/index.html';
-
-  if (isRootOrIndex) {
-    if (host.startsWith('48k.') || host.startsWith('48kcollective.')) {
-      window.location.replace(`/48kcollective${search}${hash}`);
-    } else if (host.startsWith('uni-hube.') || host.startsWith('unihube.') || host.startsWith('hube.') || host.startsWith('unihub.')) {
-      window.location.replace(`/unihube${search}${hash}`);
-    } else if (host.startsWith('publishing.') || host.startsWith('unipublishing.')) {
-      window.location.replace(`/unipublishing${search}${hash}`);
+  if (host.endsWith('uniflowslabel.com') && host !== 'uniflowslabel.com' && host !== 'www.uniflowslabel.com') {
+    const protocol = window.location.protocol;
+    const search = window.location.search || '';
+    const hash = window.location.hash || '';
+    if (host.startsWith('unihub.') || host.startsWith('hube.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/unihube${search}${hash}`);
+    } else if (host.startsWith('publishing.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/unipublishing${search}${hash}`);
+    } else if (host.startsWith('48k.')) {
+      window.location.replace(`${protocol}//uniflowslabel.com/48kcollective${search}${hash}`);
     } else if (host.startsWith('portal.') || host.startsWith('artist.')) {
       const isAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
-      window.location.replace(`/${isAuth ? 'portal' : 'artist-login'}${search}${hash}`);
+      window.location.replace(`${protocol}//uniflowslabel.com/${isAuth ? 'portal' : 'artist-login'}${search}${hash}`);
+    } else {
+      window.location.replace(`${protocol}//uniflowslabel.com/${search}${hash}`);
     }
   }
 })();

@@ -33,24 +33,6 @@
     const cleanComp = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
     async function handle404Routing() {
-      const host = window.location.hostname.toLowerCase();
-      if (host.startsWith('48k') || host.includes('48kcollective')) {
-        window.location.replace('/48kcollective');
-        return;
-      }
-      if (host.startsWith('uni-hube') || host.startsWith('unihube') || host.startsWith('hube') || host.startsWith('unihub')) {
-        window.location.replace('/unihube');
-        return;
-      }
-      if (host.startsWith('publishing') || host.startsWith('unipublishing')) {
-        window.location.replace('/unipublishing');
-        return;
-      }
-      if (host.startsWith('portal') || host.startsWith('artist.')) {
-        window.location.replace('/artist-login');
-        return;
-      }
-
       const rawPath = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
       const parts = rawPath.split('/').filter(Boolean);
       const q = new URLSearchParams(location.search);
