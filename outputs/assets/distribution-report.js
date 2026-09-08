@@ -72,6 +72,8 @@ export const state = {
   currency: 'VND',
   exchangeRate: 25989,
   statementPeriod: 'Tháng ' + (new Date().getMonth()+1) + '/' + new Date().getFullYear(),
+  statementNumber: 'UFL-' + new Date().getFullYear() + '-001',
+  curveNote: 'Bản đối soát này đã được Curve thông qua và đã lọc streams ảo từ các DSP theo tiêu chuẩn phân phối quốc tế.',
   isCustomLoaded: false,
   fileName: 'uniflows_sample_dataset.csv',
   activeView: 'summary',
@@ -284,6 +286,37 @@ export function exportProcessedCSV() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
+/**
+ * Xuất CSV riêng cho từng nghệ sĩ — chỉ lấy đúng data của nghệ sĩ được chỉ định.
+ * An toàn khi file gốc chứa data của nhiều nghệ sĩ trong label.
+ */
+export function exportArtistCSV(targetArtist) {
+  const { labelPct, artistPct } = computeFilteredData();
+  const artistRows = state.records.filter(r => r.artist === targetArtist);
+  if (!artistRows.length) { alert('Không tìm thấy dữ liệu cho: ' + targetArtist); return; }
+
+  const isUSD = state.currency==='USD';
+  const fv = v => isUSD ? (v/state.exchangeRate).toFixed(4) : (v<1000?v.toFixed(2):Math.round(v));
+  let totalStreams=0, totalGross=0;
+  artistRows.forEach(r=>{ totalStreams+=r.streams; totalGross+=r.revenue; });
+  const labelRet  = totalGross*(labelPct/100);
+  const artistNet = totalGross*(artistPct/100);
+
+  const hdrs = ['Nghệ sĩ','Bài hát','DSP','Loại Stream','Quốc gia','ISRC','Streams',`Gross (${state.currency})`,`Label (${labelPct}%)`,`Artist (${artistPct}%)`,'Ngày','Kỳ đối soát'];
+  const rows = [hdrs];
+  artistRows.forEach(r=>{
+    rows.push([`"${r.artist.replace(/"/g,'""')}"`,`"${r.track.replace(/"/g,'""')}"`,`"${r.dsp}"`,
+      `"${r.configuration||r.subSource||''}"`,`"${r.territory||''}"`,`"${r.isrc||''}"`,r.streams,
+      fv(r.revenue),fv(r.revenue*labelPct/100),fv(r.revenue*artistPct/100),`"${r.saleDate||''}"`,`"${state.statementPeriod}"`]);
+  });
+  rows.push(['"★ TỔNG CỘNG"',`"${artistRows.length} rows"`,'""','""','""','""',totalStreams,fv(totalGross),fv(labelRet),fv(artistNet),'""',`"${state.statementPeriod}"`]);
+  const safeName = targetArtist.replace(/[^a-zA-Z0-9_À-ỹ]/g,'_');
+  const periodSafe = state.statementPeriod.replace(/[\s\/]/g,'-');
+  const csv = '\uFEFF'+rows.map(r=>r.join(',')).join('\r\n');
+  const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),download:`UniFLOWs_${safeName}_${periodSafe}.csv`});
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
 export function downloadCSVTemplate() {
   const rows=[['Source','Sub Source','Track Artist','Track Title','ISRC','Territory','Units','Gross Amount in Currency','Original Currency','Exchange Rate','Configuration'],
     ['Spotify','','Khờ Band','mùa hạ 2019','TCAJT2506106','VN',32,0.019049,'EUR',29657,'Stream'],
@@ -358,7 +391,8 @@ export function generateRoyaltyStatementHTML() {
     <div style="text-align:right;">
       <div style="background:#d8ff48;color:#0b0b0b;font-family:'DM Mono',monospace;font-size:10px;font-weight:900;padding:5px 14px;text-transform:uppercase;letter-spacing:1.5px;display:inline-block;margin-bottom:8px;">⚡ ROYALTY STATEMENT</div>
       <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.6);line-height:1.9;">
-        <div>Mã số: <strong style="color:#d8ff48;">${statId}</strong></div>
+        <div>Mã số: <strong style="color:#d8ff48;">${state.statementNumber}</strong></div>
+        <div>Kỳ: <strong style="color:#fff;">${state.statementPeriod}</strong></div>
         <div>Ngày: <strong style="color:#fff;">${printDate}</strong></div>
       </div>
     </div>
@@ -369,7 +403,8 @@ export function generateRoyaltyStatementHTML() {
     <div>
       <div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;opacity:0.5;margin-bottom:4px;">ĐỐI TÁC THỤ HƯỞNG / BENEFICIARY</div>
       <div style="font-size:18px;font-weight:900;letter-spacing:-0.04em;">${artistDisplay}</div>
-      <div style="font-family:'DM Mono',monospace;font-size:10px;opacity:0.5;margin-top:3px;">Kỳ: ${state.statementPeriod} · ${state.fileName}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;opacity:0.5;margin-top:3px;">${state.fileName}</div>
+      ${state.curveNote ? `<div style="margin-top:10px;padding:8px 12px;background:#f5f4f0;border-left:3px solid #0b0b0b;font-size:10.5px;line-height:1.5;font-style:italic;opacity:0.75;">✓ ${state.curveNote}</div>` : ''}
     </div>
     <div style="border-left:1px solid rgba(11,11,11,0.15);padding-left:20px;display:grid;gap:5px;align-content:center;">
       <div style="display:flex;justify-content:space-between;font-size:11px;">
@@ -377,12 +412,8 @@ export function generateRoyaltyStatementHTML() {
         <strong style="font-family:'DM Mono',monospace;">Label ${labelPct}% / NĐ ${artistPct}%</strong>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:11px;">
-        <span style="opacity:0.5;">Đơn vị:</span>
+        <span style="opacity:0.5;">Đơn vị tiền tệ:</span>
         <strong style="font-family:'DM Mono',monospace;">${state.currency}</strong>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;">
-        <span style="opacity:0.5;">Tỷ giá:</span>
-        <strong style="font-family:'DM Mono',monospace;">1$ = ${state.exchangeRate.toLocaleString('vi-VN')}₫</strong>
       </div>
     </div>
   </div>
@@ -675,13 +706,6 @@ export function renderDistributionTab() {
   <div style="background:var(--ink);color:#fff;padding:22px;margin-bottom:28px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
       <span style="font:10px 'DM Mono',monospace;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--lime);">⚙️ Revenue Split & Filters</span>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="display:flex;align-items:center;gap:4px;">
-          <button type="button" id="dist-cur-vnd" class="button" style="padding:4px 12px;font-size:10px;${state.currency==='VND'?'background:var(--lime);color:var(--ink);border-color:var(--lime);':'background:transparent;color:#fff;border-color:rgba(255,255,255,0.3);'}">VND ₫</button>
-          <button type="button" id="dist-cur-usd" class="button" style="padding:4px 12px;font-size:10px;${state.currency==='USD'?'background:var(--lime);color:var(--ink);border-color:var(--lime);':'background:transparent;color:#fff;border-color:rgba(255,255,255,0.3);'}">USD $</button>
-        </div>
-        <span style="font:10px 'DM Mono',monospace;opacity:0.5;">1$=${state.exchangeRate.toLocaleString()}₫</span>
-      </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:flex-end;">
       <div>
@@ -713,6 +737,31 @@ export function renderDistributionTab() {
     </div>
   </div>
 
+  <!-- ===== PDF SETTINGS STRIP ===== -->
+  <div style="border:1px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:20px;margin-bottom:28px;background:#fff;">
+    <div style="border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:baseline;">
+      <strong style="font-size:13px;font-weight:900;letter-spacing:-0.02em;">📋 Cài Đặt Phiếu Đối Soát PDF</strong>
+      <span style="font:10px 'DM Mono',monospace;opacity:0.4;">Thông tin hiển thị trên bản in</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:16px;align-items:flex-end;">
+      <div>
+        <label style="font:10px 'DM Mono',monospace;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">📅 Kỳ Đối Soát</label>
+        <input type="text" id="dist-statement-period" value="${state.statementPeriod}" placeholder="VD: Tháng 6/2026 hoặc Q2-2026"
+          style="width:100%;padding:9px 12px;font:12px Manrope,sans-serif;border:1px solid var(--ink);background:var(--paper);">
+      </div>
+      <div>
+        <label style="font:10px 'DM Mono',monospace;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">🔢 Số Phiếu (Statement No.)</label>
+        <input type="text" id="dist-statement-number" value="${state.statementNumber}" placeholder="VD: UFL-2026-001"
+          style="width:100%;padding:9px 12px;font:12px 'DM Mono',monospace;border:1px solid var(--ink);background:var(--paper);">
+      </div>
+      <div>
+        <label style="font:10px 'DM Mono',monospace;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">✅ Ghi Chú Chứng Thực (Curve Note)</label>
+        <input type="text" id="dist-curve-note" value="${state.curveNote}" placeholder="VD: Bản đối soát được Curve thông qua..."
+          style="width:100%;padding:9px 12px;font:12px Manrope,sans-serif;border:1px solid var(--ink);background:var(--paper);">
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 4 METRIC CARDS ===== -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--ink);box-shadow:4px 4px 0 var(--ink);margin-bottom:28px;">
     <div style="padding:22px;border-right:1px solid var(--ink);">
@@ -739,13 +788,18 @@ export function renderDistributionTab() {
 
   <!-- ===== ACTION BAR ===== -->
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px;">
-    <div style="display:flex;gap:6px;align-items:center;">
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
       <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;opacity:0.5;">Chế độ xem:</span>
       <button type="button" id="dist-view-summary-btn" class="button" style="padding:8px 14px;font-size:10px;${state.activeView==='summary'?'':'background:transparent;color:var(--ink);'}">📊 Tổng Hợp</button>
       <button type="button" id="dist-view-tx-btn" class="button" style="padding:8px 14px;font-size:10px;${state.activeView==='transactions'?'':'background:transparent;color:var(--ink);'}">📋 Chi Tiết (${filteredRows.length})</button>
+      <span style="width:1px;height:20px;background:var(--line);display:inline-block;margin:0 4px;"></span>
+      <button type="button" id="dist-cur-vnd" class="button" style="padding:6px 10px;font-size:10px;${state.currency==='VND'?'':'background:transparent;color:var(--ink);'}">₫ VND</button>
+      <button type="button" id="dist-cur-usd" class="button" style="padding:6px 10px;font-size:10px;${state.currency==='USD'?'':'background:transparent;color:var(--ink);'}">$ USD</button>
     </div>
-    <div style="display:flex;gap:10px;">
-      <button type="button" id="dist-btn-export-csv" class="button alt">📥 Xuất CSV</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      ${state.selectedArtist !== 'all' ? `<button type="button" id="dist-btn-export-artist-csv" class="button" style="background:var(--lime);color:var(--ink);border-color:var(--ink);">📤 CSV: ${state.selectedArtist}</button>` : ''}
+      ${uniqueArtists.length > 1 ? `<button type="button" id="dist-btn-export-all-artists" class="button alt" title="Xuất riêng CSV cho từng nghệ sĩ">📦 CSV Tất Cả NĐ (${uniqueArtists.length})</button>` : ''}
+      <button type="button" id="dist-btn-export-csv" class="button alt">📥 Xuất CSV (filtered)</button>
       <button type="button" id="dist-btn-open-pdf" class="button">🖨️ Xuất PDF A4</button>
     </div>
   </div>
@@ -911,16 +965,26 @@ function attachHandlers() {
   const vndBtn     = $('#dist-cur-vnd');
   const usdBtn     = $('#dist-cur-usd');
   const expCSV     = $('#dist-btn-export-csv');
+  const expArtist  = $('#dist-btn-export-artist-csv');
+  const expAllArt  = $('#dist-btn-export-all-artists');
   const openPDF    = $('#dist-btn-open-pdf');
   const sumBtn     = $('#dist-view-summary-btn');
   const txBtn      = $('#dist-view-tx-btn');
   const printBtn   = $('#btn-print-royalty-dialog');
   const closeBtn   = $('#btn-close-royalty-dialog');
+  const periodInp  = $('#dist-statement-period');
+  const numInp     = $('#dist-statement-number');
+  const noteInp    = $('#dist-curve-note');
 
   sumBtn?.addEventListener('click', ()=>{ state.activeView='summary'; renderDistributionTab(); });
   txBtn?.addEventListener('click',  ()=>{ state.activeView='transactions'; renderDistributionTab(); });
   browseBtn?.addEventListener('click', ()=>fileInput?.click());
   dropzone?.addEventListener('click', ()=>fileInput?.click());
+
+  // PDF settings — live update state without re-render (avoid focus loss)
+  periodInp?.addEventListener('change', e=>{ state.statementPeriod = e.target.value.trim() || state.statementPeriod; });
+  numInp?.addEventListener('change',    e=>{ state.statementNumber  = e.target.value.trim() || state.statementNumber; });
+  noteInp?.addEventListener('change',   e=>{ state.curveNote        = e.target.value; });
 
   async function loadCSVFile(file) {
     try {
@@ -930,7 +994,13 @@ function attachHandlers() {
       state.records=parsed; state.fileName=file.name; state.isCustomLoaded=true;
       state.selectedArtist='all'; state.selectedDsp='all'; state.searchQuery='';
       renderDistributionTab();
-      alert(`✓ Nạp thành công ${parsed.length} dòng từ: ${file.name}`);
+      // Show per-artist breakdown if multiple artists detected
+      const artists = [...new Set(parsed.map(r=>r.artist))];
+      if (artists.length > 1) {
+        alert(`✓ Nạp thành công ${parsed.length} dòng từ: ${file.name}\n\n📁 Phát hiện ${artists.length} nghệ sĩ:\n${artists.map(a=>'  · '+a).join('\n')}\n\nDùng nút "📤 CSV: [Tên NĐ]" để xuất riêng từng nghệ sĩ một cách an toàn.`);
+      } else {
+        alert(`✓ Nạp thành công ${parsed.length} dòng từ: ${file.name}`);
+      }
     } catch(e) { alert('Lỗi CSV: '+e.message); }
   }
 
@@ -968,7 +1038,32 @@ function attachHandlers() {
   vndBtn?.addEventListener('click', ()=>{ state.currency='VND'; renderDistributionTab(); });
   usdBtn?.addEventListener('click', ()=>{ state.currency='USD'; renderDistributionTab(); });
   expCSV?.addEventListener('click', ()=>exportProcessedCSV());
-  openPDF?.addEventListener('click', ()=>openRoyaltyStatementPreview());
+  openPDF?.addEventListener('click', ()=>{
+    // Sync any unsaved PDF field changes before opening
+    if (periodInp) state.statementPeriod = periodInp.value.trim() || state.statementPeriod;
+    if (numInp)    state.statementNumber  = numInp.value.trim()   || state.statementNumber;
+    if (noteInp)   state.curveNote        = noteInp.value;
+    openRoyaltyStatementPreview();
+  });
+
+  // Export CSV for the currently-selected artist only (private — no other artist data)
+  expArtist?.addEventListener('click', ()=>{
+    if (state.selectedArtist === 'all') { alert('Chọn một nghệ sĩ cụ thể để xuất CSV riêng.'); return; }
+    exportArtistCSV(state.selectedArtist);
+  });
+
+  // Bulk: export one CSV file per artist — each file only contains that artist's data
+  expAllArt?.addEventListener('click', async ()=>{
+    const artists = [...new Set(state.records.map(r=>r.artist))].sort();
+    if (artists.length < 2) { alert('Chỉ có 1 nghệ sĩ trong dataset.'); return; }
+    const confirm = window.confirm(`Xuất ${artists.length} file CSV riêng:\n${artists.map(a=>'  · '+a).join('\n')}\n\nMỗi file chỉ chứa dữ liệu của nghệ sĩ đó.`);
+    if (!confirm) return;
+    for (const artist of artists) {
+      await new Promise(r=>setTimeout(r,300)); // small delay between downloads
+      exportArtistCSV(artist);
+    }
+  });
+
   printBtn?.addEventListener('click', ()=>printRoyaltyStatement());
   closeBtn?.addEventListener('click', ()=>document.querySelector('#admin-royalty-statement-dialog')?.close());
 }
