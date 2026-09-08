@@ -40,6 +40,7 @@
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-collective48k" style="border-left: 2px solid #7c3aed; background:#faf5ff;">⚡ 11 / 48K Collective (Agency)</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-submissions" style="border-left: 2px solid #0284c7; background:#f0f9ff; font-weight:bold;">🎵 12 / Nhận Demo & Tuyển Chọn A&R</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-shortlinks" style="border-left: 2px solid #10b981; background:#ecfdf5; font-weight:bold;">🔗 13 / Trình Rút Gọn Link (ShortURL)</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-distribution" style="border-left: 2px solid var(--lime); background: #0f172a; color: #fff; font-weight:bold;">📊 14 / Đối Soát Phân Phối (Distribution & Royalty)</button>
     </nav>
 
     <div id="notice" class="notice"></div>
@@ -331,9 +332,10 @@
             <h3 style="font-size: 14px; margin: 0; color: #166534;">Import Báo cáo Doanh thu (CSV)</h3>
             <p style="font-size: 12px; margin: 4px 0 0; color: #15803d;">Tự động tính toán và cộng tiền vào số dư của nghệ sĩ từ file CSV (Spotify, Apple Music).</p>
           </div>
-          <div>
+          <div style="display: flex; gap: 8px;">
              <input type="file" id="admin-csv-upload" accept=".csv" style="display: none;">
              <button type="button" class="button" onclick="document.getElementById('admin-csv-upload').click()" style="background: #16a34a; border-color: #16a34a;">📥 Upload CSV</button>
+             <button type="button" class="button" onclick="document.querySelector('[data-tab=\'admin-tab-distribution\']').click()" style="background:#0f172a; border-color:#0f172a; color:#fff;">📊 Đối Soát & Khấu Trừ Phân Phối ↗</button>
           </div>
         </div>
 
@@ -1076,6 +1078,13 @@
         </div>
       </section>
 
+      <!-- ========================================== -->
+      <!-- TAB 14: ĐỐI SOÁT PHÂN PHỐI & ROYALTY STATEMENT -->
+      <!-- ========================================== -->
+      <section id="admin-tab-distribution" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <!-- Injected dynamically by distribution-report.js -->
+      </section>
+
       <!-- Sticky Actions Bar -->
       <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10; display: flex; gap: 12px; align-items: center;">
         <button class="button" type="submit" id="save-all-btn" style="padding: 12px 24px; font-weight: bold;">Lưu toàn bộ lên Supabase</button>
@@ -1332,6 +1341,33 @@
       <button type="button" class="button" id="btn-save-close-producer-tracks" style="background:#0f172a;color:#fff;border-color:#0f172a;font-weight:bold;">
         ✓ Xong & Đóng
       </button>
+    </div>
+  </dialog>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ROYALTY STATEMENT A4 PREVIEW & EXPORT -->
+  <!-- ========================================== -->
+  <dialog id="admin-royalty-statement-dialog" style="max-width:920px;width:95%;border:2px solid var(--ink);padding:0;background:#e2e8f0;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.45);max-height:92vh;overflow:hidden;">
+    <div style="background:#0f172a;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;position:sticky;top:0;z-index:20;">
+      <div>
+        <strong style="font-size:16px;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;">
+          <span>📄</span> Phiếu Đối Soát Bản Quyền & Doanh Thu Phân Phối (A4 Royalty Statement)
+        </strong>
+        <span style="font-size:11.5px;color:#94a3b8;display:block;margin-top:2px;">Bản in chuẩn quốc tế có logo hãng, tỷ lệ khấu trừ, chi tiết DSP và chữ ký hai bên.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button type="button" id="btn-print-royalty-dialog" class="button" style="background:#10b981;border-color:#10b981;color:#fff;font-weight:bold;padding:8px 16px;font-size:11px;">
+          🖨️ In / Tải PDF A4
+        </button>
+        <button type="button" id="btn-close-royalty-dialog" class="button alt" style="background:#fff;border:1px solid #cbd5e1;padding:8px 14px;font-size:12px;color:#0f172a;">
+          ✕ Đóng
+        </button>
+      </div>
+    </div>
+    <div style="padding:24px;overflow-y:auto;max-height:calc(92vh - 75px);background:#cbd5e1;">
+      <div id="admin-royalty-printable-area" style="box-shadow:0 10px 30px rgba(0,0,0,0.18);">
+        <!-- Injected dynamically -->
+      </div>
     </div>
   </dialog>
 

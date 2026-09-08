@@ -1284,5 +1284,36 @@ dialog textarea {
   100% { transform: scale(1); opacity: 0.5; }
 }
 
-
-
+/* ====================================================
+   DISTRIBUTION & ROYALTY STATEMENT ENGINE STYLES
+   ==================================================== */
+.dist-pct-pill {
+  transition: all 0.15s ease;
+  border-radius: 4px;
+}
+.dist-pct-pill:hover {
+  background: var(--lime) !important;
+  color: #0b0b0b !important;
+  border-color: var(--lime) !important;
+  font-weight: bold;
+}
+#admin-royalty-statement-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+@media print {
+  body > * {
+    display: none !important;
+  }
+  #admin-royalty-statement-dialog,
+  #admin-royalty-printable-area,
+  .a4-royalty-statement-sheet {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}

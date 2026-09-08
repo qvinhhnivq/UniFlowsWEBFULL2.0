@@ -1,6 +1,7 @@
 import { getData, saveData, defaultData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
 import './security.js';
+import { renderDistributionTab, printRoyaltyStatement } from './distribution-report.js';
 
 const isAdminAuth = sessionStorage.getItem('uniflows-admin') === 'true' || localStorage.getItem('uniflows-admin') === 'true';
 if (!isAdminAuth) {
@@ -75,12 +76,23 @@ function switchAdminTab(tabId) {
   if (tabId === 'admin-tab-submissions') {
     renderMusicSubmissionsAdmin();
   }
+  if (tabId === 'admin-tab-distribution') {
+    renderDistributionTab();
+  }
 }
 
 document.querySelectorAll('#admin-tabs .admin-tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     switchAdminTab(btn.dataset.tab);
   });
+});
+
+// Royalty Statement Dialog Close & Print Handlers
+document.querySelector('#btn-close-royalty-dialog')?.addEventListener('click', () => {
+  document.querySelector('#admin-royalty-statement-dialog')?.close();
+});
+document.querySelector('#btn-print-royalty-dialog')?.addEventListener('click', () => {
+  printRoyaltyStatement();
 });
 
 // ----------------------------------------------------
@@ -1641,9 +1653,19 @@ async function loadReleasesQueue() {
           metadata: updatedMetadata
         };
         if (customSlug) updatePayload.slug = customSlug;
-        if (typeof showOnWeb === 'boolean') updatePayload.show_on_web = showOnWeb;
 
-        const { error } = await supabase.from('releases').update(updatePayload).eq('id', relId);
+        let { error } = await supabase.from('releases').update(updatePayload).eq('id', relId);
+
+        // Fallback resilience if any optional column is missing in schema cache
+        if (error && error.message && error.message.includes('column')) {
+          const fallbackPayload = {
+            links,
+            metadata: updatedMetadata,
+            submission_status: status
+          };
+          const fallbackRes = await supabase.from('releases').update(fallbackPayload).eq('id', relId);
+          error = fallbackRes.error;
+        }
 
         if (error) {
           alert('Lỗi cập nhật Supabase: ' + error.message);

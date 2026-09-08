@@ -356,3 +356,5 @@ alter table public.artists add column if not exists role_type text default 'dist
 alter table public.artists add column if not exists payout_cycle text default 'Hàng tháng (Monthly)';
 alter table public.artists add column if not exists contract_term text default '2024 - 2027';
 
+alter table public.releases add column if not exists show_on_web boolean default true;
+
