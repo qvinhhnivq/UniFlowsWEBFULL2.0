@@ -2112,7 +2112,7 @@ async function loadNotifications() {
       const { data: dbList, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('artist_id', currentArtistId)
+        .or(`artist_id.eq.${currentArtistId},artist_id.eq.all`)
         .order('created_at', { ascending: false });
 
       if (!error && dbList && dbList.length > 0) {

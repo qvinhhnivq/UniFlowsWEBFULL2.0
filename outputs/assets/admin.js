@@ -1,5 +1,17 @@
-import { getData, saveData, defaultData } from './data.js';
-import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
+import { getData, saveData, defaultData, saveSingleArticle, deleteArticleFromSupabase, saveAllArticlesToSupabase } from './data.js';
+import { 
+  supabase, 
+  isSupabaseConfigured, 
+  uploadArtworkFile, 
+  uploadAudioFile, 
+  testSupabaseConnection, 
+  getSupabaseUrl, 
+  getSupabaseAnonKey, 
+  saveCustomSupabaseConfig, 
+  resetSupabaseConfig, 
+  DEFAULT_SUPABASE_URL, 
+  DEFAULT_SUPABASE_ANON_KEY 
+} from './supabase.js';
 import './security.js';
 import { renderDistributionTab, printRoyaltyStatement } from './distribution-report.js';
 
@@ -28,12 +40,16 @@ let currentReleaseFilter = 'all';
 const esc = s => String(s ?? '').replace(/"/g, '&quot;');
 const slug = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-function showNotice(msg) {
+function showNotice(msg, isError = false) {
   if (!notice) return;
   notice.textContent = msg;
   notice.style.display = 'block';
+  notice.style.background = isError ? '#fef2f2' : '#f0fdf4';
+  notice.style.color = isError ? '#991b1b' : '#166534';
+  notice.style.borderColor = isError ? '#f87171' : '#86efac';
   scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 
 // ----------------------------------------------------
 // TAB NAVIGATION FOR ADMIN
@@ -574,28 +590,33 @@ function attachArtistUploadEvents() {
 // ARTICLES & JOURNAL EDITOR
 // ----------------------------------------------------
 const articleEditor = (art, idx) => `
-  <div class="item-editor" data-article style="background:#fff;border:1px solid var(--ink);padding:20px;margin-bottom:15px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+  <div class="item-editor" data-article data-art-idx="${idx}" style="background:#fff;border:1px solid var(--ink);padding:20px;margin-bottom:15px;border-radius:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
       <h3 style="margin:0;font-size:18px;">Bài viết #${idx + 1}: ${esc(art.title)}</h3>
-      <button class="button alt remove" type="button" data-remove-article="${idx}" style="padding:6px 12px;font-size:11px;">✕ Xóa bài viết</button>
+      <div style="display:flex;gap:8px;">
+        <button class="button save-single-art-btn" type="button" data-save-article="${idx}" style="background:#10b981;border-color:#10b981;color:#fff;padding:6px 14px;font-size:11px;font-weight:bold;">💾 Lưu bài viết này</button>
+        <button class="button alt remove" type="button" data-remove-article="${idx}" style="padding:6px 12px;font-size:11px;">✕ Xóa bài viết</button>
+      </div>
     </div>
     <div class="mini-grid">
-      <div class="field"><label>Tiêu đề</label><input data-key="title" value="${esc(art.title)}" required></div>
-      <div class="field"><label>ID / Slug bài viết</label><input data-key="id" value="${esc(art.id)}" required></div>
-      <div class="field"><label>Thời gian</label><input data-key="date" value="${esc(art.date)}"></div>
-      <div class="field"><label>Chuyên mục</label><input data-key="category" value="${esc(art.category)}"></div>
-      <div class="field">
-        <label>URL Ảnh bìa (Hoặc dán Link trực tiếp)</label>
-        <input data-key="cover" id="article-cover-${idx}" value="${esc(art.cover)}" placeholder="https://...">
+      <div class="field"><label>Tiêu đề bài viết <span style="color:#ef4444;">*</span></label><input data-key="title" value="${esc(art.title)}" placeholder="Tiêu đề bài viết..." required></div>
+      <div class="field"><label>ID / Slug bài viết <span style="color:#ef4444;">*</span></label><input data-key="id" value="${esc(art.id)}" placeholder="slug-bai-viet" required></div>
+      <div class="field"><label>Thời gian đăng</label><input data-key="date" value="${esc(art.date || new Date().toLocaleDateString('vi-VN'))}"></div>
+      <div class="field"><label>Chuyên mục</label><input data-key="category" value="${esc(art.category || 'Tin Tức')}"></div>
+      <div class="field"><label>Tác giả / Bút danh</label><input data-key="author" value="${esc(art.author || 'UniFLOWs Editorial')}"></div>
+      <div class="field"><label>Thời gian đọc dự kiến</label><input data-key="readTime" value="${esc(art.readTime || '3 phút đọc')}"></div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>URL Ảnh bìa (Hoặc tải tệp lên Supabase Storage)</label>
+        <input data-key="cover" id="article-cover-${idx}" value="${esc(art.cover || '')}" placeholder="https://...">
         <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
           <input type="file" accept="image/*" class="article-cover-input" data-target="#article-cover-${idx}" data-status="#art-status-${idx}" style="font-size:11px;">
           <span id="art-status-${idx}" style="font-size:11px;color:#008800;"></span>
         </div>
       </div>
-      <div class="field"><label>Hiển thị</label><select data-key="published"><option value="true" ${art.published ? 'selected' : ''}>Công khai</option><option value="false" ${!art.published ? 'selected' : ''}>Ẩn</option></select></div>
+      <div class="field"><label>Hiển thị trên Tạp chí (news.html)</label><select data-key="published"><option value="true" ${art.published !== false && art.published !== 'false' ? 'selected' : ''}>🟢 Công khai</option><option value="false" ${art.published === false || art.published === 'false' ? 'selected' : ''}>🔴 Ẩn bài viết</option></select></div>
     </div>
-    <div class="field" style="margin-top:10px;"><label>Tóm tắt bài viết</label><textarea data-key="excerpt" rows="2">${esc(art.excerpt)}</textarea></div>
-    <div class="field"><label>Nội dung chi tiết</label><textarea data-key="body" rows="6">${esc(art.body)}</textarea></div>
+    <div class="field" style="margin-top:10px;"><label>Tóm tắt ngắn (Lead / Excerpt)</label><textarea data-key="excerpt" rows="2" placeholder="Tóm tắt nội dung bài viết...">${esc(art.excerpt || '')}</textarea></div>
+    <div class="field"><label>Nội dung chi tiết (Hỗ trợ xuống dòng)</label><textarea data-key="body" rows="6" placeholder="Nội dung bài viết đầy đủ...">${esc(art.body || '')}</textarea></div>
   </div>
 `;
 
@@ -1933,6 +1954,9 @@ function render() {
   renderUniHubeAdmin();
   renderCollective48kAdmin();
   renderMusicSubmissionsAdmin();
+  populateNotificationArtistDropdown();
+  loadSentNotifications();
+  updateSupabaseStatusBanner();
 }
 
 // ----------------------------------------------------
@@ -2225,7 +2249,7 @@ function readItems(selector, kind) {
     let obj = {};
     el.querySelectorAll('[data-key]').forEach(input => {
       let val = input.type === 'checkbox' ? input.checked : input.value.trim();
-      if (input.dataset.key === 'showOnWeb') {
+      if (input.dataset.key === 'showOnWeb' || input.dataset.key === 'published') {
         val = val === 'true' || val === true;
       }
       obj[input.dataset.key] = val;
@@ -2318,14 +2342,106 @@ document.querySelector('#add-partner-user')?.addEventListener('click', () => {
   render();
 });
 
-document.querySelector('#add-article')?.addEventListener('click', async () => {
-  data.articles.unshift({ id: 'bai-viet-' + Date.now().toString(36), date: '08.2026', category: 'News', title: 'Bài viết mới', cover: '', excerpt: '', body: '', published: true });
-  await saveData(data);
-  render();
+document.querySelector('#add-article')?.addEventListener('click', () => {
+  // Sync current DOM values into data.articles first so unsaved edits aren't wiped
+  const currentDomArticles = readItems('[data-article]', 'article');
+  if (currentDomArticles.length > 0) {
+    data.articles = currentDomArticles;
+  }
+  const newId = 'bai-viet-' + Date.now().toString(36);
+  const newArt = {
+    id: newId,
+    title: 'Bài viết mới',
+    category: 'Tin Tức',
+    date: new Date().toLocaleDateString('vi-VN'),
+    author: 'UniFLOWs Editorial',
+    readTime: '3 phút đọc',
+    cover: '',
+    excerpt: '',
+    body: '',
+    published: true
+  };
+  data.articles.unshift(newArt);
+  articlesBox.innerHTML = data.articles.map(articleEditor).join('');
+  attachArticleUploadEvents();
+  showNotice('✓ Đã thêm khung bài viết mới ở đầu danh sách. Nhập nội dung và bấm "Lưu bài viết này"!');
+  const firstTitleInput = articlesBox.querySelector('[data-key="title"]');
+  if (firstTitleInput) {
+    firstTitleInput.focus();
+    firstTitleInput.select();
+  }
+});
+
+// Save all articles button handler
+document.querySelector('#save-all-articles-btn')?.addEventListener('click', async () => {
+  const btn = document.querySelector('#save-all-articles-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Đang lưu lên Supabase...';
+  }
+  data.articles = readItems('[data-article]', 'article');
+  const res = await saveAllArticlesToSupabase(data.articles);
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '💾 Lưu tất cả bài viết lên Supabase';
+  }
+  if (res.success) {
+    showNotice(`✓ Đã lưu toàn bộ ${data.articles.length} bài viết lên Supabase và Website thành công!`);
+    await logAuditEvent('Cập nhật bài viết', `Đã lưu toàn bộ danh sách ${data.articles.length} bài viết.`);
+  } else {
+    showNotice(`⚠️ Đã lưu ${data.articles.length} bài viết vào bộ nhớ cục bộ (Có một số lỗi khi đồng bộ lên Supabase).`);
+  }
 });
 
 // Remove artist and article handler
 document.addEventListener('click', async e => {
+  // 1. Single article save handler
+  const saveArtBtn = e.target.closest('[data-save-article]');
+  if (saveArtBtn) {
+    const saveArticleIdx = saveArtBtn.dataset.saveArticle;
+    const idxNum = parseInt(saveArticleIdx, 10);
+    const itemEl = saveArtBtn.closest('[data-article]');
+    if (!itemEl) return;
+
+    const singleObj = {};
+    itemEl.querySelectorAll('[data-key]').forEach(input => {
+      let val = input.type === 'checkbox' ? input.checked : input.value.trim();
+      if (input.dataset.key === 'published') val = val === 'true' || val === true;
+      singleObj[input.dataset.key] = val;
+    });
+
+    if (!singleObj.id || !singleObj.title) {
+      alert('Vui lòng nhập đầy đủ Tiêu đề và ID / Slug bài viết.');
+      return;
+    }
+
+    saveArtBtn.disabled = true;
+    saveArtBtn.textContent = 'Đang lưu...';
+
+    const res = await saveSingleArticle(singleObj);
+    if (idxNum >= 0 && idxNum < data.articles.length && data.articles[idxNum].id === singleObj.id) {
+      data.articles[idxNum] = singleObj;
+    } else {
+      const existingIdx = data.articles.findIndex(a => a.id === singleObj.id);
+      if (existingIdx >= 0) {
+        data.articles[existingIdx] = singleObj;
+      } else {
+        data.articles.unshift(singleObj);
+      }
+    }
+
+    saveArtBtn.disabled = false;
+    saveArtBtn.textContent = '💾 Lưu bài viết này';
+
+    if (res.success) {
+      showNotice(`✓ Đã lưu bài viết "${singleObj.title}" lên Supabase thành công!`);
+      await logAuditEvent('Lưu bài viết', `Đã lưu bài viết: "${singleObj.title}" (${singleObj.id})`);
+    } else {
+      showNotice(`⚠️ Đã lưu bài viết vào bộ nhớ cục bộ. Lỗi Supabase: ${res.error || 'Mất kết nối'}`);
+    }
+    return;
+  }
+
   const removeArtistIdx = e.target.dataset.removeArtist;
   if (removeArtistIdx !== undefined) {
     const artistEl = e.target.closest('[data-artist]');
@@ -2357,6 +2473,7 @@ document.addEventListener('click', async e => {
     await logAuditEvent('Xóa tài khoản', `Đã xóa nghệ sĩ "${artistName}" khỏi hệ thống.`);
     showNotice(`✓ Đã xóa nghệ sĩ "${artistName}" khỏi hệ thống và đồng bộ ngay lên Website!`);
     render();
+    return;
   }
 
   const removeArticleIdx = e.target.dataset.removeArticle;
@@ -2364,13 +2481,15 @@ document.addEventListener('click', async e => {
     const idxNum = parseInt(removeArticleIdx, 10);
     const article = data.articles[idxNum];
     if (!confirm(`Xóa bài viết "${article?.title || ''}"?`)) return;
-    if (isSupabaseConfigured() && article?.id) {
-      await supabase.from('articles').delete().eq('id', article.id);
+    if (article?.id) {
+      await deleteArticleFromSupabase(article.id);
     }
     data.articles.splice(idxNum, 1);
-    await saveData(data);
-    showNotice('✓ Đã xóa bài viết và cập nhật Website!');
-    render();
+    articlesBox.innerHTML = data.articles.map(articleEditor).join('');
+    attachArticleUploadEvents();
+    showNotice('✓ Đã xóa bài viết khỏi Supabase và cập nhật Website!');
+    await logAuditEvent('Xóa bài viết', `Đã xóa bài viết: "${article?.title || ''}"`);
+    return;
   }
 });
 
@@ -4754,8 +4873,600 @@ function initShortlinksAdmin() {
   });
 }
 
+// ============================================================================
+// 14. QUẢN LÝ SUPABASE CLOUD & LIVE DIAGNOSTICS
+// ============================================================================
+function updateSupabaseStatusBanner() {
+  const dot = document.querySelector('#supabase-live-status-dot');
+  const text = document.querySelector('#supabase-live-status-text');
+  const sub = document.querySelector('#supabase-live-status-sub');
+  
+  const configured = isSupabaseConfigured();
+  const currentUrl = getSupabaseUrl();
+
+  if (configured) {
+    if (dot) {
+      dot.style.background = '#10b981';
+      dot.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.2)';
+    }
+    if (text) text.textContent = 'Supabase Cloud: Đang kết nối';
+    let host = '';
+    try { host = new URL(currentUrl).hostname; } catch { host = currentUrl; }
+    if (sub) sub.textContent = `Endpoint: ${host} · Sẵn sàng đồng bộ cơ sở dữ liệu và lưu trữ Storage.`;
+  } else {
+    if (dot) {
+      dot.style.background = '#ef4444';
+      dot.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.2)';
+    }
+    if (text) text.textContent = 'Supabase Cloud: Chưa kích hoạt';
+    if (sub) sub.textContent = 'Hệ thống đang hoạt động ở chế độ Local Storage Offline (Chưa cấu hình URL hoặc Anon Key).';
+  }
+
+  // Populate Tab 7 inputs
+  const tabUrlInput = document.querySelector('#tab-supabase-url');
+  const tabKeyInput = document.querySelector('#tab-supabase-key');
+  if (tabUrlInput && !tabUrlInput.value) tabUrlInput.value = currentUrl;
+  if (tabKeyInput && !tabKeyInput.value) tabKeyInput.value = getSupabaseAnonKey();
+
+  // Populate Modal inputs
+  const modalUrlInput = document.querySelector('#modal-supabase-url');
+  const modalKeyInput = document.querySelector('#modal-supabase-key');
+  if (modalUrlInput && !modalUrlInput.value) modalUrlInput.value = currentUrl;
+  if (modalKeyInput && !modalKeyInput.value) modalKeyInput.value = getSupabaseAnonKey();
+}
+
+async function runSupabaseDiagnosticTest(resultContainer) {
+  if (!resultContainer) return;
+  resultContainer.style.display = 'block';
+  resultContainer.innerHTML = `
+    <div style="display:flex; align-items:center; gap:8px; color:#2563eb; font-weight:600; padding:10px 0;">
+      <span style="font-size:16px;">⏳</span>
+      Đang kiểm tra kết nối Supabase Cloud và quét 8 bảng cơ sở dữ liệu...
+    </div>
+  `;
+
+  try {
+    const report = await testSupabaseConnection();
+    
+    let tablesHtml = '';
+    for (const [tbl, isOk] of Object.entries(report.tables || {})) {
+      tablesHtml += `
+        <li style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f1f5f9;">
+          <span style="font-family:'DM Mono',monospace; font-size:11.5px; color:#1e293b;">${esc(tbl)}</span>
+          <span style="font-weight:bold; font-size:11px; color:${isOk ? '#16a34a' : '#dc2626'};">
+            ${isOk ? '✓ Sẵn sàng' : '✗ Chưa sẵn sàng'}
+          </span>
+        </li>
+      `;
+    }
+
+    const storageOk = Boolean(report.storage?.artworks);
+    const isOverallOk = Boolean(report.online);
+
+    resultContainer.innerHTML = `
+      <div style="background:${isOverallOk ? '#f0fdf4' : '#fef2f2'}; border:1px solid ${isOverallOk ? '#86efac' : '#fca5a5'}; border-radius:6px; padding:12px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:8px; font-weight:bold; color:${isOverallOk ? '#15803d' : '#991b1b'}; margin-bottom:4px;">
+          <span style="font-size:16px;">${isOverallOk ? '✅' : '❌'}</span>
+          <span>${esc(report.details || (isOverallOk ? 'Supabase Cloud kết nối thành công!' : 'Kết nối thất bại'))}</span>
+        </div>
+        <div style="font-size:11px; color:#475569; font-family:'DM Mono',monospace;">
+          URL: ${esc(report.url || 'None')} · Độ trễ: ${report.latencyMs || 0}ms
+        </div>
+      </div>
+
+      <div style="margin-top:8px;">
+        <strong style="font-size:11px; text-transform:uppercase; color:#64748b; display:block; margin-bottom:6px;">Trạng thái chi tiết 8 bảng cơ sở dữ liệu:</strong>
+        <ul style="list-style:none; padding:0; margin:0;">
+          ${tablesHtml}
+          <li style="display:flex; justify-content:space-between; align-items:center; padding:5px 0;">
+            <span style="font-family:'DM Mono',monospace; font-size:11.5px; color:#1e293b;">storage.buckets (artworks)</span>
+            <span style="font-weight:bold; font-size:11px; color:${storageOk ? '#16a34a' : '#d97706'};">
+              ${storageOk ? '✓ Sẵn sàng (artworks)' : '⚠️ Chưa thấy bucket artworks'}
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      ${!isOverallOk ? `
+        <div style="margin-top:10px; padding:8px 12px; background:#fffbeb; border:1px solid #fde68a; border-radius:4px; font-size:11px; color:#92400e; line-height:1.4;">
+          💡 <b>Gợi ý khắc phục:</b> Nếu có bảng báo đỏ hoặc chưa có cột mới, hãy bấm <b>"📋 SQL Schema"</b> &rarr; Sao chép và chạy lại trong Supabase SQL Editor.
+        </div>
+      ` : ''}
+    `;
+  } catch (err) {
+    resultContainer.innerHTML = `
+      <div style="color:#dc2626; font-weight:bold; font-size:12px; padding:10px; background:#fef2f2; border:1px solid #fca5a5; border-radius:6px;">
+        ❌ Không thể thực hiện kiểm tra: ${esc(err.message)}
+      </div>
+    `;
+  }
+}
+
+async function openSqlSchemaDialog(dialog) {
+  if (!dialog) return;
+  const preview = document.querySelector('#schema-sql-content-preview');
+  if (preview && (!preview.textContent || preview.textContent.length < 50)) {
+    preview.textContent = '-- Đang nạp schema từ supabase_schema.sql...';
+    try {
+      const res = await fetch('supabase_schema.sql');
+      if (res.ok) {
+        const text = await res.text();
+        preview.textContent = text;
+      } else {
+        throw new Error('Không thể tải file supabase_schema.sql qua fetch');
+      }
+    } catch {
+      preview.textContent = `-- Chạy script tạo bảng Supabase:\n-- Vui lòng xem và copy toàn bộ mã trong file supabase_schema.sql ở thư mục dự án.`;
+    }
+  }
+  dialog.showModal();
+}
+
+function initSupabaseCloudAdmin() {
+  updateSupabaseStatusBanner();
+
+  const btnQuickTest = document.querySelector('#btn-quick-test-supabase');
+  const btnQuickConfig = document.querySelector('#btn-quick-config-supabase');
+  const btnQuickSchema = document.querySelector('#btn-quick-schema-supabase');
+  const bannerDiagBox = document.querySelector('#supabase-diagnostic-details');
+
+  const configDialog = document.querySelector('#admin-supabase-config-dialog');
+  const schemaDialog = document.querySelector('#admin-sql-schema-dialog');
+
+  btnQuickTest?.addEventListener('click', () => {
+    if (bannerDiagBox) {
+      if (bannerDiagBox.style.display === 'block' && bannerDiagBox.innerHTML.includes('Trạng thái chi tiết')) {
+        bannerDiagBox.style.display = 'none';
+      } else {
+        runSupabaseDiagnosticTest(bannerDiagBox);
+      }
+    }
+  });
+
+  btnQuickConfig?.addEventListener('click', () => {
+    if (configDialog) {
+      const modalUrl = document.querySelector('#modal-supabase-url');
+      const modalKey = document.querySelector('#modal-supabase-key');
+      if (modalUrl) modalUrl.value = getSupabaseUrl();
+      if (modalKey) modalKey.value = getSupabaseAnonKey();
+      configDialog.showModal();
+    }
+  });
+
+  btnQuickSchema?.addEventListener('click', async () => {
+    await openSqlSchemaDialog(schemaDialog);
+  });
+
+  document.querySelector('#close-supabase-config-dialog-btn')?.addEventListener('click', () => configDialog?.close());
+  document.querySelector('#modal-close-supabase-btn')?.addEventListener('click', () => configDialog?.close());
+  document.querySelector('#close-sql-schema-dialog-btn')?.addEventListener('click', () => schemaDialog?.close());
+
+  document.querySelector('#modal-save-supabase-btn')?.addEventListener('click', async () => {
+    const url = document.querySelector('#modal-supabase-url')?.value.trim();
+    const key = document.querySelector('#modal-supabase-key')?.value.trim();
+    if (!url || !key) {
+      alert('Vui lòng nhập cả Supabase URL và Anon Public Key!');
+      return;
+    }
+    saveCustomSupabaseConfig(url, key);
+    updateSupabaseStatusBanner();
+    const statusEl = document.querySelector('#modal-supabase-status');
+    await runSupabaseDiagnosticTest(statusEl);
+  });
+
+  document.querySelector('#modal-test-supabase-btn')?.addEventListener('click', async () => {
+    const statusEl = document.querySelector('#modal-supabase-status');
+    await runSupabaseDiagnosticTest(statusEl);
+  });
+
+  document.querySelector('#modal-reset-supabase-btn')?.addEventListener('click', async () => {
+    if (confirm('Khôi phục Supabase URL và Key về mặc định ban đầu?')) {
+      resetSupabaseConfig();
+      const modalUrl = document.querySelector('#modal-supabase-url');
+      const modalKey = document.querySelector('#modal-supabase-key');
+      if (modalUrl) modalUrl.value = getSupabaseUrl();
+      if (modalKey) modalKey.value = getSupabaseAnonKey();
+      updateSupabaseStatusBanner();
+      const statusEl = document.querySelector('#modal-supabase-status');
+      await runSupabaseDiagnosticTest(statusEl);
+    }
+  });
+
+  // Tab 7 Controls
+  const btnTabTest = document.querySelector('#btn-tab-test-supabase');
+  const btnTabViewSchema = document.querySelector('#btn-tab-view-schema');
+  const btnTabSave = document.querySelector('#btn-tab-save-supabase');
+  const btnTabReset = document.querySelector('#btn-tab-reset-supabase');
+  const tabDiagBox = document.querySelector('#tab-supabase-diag-box');
+  const tabMsg = document.querySelector('#tab-supabase-msg');
+
+  btnTabTest?.addEventListener('click', () => {
+    runSupabaseDiagnosticTest(tabDiagBox);
+  });
+
+  btnTabViewSchema?.addEventListener('click', async () => {
+    await openSqlSchemaDialog(schemaDialog);
+  });
+
+  btnTabSave?.addEventListener('click', async () => {
+    const url = document.querySelector('#tab-supabase-url')?.value.trim();
+    const key = document.querySelector('#tab-supabase-key')?.value.trim();
+    if (!url || !key) {
+      if (tabMsg) {
+        tabMsg.textContent = '❌ Vui lòng nhập đủ URL và Key';
+        tabMsg.style.color = '#dc2626';
+      }
+      return;
+    }
+    saveCustomSupabaseConfig(url, key);
+    updateSupabaseStatusBanner();
+    if (tabMsg) {
+      tabMsg.textContent = '✓ Đã lưu cấu hình!';
+      tabMsg.style.color = '#16a34a';
+      setTimeout(() => { tabMsg.textContent = ''; }, 3000);
+    }
+    await runSupabaseDiagnosticTest(tabDiagBox);
+  });
+
+  btnTabReset?.addEventListener('click', async () => {
+    if (confirm('Khôi phục cấu hình Supabase về mặc định ban đầu?')) {
+      resetSupabaseConfig();
+      const tabUrl = document.querySelector('#tab-supabase-url');
+      const tabKey = document.querySelector('#tab-supabase-key');
+      if (tabUrl) tabUrl.value = getSupabaseUrl();
+      if (tabKey) tabKey.value = getSupabaseAnonKey();
+      updateSupabaseStatusBanner();
+      if (tabMsg) {
+        tabMsg.textContent = '✓ Đã khôi phục mặc định';
+        tabMsg.style.color = '#16a34a';
+        setTimeout(() => { tabMsg.textContent = ''; }, 3000);
+      }
+      await runSupabaseDiagnosticTest(tabDiagBox);
+    }
+  });
+
+  // Copy SQL button
+  const btnCopySql = document.querySelector('#btn-copy-full-sql');
+  btnCopySql?.addEventListener('click', () => {
+    const pre = document.querySelector('#schema-sql-content-preview');
+    if (pre && pre.textContent) {
+      navigator.clipboard?.writeText(pre.textContent);
+      const orig = btnCopySql.textContent;
+      btnCopySql.textContent = '✓ Đã chép toàn bộ SQL!';
+      btnCopySql.style.background = '#059669';
+      setTimeout(() => {
+        btnCopySql.textContent = orig;
+        btnCopySql.style.background = '#10b981';
+      }, 2000);
+    }
+  });
+}
+
+// ============================================================================
+// 15. LƯU NHANH BANNER THÔNG BÁO (TAB 7)
+// ============================================================================
+function initAnnouncementsQuickSave() {
+  const saveBtn = document.querySelector('#save-announcements-btn');
+  saveBtn?.addEventListener('click', async () => {
+    const origText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ Đang lưu...';
+
+    const customAnnouncements = [];
+    document.querySelectorAll('.custom-announcement-card').forEach((card, i) => {
+      const title = card.querySelector('.ann-title')?.value.trim();
+      const type = card.querySelector('.ann-type')?.value || 'info';
+      const date = card.querySelector('.ann-date')?.value.trim() || new Date().toLocaleDateString('vi-VN');
+      const content = card.querySelector('.ann-content')?.value.trim() || '';
+      const active = card.querySelector('.ann-active')?.value !== 'false';
+      if (title) {
+        customAnnouncements.push({
+          id: 'ann-' + (i + 1) + '-' + Date.now().toString(36),
+          title,
+          type,
+          date,
+          content,
+          active
+        });
+      }
+    });
+
+    data.announcements = customAnnouncements;
+    try {
+      await saveData(data);
+      await logAuditEvent('Cập nhật Banner Thông Báo', `Đã lưu ${customAnnouncements.length} thông báo portal lên hệ thống`);
+      showNotice(`✓ Đã lưu thành công ${customAnnouncements.length} banner thông báo lên Supabase và bộ nhớ!`);
+      saveBtn.textContent = '✓ Đã lưu thành công!';
+      saveBtn.style.background = '#059669';
+    } catch (err) {
+      showNotice(`Lỗi lưu thông báo: ${err.message}`, true);
+      saveBtn.textContent = 'Lỗi lưu!';
+    } finally {
+      setTimeout(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = origText;
+        saveBtn.style.background = '#10b981';
+      }, 2000);
+    }
+  });
+}
+
+// ============================================================================
+// 16. TRUNG TÂM GỬI THÔNG BÁO NGHỆ SĨ (TAB 3 - SECTION 03.1)
+// ============================================================================
+function populateNotificationArtistDropdown() {
+  const sel = document.querySelector('#notif-target-artist');
+  if (!sel) return;
+  
+  const currentVal = sel.value;
+  sel.innerHTML = `
+    <option value="all">📢 Tất cả nghệ sĩ (Gửi Broadcast toàn hệ thống)</option>
+    ${(data.artists || []).map(a => `
+      <option value="${esc(a.id)}" ${a.id === currentVal ? 'selected' : ''}>👤 ${esc(a.name)} (${esc(a.id)})</option>
+    `).join('')}
+  `;
+}
+
+async function loadSentNotifications() {
+  const listContainer = document.querySelector('#admin-sent-notifications-list');
+  if (!listContainer) return;
+
+  let list = [];
+
+  // 1. Try Supabase first
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbNotifs, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (!error && dbNotifs && dbNotifs.length > 0) {
+        list = dbNotifs;
+      }
+    } catch (err) {
+      console.warn('Lỗi đọc notifications từ Supabase:', err);
+    }
+  }
+
+  // 2. If Supabase empty or offline, merge with localStorage
+  try {
+    const local = JSON.parse(localStorage.getItem('uniflows-admin-sent-notifications') || '[]');
+    if (Array.isArray(local)) {
+      const ids = new Set(list.map(x => x.id));
+      local.forEach(item => {
+        if (!ids.has(item.id)) {
+          list.push(item);
+          ids.add(item.id);
+        }
+      });
+      list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    }
+  } catch {}
+
+  renderSentNotificationsList(list);
+}
+
+function renderSentNotificationsList(list = []) {
+  const listContainer = document.querySelector('#admin-sent-notifications-list');
+  if (!listContainer) return;
+
+  if (list.length === 0) {
+    listContainer.innerHTML = '<p class="empty" style="padding:16px; font-size:12px; text-align:center; color:#64748b; margin:0;">Chưa có thông báo nào được gửi. Hãy soạn và bấm "Gửi Thông Báo Ngay" ở trên.</p>';
+    return;
+  }
+
+  const typeBadges = {
+    important: { label: 'Quan trọng', bg: '#fee2e2', text: '#dc2626' },
+    info: { label: 'Tin tức', bg: '#e0f2fe', text: '#0284c7' },
+    payout: { label: 'Doanh thu', bg: '#dcfce7', text: '#16a34a' },
+    release: { label: 'Phát hành', bg: '#fef3c7', text: '#d97706' },
+    update: { label: 'Cập nhật', bg: '#ede9fe', text: '#7c3aed' }
+  };
+
+  listContainer.innerHTML = list.map((n, idx) => {
+    const badge = typeBadges[n.type] || { label: n.type || 'Thông báo', bg: '#f1f5f9', text: '#475569' };
+    const dateStr = n.created_at ? new Date(n.created_at).toLocaleString('vi-VN') : 'Vừa xong';
+    const targetArtistName = n.artist_id === 'all' 
+      ? '📢 Toàn bộ nghệ sĩ (Broadcast)' 
+      : (data.artists?.find(a => a.id === n.artist_id)?.name || n.artist_id);
+
+    return `
+      <div class="sent-notif-item" style="padding:12px 16px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; background:${idx % 2 === 0 ? '#fff' : '#f8fafc'};">
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+            <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:${badge.bg}; color:${badge.text}; text-transform:uppercase;">
+              ${badge.label}
+            </span>
+            <strong style="font-size:13px; color:#0f172a;">${esc(n.title)}</strong>
+            <span style="font-size:11px; color:#64748b;">gửi đến <b>${esc(targetArtistName)}</b></span>
+          </div>
+          <p style="font-size:12px; color:#334155; margin:2px 0 4px; line-height:1.4;">${esc(n.message)}</p>
+          <div style="display:flex; align-items:center; gap:12px; font-size:11px; color:#94a3b8; font-family:'DM Mono',monospace;">
+            <span>🕒 ${esc(dateStr)}</span>
+            ${n.action_url ? `<a href="${esc(n.action_url)}" target="_blank" style="color:#2563eb; text-decoration:underline;">🔗 Link: ${esc(n.action_url)}</a>` : ''}
+          </div>
+        </div>
+        <button type="button" class="btn-delete-sent-notif button alt remove" data-notif-id="${esc(n.id)}" style="padding:4px 8px; font-size:11px; white-space:nowrap;">
+          ✕ Xóa
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  listContainer.querySelectorAll('.btn-delete-sent-notif').forEach(btn => {
+    btn.onclick = async () => {
+      const notifId = btn.dataset.notifId;
+      if (!notifId) return;
+      if (!confirm('Xác nhận xóa thông báo này khỏi hệ thống?')) return;
+
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      // Delete on Supabase
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('notifications').delete().eq('id', notifId);
+        } catch (e) {
+          console.warn('Lỗi xóa notification trên Supabase:', e);
+        }
+      }
+
+      // Delete in localStorage
+      try {
+        let local = JSON.parse(localStorage.getItem('uniflows-admin-sent-notifications') || '[]');
+        local = local.filter(x => x.id !== notifId);
+        localStorage.setItem('uniflows-admin-sent-notifications', JSON.stringify(local));
+      } catch {}
+
+      showNotice('✓ Đã xóa thông báo thành công');
+      loadSentNotifications();
+    };
+  });
+}
+
+function initArtistNotificationDispatcher() {
+  populateNotificationArtistDropdown();
+  loadSentNotifications();
+
+  document.querySelector('#btn-refresh-sent-notifs')?.addEventListener('click', () => {
+    loadSentNotifications();
+  });
+
+  const btnSend = document.querySelector('#btn-send-artist-notif');
+  const targetSel = document.querySelector('#notif-target-artist');
+  const typeSel = document.querySelector('#notif-type');
+  const titleInput = document.querySelector('#notif-title');
+  const messageInput = document.querySelector('#notif-message');
+  const linkInput = document.querySelector('#notif-link');
+  const syncBannerCheck = document.querySelector('#notif-sync-banner');
+  const statusEl = document.querySelector('#notif-dispatch-status');
+
+  btnSend?.addEventListener('click', async () => {
+    const targetArtist = targetSel?.value || 'all';
+    const type = typeSel?.value || 'info';
+    const title = titleInput?.value.trim();
+    const message = messageInput?.value.trim();
+    const link = linkInput?.value.trim() || null;
+    const syncBanner = syncBannerCheck?.checked ?? false;
+
+    if (!title) {
+      alert('Vui lòng nhập tiêu đề thông báo!');
+      titleInput?.focus();
+      return;
+    }
+    if (!message) {
+      alert('Vui lòng nhập nội dung thông báo!');
+      messageInput?.focus();
+      return;
+    }
+
+    const origBtnText = btnSend.textContent;
+    btnSend.disabled = true;
+    btnSend.textContent = '⏳ Đang gửi lên Supabase...';
+    if (statusEl) {
+      statusEl.textContent = 'Đang xử lý...';
+      statusEl.style.color = '#2563eb';
+    }
+
+    const notifId = 'notif-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+    const newNotif = {
+      id: notifId,
+      artist_id: targetArtist,
+      title,
+      message,
+      type,
+      action_url: link,
+      is_read: false,
+      created_at: new Date().toISOString()
+    };
+
+    let supabaseSuccess = false;
+
+    // 1. Send to Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        const { error } = await supabase.from('notifications').insert([newNotif]);
+        if (error) {
+          console.warn('Lỗi insert notification Supabase:', error);
+        } else {
+          supabaseSuccess = true;
+        }
+      } catch (err) {
+        console.warn('Lỗi gửi notification catch:', err);
+      }
+    }
+
+    // 2. Always persist locally
+    try {
+      const localHistory = JSON.parse(localStorage.getItem('uniflows-admin-sent-notifications') || '[]');
+      localHistory.unshift(newNotif);
+      localStorage.setItem('uniflows-admin-sent-notifications', JSON.stringify(localHistory.slice(0, 50)));
+
+      if (targetArtist === 'all') {
+        (data.artists || []).forEach(a => {
+          const aKey = 'uniflows-notifications-' + a.id;
+          const aList = JSON.parse(localStorage.getItem(aKey) || '[]');
+          aList.unshift(newNotif);
+          localStorage.setItem(aKey, JSON.stringify(aList.slice(0, 30)));
+        });
+      } else {
+        const aKey = 'uniflows-notifications-' + targetArtist;
+        const aList = JSON.parse(localStorage.getItem(aKey) || '[]');
+        aList.unshift(newNotif);
+        localStorage.setItem(aKey, JSON.stringify(aList.slice(0, 30)));
+      }
+    } catch (e) {
+      console.warn('Lỗi lưu notification local:', e);
+    }
+
+    // 3. Sync to Banner Announcements if requested
+    if (syncBanner) {
+      if (!data.announcements) data.announcements = [];
+      data.announcements.unshift({
+        id: 'ann-' + Date.now(),
+        title,
+        type: type === 'important' ? 'important' : (type === 'release' ? 'update' : 'info'),
+        date: new Date().toLocaleDateString('vi-VN'),
+        content: message,
+        active: true
+      });
+      try {
+        await saveData(data);
+        renderAnnouncementsEditor(data.announcements);
+      } catch (e) {
+        console.warn('Lỗi đồng bộ announcement:', e);
+      }
+    }
+
+    await logAuditEvent('Gửi Thông Báo Nghệ Sĩ', `Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist}`);
+
+    if (statusEl) {
+      statusEl.textContent = supabaseSuccess 
+        ? '✓ Đã gửi thông báo lên Supabase Cloud & Artist Portal thành công!' 
+        : '✓ Đã gửi thông báo thành công (Lưu trữ cục bộ & Portal)!';
+      statusEl.style.color = '#16a34a';
+    }
+
+    showNotice(`✓ Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist} thành công!`);
+
+    if (titleInput) titleInput.value = '';
+    if (messageInput) messageInput.value = '';
+    if (linkInput) linkInput.value = '';
+
+    btnSend.disabled = false;
+    btnSend.textContent = origBtnText;
+
+    loadSentNotifications();
+  });
+}
+
 initAccountProvisioning();
 initShortlinksAdmin();
+initSupabaseCloudAdmin();
+initArtistNotificationDispatcher();
+initAnnouncementsQuickSave();
 render();
 renderShortlinksAdmin();
 

@@ -11,6 +11,8 @@ drop table if exists public.site_settings cascade;
 drop table if exists public.profiles cascade;
 drop table if exists public.audit_logs cascade;
 drop table if exists public.notifications cascade;
+drop table if exists public.copyright_reports cascade;
+drop table if exists public.greenlist_requests cascade;
 
 -- Xóa các policy cũ (nếu có)
 drop policy if exists "Mọi người đều có thể xem Artworks" on storage.objects;
@@ -71,12 +73,13 @@ create table public.artists (
   payable_balance text default '0',
   royalty_rate text default '80',
   stats jsonb default '{}'::jsonb,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
 -- 1.4. BẢNG RELEASES (BẢN PHÁT HÀNH / SẢN PHẨM ÂM NHẠC)
 create table public.releases (
-  id uuid default gen_random_uuid() primary key,
+  id text primary key, -- Hỗ trợ slug chuỗi hoặc uuid
   artist_id text references public.artists(id) on delete cascade,
   title text not null,
   type text default 'Single',
@@ -102,7 +105,8 @@ create table public.releases (
   artwork_url text,
   links jsonb default '{}'::jsonb,
   metadata jsonb default '{}'::jsonb,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
 -- 1.5. BẢNG ARTICLES (TẠP CHÍ & BÀI VIẾT)
@@ -117,7 +121,8 @@ create table public.articles (
   excerpt text,
   body text,
   published boolean default true,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
 -- 1.6. BẢNG PAYOUT_REQUESTS (YÊU CẦU RÚT TIỀN TỪ NGHỆ SĨ)
@@ -142,13 +147,44 @@ create table public.audit_logs (
 
 -- 1.8. BẢNG NOTIFICATIONS (TRUNG TÂM THÔNG BÁO NGHỆ SĨ & HÃNG ĐĨA)
 create table public.notifications (
-  id uuid default gen_random_uuid() primary key,
-  artist_id text not null,
+  id text primary key default gen_random_uuid()::text,
+  artist_id text not null, -- 'all' hoặc artist slug
   title text not null,
   message text not null,
-  type text default 'info', -- 'payout', 'release', 'announcement', 'general'
+  type text default 'info', -- 'payout', 'release', 'announcement', 'general', 'important'
   link text default '',
   is_read boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 1.9. BẢNG COPYRIGHT_REPORTS (BÁO CÁO VI PHẠM BẢN QUYỀN)
+create table public.copyright_reports (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  artist_name text,
+  track_title text not null,
+  platform text,
+  violation_type text,
+  target_url text not null,
+  action_preference text,
+  notes text,
+  status text default 'Đang tiếp nhận',
+  admin_notes text default '',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 1.10. BẢNG GREENLIST_REQUESTS (YÊU CẦU MIỄN TRỪ BẢN QUYỀN / GREEN-LIST)
+create table public.greenlist_requests (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  artist_name text,
+  platform text,
+  channel_id text not null,
+  track_scope text,
+  purpose text,
+  notes text,
+  status text default 'Đang tiếp nhận',
+  admin_notes text default '',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -193,6 +229,8 @@ alter table public.articles enable row level security;
 alter table public.payout_requests enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.notifications enable row level security;
+alter table public.copyright_reports enable row level security;
+alter table public.greenlist_requests enable row level security;
 
 create policy "Cho phép đọc công khai site_settings" on public.site_settings for select using (true);
 create policy "Cho phép đọc công khai artists" on public.artists for select using (true);
@@ -202,6 +240,8 @@ create policy "Cho phép đọc profile" on public.profiles for select using (tr
 create policy "Cho phép đọc payout_requests" on public.payout_requests for select using (true);
 create policy "Cho phép đọc công khai audit_logs" on public.audit_logs for select using (true);
 create policy "Cho phép đọc công khai notifications" on public.notifications for select using (true);
+create policy "Cho phép đọc công khai copyright_reports" on public.copyright_reports for select using (true);
+create policy "Cho phép đọc công khai greenlist_requests" on public.greenlist_requests for select using (true);
 
 create policy "Toàn quyền quản trị site_settings" on public.site_settings for all using (true) with check (true);
 create policy "Toàn quyền quản trị artists" on public.artists for all using (true) with check (true);
@@ -211,6 +251,9 @@ create policy "Toàn quyền quản trị profiles" on public.profiles for all u
 create policy "Toàn quyền quản trị payout_requests" on public.payout_requests for all using (true) with check (true);
 create policy "Toàn quyền quản trị audit_logs" on public.audit_logs for all using (true) with check (true);
 create policy "Toàn quyền quản trị notifications" on public.notifications for all using (true) with check (true);
+create policy "Toàn quyền quản trị copyright_reports" on public.copyright_reports for all using (true) with check (true);
+create policy "Toàn quyền quản trị greenlist_requests" on public.greenlist_requests for all using (true) with check (true);
+
 
 -- ==============================================================================
 -- 4. SEED DATA MẪU BAN ĐẦU
@@ -355,6 +398,43 @@ alter table public.artists add column if not exists show_on_web boolean default 
 alter table public.artists add column if not exists role_type text default 'distribution';
 alter table public.artists add column if not exists payout_cycle text default 'Hàng tháng (Monthly)';
 alter table public.artists add column if not exists contract_term text default '2024 - 2027';
+alter table public.artists add column if not exists updated_at timestamp with time zone default timezone('utc'::text, now());
 
 alter table public.releases add column if not exists show_on_web boolean default true;
+alter table public.releases add column if not exists updated_at timestamp with time zone default timezone('utc'::text, now());
+
+alter table public.articles add column if not exists author text default 'UniFLOWs Editorial';
+alter table public.articles add column if not exists read_time text default '3 phút đọc';
+alter table public.articles add column if not exists updated_at timestamp with time zone default timezone('utc'::text, now());
+
+-- Tạo các bảng nếu chưa có (không làm mất dữ liệu bảng cũ)
+create table if not exists public.copyright_reports (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  artist_name text,
+  track_title text not null,
+  platform text,
+  violation_type text,
+  target_url text not null,
+  action_preference text,
+  notes text,
+  status text default 'Đang tiếp nhận',
+  admin_notes text default '',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table if not exists public.greenlist_requests (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  artist_name text,
+  platform text,
+  channel_id text not null,
+  track_scope text,
+  purpose text,
+  notes text,
+  status text default 'Đang tiếp nhận',
+  admin_notes text default '',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 

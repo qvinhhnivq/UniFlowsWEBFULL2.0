@@ -780,11 +780,17 @@ export async function saveData(data) {
           monthly_streams: String(a.monthlyStreams || '0'),
           estimated_revenue: String(a.estimatedRevenue || '0'),
           payable_balance: String(a.payableBalance || '0'),
-          stats: stats,
-          updated_at: new Date().toISOString()
+          stats: stats
         };
 
-        await supabase.from('artists').upsert(artistPayload);
+        try {
+          const { error: aErr } = await supabase.from('artists').upsert({ ...artistPayload, updated_at: new Date().toISOString() });
+          if (aErr) {
+            await supabase.from('artists').upsert(artistPayload);
+          }
+        } catch {
+          try { await supabase.from('artists').upsert(artistPayload); } catch {}
+        }
 
         // Save products into releases table
         if (Array.isArray(a.products)) {
@@ -825,20 +831,7 @@ export async function saveData(data) {
 
     // 3. Save articles
     if (Array.isArray(data.articles)) {
-      for (const art of data.articles) {
-        await supabase.from('articles').upsert({
-          id: art.id,
-          title: art.title,
-          category: art.category,
-          date: art.date,
-          author: art.author || 'UniFLOWs Editorial',
-          read_time: art.readTime || '3 phút đọc',
-          cover: art.cover || '',
-          excerpt: art.excerpt || '',
-          body: art.body || '',
-          published: art.published ?? true
-        });
-      }
+      await saveAllArticlesToSupabase(data.articles);
     }
 
     return true;
@@ -848,6 +841,134 @@ export async function saveData(data) {
   }
 }
 
+// ----------------------------------------------------
+// DEDICATED ARTICLE PERSISTENCE HELPERS
+// ----------------------------------------------------
+export async function saveSingleArticle(art) {
+  if (!art || !art.id) return { success: false, error: 'Thiếu ID bài viết' };
+
+  // Update local cache
+  const cached = getLocalCachedData();
+  if (!cached.articles) cached.articles = [];
+  const idx = cached.articles.findIndex(a => a.id === art.id);
+  const normalizedArt = {
+    id: art.id,
+    title: art.title || 'Bài viết không tiêu đề',
+    category: art.category || 'News',
+    date: art.date || new Date().toLocaleDateString('vi-VN'),
+    author: art.author || 'UniFLOWs Editorial',
+    readTime: art.readTime || '3 phút đọc',
+    cover: art.cover || '',
+    excerpt: art.excerpt || '',
+    body: art.body || '',
+    published: art.published === true || art.published === 'true'
+  };
+
+  if (idx >= 0) {
+    cached.articles[idx] = normalizedArt;
+  } else {
+    cached.articles.unshift(normalizedArt);
+  }
+  localStorage.setItem('uniflows-content', JSON.stringify(cached));
+
+  if (!isSupabaseConfigured()) {
+    return { success: true, localOnly: true };
+  }
+
+  try {
+    const payload = {
+      id: normalizedArt.id,
+      title: normalizedArt.title,
+      category: normalizedArt.category,
+      date: normalizedArt.date,
+      author: normalizedArt.author,
+      read_time: normalizedArt.readTime,
+      cover: normalizedArt.cover,
+      excerpt: normalizedArt.excerpt,
+      body: normalizedArt.body,
+      published: normalizedArt.published
+    };
+
+    const { error } = await supabase.from('articles').upsert(payload);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.warn('Lỗi lưu bài viết lên Supabase:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteArticleFromSupabase(artId) {
+  if (!artId) return { success: false };
+
+  // 1. Update localStorage
+  const cached = getLocalCachedData();
+  if (Array.isArray(cached.articles)) {
+    cached.articles = cached.articles.filter(a => a.id !== artId);
+    localStorage.setItem('uniflows-content', JSON.stringify(cached));
+  }
+
+  // 2. Delete on Supabase
+  if (isSupabaseConfigured()) {
+    try {
+      const { error } = await supabase.from('articles').delete().eq('id', artId);
+      if (error) console.warn('Lỗi xóa bài viết trên Supabase:', error);
+    } catch (e) {
+      console.warn('Lỗi xóa bài viết Supabase catch:', e);
+    }
+  }
+  return { success: true };
+}
+
+export async function saveAllArticlesToSupabase(articlesList) {
+  if (!Array.isArray(articlesList)) return { success: false };
+
+  // 1. Update local cache
+  const cached = getLocalCachedData();
+  cached.articles = articlesList.map(art => ({
+    id: art.id,
+    title: art.title || 'Bài viết không tiêu đề',
+    category: art.category || 'News',
+    date: art.date || new Date().toLocaleDateString('vi-VN'),
+    author: art.author || 'UniFLOWs Editorial',
+    readTime: art.readTime || '3 phút đọc',
+    cover: art.cover || '',
+    excerpt: art.excerpt || '',
+    body: art.body || '',
+    published: art.published === true || art.published === 'true'
+  }));
+  localStorage.setItem('uniflows-content', JSON.stringify(cached));
+
+  // 2. Upsert to Supabase
+  if (!isSupabaseConfigured()) {
+    return { success: true, localOnly: true };
+  }
+
+  let errorCount = 0;
+  for (const art of cached.articles) {
+    try {
+      const { error } = await supabase.from('articles').upsert({
+        id: art.id,
+        title: art.title,
+        category: art.category,
+        date: art.date,
+        author: art.author,
+        read_time: art.readTime,
+        cover: art.cover,
+        excerpt: art.excerpt,
+        body: art.body,
+        published: art.published
+      });
+      if (error) errorCount++;
+    } catch {
+      errorCount++;
+    }
+  }
+
+  return { success: errorCount === 0, errorCount };
+}
+
 export function resetData() {
   localStorage.removeItem('uniflows-content');
 }
+
