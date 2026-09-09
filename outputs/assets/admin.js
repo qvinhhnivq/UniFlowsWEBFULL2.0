@@ -1351,7 +1351,9 @@ async function loadReleasesQueue() {
   }
 
   releasesBox.innerHTML = filtered.map(r => {
-    const artistName = r.artists?.name || data.artists.find(a => a.id === r.artist_id)?.name || r.artist_id || 'Nghệ sĩ';
+    const artistObj = (data.artists || []).find(a => a.id === r.artist_id || a.username === r.artist_id);
+    const artistName = r.artists?.name || artistObj?.name || r.artist_id || 'Nghệ sĩ';
+    const artistEmail = artistObj?.email || '';
     const status = r.submission_status || 'Đã phát hành';
     const links = r.links || {};
     const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
@@ -1553,6 +1555,12 @@ async function loadReleasesQueue() {
           <div class="splits-container" style="display:grid;gap:8px;">
             ${renderSplitsList(r, meta.splits || [])}
           </div>
+        </div>
+
+        <div style="margin:12px 0 6px;padding:8px 12px;background:#f8fafc;border:1px dashed #cbd5e1;display:flex;align-items:center;gap:10px;font-size:12px;">
+          <span style="font-weight:bold;color:#334155;white-space:nowrap;">📧 Email nghệ sĩ nhận thông báo A&R:</span>
+          <input class="rel-artist-email-input" type="email" value="${esc(artistEmail)}" placeholder="email_nghe_si@domain.com (Nhập email của bạn để test nhận thư)" style="flex:1;padding:6px 10px;border:1px solid #cbd5e1;font-size:12px;background:#fff;font-family:monospace;">
+          <span style="color:#64748b;font-size:11px;">(Sẽ gửi email khi duyệt, yêu cầu sửa hoặc từ chối)</span>
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;gap:12px;">
@@ -1879,7 +1887,12 @@ async function loadReleasesQueue() {
       // Send automated email to artist if enabled
       let emailNotice = '';
       try {
-        const targetArtistObj = await resolveArtistObj(relArtistId);
+        const targetEmailInput = card?.querySelector('.rel-artist-email-input')?.value.trim();
+        let targetArtistObj = await resolveArtistObj(relArtistId) || {};
+        if (targetEmailInput) {
+          targetArtistObj.email = targetEmailInput;
+        }
+
         if (targetArtistObj && targetArtistObj.email) {
           let emailRes = null;
           const releaseData = targetRel || { id: relId, title: relTitle, artist_id: relArtistId };
@@ -1892,9 +1905,11 @@ async function loadReleasesQueue() {
           }
 
           if (emailRes && emailRes.success) {
-            emailNotice = ` & đã tự động gửi email tới "${targetArtistObj.email}"`;
+            emailNotice = ` & đã tự động gửi email tới "${targetArtistObj.email}"!`;
           } else if (emailRes && !emailRes.disabled && !emailRes.skipped && emailRes.error) {
             emailNotice = ` ⚠️ (Cảnh báo email: ${emailRes.error})`;
+            console.warn('Lỗi gửi email release:', emailRes.error);
+            alert(`Lưu bản phát hành thành công, NHƯNG không thể gửi email tới ${targetArtistObj.email}: ${emailRes.error}`);
           } else if (emailRes && emailRes.disabled) {
             emailNotice = ` (Email tự động đang tắt trong Cấu hình)`;
           }
@@ -1903,6 +1918,7 @@ async function loadReleasesQueue() {
         }
       } catch (err) {
         console.warn('Lỗi gửi email release:', err);
+        alert(`Lỗi hệ thống khi gửi email xét duyệt: ${err.message}`);
       }
 
       btn.disabled = false; btn.textContent = 'Lưu bản phát hành';

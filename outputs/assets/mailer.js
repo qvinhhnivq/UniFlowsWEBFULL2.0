@@ -20,7 +20,7 @@ export const DEFAULT_EMAIL_CONFIG = {
     onReleaseRejected: true,    // Tự động gửi khi từ chối bản phát hành
     onReleaseApproved: true,    // Tự động gửi khi duyệt phát hành
     onDirectNotif: true,        // Tự động gửi khi gửi thông báo riêng cho nghệ sĩ
-    onBroadcastNotif: false,    // Tự động gửi khi phát broadcast toàn bộ nghệ sĩ
+    onBroadcastNotif: true,     // Tự động gửi khi phát broadcast toàn bộ nghệ sĩ
     onPayoutUpdate: true        // Tự động gửi khi duyệt/từ chối rút tiền
   }
 };
