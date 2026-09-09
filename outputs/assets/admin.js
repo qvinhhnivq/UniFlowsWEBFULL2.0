@@ -14,6 +14,16 @@ import {
 } from './supabase.js';
 import './security.js';
 import { renderDistributionTab, printRoyaltyStatement } from './distribution-report.js';
+import { 
+  getEmailConfig, 
+  saveEmailConfig, 
+  sendAccountHandoverEmail, 
+  sendReleaseRevisionEmail, 
+  sendReleaseRejectedEmail, 
+  sendReleaseApprovedEmail, 
+  sendArtistNotificationEmail, 
+  sendTestEmail 
+} from './mailer.js';
 
 const isAdminAuth = sessionStorage.getItem('uniflows-admin') === 'true' || localStorage.getItem('uniflows-admin') === 'true';
 if (!isAdminAuth) {
@@ -468,9 +478,14 @@ const artistEditor = (a, idx) => {
     <div style="background:#f0fdf4;border:1px solid #86efac;padding:15px;margin-bottom:15px;border-radius:6px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
         <h4 style="margin:0;font-size:13px;text-transform:uppercase;color:#166534;">🔑 Thông Tin Đăng Nhập & Mật Khẩu Portal</h4>
-        <button type="button" class="btn-export-artist-handover button" data-artist-idx="${idx}" style="background:#16a34a;color:#fff;border-color:#16a34a;padding:5px 12px;font-size:11px;font-weight:bold;">
-          📋 Xuất Phiếu Bàn Giao Tài Khoản
-        </button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="btn-email-artist-handover button" data-artist-idx="${idx}" style="background:#2563eb;color:#fff;border-color:#2563eb;padding:5px 12px;font-size:11px;font-weight:bold;">
+            ✉️ Gửi Email Bàn Giao
+          </button>
+          <button type="button" class="btn-export-artist-handover button" data-artist-idx="${idx}" style="background:#16a34a;color:#fff;border-color:#16a34a;padding:5px 12px;font-size:11px;font-weight:bold;">
+            📋 Xuất Phiếu Bàn Giao
+          </button>
+        </div>
       </div>
       <div class="mini-grid">
         <div class="field">
@@ -837,6 +852,20 @@ async function loadPayoutRequests() {
           `Yêu cầu rút ₫ ${amtStr} chưa được duyệt.${rejection_reason ? ' Lý do: ' + rejection_reason : ''}`,
           'payout'
         );
+      }
+
+      // Send automated email for payout update if enabled
+      const artistObj = (data.artists || []).find(a => a.id === artistId);
+      if (artistObj && artistObj.email) {
+        const notifPayload = {
+          title: status === 'Đã thanh toán (Hoàn tất)' ? '💳 Yêu cầu rút tiền đã được duyệt' : '❌ Yêu cầu rút tiền bị từ chối',
+          message: status === 'Đã thanh toán (Hoàn tất)' 
+            ? `Khoản thanh toán ₫ ${amtStr} đã được chuyển khoản hoàn tất vào tài khoản ngân hàng của bạn.`
+            : `Yêu cầu rút ₫ ${amtStr} chưa được duyệt.${rejection_reason ? ' Lý do: ' + rejection_reason : ''}`,
+          type: 'payout',
+          action_url: 'portal.html?tab=payouts'
+        };
+        sendArtistNotificationEmail(artistObj, notifPayload);
       }
 
       // Update local storage
@@ -2955,7 +2984,8 @@ ARTWORK URL: ${artwork || 'N/A'}
       await saveData(data);
       await logAuditEvent('Xét Duyệt Metadata Bản Phát Hành', `Bản phát hành "${rel.title}" của "${artistName}" chuyển sang trạng thái "${newStatus}".`);
       
-      // Notify artist
+      // Notify artist via Portal & automated Email from custom domain
+      const targetArtistObj = (data.artists || []).find(a => a.id === rel.artist_id);
       if (newStatus === 'Đã phát hành') {
         await sendArtistNotification(
           rel.artist_id,
@@ -2963,6 +2993,9 @@ ARTWORK URL: ${artwork || 'N/A'}
           `Bản phát hành "${rel.title}" đã được duyệt phân phối chính thức trên các nền tảng streaming!${newFeedback ? `\n\n💬 Góp ý từ A&R:\n"${newFeedback}"` : ''}`,
           'release'
         );
+        if (targetArtistObj && targetArtistObj.email) {
+          sendReleaseApprovedEmail(targetArtistObj, rel);
+        }
       } else if (newStatus === 'Yêu cầu chỉnh sửa') {
         await sendArtistNotification(
           rel.artist_id,
@@ -2970,6 +3003,19 @@ ARTWORK URL: ${artwork || 'N/A'}
           `Bản phát hành "${rel.title}" cần chỉnh sửa theo yêu cầu của A&R:${newFeedback ? `\n\n💬 Lời nhắn từ A&R:\n"${newFeedback}"` : ' Vui lòng kiểm tra lại file Master hoặc Artwork.'}`,
           'release'
         );
+        if (targetArtistObj && targetArtistObj.email) {
+          sendReleaseRevisionEmail(targetArtistObj, rel, newFeedback);
+        }
+      } else if (newStatus === 'Từ chối phát hành' || newStatus === 'Từ chối') {
+        await sendArtistNotification(
+          rel.artist_id,
+          '❌ Bản phát hành chưa đạt tiêu chuẩn',
+          `Bản phát hành "${rel.title}" đã bị từ chối phát hành.${newFeedback ? `\n\n💬 Lý do từ A&R:\n"${newFeedback}"` : ''}`,
+          'release'
+        );
+        if (targetArtistObj && targetArtistObj.email) {
+          sendReleaseRejectedEmail(targetArtistObj, rel, newFeedback);
+        }
       }
 
       showNotice(`✓ ĐÃ CẬP NHẬT XÉT DUYỆT! Bản phát hành "${rel.title}" hiện ở trạng thái "${newStatus}".`);
@@ -3651,8 +3697,42 @@ function initAccountProvisioning() {
     renderArtistSelector();
     renderSelectedArtistEditor();
 
+    // Automatically send handover email if email provided
+    if (email) {
+      sendAccountHandoverEmail(artistRecord).then(res => {
+        if (res.success) {
+          showNotice(`✓ Đã cấp tài khoản và TỰ ĐỘNG GỬI EMAIL BÀN GIAO đến "${email}"!`);
+        } else if (!res.disabled && res.error) {
+          console.warn('Lỗi gửi email bàn giao:', res.error);
+        }
+      });
+    }
+
     showNotice(`✓ Đã cấp tài khoản thành công cho "${name}"!`);
   };
+
+  const emailHandoverBtn = document.querySelector('#btn-email-handover');
+  if (emailHandoverBtn) {
+    emailHandoverBtn.onclick = async () => {
+      const email = document.querySelector('#prov-email')?.value.trim();
+      if (!email) {
+        alert('Tài khoản này chưa có email để gửi!');
+        return;
+      }
+      emailHandoverBtn.disabled = true;
+      emailHandoverBtn.textContent = '⏳ Đang gửi mail...';
+      const targetArtist = (data.artists || []).find(a => a.id === selectedArtistId) || {};
+      const res = await sendAccountHandoverEmail(targetArtist);
+      emailHandoverBtn.disabled = false;
+      emailHandoverBtn.textContent = '✉️ Gửi Email Bàn Giao';
+      if (res.success) {
+        showNotice(`✓ Đã gửi email phiếu bàn giao tài khoản đến "${email}" thành công!`);
+        alert(`🎉 Đã gửi email phiếu bàn giao tài khoản đến ${email}!`);
+      } else {
+        alert(`Không thể gửi email: ${res.error || 'Vui lòng kiểm tra lại cấu hình Email trong Tab 07.'}`);
+      }
+    };
+  }
 
   copyHandoverBtn.onclick = () => {
     const text = handoverPre.textContent;
@@ -3664,8 +3744,31 @@ function initAccountProvisioning() {
   };
 }
 
-// Handover slip export from individual artist card
-document.addEventListener('click', (e) => {
+// Handover slip export & email dispatch from individual artist card
+document.addEventListener('click', async (e) => {
+  const emailBtn = e.target.closest('.btn-email-artist-handover');
+  if (emailBtn) {
+    const idx = parseInt(emailBtn.dataset.artistIdx, 10);
+    const a = data.artists[idx];
+    if (!a || !a.email) {
+      alert('Nghệ sĩ này chưa có thông tin email liên kết để gửi thư!');
+      return;
+    }
+    const origText = emailBtn.textContent;
+    emailBtn.disabled = true;
+    emailBtn.textContent = '⏳ Đang gửi mail...';
+    const res = await sendAccountHandoverEmail(a);
+    emailBtn.disabled = false;
+    emailBtn.textContent = origText;
+    if (res.success) {
+      showNotice(`✓ Đã gửi email phiếu bàn giao tài khoản đến "${a.email}" thành công!`);
+      alert(`🎉 Đã gửi email phiếu bàn giao tài khoản đến ${a.email}!`);
+    } else {
+      alert(`Không thể gửi email: ${res.error || 'Vui lòng kiểm tra lại cấu hình Email trong Tab 07.'}`);
+    }
+    return;
+  }
+
   const btn = e.target.closest('.btn-export-artist-handover');
   if (!btn) return;
   const idx = parseInt(btn.dataset.artistIdx, 10);
@@ -4915,6 +5018,116 @@ function updateSupabaseStatusBanner() {
   if (modalKeyInput && !modalKeyInput.value) modalKeyInput.value = getSupabaseAnonKey();
 }
 
+const QUICKFIX_SQL_CONTENT = `-- ==============================================================================
+-- UNIFLOWS LABEL — SỬA NHANH LỖI THIẾU BẢNG & STORAGE BUCKETS (SAFE QUICK-FIX)
+-- Chạy script này trong Supabase Dashboard -> SQL Editor -> New Query -> Run
+-- (100% AN TOÀN - KHÔNG XÓA HAY LÀM MẤT DỮ LIỆU CÁC BẢNG HIỆN CÓ)
+-- ==============================================================================
+
+-- 1. TẠO BẢNG COPYRIGHT_REPORTS (NẾU CHƯA CÓ)
+CREATE TABLE IF NOT EXISTS public.copyright_reports (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  artist_id text,
+  artist_name text,
+  track_title text NOT NULL,
+  platform text,
+  violation_type text,
+  target_url text NOT NULL,
+  action_preference text,
+  notes text,
+  status text DEFAULT 'Đang tiếp nhận',
+  admin_notes text DEFAULT '',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 2. TẠO BẢNG GREENLIST_REQUESTS (NẾU CHƯA CÓ)
+CREATE TABLE IF NOT EXISTS public.greenlist_requests (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  artist_id text,
+  artist_name text,
+  platform text,
+  channel_id text NOT NULL,
+  track_scope text,
+  purpose text,
+  notes text,
+  status text DEFAULT 'Đang tiếp nhận',
+  admin_notes text DEFAULT '',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 3. KÍCH HOẠT ROW LEVEL SECURITY (RLS) & CHÍNH SÁCH QUYỀN
+ALTER TABLE public.copyright_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.greenlist_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Cho phép đọc công khai copyright_reports" ON public.copyright_reports;
+DROP POLICY IF EXISTS "Toàn quyền quản trị copyright_reports" ON public.copyright_reports;
+DROP POLICY IF EXISTS "Cho phép đọc công khai greenlist_requests" ON public.greenlist_requests;
+DROP POLICY IF EXISTS "Toàn quyền quản trị greenlist_requests" ON public.greenlist_requests;
+
+CREATE POLICY "Cho phép đọc công khai copyright_reports" ON public.copyright_reports FOR SELECT USING (true);
+CREATE POLICY "Toàn quyền quản trị copyright_reports" ON public.copyright_reports FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Cho phép đọc công khai greenlist_requests" ON public.greenlist_requests FOR SELECT USING (true);
+CREATE POLICY "Toàn quyền quản trị greenlist_requests" ON public.greenlist_requests FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. TẠO & CẤU HÌNH STORAGE BUCKETS (artworks & audio-masters)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES 
+  ('artworks', 'artworks', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/*']),
+  ('audio-masters', 'audio-masters', true, 104857600, ARRAY['audio/wav', 'audio/x-wav', 'audio/mpeg', 'audio/mp3', 'audio/flac', 'audio/*'])
+ON CONFLICT (id) DO UPDATE SET 
+  public = true,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- 5. PHÂN QUYỀN TRUY CẬP STORAGE OBJECTS
+DROP POLICY IF EXISTS "Mọi người đều có thể xem Artworks" ON storage.objects;
+DROP POLICY IF EXISTS "Người dùng có thể upload Artworks" ON storage.objects;
+DROP POLICY IF EXISTS "Toàn quyền xóa sửa Artworks" ON storage.objects;
+DROP POLICY IF EXISTS "Mọi người đều có thể tải/nghe Audio Masters" ON storage.objects;
+DROP POLICY IF EXISTS "Người dùng có thể upload Audio Masters" ON storage.objects;
+DROP POLICY IF EXISTS "Toàn quyền xóa sửa Audio Masters" ON storage.objects;
+
+CREATE POLICY "Mọi người đều có thể xem Artworks"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'artworks');
+
+CREATE POLICY "Người dùng có thể upload Artworks"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'artworks');
+
+CREATE POLICY "Toàn quyền xóa sửa Artworks"
+ON storage.objects FOR ALL
+USING (bucket_id = 'artworks');
+
+CREATE POLICY "Mọi người đều có thể tải/nghe Audio Masters"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'audio-masters');
+
+CREATE POLICY "Người dùng có thể upload Audio Masters"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'audio-masters');
+
+CREATE POLICY "Toàn quyền xóa sửa Audio Masters"
+ON storage.objects FOR ALL
+USING (bucket_id = 'audio-masters');
+
+-- 6. PHÂN QUYỀN SCHEMA STORAGE VÀ BUCKETS CHO CLIENT (ANON / AUTHENTICATED)
+GRANT USAGE ON SCHEMA storage TO anon, authenticated;
+GRANT ALL ON TABLE storage.objects TO anon, authenticated;
+GRANT ALL ON TABLE storage.buckets TO anon, authenticated;
+
+-- 7. BỔ SUNG CỘT BẢO ĐẢM KHÔNG THIẾU Ở CÁC BẢNG KHÁC
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS author text DEFAULT 'UniFLOWs Editorial';
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS read_time text DEFAULT '3 phút đọc';
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS action_url text;
+`;
+
+let fullSchemaCached = '';
+
 async function runSupabaseDiagnosticTest(resultContainer) {
   if (!resultContainer) return;
   resultContainer.style.display = 'block';
@@ -4930,17 +5143,21 @@ async function runSupabaseDiagnosticTest(resultContainer) {
     
     let tablesHtml = '';
     for (const [tbl, isOk] of Object.entries(report.tables || {})) {
+      const errDetail = report.tableErrors?.[tbl];
+      const isMissingTable = errDetail && (errDetail.includes('does not exist') || errDetail.includes('relation'));
+
       tablesHtml += `
-        <li style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f1f5f9;">
+        <li style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f1f5f9; gap:10px; flex-wrap:wrap;">
           <span style="font-family:'DM Mono',monospace; font-size:11.5px; color:#1e293b;">${esc(tbl)}</span>
-          <span style="font-weight:bold; font-size:11px; color:${isOk ? '#16a34a' : '#dc2626'};">
-            ${isOk ? '✓ Sẵn sàng' : '✗ Chưa sẵn sàng'}
+          <span style="font-weight:bold; font-size:11px; color:${isOk ? '#16a34a' : '#dc2626'}; text-align:right;">
+            ${isOk ? '✓ Sẵn sàng' : '✗ ' + (isMissingTable ? 'Chưa tạo bảng trên Supabase' : (errDetail ? esc(errDetail) : 'Chưa sẵn sàng'))}
           </span>
         </li>
       `;
     }
 
     const storageOk = Boolean(report.storage?.artworks);
+    const storageErr = report.storageErrors?.artworks || report.storageErrors?.listBuckets || '';
     const isOverallOk = Boolean(report.online);
 
     resultContainer.innerHTML = `
@@ -4958,21 +5175,51 @@ async function runSupabaseDiagnosticTest(resultContainer) {
         <strong style="font-size:11px; text-transform:uppercase; color:#64748b; display:block; margin-bottom:6px;">Trạng thái chi tiết 8 bảng cơ sở dữ liệu:</strong>
         <ul style="list-style:none; padding:0; margin:0;">
           ${tablesHtml}
-          <li style="display:flex; justify-content:space-between; align-items:center; padding:5px 0;">
+          <li style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; gap:10px; flex-wrap:wrap;">
             <span style="font-family:'DM Mono',monospace; font-size:11.5px; color:#1e293b;">storage.buckets (artworks)</span>
-            <span style="font-weight:bold; font-size:11px; color:${storageOk ? '#16a34a' : '#d97706'};">
-              ${storageOk ? '✓ Sẵn sàng (artworks)' : '⚠️ Chưa thấy bucket artworks'}
+            <span style="font-weight:bold; font-size:11px; color:${storageOk ? '#16a34a' : '#d97706'}; text-align:right;">
+              ${storageOk ? '✓ Sẵn sàng (artworks public)' : '⚠️ ' + (storageErr ? esc(storageErr) : 'Chưa tạo bucket hoặc chưa cấp quyền')}
             </span>
           </li>
         </ul>
       </div>
 
-      ${!isOverallOk ? `
-        <div style="margin-top:10px; padding:8px 12px; background:#fffbeb; border:1px solid #fde68a; border-radius:4px; font-size:11px; color:#92400e; line-height:1.4;">
-          💡 <b>Gợi ý khắc phục:</b> Nếu có bảng báo đỏ hoặc chưa có cột mới, hãy bấm <b>"📋 SQL Schema"</b> &rarr; Sao chép và chạy lại trong Supabase SQL Editor.
+      ${(!isOverallOk || !storageOk || !report.tables.copyright_reports || !report.tables.greenlist_requests) ? `
+        <div style="margin-top:12px; padding:12px 14px; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; font-size:12px; color:#92400e; line-height:1.5;">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:bold; margin-bottom:4px;">
+            <span>⚡</span>
+            <span>Khắc phục lỗi thiếu bảng & Storage Bucket</span>
+          </div>
+          <div>Bạn chỉ cần sao chép script <b>SQL Sửa Nhanh</b> và chạy trong Supabase SQL Editor (an toàn 100%, không mất dữ liệu).</div>
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn-diag-quickfix-copy button" style="background:#f59e0b; color:#fff; border-color:#f59e0b; font-weight:bold; font-size:11px; padding:6px 14px;">
+              ⚡ Sao chép SQL Sửa Nhanh
+            </button>
+            <button type="button" class="btn-diag-open-schema button alt" style="background:#fff; font-size:11px; padding:6px 12px; font-weight:bold;">
+              📋 Mở Trình Xem SQL
+            </button>
+          </div>
         </div>
       ` : ''}
     `;
+
+    // Attach click events inside diagnostic container
+    resultContainer.querySelector('.btn-diag-quickfix-copy')?.addEventListener('click', (e) => {
+      navigator.clipboard?.writeText(QUICKFIX_SQL_CONTENT);
+      const btn = e.currentTarget;
+      const orig = btn.textContent;
+      btn.textContent = '✓ Đã sao chép SQL!';
+      btn.style.background = '#10b981';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '#f59e0b';
+      }, 2000);
+    });
+
+    resultContainer.querySelector('.btn-diag-open-schema')?.addEventListener('click', () => {
+      const schemaDialog = document.querySelector('#admin-sql-schema-dialog');
+      openSqlSchemaDialog(schemaDialog, 'quickfix');
+    });
   } catch (err) {
     resultContainer.innerHTML = `
       <div style="color:#dc2626; font-weight:bold; font-size:12px; padding:10px; background:#fef2f2; border:1px solid #fca5a5; border-radius:6px;">
@@ -4982,23 +5229,52 @@ async function runSupabaseDiagnosticTest(resultContainer) {
   }
 }
 
-async function openSqlSchemaDialog(dialog) {
+async function openSqlSchemaDialog(dialog, initialMode = 'quickfix') {
   if (!dialog) return;
   const preview = document.querySelector('#schema-sql-content-preview');
-  if (preview && (!preview.textContent || preview.textContent.length < 50)) {
-    preview.textContent = '-- Đang nạp schema từ supabase_schema.sql...';
+  const tabQuickfix = document.querySelector('#tab-btn-sql-quickfix');
+  const tabFull = document.querySelector('#tab-btn-sql-full');
+
+  async function loadFullSchema() {
+    if (fullSchemaCached) return fullSchemaCached;
     try {
       const res = await fetch('supabase_schema.sql');
       if (res.ok) {
-        const text = await res.text();
-        preview.textContent = text;
-      } else {
-        throw new Error('Không thể tải file supabase_schema.sql qua fetch');
+        fullSchemaCached = await res.text();
+        return fullSchemaCached;
       }
-    } catch {
-      preview.textContent = `-- Chạy script tạo bảng Supabase:\n-- Vui lòng xem và copy toàn bộ mã trong file supabase_schema.sql ở thư mục dự án.`;
+    } catch {}
+    return '-- Xem file supabase_schema.sql trong thư mục dự án.';
+  }
+
+  function setMode(mode) {
+    if (mode === 'quickfix') {
+      if (preview) preview.textContent = QUICKFIX_SQL_CONTENT;
+      if (tabQuickfix) {
+        tabQuickfix.style.background = '#0f172a';
+        tabQuickfix.style.color = '#fff';
+      }
+      if (tabFull) {
+        tabFull.style.background = '#f1f5f9';
+        tabFull.style.color = '#334155';
+      }
+    } else {
+      if (preview) preview.textContent = '-- Đang nạp toàn bộ Schema V2...';
+      loadFullSchema().then(text => {
+        if (preview) preview.textContent = text;
+      });
+      if (tabFull) {
+        tabFull.style.background = '#0f172a';
+        tabFull.style.color = '#fff';
+      }
+      if (tabQuickfix) {
+        tabQuickfix.style.background = '#f1f5f9';
+        tabQuickfix.style.color = '#334155';
+      }
     }
   }
+
+  setMode(initialMode);
   dialog.showModal();
 }
 
@@ -5034,7 +5310,7 @@ function initSupabaseCloudAdmin() {
   });
 
   btnQuickSchema?.addEventListener('click', async () => {
-    await openSqlSchemaDialog(schemaDialog);
+    await openSqlSchemaDialog(schemaDialog, 'quickfix');
   });
 
   document.querySelector('#close-supabase-config-dialog-btn')?.addEventListener('click', () => configDialog?.close());
@@ -5085,7 +5361,7 @@ function initSupabaseCloudAdmin() {
   });
 
   btnTabViewSchema?.addEventListener('click', async () => {
-    await openSqlSchemaDialog(schemaDialog);
+    await openSqlSchemaDialog(schemaDialog, 'quickfix');
   });
 
   btnTabSave?.addEventListener('click', async () => {
@@ -5125,20 +5401,70 @@ function initSupabaseCloudAdmin() {
     }
   });
 
-  // Copy SQL button
+  // Copy Quick-Fix SQL button
+  const btnCopyQuickfix = document.querySelector('#btn-copy-quickfix-sql');
+  btnCopyQuickfix?.addEventListener('click', () => {
+    navigator.clipboard?.writeText(QUICKFIX_SQL_CONTENT);
+    const orig = btnCopyQuickfix.textContent;
+    btnCopyQuickfix.textContent = '✓ Đã chép SQL Sửa Nhanh!';
+    btnCopyQuickfix.style.background = '#10b981';
+    setTimeout(() => {
+      btnCopyQuickfix.textContent = orig;
+      btnCopyQuickfix.style.background = '#f59e0b';
+    }, 2000);
+  });
+
+  // Copy Full SQL button
   const btnCopySql = document.querySelector('#btn-copy-full-sql');
-  btnCopySql?.addEventListener('click', () => {
-    const pre = document.querySelector('#schema-sql-content-preview');
-    if (pre && pre.textContent) {
-      navigator.clipboard?.writeText(pre.textContent);
+  btnCopySql?.addEventListener('click', async () => {
+    let text = fullSchemaCached;
+    if (!text) {
+      try {
+        const res = await fetch('supabase_schema.sql');
+        if (res.ok) text = await res.text();
+      } catch {}
+    }
+    if (!text) text = document.querySelector('#schema-sql-content-preview')?.textContent || '';
+    if (text) {
+      navigator.clipboard?.writeText(text);
       const orig = btnCopySql.textContent;
-      btnCopySql.textContent = '✓ Đã chép toàn bộ SQL!';
-      btnCopySql.style.background = '#059669';
+      btnCopySql.textContent = '✓ Đã chép Toàn bộ V2!';
+      btnCopySql.style.color = '#10b981';
       setTimeout(() => {
         btnCopySql.textContent = orig;
-        btnCopySql.style.background = '#10b981';
+        btnCopySql.style.color = 'inherit';
       }, 2000);
     }
+  });
+
+  // Modal tab switcher
+  document.querySelector('#tab-btn-sql-quickfix')?.addEventListener('click', () => {
+    const preview = document.querySelector('#schema-sql-content-preview');
+    if (preview) preview.textContent = QUICKFIX_SQL_CONTENT;
+    const tabQ = document.querySelector('#tab-btn-sql-quickfix');
+    const tabF = document.querySelector('#tab-btn-sql-full');
+    if (tabQ) { tabQ.style.background = '#0f172a'; tabQ.style.color = '#fff'; }
+    if (tabF) { tabF.style.background = '#f1f5f9'; tabF.style.color = '#334155'; }
+  });
+
+  document.querySelector('#tab-btn-sql-full')?.addEventListener('click', async () => {
+    const preview = document.querySelector('#schema-sql-content-preview');
+    if (preview) preview.textContent = '-- Đang nạp toàn bộ Schema V2...';
+    let text = fullSchemaCached;
+    if (!text) {
+      try {
+        const res = await fetch('supabase_schema.sql');
+        if (res.ok) {
+          text = await res.text();
+          fullSchemaCached = text;
+        }
+      } catch {}
+    }
+    if (preview) preview.textContent = text || '-- Vui lòng xem file supabase_schema.sql trong thư mục dự án.';
+    const tabQ = document.querySelector('#tab-btn-sql-quickfix');
+    const tabF = document.querySelector('#tab-btn-sql-full');
+    if (tabF) { tabF.style.background = '#0f172a'; tabF.style.color = '#fff'; }
+    if (tabQ) { tabQ.style.background = '#f1f5f9'; tabQ.style.color = '#334155'; }
   });
 }
 
@@ -5440,16 +5766,40 @@ function initArtistNotificationDispatcher() {
       }
     }
 
+    // 4. Send automated email from custom domain if configured
+    const emailCfg = getEmailConfig();
+    let emailSentCount = 0;
+    if (emailCfg.enabled) {
+      if (targetArtist === 'all') {
+        if (emailCfg.triggers.onBroadcastNotif) {
+          (data.artists || []).forEach(a => {
+            if (a.email) {
+              sendArtistNotificationEmail(a, newNotif);
+              emailSentCount++;
+            }
+          });
+        }
+      } else {
+        if (emailCfg.triggers.onDirectNotif) {
+          const targetArtistObj = (data.artists || []).find(a => a.id === targetArtist);
+          if (targetArtistObj && targetArtistObj.email) {
+            sendArtistNotificationEmail(targetArtistObj, newNotif);
+            emailSentCount = 1;
+          }
+        }
+      }
+    }
+
     await logAuditEvent('Gửi Thông Báo Nghệ Sĩ', `Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist}`);
 
     if (statusEl) {
       statusEl.textContent = supabaseSuccess 
-        ? '✓ Đã gửi thông báo lên Supabase Cloud & Artist Portal thành công!' 
-        : '✓ Đã gửi thông báo thành công (Lưu trữ cục bộ & Portal)!';
+        ? `✓ Đã gửi thông báo lên Supabase & Portal thành công!${emailSentCount > 0 ? ' (Đã gửi qua Email)' : ''}` 
+        : `✓ Đã gửi thông báo thành công!${emailSentCount > 0 ? ' (Đã gửi qua Email)' : ''}`;
       statusEl.style.color = '#16a34a';
     }
 
-    showNotice(`✓ Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist} thành công!`);
+    showNotice(`✓ Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist} thành công!${emailSentCount > 0 ? ' (Đã gửi qua Email)' : ''}`);
 
     if (titleInput) titleInput.value = '';
     if (messageInput) messageInput.value = '';
@@ -5462,13 +5812,126 @@ function initArtistNotificationDispatcher() {
   });
 }
 
+// ============================================================================
+// 17. QUẢN LÝ CẤU HÌNH EMAIL DOMAIN TỰ ĐỘNG (TAB 7 - SECTION 05)
+// ============================================================================
+function initEmailConfigAdmin() {
+  const chkEnabled = document.querySelector('#email-cfg-enabled');
+  const selProvider = document.querySelector('#email-cfg-provider');
+  const inputSenderEmail = document.querySelector('#email-cfg-sender-email');
+  const inputSenderName = document.querySelector('#email-cfg-sender-name');
+  const inputApiKey = document.querySelector('#email-cfg-api-key');
+  const inputWebhookUrl = document.querySelector('#email-cfg-webhook-url');
+  const boxWebhook = document.querySelector('#box-email-webhook-url');
+
+  const trigAccount = document.querySelector('#email-trig-account');
+  const trigRevision = document.querySelector('#email-trig-revision');
+  const trigReject = document.querySelector('#email-trig-reject');
+  const trigApprove = document.querySelector('#email-trig-approve');
+  const trigDirect = document.querySelector('#email-trig-direct');
+  const trigBroadcast = document.querySelector('#email-trig-broadcast');
+  const trigPayout = document.querySelector('#email-trig-payout');
+
+  const btnSave = document.querySelector('#btn-save-email-cfg');
+  const statusMsg = document.querySelector('#email-cfg-status-msg');
+  const btnTest = document.querySelector('#btn-send-test-email');
+  const testRecipientInput = document.querySelector('#email-test-recipient');
+
+  if (!chkEnabled) return;
+
+  // Load current configuration
+  const cfg = getEmailConfig();
+  chkEnabled.checked = Boolean(cfg.enabled);
+  if (selProvider) selProvider.value = cfg.provider || 'brevo';
+  if (inputSenderEmail) inputSenderEmail.value = cfg.senderEmail || '';
+  if (inputSenderName) inputSenderName.value = cfg.senderName || 'UniFLOWs Record Label';
+  if (inputApiKey) inputApiKey.value = cfg.apiKey || '';
+  if (inputWebhookUrl) inputWebhookUrl.value = cfg.webhookUrl || '';
+
+  if (boxWebhook) {
+    boxWebhook.style.display = (cfg.provider === 'custom_webhook' || cfg.provider === 'supabase_edge') ? 'block' : 'none';
+  }
+
+  if (cfg.triggers) {
+    if (trigAccount) trigAccount.checked = cfg.triggers.onAccountCreated !== false;
+    if (trigRevision) trigRevision.checked = cfg.triggers.onReleaseRevision !== false;
+    if (trigReject) trigReject.checked = cfg.triggers.onReleaseRejected !== false;
+    if (trigApprove) trigApprove.checked = cfg.triggers.onReleaseApproved !== false;
+    if (trigDirect) trigDirect.checked = cfg.triggers.onDirectNotif !== false;
+    if (trigBroadcast) trigBroadcast.checked = Boolean(cfg.triggers.onBroadcastNotif);
+    if (trigPayout) trigPayout.checked = cfg.triggers.onPayoutUpdate !== false;
+  }
+
+  selProvider?.addEventListener('change', () => {
+    const val = selProvider.value;
+    if (boxWebhook) {
+      boxWebhook.style.display = (val === 'custom_webhook' || val === 'supabase_edge') ? 'block' : 'none';
+    }
+  });
+
+  btnSave?.addEventListener('click', () => {
+    const updatedCfg = {
+      enabled: chkEnabled.checked,
+      provider: selProvider?.value || 'brevo',
+      senderEmail: inputSenderEmail?.value.trim() || 'notifications@uniflowslabel.com',
+      senderName: inputSenderName?.value.trim() || 'UniFLOWs Record Label',
+      apiKey: inputApiKey?.value.trim() || '',
+      webhookUrl: inputWebhookUrl?.value.trim() || '',
+      triggers: {
+        onAccountCreated: trigAccount?.checked ?? true,
+        onReleaseRevision: trigRevision?.checked ?? true,
+        onReleaseRejected: trigReject?.checked ?? true,
+        onReleaseApproved: trigApprove?.checked ?? true,
+        onDirectNotif: trigDirect?.checked ?? true,
+        onBroadcastNotif: trigBroadcast?.checked ?? false,
+        onPayoutUpdate: trigPayout?.checked ?? true
+      }
+    };
+
+    saveEmailConfig(updatedCfg);
+    if (statusMsg) {
+      statusMsg.textContent = '✓ Đã lưu cấu hình email!';
+      statusMsg.style.color = '#16a34a';
+      setTimeout(() => { statusMsg.textContent = ''; }, 3000);
+    }
+    showNotice('✓ Đã lưu cấu hình Email Domain thành công!');
+    logAuditEvent('Cập nhật cấu hình Email Domain', `Provider: ${updatedCfg.provider} - Sender: ${updatedCfg.senderEmail} - Trạng thái: ${updatedCfg.enabled ? 'Bật' : 'Tắt'}`);
+  });
+
+  btnTest?.addEventListener('click', async () => {
+    const recipient = testRecipientInput?.value.trim();
+    if (!recipient || !recipient.includes('@')) {
+      alert('Vui lòng nhập địa chỉ email nhận thư thử nghiệm!');
+      testRecipientInput?.focus();
+      return;
+    }
+
+    const origText = btnTest.textContent;
+    btnTest.disabled = true;
+    btnTest.textContent = '⏳ Đang gửi mail...';
+
+    const res = await sendTestEmail(recipient);
+    btnTest.disabled = false;
+    btnTest.textContent = origText;
+
+    if (res.success) {
+      alert(`🎉 Gửi email thử nghiệm THÀNH CÔNG đến ${recipient}!\nVui lòng kiểm tra Hộp thư đến (hoặc mục Spam).`);
+      showNotice(`✓ Đã gửi email thử nghiệm thành công đến ${recipient}!`);
+    } else {
+      alert(`❌ Gửi email thất bại:\n${res.error || 'Vui lòng kiểm tra lại API Key và Email người gửi.'}`);
+    }
+  });
+}
+
 initAccountProvisioning();
 initShortlinksAdmin();
 initSupabaseCloudAdmin();
 initArtistNotificationDispatcher();
 initAnnouncementsQuickSave();
+initEmailConfigAdmin();
 render();
 renderShortlinksAdmin();
+
 
 
 

@@ -85,10 +85,12 @@ export async function testSupabaseConnection() {
       copyright_reports: false,
       greenlist_requests: false
     },
+    tableErrors: {},
     storage: {
       artworks: false,
       audio_masters: false
     },
+    storageErrors: {},
     errors: [],
     details: ''
   };
@@ -106,52 +108,106 @@ export async function testSupabaseConnection() {
     const testWork = async () => {
       // 1. Test ping site_settings
       const { data: sData, error: sErr } = await supabase.from('site_settings').select('id').limit(1);
-      if (sErr) report.errors.push(`site_settings: ${sErr.message}`);
-      else report.tables.site_settings = true;
+      if (sErr) {
+        report.errors.push(`site_settings: ${sErr.message}`);
+        report.tableErrors.site_settings = sErr.message;
+      } else {
+        report.tables.site_settings = true;
+      }
 
       // 2. Test articles
       const { error: artErr } = await supabase.from('articles').select('id').limit(1);
-      if (artErr) report.errors.push(`articles: ${artErr.message}`);
-      else report.tables.articles = true;
+      if (artErr) {
+        report.errors.push(`articles: ${artErr.message}`);
+        report.tableErrors.articles = artErr.message;
+      } else {
+        report.tables.articles = true;
+      }
 
       // 3. Test artists
       const { error: aErr } = await supabase.from('artists').select('id').limit(1);
-      if (aErr) report.errors.push(`artists: ${aErr.message}`);
-      else report.tables.artists = true;
+      if (aErr) {
+        report.errors.push(`artists: ${aErr.message}`);
+        report.tableErrors.artists = aErr.message;
+      } else {
+        report.tables.artists = true;
+      }
 
       // 4. Test releases
       const { error: relErr } = await supabase.from('releases').select('id').limit(1);
-      if (relErr) report.errors.push(`releases: ${relErr.message}`);
-      else report.tables.releases = true;
+      if (relErr) {
+        report.errors.push(`releases: ${relErr.message}`);
+        report.tableErrors.releases = relErr.message;
+      } else {
+        report.tables.releases = true;
+      }
 
       // 5. Test notifications
       const { error: notifErr } = await supabase.from('notifications').select('id').limit(1);
-      if (notifErr) report.errors.push(`notifications: ${notifErr.message}`);
-      else report.tables.notifications = true;
+      if (notifErr) {
+        report.errors.push(`notifications: ${notifErr.message}`);
+        report.tableErrors.notifications = notifErr.message;
+      } else {
+        report.tables.notifications = true;
+      }
 
       // 6. Test payout_requests
       const { error: payErr } = await supabase.from('payout_requests').select('id').limit(1);
-      if (payErr) report.errors.push(`payout_requests: ${payErr.message}`);
-      else report.tables.payout_requests = true;
+      if (payErr) {
+        report.errors.push(`payout_requests: ${payErr.message}`);
+        report.tableErrors.payout_requests = payErr.message;
+      } else {
+        report.tables.payout_requests = true;
+      }
 
       // 7. Test copyright_reports
       const { error: crErr } = await supabase.from('copyright_reports').select('id').limit(1);
-      if (crErr) report.errors.push(`copyright_reports: ${crErr.message}`);
-      else report.tables.copyright_reports = true;
+      if (crErr) {
+        report.errors.push(`copyright_reports: ${crErr.message}`);
+        report.tableErrors.copyright_reports = crErr.message;
+      } else {
+        report.tables.copyright_reports = true;
+      }
 
       // 8. Test greenlist_requests
       const { error: glErr } = await supabase.from('greenlist_requests').select('id').limit(1);
-      if (glErr) report.errors.push(`greenlist_requests: ${glErr.message}`);
-      else report.tables.greenlist_requests = true;
+      if (glErr) {
+        report.errors.push(`greenlist_requests: ${glErr.message}`);
+        report.tableErrors.greenlist_requests = glErr.message;
+      } else {
+        report.tables.greenlist_requests = true;
+      }
 
       // 9. Test storage
+      report.storageErrors = {};
       try {
-        const { data: bData, error: bErr } = await supabase.storage.listBuckets();
-        if (!bErr && Array.isArray(bData)) {
-          report.storage.artworks = bData.some(b => b.name === 'artworks');
-          report.storage.audio_masters = bData.some(b => b.name === 'audio-masters');
+        const { error: artErr } = await supabase.storage.from('artworks').list('', { limit: 1 });
+        if (!artErr) {
+          report.storage.artworks = true;
+        } else {
+          report.storageErrors.artworks = artErr.message;
         }
-      } catch {}
+
+        const { error: audioErr } = await supabase.storage.from('audio-masters').list('', { limit: 1 });
+        if (!audioErr) {
+          report.storage.audio_masters = true;
+        } else {
+          report.storageErrors.audio_masters = audioErr.message;
+        }
+
+        // Fallback test via listBuckets
+        if (!report.storage.artworks || !report.storage.audio_masters) {
+          const { data: bData, error: bErr } = await supabase.storage.listBuckets();
+          if (!bErr && Array.isArray(bData)) {
+            if (bData.some(b => b.name === 'artworks')) report.storage.artworks = true;
+            if (bData.some(b => b.name === 'audio-masters')) report.storage.audio_masters = true;
+          } else if (bErr && !report.storage.artworks) {
+            report.storageErrors.listBuckets = bErr.message;
+          }
+        }
+      } catch (stErr) {
+        report.storageErrors.general = stErr.message;
+      }
     };
 
     await Promise.race([testWork(), timeoutPromise]);
