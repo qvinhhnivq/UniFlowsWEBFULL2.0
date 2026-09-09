@@ -22,6 +22,7 @@ import {
   sendReleaseRejectedEmail, 
   sendReleaseApprovedEmail, 
   sendArtistNotificationEmail, 
+  sendPayoutStatusEmail, 
   sendTestEmail 
 } from './mailer.js';
 
@@ -58,6 +59,34 @@ function showNotice(msg, isError = false) {
   notice.style.color = isError ? '#991b1b' : '#166534';
   notice.style.borderColor = isError ? '#f87171' : '#86efac';
   scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Resilient artist email and profile resolver across local data, Supabase, and fallbacks
+export async function resolveArtistObj(artistId) {
+  if (!artistId) return null;
+  let artist = (data.artists || []).find(a => a.id === artistId || a.username === artistId);
+  if (!artist?.email && isSupabaseConfigured()) {
+    try {
+      const { data: dbArt } = await supabase.from('artists').select('*').or(`id.eq.${artistId},username.eq.${artistId}`).maybeSingle();
+      if (dbArt) artist = { ...(artist || {}), ...dbArt };
+    } catch {}
+  }
+  if (!artist?.email) {
+    try {
+      const acts = JSON.parse(localStorage.getItem('uniflows-artist-accounts') || '[]');
+      const acc = acts.find(x => x.id === artistId || x.username === artistId);
+      if (acc && acc.email) artist = { ...(artist || {}), ...acc };
+    } catch {}
+  }
+  if (!artist?.email) {
+    const def = (defaultData.artists || []).find(d => d.id === artistId);
+    if (def && def.email) {
+      artist = { ...(artist || {}), ...def };
+    } else {
+      artist = { ...(artist || {}), id: artistId, name: artist?.name || artistId, email: `${artistId}@uniflowslabel.com` };
+    }
+  }
+  return artist;
 }
 
 
@@ -855,17 +884,40 @@ async function loadPayoutRequests() {
       }
 
       // Send automated email for payout update if enabled
-      const artistObj = (data.artists || []).find(a => a.id === artistId);
-      if (artistObj && artistObj.email) {
-        const notifPayload = {
-          title: status === 'Đã thanh toán (Hoàn tất)' ? '💳 Yêu cầu rút tiền đã được duyệt' : '❌ Yêu cầu rút tiền bị từ chối',
-          message: status === 'Đã thanh toán (Hoàn tất)' 
-            ? `Khoản thanh toán ₫ ${amtStr} đã được chuyển khoản hoàn tất vào tài khoản ngân hàng của bạn.`
-            : `Yêu cầu rút ₫ ${amtStr} chưa được duyệt.${rejection_reason ? ' Lý do: ' + rejection_reason : ''}`,
-          type: 'payout',
-          action_url: 'portal.html?tab=payouts'
-        };
-        sendArtistNotificationEmail(artistObj, notifPayload);
+      let artistObj = await resolveArtistObj(artistId);
+
+      const payoutReq = (payoutRequests || []).find(x => x.id === payoutId) || {};
+      const payoutData = {
+        id: payoutId,
+        amount: amount || payoutReq.amount || '0',
+        bank_info: payoutReq.bank_info || {},
+        created_at: payoutReq.created_at || new Date().toISOString()
+      };
+
+      let emailNotice = '';
+      if (artistObj && artistObj.email && (status === 'Đã thanh toán (Hoàn tất)' || status === 'Từ chối thanh toán')) {
+        try {
+          const emailRes = await sendPayoutStatusEmail({
+            artist: artistObj,
+            payout: payoutData,
+            status,
+            rejectionReason: rejection_reason
+          });
+
+          if (emailRes && emailRes.success) {
+            emailNotice = ` & đã tự động gửi email thông báo tới "${artistObj.email}"`;
+          } else if (emailRes && !emailRes.disabled && !emailRes.skipped && emailRes.error) {
+            emailNotice = ` ⚠️ (Cảnh báo email: ${emailRes.error})`;
+            console.warn('Lỗi gửi email đối soát:', emailRes.error);
+          } else if (emailRes && emailRes.disabled) {
+            emailNotice = ` (Email tự động đang tắt trong Cấu hình)`;
+          }
+        } catch (eErr) {
+          console.warn('Lỗi dispatch email payout:', eErr);
+          emailNotice = ` ⚠️ (Lỗi gửi email: ${eErr.message})`;
+        }
+      } else if (!artistObj?.email) {
+        emailNotice = ` ⚠️ (Nghệ sĩ "${artistId}" chưa có địa chỉ email trong hệ thống nên không thể gửi thư)`;
       }
 
       // Update local storage
@@ -880,7 +932,7 @@ async function loadPayoutRequests() {
       } catch {}
 
       btn.disabled = false; btn.textContent = 'Lưu cập nhật';
-      showNotice(`✓ Đã cập nhật trạng thái yêu cầu rút tiền: "${status}"`);
+      showNotice(`✓ Đã cập nhật trạng thái yêu cầu rút tiền: "${status}"${emailNotice}`);
       loadPayoutRequests();
     });
   });
@@ -951,7 +1003,7 @@ async function loadAdminCopyrightReports() {
     const isRejected = st === 'Từ chối';
 
     return `
-      <div class="item-editor" data-copyright-id="${esc(req.id)}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:14px;border-radius:8px;">
+      <div class="item-editor" data-copyright-id="${esc(req.id)}" data-artist-id="${esc(req.artist_id || '')}" data-track-title="${esc(req.track_title || req.track || req.title || '')}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:14px;border-radius:8px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;">
           <div>
             <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;background:#fee2e2;color:#b91c1c;">
@@ -1015,6 +1067,8 @@ async function loadAdminCopyrightReports() {
       const card = e.target.closest('[data-copyright-id]');
       const status = card?.querySelector('.copyright-status-select')?.value;
       const admin_notes = card?.querySelector('.copyright-admin-notes')?.value.trim() || '';
+      const artistId = card?.dataset.artistId;
+      const trackTitle = card?.dataset.trackTitle || 'Tác phẩm';
 
       btn.disabled = true; btn.textContent = 'Đang lưu...';
 
@@ -1032,8 +1086,30 @@ async function loadAdminCopyrightReports() {
         }
       } catch {}
 
+      // Send automated email if artist found
+      let emailNotice = '';
+      if (artistId) {
+        try {
+          const artistObj = await resolveArtistObj(artistId);
+          if (artistObj && artistObj.email) {
+            const notifPayload = {
+              title: `[Bản quyền] Cập nhật báo cáo: "${trackTitle}" (${status})`,
+              message: `Báo cáo vi phạm bản quyền đối với bài "${trackTitle}" đã được cập nhật trạng thái: "${status}".${admin_notes ? '\n\nPhản hồi từ Ban Quản Trị: ' + admin_notes : ''}`,
+              type: 'important',
+              action_url: 'portal.html?tab=copyrights'
+            };
+            const emailRes = await sendArtistNotificationEmail(artistObj, notifPayload);
+            if (emailRes && emailRes.success) {
+              emailNotice = ` & đã gửi email tới "${artistObj.email}"`;
+            }
+          }
+        } catch (eErr) {
+          console.warn('Lỗi gửi email copyright:', eErr);
+        }
+      }
+
       btn.disabled = false; btn.textContent = 'Lưu trạng thái';
-      showNotice(`✓ Đã cập nhật trạng thái báo cáo bản quyền: "${status}"`);
+      showNotice(`✓ Đã cập nhật trạng thái báo cáo bản quyền: "${status}"${emailNotice}`);
       loadAdminCopyrightReports();
     });
   });
@@ -1087,7 +1163,7 @@ async function loadAdminGreenlistRequests() {
     const isRevoked = st === '🔴 Đã thu hồi quyền' || st === 'Đã thu hồi';
 
     return `
-      <div class="item-editor" data-greenlist-id="${esc(req.id)}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:14px;border-radius:8px;">
+      <div class="item-editor" data-greenlist-id="${esc(req.id)}" data-artist-id="${esc(req.artist_id || '')}" data-channel-name="${esc(req.channel_id || req.title || req.platform || 'Kênh')}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:14px;border-radius:8px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;">
           <div>
             <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;background:#dcfce7;color:#15803d;">
@@ -1143,6 +1219,8 @@ async function loadAdminGreenlistRequests() {
       const card = e.target.closest('[data-greenlist-id]');
       const status = card?.querySelector('.greenlist-status-select')?.value;
       const admin_notes = card?.querySelector('.greenlist-admin-notes')?.value.trim() || '';
+      const artistId = card?.dataset.artistId;
+      const channelName = card?.dataset.channelName || 'Kênh';
 
       btn.disabled = true; btn.textContent = 'Đang lưu...';
 
@@ -1160,8 +1238,30 @@ async function loadAdminGreenlistRequests() {
         }
       } catch {}
 
+      // Send automated email if artist found
+      let emailNotice = '';
+      if (artistId) {
+        try {
+          const artistObj = await resolveArtistObj(artistId);
+          if (artistObj && artistObj.email) {
+            const notifPayload = {
+              title: `[Greenlist] Cập nhật kênh: "${channelName}" (${status})`,
+              message: `Yêu cầu cấp quyền Green-list cho ${channelName} đã được cập nhật trạng thái: "${status}".${admin_notes ? '\n\nGhi chú từ A&R: ' + admin_notes : ''}`,
+              type: status.includes('cấp quyền') ? 'update' : 'important',
+              action_url: 'portal.html?tab=greenlist'
+            };
+            const emailRes = await sendArtistNotificationEmail(artistObj, notifPayload);
+            if (emailRes && emailRes.success) {
+              emailNotice = ` & đã gửi email tới "${artistObj.email}"`;
+            }
+          }
+        } catch (eErr) {
+          console.warn('Lỗi gửi email greenlist:', eErr);
+        }
+      }
+
       btn.disabled = false; btn.textContent = 'Lưu cập nhật';
-      showNotice(`✓ Đã cập nhật trạng thái Green-list: "${status}"`);
+      showNotice(`✓ Đã cập nhật trạng thái Green-list: "${status}"${emailNotice}`);
       loadAdminGreenlistRequests();
     });
   });
@@ -1757,8 +1857,37 @@ async function loadReleasesQueue() {
         );
       }
 
+      // Send automated email to artist if enabled
+      let emailNotice = '';
+      try {
+        const targetArtistObj = await resolveArtistObj(relArtistId);
+        if (targetArtistObj && targetArtistObj.email) {
+          let emailRes = null;
+          const releaseData = targetRel || { id: relId, title: relTitle, artist_id: relArtistId };
+          if (status === 'Đã phát hành') {
+            emailRes = await sendReleaseApprovedEmail(targetArtistObj, releaseData);
+          } else if (status === 'Yêu cầu chỉnh sửa' || (status && status.includes('chỉnh sửa'))) {
+            emailRes = await sendReleaseRevisionEmail(targetArtistObj, releaseData, arFeedback);
+          } else if (status === 'Từ chối duyệt' || (status && status.includes('chối'))) {
+            emailRes = await sendReleaseRejectedEmail(targetArtistObj, releaseData, arFeedback);
+          }
+
+          if (emailRes && emailRes.success) {
+            emailNotice = ` & đã tự động gửi email tới "${targetArtistObj.email}"`;
+          } else if (emailRes && !emailRes.disabled && !emailRes.skipped && emailRes.error) {
+            emailNotice = ` ⚠️ (Cảnh báo email: ${emailRes.error})`;
+          } else if (emailRes && emailRes.disabled) {
+            emailNotice = ` (Email tự động đang tắt trong Cấu hình)`;
+          }
+        } else if (!targetArtistObj?.email) {
+          emailNotice = ` ⚠️ (Nghệ sĩ "${relArtistId}" chưa có email trong hệ thống)`;
+        }
+      } catch (err) {
+        console.warn('Lỗi gửi email release:', err);
+      }
+
       btn.disabled = false; btn.textContent = 'Lưu bản phát hành';
-      showNotice('✓ Đã cập nhật bản phát hành, góp ý A&R và SmartLink thành công!');
+      showNotice(`✓ Đã cập nhật bản phát hành, góp ý A&R và SmartLink thành công!${emailNotice}`);
       loadReleasesQueue();
     });
   });
@@ -2985,40 +3114,51 @@ ARTWORK URL: ${artwork || 'N/A'}
       await logAuditEvent('Xét Duyệt Metadata Bản Phát Hành', `Bản phát hành "${rel.title}" của "${artistName}" chuyển sang trạng thái "${newStatus}".`);
       
       // Notify artist via Portal & automated Email from custom domain
-      const targetArtistObj = (data.artists || []).find(a => a.id === rel.artist_id);
-      if (newStatus === 'Đã phát hành') {
-        await sendArtistNotification(
-          rel.artist_id,
-          '💿 Bản phát hành đã được phê duyệt!',
-          `Bản phát hành "${rel.title}" đã được duyệt phân phối chính thức trên các nền tảng streaming!${newFeedback ? `\n\n💬 Góp ý từ A&R:\n"${newFeedback}"` : ''}`,
-          'release'
-        );
-        if (targetArtistObj && targetArtistObj.email) {
-          sendReleaseApprovedEmail(targetArtistObj, rel);
+      let emailNotice = '';
+      try {
+        const targetArtistObj = await resolveArtistObj(rel.artist_id);
+        if (newStatus === 'Đã phát hành') {
+          await sendArtistNotification(
+            rel.artist_id,
+            '💿 Bản phát hành đã được phê duyệt!',
+            `Bản phát hành "${rel.title}" đã được duyệt phân phối chính thức trên các nền tảng streaming!${newFeedback ? `\n\n💬 Góp ý từ A&R:\n"${newFeedback}"` : ''}`,
+            'release'
+          );
+          if (targetArtistObj && targetArtistObj.email) {
+            const res = await sendReleaseApprovedEmail(targetArtistObj, rel);
+            if (res && res.success) emailNotice = ` & đã gửi email tới "${targetArtistObj.email}"`;
+            else if (res && !res.disabled && !res.skipped && res.error) emailNotice = ` ⚠️ (Cảnh báo email: ${res.error})`;
+          }
+        } else if (newStatus === 'Yêu cầu chỉnh sửa') {
+          await sendArtistNotification(
+            rel.artist_id,
+            '⚠️ Yêu cầu chỉnh sửa bản phát hành',
+            `Bản phát hành "${rel.title}" cần chỉnh sửa theo yêu cầu của A&R:${newFeedback ? `\n\n💬 Lời nhắn từ A&R:\n"${newFeedback}"` : ' Vui lòng kiểm tra lại file Master hoặc Artwork.'}`,
+            'release'
+          );
+          if (targetArtistObj && targetArtistObj.email) {
+            const res = await sendReleaseRevisionEmail(targetArtistObj, rel, newFeedback);
+            if (res && res.success) emailNotice = ` & đã gửi email tới "${targetArtistObj.email}"`;
+            else if (res && !res.disabled && !res.skipped && res.error) emailNotice = ` ⚠️ (Cảnh báo email: ${res.error})`;
+          }
+        } else if (newStatus === 'Từ chối phát hành' || newStatus === 'Từ chối' || newStatus.includes('chối')) {
+          await sendArtistNotification(
+            rel.artist_id,
+            '❌ Bản phát hành chưa đạt tiêu chuẩn',
+            `Bản phát hành "${rel.title}" đã bị từ chối phát hành.${newFeedback ? `\n\n💬 Lý do từ A&R:\n"${newFeedback}"` : ''}`,
+            'release'
+          );
+          if (targetArtistObj && targetArtistObj.email) {
+            const res = await sendReleaseRejectedEmail(targetArtistObj, rel, newFeedback);
+            if (res && res.success) emailNotice = ` & đã gửi email tới "${targetArtistObj.email}"`;
+            else if (res && !res.disabled && !res.skipped && res.error) emailNotice = ` ⚠️ (Cảnh báo email: ${res.error})`;
+          }
         }
-      } else if (newStatus === 'Yêu cầu chỉnh sửa') {
-        await sendArtistNotification(
-          rel.artist_id,
-          '⚠️ Yêu cầu chỉnh sửa bản phát hành',
-          `Bản phát hành "${rel.title}" cần chỉnh sửa theo yêu cầu của A&R:${newFeedback ? `\n\n💬 Lời nhắn từ A&R:\n"${newFeedback}"` : ' Vui lòng kiểm tra lại file Master hoặc Artwork.'}`,
-          'release'
-        );
-        if (targetArtistObj && targetArtistObj.email) {
-          sendReleaseRevisionEmail(targetArtistObj, rel, newFeedback);
-        }
-      } else if (newStatus === 'Từ chối phát hành' || newStatus === 'Từ chối') {
-        await sendArtistNotification(
-          rel.artist_id,
-          '❌ Bản phát hành chưa đạt tiêu chuẩn',
-          `Bản phát hành "${rel.title}" đã bị từ chối phát hành.${newFeedback ? `\n\n💬 Lý do từ A&R:\n"${newFeedback}"` : ''}`,
-          'release'
-        );
-        if (targetArtistObj && targetArtistObj.email) {
-          sendReleaseRejectedEmail(targetArtistObj, rel, newFeedback);
-        }
+      } catch (err) {
+        console.warn('Lỗi gửi email modal metadata:', err);
       }
 
-      showNotice(`✓ ĐÃ CẬP NHẬT XÉT DUYỆT! Bản phát hành "${rel.title}" hiện ở trạng thái "${newStatus}".`);
+      showNotice(`✓ ĐÃ CẬP NHẬT XÉT DUYỆT! Bản phát hành "${rel.title}" hiện ở trạng thái "${newStatus}".${emailNotice}`);
 
       dialog.close();
       renderReleasesAdmin();
@@ -3698,17 +3838,23 @@ function initAccountProvisioning() {
     renderSelectedArtistEditor();
 
     // Automatically send handover email if email provided
+    let emailNotice = '';
     if (email) {
-      sendAccountHandoverEmail(artistRecord).then(res => {
-        if (res.success) {
-          showNotice(`✓ Đã cấp tài khoản và TỰ ĐỘNG GỬI EMAIL BÀN GIAO đến "${email}"!`);
-        } else if (!res.disabled && res.error) {
-          console.warn('Lỗi gửi email bàn giao:', res.error);
+      try {
+        const res = await sendAccountHandoverEmail(artistRecord);
+        if (res && res.success) {
+          emailNotice = ` và TỰ ĐỘNG GỬI EMAIL BÀN GIAO đến "${email}"!`;
+        } else if (res && !res.disabled && res.error) {
+          emailNotice = ` (⚠️ Cảnh báo gửi email: ${res.error})`;
+        } else if (res && res.disabled) {
+          emailNotice = ` (Email tự động đang tắt trong Cấu hình)`;
         }
-      });
+      } catch (err) {
+        console.warn('Lỗi gửi email bàn giao:', err);
+      }
     }
 
-    showNotice(`✓ Đã cấp tài khoản thành công cho "${name}"!`);
+    showNotice(`✓ Đã cấp tài khoản thành công cho "${name}"!${emailNotice}`);
   };
 
   const emailHandoverBtn = document.querySelector('#btn-email-handover');
@@ -4787,7 +4933,20 @@ function renderMusicSubmissionsAdmin() {
       sub.status = 'Đã ký hợp đồng';
       await saveData(data);
       await logAuditEvent('A&R Onboard Nghệ Sĩ Mới', `Đã kích hoạt tài khoản nghệ sĩ cho "${artistName}" từ hồ sơ Demo.`);
-      showNotice(`🎉 ĐÃ ONBOARD THÀNH CÔNG! Nghệ sĩ "${artistName}" đã được đưa vào hệ thống và hiển thị trên Website!`);
+
+      let emailNotice = '';
+      if (sub.email) {
+        try {
+          const res = await sendAccountHandoverEmail(newArtist);
+          if (res && res.success) {
+            emailNotice = ` & đã tự động gửi email bàn giao tài khoản đến "${sub.email}"!`;
+          }
+        } catch (eErr) {
+          console.warn('Lỗi gửi email handover onboard:', eErr);
+        }
+      }
+
+      showNotice(`🎉 ĐÃ ONBOARD THÀNH CÔNG! Nghệ sĩ "${artistName}" đã được đưa vào hệ thống và hiển thị trên Website!${emailNotice}`);
       
       selectedArtistId = newId;
       render();
@@ -5768,38 +5927,69 @@ function initArtistNotificationDispatcher() {
 
     // 4. Send automated email from custom domain if configured
     const emailCfg = getEmailConfig();
-    let emailSentCount = 0;
+    let emailStatusNote = '';
+
     if (emailCfg.enabled) {
       if (targetArtist === 'all') {
         if (emailCfg.triggers.onBroadcastNotif) {
-          (data.artists || []).forEach(a => {
-            if (a.email) {
-              sendArtistNotificationEmail(a, newNotif);
-              emailSentCount++;
+          const allArtists = [];
+          const seenIds = new Set();
+          for (const a of (data.artists || [])) {
+            if (a.id && !seenIds.has(a.id)) {
+              seenIds.add(a.id);
+              allArtists.push(a);
             }
+          }
+          for (const d of (defaultData.artists || [])) {
+            if (d.id && !seenIds.has(d.id)) {
+              seenIds.add(d.id);
+              allArtists.push(d);
+            }
+          }
+
+          const sendPromises = allArtists.map(async (art) => {
+            const resolvedArt = await resolveArtistObj(art.id);
+            if (resolvedArt && resolvedArt.email) {
+              return sendArtistNotificationEmail(resolvedArt, newNotif);
+            }
+            return { skipped: true };
           });
+
+          const results = await Promise.allSettled(sendPromises);
+          const successCount = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
+          emailStatusNote = ` & đã tự động gửi email broadcast tới ${successCount} nghệ sĩ!`;
+        } else {
+          emailStatusNote = ` (Lưu ý: Tùy chọn "Thông báo toàn thể: Gửi email broadcast hàng loạt" đang tắt trong Cấu hình Email)`;
         }
       } else {
         if (emailCfg.triggers.onDirectNotif) {
-          const targetArtistObj = (data.artists || []).find(a => a.id === targetArtist);
+          const targetArtistObj = await resolveArtistObj(targetArtist);
           if (targetArtistObj && targetArtistObj.email) {
-            sendArtistNotificationEmail(targetArtistObj, newNotif);
-            emailSentCount = 1;
+            const emailRes = await sendArtistNotificationEmail(targetArtistObj, newNotif);
+            if (emailRes && emailRes.success) {
+              emailStatusNote = ` & đã gửi email thông báo tới "${targetArtistObj.email}"!`;
+            } else if (emailRes && !emailRes.disabled && !emailRes.skipped && emailRes.error) {
+              emailStatusNote = ` ⚠️ (Lỗi gửi email: ${emailRes.error})`;
+            }
+          } else {
+            emailStatusNote = ` ⚠️ (Nghệ sĩ "${targetArtist}" chưa có địa chỉ email trong hệ thống)`;
           }
+        } else {
+          emailStatusNote = ` (Lưu ý: Tùy chọn "Thông báo riêng nghệ sĩ" đang tắt trong Cấu hình Email)`;
         }
       }
+    } else {
+      emailStatusNote = ` (Lưu ý: Tính năng gửi email tự động đang tắt trong Cấu hình Email)`;
     }
 
     await logAuditEvent('Gửi Thông Báo Nghệ Sĩ', `Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist}`);
 
     if (statusEl) {
-      statusEl.textContent = supabaseSuccess 
-        ? `✓ Đã gửi thông báo lên Supabase & Portal thành công!${emailSentCount > 0 ? ' (Đã gửi qua Email)' : ''}` 
-        : `✓ Đã gửi thông báo thành công!${emailSentCount > 0 ? ' (Đã gửi qua Email)' : ''}`;
+      statusEl.textContent = `✓ Đã gửi thông báo thành công!${emailStatusNote}`;
       statusEl.style.color = '#16a34a';
     }
 
-    showNotice(`✓ Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist} thành công!${emailSentCount > 0 ? ' (Đã gửi qua Email)' : ''}`);
+    showNotice(`✓ Đã gửi thông báo "${title}" tới ${targetArtist === 'all' ? 'tất cả nghệ sĩ' : targetArtist} thành công!${emailStatusNote}`);
 
     if (titleInput) titleInput.value = '';
     if (messageInput) messageInput.value = '';

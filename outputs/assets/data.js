@@ -38,6 +38,8 @@ export const defaultData = {
     {
       id: 'lumi',
       name: 'Lumi',
+      username: 'lumi',
+      email: 'lumi@uniflowslabel.com',
       genre: 'Dream Pop / Indie',
       image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
       bio: 'Lumi tạo nên không gian âm nhạc bay bổng với những thanh âm lơ lửng, ca từ mộng mị và sự hòa quyện tinh tế giữa giai điệu pop hiện đại và nét mộc mạc của indie pop.',
@@ -104,6 +106,8 @@ export const defaultData = {
     {
       id: '48k',
       name: '48K',
+      username: '48k',
+      email: 'producer48k@uniflowslabel.com',
       genre: 'Electronic / Future Bass',
       image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80',
       bio: 'Tập hợp các nhà sản xuất âm thanh điện tử tiên phong, mang năng lượng bùng nổ từ club đến các sân khấu lễ hội lớn với chất lượng chuẩn 48kHz lossless.',
@@ -147,6 +151,8 @@ export const defaultData = {
     {
       id: 'vule',
       name: 'Vũ Lê',
+      username: 'vule',
+      email: 'vule@uniflowslabel.com',
       genre: 'R&B / Neo-Soul',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
       bio: 'Giọng hát ấm áp kết hợp cùng hòa âm R&B hiện đại và ca từ giàu tính tự sự, tạo nên những giai điệu đêm muộn đầy cảm xúc.',
@@ -190,6 +196,8 @@ export const defaultData = {
     {
       id: 'monotone',
       name: 'Monotone',
+      username: 'monotone',
+      email: 'monotone@uniflowslabel.com',
       genre: 'Indie Rock / Alternative',
       image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
       bio: 'Âm hưởng guitar gai góc, tiếng trống dồn dập cùng tinh thần tự do phóng khoáng đại diện cho làn sóng indie rock mới tại Việt Nam.',
@@ -656,6 +664,15 @@ export async function getData() {
       merged.artists = defaultData.artists;
       merged.artist_order = defaultData.artists.map(a => a.id);
     }
+
+    // Ensure all artists have an email address for automated notifications
+    merged.artists = (merged.artists || []).map(a => {
+      if (!a.email) {
+        const match = defaultData.artists.find(d => d.id === a.id);
+        a.email = match?.email || `${a.username || a.id}@uniflowslabel.com`;
+      }
+      return a;
+    });
 
     if (articlesData && articlesData.length > 0) {
       merged.articles = articlesData.map(art => ({

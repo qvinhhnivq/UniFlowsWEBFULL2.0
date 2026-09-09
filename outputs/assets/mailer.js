@@ -1,6 +1,7 @@
 // ============================================================================
 // UNIFLOWS LABEL — EMAIL AUTOMATION ENGINE (DOMAIN CUSTOM EMAIL DISPATCHER)
-// Hỗ trợ gửi email tự động từ domain riêng qua Resend, Brevo, Supabase Edge Function hoặc Webhook
+// Hỗ trợ gửi email tự động từ domain riêng qua Brevo, Resend, Supabase Edge Function hoặc Webhook
+// Thiết kế giao diện HTML Email Brutalism / Editorial đồng bộ với Homepage UniFLOWs
 // ============================================================================
 
 import { getSupabaseUrl, getSupabaseAnonKey } from './supabase.js';
@@ -187,11 +188,15 @@ export async function sendEmail({ to, subject, html, text }) {
 }
 
 // ----------------------------------------------------------------------------
-// EMAIL TEMPLATE BUILDER: GIAO DIỆN HTML EMAIL CHUẨN UNIFLOWS BRANDING
+// EMAIL TEMPLATE BUILDER: GIAO DIỆN HTML EMAIL CHUẨN BRUTALISM / EDITORIAL HOMEPAGE
+// Đồng bộ với màu sắc, font DM Mono, logo /assets/logo.jpg và slogan MAKE THE WORLD MOVE.
 // ----------------------------------------------------------------------------
-function buildHtmlEmailLayout({ preheader, headerTitle, badgeText, badgeColor, contentHtml, actionBtnText, actionBtnUrl, footerNote }) {
-  const origin = window.location.origin;
+function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText, badgeColor, badgeBg, badgeBorder, contentHtml, actionBtnText, actionBtnUrl, footerNote }) {
+  const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
+    ? window.location.origin 
+    : 'https://uniflowslabel.com';
   const portalUrl = actionBtnUrl || `${origin}/portal.html`;
+  const logoUrl = `${origin}/assets/logo.jpg`;
 
   return `
 <!DOCTYPE html>
@@ -199,53 +204,75 @@ function buildHtmlEmailLayout({ preheader, headerTitle, badgeText, badgeColor, c
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
   <title>${headerTitle || 'UniFLOWs Label'}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#0b0f19;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1e293b;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background-color:#0b0b0b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f1f5f9;-webkit-font-smoothing:antialiased;">
   <!-- Preheader preview text -->
-  <div style="display:none;font-size:1px;color:#0b0f19;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+  <div style="display:none;font-size:1px;color:#0b0b0b;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
     ${preheader || headerTitle}
   </div>
 
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#0b0f19;padding:30px 10px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#0b0b0b;padding:36px 12px;">
     <tr>
       <td align="center">
-        <!-- Main Card Container -->
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+        <!-- Main Card Container: Brutalist Frame with Dark Editorial Surface -->
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:620px;background-color:#121212;border:1px solid #2a2a2a;box-shadow:8px 8px 0px #000000;overflow:hidden;">
           
-          <!-- Header Banner -->
+          <!-- Top Header: Logo, Brand Typography & Status Tag -->
           <tr>
-            <td style="background:#0f172a;padding:28px 32px;border-bottom:3px solid #f59e0b;text-align:left;">
+            <td style="background-color:#0d0d0d;padding:26px 32px 22px;border-bottom:2px solid #d8ff48;">
               <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td>
-                    <div style="font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#f59e0b;margin-bottom:6px;">
-                      UniFLOWs Record Label &bull; Artist Portal
-                    </div>
-                    <h1 style="margin:0;font-size:22px;color:#ffffff;font-weight:800;letter-spacing:-0.02em;">
-                      ${headerTitle}
-                    </h1>
+                  <td align="left" valign="middle">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="vertical-align:middle;padding-right:14px;">
+                          <!-- Official UniFLOWs Logo -->
+                          <img src="${logoUrl}" alt="UniFLOWs Logo" width="46" height="46" style="display:block;width:46px;height:46px;object-fit:cover;border:1px solid #333333;background:#000000;" onerror="this.style.display='none'">
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <div style="font-family:'DM Mono',Courier,monospace;font-size:18px;font-weight:900;letter-spacing:-0.5px;color:#ffffff;line-height:1.1;">
+                            UNIFLOWs
+                          </div>
+                          <div style="font-family:'DM Mono',Courier,monospace;font-size:9.5px;letter-spacing:2px;color:#d8ff48;text-transform:uppercase;margin-top:4px;font-weight:700;">
+                            RECORD LABEL &bull; ARTIST SERVICES
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                   ${badgeText ? `
-                  <td align="right" valign="top">
-                    <span style="display:inline-block;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;background-color:${badgeColor || '#2563eb'};color:#ffffff;">
+                  <td align="right" valign="middle">
+                    <span style="display:inline-block;padding:6px 13px;font-family:'DM Mono',Courier,monospace;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;background-color:${badgeBg || '#1e1e1e'};color:${badgeColor || '#d8ff48'};border:1px solid ${badgeBorder || '#d8ff48'};">
                       ${badgeText}
                     </span>
                   </td>
                   ` : ''}
                 </tr>
               </table>
+
+              <!-- Section Kicker and Headline -->
+              <div style="margin-top:20px;padding-top:16px;border-top:1px solid #222222;">
+                <div style="font-family:'DM Mono',Courier,monospace;font-size:10.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#d8ff48;margin-bottom:6px;">
+                  ${kicker || '01 / NOTIFICATION'}
+                </div>
+                <h1 style="margin:0;font-size:23px;line-height:1.25;color:#ffffff;font-weight:800;letter-spacing:-0.03em;">
+                  ${headerTitle}
+                </h1>
+              </div>
             </td>
           </tr>
 
-          <!-- Body Content -->
+          <!-- Main Body Content -->
           <tr>
-            <td style="padding:32px;font-size:14px;line-height:1.6;color:#334155;">
+            <td style="background-color:#141414;padding:32px;font-size:14.5px;line-height:1.65;color:#e2e8f0;">
               ${contentHtml}
 
               ${actionBtnText ? `
-              <div style="margin-top:28px;text-align:center;">
-                <a href="${portalUrl}" target="_blank" style="display:inline-block;padding:14px 32px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;border-radius:6px;box-shadow:0 4px 12px rgba(15,23,42,0.3);">
+              <div style="margin-top:34px;text-align:center;">
+                <a href="${portalUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:#d8ff48;color:#0b0b0b;text-decoration:none;font-family:'DM Mono',Courier,monospace;font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;border:1px solid #d8ff48;box-shadow:4px 4px 0px #000000;">
                   ${actionBtnText} &rarr;
                 </a>
               </div>
@@ -253,15 +280,15 @@ function buildHtmlEmailLayout({ preheader, headerTitle, badgeText, badgeColor, c
             </td>
           </tr>
 
-          <!-- Footer -->
+          <!-- Editorial Brutalist Footer -->
           <tr>
-            <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 32px;font-size:12px;color:#64748b;text-align:center;line-height:1.5;">
-              ${footerNote ? `<p style="margin:0 0 8px;">${footerNote}</p>` : ''}
-              <p style="margin:0;font-weight:600;color:#0f172a;">
-                UniFLOWs Label &bull; MAKE THE WORLD MOVE.
+            <td style="background-color:#0d0d0d;border-top:1px solid #242424;padding:24px 32px;font-family:'DM Mono',Courier,monospace;font-size:11px;color:#71717a;text-align:center;line-height:1.6;">
+              ${footerNote ? `<p style="margin:0 0 10px;color:#a1a1aa;font-size:11.5px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">${footerNote}</p>` : ''}
+              <p style="margin:0;font-weight:800;color:#ffffff;letter-spacing:1.5px;text-transform:uppercase;font-size:11px;">
+                UNIFLOWS LABEL &bull; MAKE THE WORLD MOVE.
               </p>
-              <p style="margin:4px 0 0;font-size:11px;color:#94a3b8;">
-                Hồ Chí Minh, Việt Nam &bull; <a href="${origin}" target="_blank" style="color:#2563eb;text-decoration:none;">uniflowslabel.com</a>
+              <p style="margin:6px 0 0;font-size:10px;color:#71717a;letter-spacing:1px;text-transform:uppercase;">
+                Independent entertainment / Vietnam &bull; <a href="${origin}" target="_blank" style="color:#d8ff48;text-decoration:none;">uniflowslabel.com</a>
               </p>
             </td>
           </tr>
@@ -283,69 +310,81 @@ export async function sendAccountHandoverEmail(artist) {
   if (!cfg.enabled || !cfg.triggers.onAccountCreated) return { skipped: true };
   if (!artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email.' };
 
-  const origin = window.location.origin;
+  const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
+    ? window.location.origin 
+    : 'https://uniflowslabel.com';
   const loginUrl = `${origin}/artist-login.html`;
-  const subject = `🎉 Chào mừng đến với UniFLOWs! Phiếu bàn giao tài khoản Artist Portal: ${artist.name}`;
+  const subject = `🎉 [UniFLOWs] Chào mừng gia nhập Label! Phiếu bàn giao tài khoản: ${artist.name}`;
 
   const contentHtml = `
-    <p style="font-size:16px;color:#0f172a;font-weight:700;margin-top:0;">
+    <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
       Xin chào ${artist.name},
     </p>
-    <p>
-      Ban quản trị <b>UniFLOWs Record Label</b> xin chúc mừng và hoan nghênh bạn chính thức gia nhập hệ sinh thái phân phối & phát triển âm nhạc của chúng tôi!
+    <p style="color:#cbd5e1;">
+      Ban quản trị <b>UniFLOWs Record Label</b> trân trọng hoan nghênh bạn chính thức gia nhập hệ sinh thái phát hành & phân phối âm nhạc độc lập của chúng tôi!
     </p>
-    <p>
-      Dưới đây là thông tin đăng nhập vào <b>Artist Portal</b> dành riêng cho bạn để quản lý các bản phát hành, tải lên file Master chất lượng cao, theo dõi thống kê streaming toàn cầu và đối soát doanh thu:
+    <p style="color:#cbd5e1;">
+      Dưới đây là thông tin định danh & mật khẩu đăng nhập vào <b>Artist Portal</b> dành riêng cho bạn để quản lý các bản phát hành, tải lên Master WAV, theo dõi số liệu streaming toàn cầu và nhận thanh toán doanh thu:
     </p>
 
     <!-- Handover Vault Card -->
-    <div style="background-color:#f1f5f9;border:2px solid #cbd5e1;border-radius:8px;padding:20px;margin:20px 0;font-family:'Courier New',Courier,monospace;">
-      <table width="100%" border="0" cellspacing="0" cellpadding="6" style="font-size:13px;color:#0f172a;">
+    <div style="background-color:#1a1a1a;border:1px solid #333333;padding:20px;margin:22px 0;font-family:'DM Mono',Courier,monospace;">
+      <div style="font-size:11px;letter-spacing:1.5px;color:#d8ff48;text-transform:uppercase;margin-bottom:14px;font-weight:800;">
+        PHIẾU BÀN GIAO TÀI KHOẢN HỆ THỐNG
+      </div>
+      <table width="100%" border="0" cellspacing="0" cellpadding="6" style="font-size:12.5px;color:#e2e8f0;">
         <tr>
-          <td width="38%" style="color:#64748b;font-weight:bold;">👤 TÊN HIỂN THỊ:</td>
-          <td><b>${artist.name}</b></td>
+          <td width="38%" style="color:#94a3b8;font-weight:bold;">👤 TÊN HIỂN THỊ:</td>
+          <td><b style="color:#ffffff;font-size:14px;">${artist.name}</b></td>
         </tr>
         <tr>
-          <td style="color:#64748b;font-weight:bold;">🔑 USERNAME:</td>
-          <td style="color:#1d4ed8;font-weight:bold;font-size:15px;">${artist.username || artist.id}</td>
+          <td style="color:#94a3b8;font-weight:bold;">🔑 USERNAME:</td>
+          <td style="color:#93c5fd;font-weight:bold;font-size:14px;">${artist.username || artist.id}</td>
         </tr>
         <tr>
-          <td style="color:#64748b;font-weight:bold;">📧 EMAIL LIÊN KẾT:</td>
-          <td>${artist.email}</td>
+          <td style="color:#94a3b8;font-weight:bold;">📧 EMAIL LIÊN KẾT:</td>
+          <td style="color:#f1f5f9;">${artist.email}</td>
         </tr>
         <tr>
-          <td style="color:#64748b;font-weight:bold;">🔒 MẬT KHẨU BAN ĐẦU:</td>
-          <td style="color:#b91c1c;font-weight:bold;font-size:15px;background:#fee2e2;padding:4px 8px;border-radius:4px;display:inline-block;">${artist.password}</td>
+          <td style="color:#94a3b8;font-weight:bold;">🔒 MẬT KHẨU BAN ĐẦU:</td>
+          <td>
+            <span style="color:#fca5a5;font-weight:bold;font-size:14px;background:#3b1114;border:1px solid #7f1d1d;padding:4px 10px;display:inline-block;">
+              ${artist.password}
+            </span>
+          </td>
         </tr>
         <tr>
-          <td style="color:#64748b;font-weight:bold;">📜 PHÂN QUYỀN / VAI TRÒ:</td>
-          <td><b>${artist.roleType || 'Nghệ sĩ Độc quyền'}</b></td>
+          <td style="color:#94a3b8;font-weight:bold;">📜 PHÂN QUYỀN:</td>
+          <td style="color:#ffffff;"><b>${artist.roleType || 'Nghệ sĩ Độc quyền'}</b></td>
         </tr>
         <tr>
-          <td style="color:#64748b;font-weight:bold;">💳 TỶ LỆ ROYALTY:</td>
-          <td>${artist.royaltyRate || '80% Master'}</td>
+          <td style="color:#94a3b8;font-weight:bold;">💳 TỶ LỆ ROYALTY:</td>
+          <td style="color:#d8ff48;font-weight:bold;">${artist.royaltyRate || '80% Master'}</td>
         </tr>
         <tr>
-          <td style="color:#64748b;font-weight:bold;">🕒 KỲ ĐỐI SOÁT:</td>
-          <td>${artist.payoutCycle || 'Hàng tháng (Monthly)'}</td>
+          <td style="color:#94a3b8;font-weight:bold;">🕒 KỲ ĐỐI SOÁT:</td>
+          <td style="color:#ffffff;">${artist.payoutCycle || 'Hàng tháng (Monthly)'}</td>
         </tr>
       </table>
     </div>
 
-    <div style="background-color:#fffbeb;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:4px;font-size:12.5px;color:#92400e;line-height:1.5;">
-      💡 <b>Lưu ý bảo mật:</b> Vui lòng đổi mật khẩu ngay trong lần đăng nhập đầu tiên tại mục <i>Cài đặt hồ sơ</i> trên Artist Portal để bảo vệ quyền riêng tư và dữ liệu doanh thu của bạn.
+    <div style="background-color:#1c1917;border-left:4px solid #d8ff48;border:1px solid #333333;padding:14px 18px;font-size:12.5px;color:#fef08a;line-height:1.5;">
+      ⚡ <b>Lưu ý bảo mật:</b> Vui lòng truy cập Portal và đổi mật khẩu trong lần đăng nhập đầu tiên tại mục <i>Cài đặt hồ sơ</i> để bảo vệ quyền riêng tư và dữ liệu đối soát của bạn.
     </div>
   `;
 
   const html = buildHtmlEmailLayout({
-    preheader: `Thông tin tài khoản Portal của bạn tại UniFLOWs: Username: ${artist.username || artist.id}`,
+    kicker: '01 / ACCOUNT HANDOVER',
+    preheader: `Thông tin tài khoản Artist Portal UniFLOWs của bạn: Username: ${artist.username || artist.id}`,
     headerTitle: 'Phiếu Bàn Giao Tài Khoản Artist Portal',
     badgeText: 'MỚI KÍCH HOẠT',
-    badgeColor: '#10b981',
+    badgeColor: '#0b0b0b',
+    badgeBg: '#d8ff48',
+    badgeBorder: '#d8ff48',
     contentHtml,
     actionBtnText: 'Đăng Nhập Artist Portal Ngay',
     actionBtnUrl: loginUrl,
-    footerNote: 'Email này chứa thông tin bảo mật tài khoản. Vui lòng không chia sẻ cho bên thứ ba.'
+    footerNote: 'Email này chứa thông tin bảo mật đăng nhập. Vui lòng không chuyển tiếp cho bên thứ ba.'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -359,45 +398,50 @@ export async function sendReleaseRevisionEmail(artist, release, feedback) {
   if (!cfg.enabled || !cfg.triggers.onReleaseRevision) return { skipped: true };
   if (!artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email.' };
 
-  const origin = window.location.origin;
+  const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
+    ? window.location.origin 
+    : 'https://uniflowslabel.com';
   const portalUrl = `${origin}/portal.html?tab=releases`;
-  const subject = `⚠️ [Yêu cầu chỉnh sửa] Bản phát hành "${release.title}" — UniFLOWs A&R Review`;
+  const subject = `⚠️ [UniFLOWs A&R] Yêu cầu chỉnh sửa bài hát "${release.title}"`;
 
   const contentHtml = `
-    <p style="font-size:16px;color:#0f172a;font-weight:700;margin-top:0;">
+    <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
       Chào ${artist.name},
     </p>
-    <p>
+    <p style="color:#cbd5e1;">
       Đội ngũ A&R và Quality Control của <b>UniFLOWs Label</b> đã hoàn tất xét duyệt bản phát hành <b>"${release.title}"</b> của bạn.
     </p>
-    <p>
-      Để đảm bảo sản phẩm đạt tiêu chuẩn phân phối quốc tế của Spotify, Apple Music và tránh bị từ chối từ DSPs, chúng tôi cần bạn hỗ trợ điều chỉnh một số chi tiết:
+    <p style="color:#cbd5e1;">
+      Để đảm bảo sản phẩm đạt tiêu chuẩn kỹ thuật phân phối quốc tế trên Spotify, Apple Music và tránh bị DSPs gỡ bỏ, chúng tôi cần bạn hỗ trợ điều chỉnh một số chi tiết sau:
     </p>
 
     <!-- Feedback Box -->
-    <div style="background-color:#fff1f2;border:1px solid #fecdd3;border-left:4px solid #e11d48;padding:16px 20px;border-radius:6px;margin:20px 0;">
-      <strong style="display:block;color:#9f1239;font-size:13px;text-transform:uppercase;margin-bottom:6px;">
+    <div style="background-color:#1c1012;border:1px solid #7f1d1d;border-left:4px solid #ef4444;padding:18px 20px;margin:22px 0;">
+      <span style="display:block;font-family:'DM Mono',Courier,monospace;color:#f87171;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;margin-bottom:6px;">
         💬 Góp ý & Lời nhắn từ Đội ngũ A&R:
-      </strong>
-      <p style="margin:0;font-size:14px;color:#881337;white-space:pre-wrap;line-height:1.6;">
-        ${feedback || 'Vui lòng kiểm tra lại file âm thanh Master (chuẩn 16/24-bit 44.1kHz WAV) hoặc ảnh Artwork đúng kích thước chuẩn tối thiểu 3000x3000px, không bị mờ và không chứa logo nền tảng khác.'}
+      </span>
+      <p style="margin:0;font-size:14px;color:#fca5a5;white-space:pre-wrap;line-height:1.6;font-weight:500;">
+        ${feedback || 'Vui lòng kiểm tra lại file âm thanh Master (chuẩn 16/24-bit 44.1kHz WAV không nén) hoặc ảnh Artwork đúng kích thước vuông tối thiểu 3000x3000px, không mờ, không chứa logo nền tảng khác.'}
       </p>
     </div>
 
-    <p style="font-size:13px;color:#64748b;">
-      Sau khi hoàn tất chỉnh sửa, vui lòng truy cập Artist Portal để tải lại file hoặc cập nhật thông tin tương ứng. Đội ngũ sẽ tiến hành duyệt lại trong vòng 24 giờ.
+    <p style="font-size:13px;color:#94a3b8;line-height:1.6;">
+      Sau khi hoàn tất chỉnh sửa, vui lòng vào Artist Portal để tải lại file hoặc cập nhật thông tin. Đội ngũ kiểm duyệt sẽ tiến hành duyệt lại trong vòng 24 giờ làm việc.
     </p>
   `;
 
   const html = buildHtmlEmailLayout({
-    preheader: `Bản phát hành "${release.title}" cần điều chỉnh theo yêu cầu của A&R`,
+    kicker: '02 / A&R REVIEW & REVISION',
+    preheader: `Bản phát hành "${release.title}" cần điều chỉnh theo yêu cầu từ A&R`,
     headerTitle: 'Yêu Cầu Chỉnh Sửa Bản Phát Hành',
     badgeText: 'CẦN CHỈNH SỬA',
-    badgeColor: '#e11d48',
+    badgeColor: '#fca5a5',
+    badgeBg: '#261214',
+    badgeBorder: '#7f1d1d',
     contentHtml,
     actionBtnText: 'Mở Portal & Cập Nhật Bài Hát',
     actionBtnUrl: portalUrl,
-    footerNote: 'Nếu bạn có thắc mắc kỹ thuật, vui lòng phản hồi trực tiếp email này hoặc liên hệ A&R team.'
+    footerNote: 'Nếu bạn có thắc mắc về tiêu chuẩn âm thanh hoặc bản quyền sample, vui lòng phản hồi email này.'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -411,42 +455,47 @@ export async function sendReleaseRejectedEmail(artist, release, reason) {
   if (!cfg.enabled || !cfg.triggers.onReleaseRejected) return { skipped: true };
   if (!artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email.' };
 
-  const origin = window.location.origin;
+  const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
+    ? window.location.origin 
+    : 'https://uniflowslabel.com';
   const portalUrl = `${origin}/portal.html?tab=releases`;
-  const subject = `❌ [Thông báo xét duyệt] Bản phát hành "${release.title}" — UniFLOWs Label`;
+  const subject = `❌ [UniFLOWs] Thông báo xét duyệt bản phát hành "${release.title}"`;
 
   const contentHtml = `
-    <p style="font-size:16px;color:#0f172a;font-weight:700;margin-top:0;">
+    <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
       Chào ${artist.name},
     </p>
-    <p>
-      Rất tiếc, sau khi kiểm duyệt kỹ thuật và chính sách bản quyền, bản phát hành <b>"${release.title}"</b> chưa thể tiếp tục quy trình phân phối thương mại trên hệ thống của UniFLOWs.
+    <p style="color:#cbd5e1;">
+      Rất tiếc, sau khi thẩm định kỹ thuật và chính sách bản quyền âm nhạc, bản phát hành <b>"${release.title}"</b> chưa đủ điều kiện để đưa vào luồng phân phối thương mại trên hệ thống của UniFLOWs.
     </p>
 
     <!-- Reason Box -->
-    <div style="background-color:#fef2f2;border:1px solid #fee2e2;border-left:4px solid #dc2626;padding:16px 20px;border-radius:6px;margin:20px 0;">
-      <strong style="display:block;color:#991b1b;font-size:13px;text-transform:uppercase;margin-bottom:6px;">
+    <div style="background-color:#1c1012;border:1px solid #7f1d1d;border-left:4px solid #ef4444;padding:18px 20px;margin:22px 0;">
+      <span style="display:block;font-family:'DM Mono',Courier,monospace;color:#f87171;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;margin-bottom:6px;">
         Lý do từ chối:
-      </strong>
-      <p style="margin:0;font-size:14px;color:#7f1d1d;white-space:pre-wrap;line-height:1.6;">
+      </span>
+      <p style="margin:0;font-size:14px;color:#fca5a5;white-space:pre-wrap;line-height:1.6;font-weight:500;">
         ${reason || 'Sản phẩm vi phạm bản quyền mẫu sample chưa được cấp phép (cleared sample), chất lượng âm thanh không đạt chuẩn thương mại hoặc thông tin tác giả/nhà sản xuất chưa được xác minh đầy đủ.'}
       </p>
     </div>
 
-    <p style="font-size:13px;color:#64748b;">
-      Bạn có thể gửi câu hỏi phản hồi hoặc tải lên bản demo khác trên Artist Portal bất cứ lúc nào.
+    <p style="font-size:13px;color:#94a3b8;line-height:1.6;">
+      Bạn luôn có thể trao đổi thêm với bộ phận A&R hoặc tải lên các bản demo mới trên Artist Portal bất cứ lúc nào.
     </p>
   `;
 
   const html = buildHtmlEmailLayout({
-    preheader: `Bản phát hành "${release.title}" chưa đạt điều kiện phát hành`,
+    kicker: '03 / RELEASE REVIEW DECISION',
+    preheader: `Bản phát hành "${release.title}" chưa đạt điều kiện phát hành thương mại`,
     headerTitle: 'Thông Báo Từ Chối Bản Phát Hành',
     badgeText: 'TỪ CHỐI',
-    badgeColor: '#dc2626',
+    badgeColor: '#fca5a5',
+    badgeBg: '#261214',
+    badgeBorder: '#7f1d1d',
     contentHtml,
     actionBtnText: 'Xem Chi Tiết Trên Portal',
     actionBtnUrl: portalUrl,
-    footerNote: 'UniFLOWs Label luôn sẵn sàng hỗ trợ bạn hoàn thiện sản phẩm ở các dự án tiếp theo.'
+    footerNote: 'UniFLOWs Label luôn sẵn sàng đồng hành và lắng nghe các sản phẩm âm nhạc tiếp theo của bạn.'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -460,36 +509,44 @@ export async function sendReleaseApprovedEmail(artist, release) {
   if (!cfg.enabled || !cfg.triggers.onReleaseApproved) return { skipped: true };
   if (!artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email.' };
 
-  const origin = window.location.origin;
+  const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
+    ? window.location.origin 
+    : 'https://uniflowslabel.com';
   const portalUrl = `${origin}/portal.html?tab=releases`;
-  const subject = `🎉 [Chúc mừng] Bản phát hành "${release.title}" đã được duyệt phân phối chính thức!`;
+  const subject = `🎉 [UniFLOWs Chúc Mừng] Bản phát hành "${release.title}" đã được duyệt phân phối toàn cầu!`;
 
   const contentHtml = `
-    <p style="font-size:16px;color:#0f172a;font-weight:700;margin-top:0;">
+    <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
       Chúc mừng ${artist.name}!
     </p>
-    <p>
+    <p style="color:#cbd5e1;">
       Bản phát hành <b>"${release.title}"</b> của bạn đã vượt qua toàn bộ các bài kiểm tra kỹ thuật và chính thức được đưa vào luồng phân phối toàn cầu của <b>UniFLOWs Label</b>!
     </p>
 
-    <div style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #16a34a;padding:16px 20px;border-radius:6px;margin:20px 0;">
-      <p style="margin:0;font-size:14px;color:#14532d;line-height:1.6;">
+    <div style="background-color:#112217;border:1px solid #14532d;border-left:4px solid #d8ff48;padding:18px 20px;margin:22px 0;font-family:'DM Mono',Courier,monospace;">
+      <div style="font-size:11px;letter-spacing:1.5px;color:#d8ff48;text-transform:uppercase;margin-bottom:10px;font-weight:800;">
+        THÔNG TIN LỊCH TRÌNH PHÁT HÀNH
+      </div>
+      <p style="margin:0;font-size:13.5px;color:#f0fdf4;line-height:1.7;">
         💿 <b>Tác phẩm:</b> ${release.title}<br>
-        📅 <b>Ngày phát hành dự kiến:</b> ${release.release_date || release.releaseDate || 'Theo lịch trình'}<br>
-        🌍 <b>Phạm vi:</b> Toàn cầu 150+ nền tảng (Spotify, Apple Music, YouTube Music, Zing MP3, v.v.)
+        📅 <b>Ngày phát hành dự kiến:</b> ${release.release_date || release.releaseDate || 'Theo lịch trình đã đăng ký'}<br>
+        🌍 <b>Phạm vi phân phối:</b> Toàn cầu 150+ nền tảng (Spotify, Apple Music, YouTube Music, Zing MP3, TikTok, v.v.)
       </p>
     </div>
 
-    <p style="font-size:13px;color:#64748b;">
-      Bạn có thể truy cập Portal để lấy Smart Link quảng bá, tạo mã QR Code hoặc theo dõi chiến dịch Pitching Playlist.
+    <p style="font-size:13px;color:#94a3b8;line-height:1.6;">
+      Bạn có thể truy cập Portal để lấy Smart Link quảng bá, tạo mã QR Code hoặc theo dõi chiến dịch Pitching Playlist cùng đội ngũ truyền thông của UniFLOWs.
     </p>
   `;
 
   const html = buildHtmlEmailLayout({
-    preheader: `Bản phát hành "${release.title}" đã được duyệt phân phối!`,
+    kicker: '04 / GLOBAL DISTRIBUTION',
+    preheader: `Bản phát hành "${release.title}" đã được duyệt phân phối chính thức!`,
     headerTitle: 'Bản Phát Hành Đã Được Phê Duyệt!',
     badgeText: 'APPROVED',
-    badgeColor: '#16a34a',
+    badgeColor: '#0b0b0b',
+    badgeBg: '#d8ff48',
+    badgeBorder: '#d8ff48',
     contentHtml,
     actionBtnText: 'Mở Smart Link & Thống Kê',
     actionBtnUrl: portalUrl
@@ -512,7 +569,9 @@ export async function sendArtistNotificationEmail(artist, notif) {
   if (!artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email.' };
 
   const subject = `📢 [UniFLOWs] ${notif.title}`;
-  const origin = window.location.origin;
+  const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
+    ? window.location.origin 
+    : 'https://uniflowslabel.com';
   const actionUrl = notif.action_url ? (notif.action_url.startsWith('http') ? notif.action_url : `${origin}/${notif.action_url}`) : `${origin}/portal.html`;
 
   const typeLabels = {
@@ -524,22 +583,25 @@ export async function sendArtistNotificationEmail(artist, notif) {
   };
 
   const contentHtml = `
-    <p style="font-size:16px;color:#0f172a;font-weight:700;margin-top:0;">
+    <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
       Chào ${artist.name || 'Nghệ sĩ'},
     </p>
-    <div style="background-color:#f8fafc;border:1px solid #e2e8f0;padding:18px 22px;border-radius:8px;margin:18px 0;">
-      <h3 style="margin:0 0 10px;font-size:16px;color:#0f172a;">${notif.title}</h3>
-      <p style="margin:0;font-size:14px;color:#334155;white-space:pre-wrap;line-height:1.6;">
+    <div style="background-color:#1a1a1a;border:1px solid #2e2e2e;padding:20px 24px;margin:20px 0;">
+      <h3 style="margin:0 0 10px;font-size:16px;color:#ffffff;letter-spacing:-0.02em;">${notif.title}</h3>
+      <p style="margin:0;font-size:14px;color:#cbd5e1;white-space:pre-wrap;line-height:1.65;">
         ${notif.message}
       </p>
     </div>
   `;
 
   const html = buildHtmlEmailLayout({
+    kicker: '05 / LABEL DISPATCH',
     preheader: notif.title,
     headerTitle: notif.title,
     badgeText: typeLabels[notif.type] || 'Thông Báo',
-    badgeColor: notif.type === 'important' ? '#dc2626' : '#2563eb',
+    badgeColor: notif.type === 'important' ? '#fca5a5' : '#0b0b0b',
+    badgeBg: notif.type === 'important' ? '#261214' : '#d8ff48',
+    badgeBorder: notif.type === 'important' ? '#7f1d1d' : '#d8ff48',
     contentHtml,
     actionBtnText: notif.action_url ? 'Xem Chi Tiết Ngay' : 'Mở Artist Portal',
     actionBtnUrl: actionUrl
@@ -549,34 +611,175 @@ export async function sendArtistNotificationEmail(artist, notif) {
 }
 
 // ----------------------------------------------------------------------------
-// 6. GỬI EMAIL THỬ NGHIỆM ĐỂ TEST CẤU HÌNH DOMAIN
+// 6. SỰ KIỆN: DUYỆT HOẶC TỪ CHỐI RÚT TIỀN (PAYOUT STATUS UPDATE) — CRITICAL FIX
+// ----------------------------------------------------------------------------
+export async function sendPayoutStatusEmail({ artist, payout, status, rejectionReason }) {
+  const cfg = getEmailConfig();
+  if (!cfg.enabled || !cfg.triggers.onPayoutUpdate) return { skipped: true };
+  if (!artist || !artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email trong hồ sơ.' };
+
+  const isRejected = status === 'Từ chối thanh toán' || status === 'Từ chối';
+  const amt = parseInt(String(payout?.amount || 0).replace(/[^0-9]/g, ''), 10) || 0;
+  const amtFormatted = `₫ ${amt.toLocaleString('vi-VN')}`;
+  const bank = payout?.bank_info || {};
+  const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
+    ? window.location.origin 
+    : 'https://uniflowslabel.com';
+  const portalUrl = `${origin}/portal.html?tab=payouts`;
+
+  const subject = isRejected 
+    ? `❌ [UniFLOWs Đối Soát] Yêu cầu rút tiền ${amtFormatted} chưa được duyệt`
+    : `💳 [UniFLOWs Xác Nhận] Khoản rút tiền ${amtFormatted} đã được chuyển khoản hoàn tất`;
+
+  let contentHtml = '';
+  if (isRejected) {
+    contentHtml = `
+      <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
+        Chào ${artist.name || 'Nghệ sĩ'},
+      </p>
+      <p style="color:#cbd5e1;line-height:1.65;">
+        Ban quản trị <b>UniFLOWs Label</b> xin thông báo yêu cầu rút tiền bản quyền / doanh thu của bạn vừa được xử lý, tuy nhiên yêu cầu này <b>chưa được duyệt giải ngân</b> trong đợt này.
+      </p>
+
+      <!-- Rejection Reason Card -->
+      <div style="background-color:#1c1012;border:1px solid #7f1d1d;border-left:4px solid #ef4444;padding:18px 20px;margin:22px 0;">
+        <span style="display:block;font-family:'DM Mono',Courier,monospace;color:#f87171;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;margin-bottom:6px;">
+          ⚠️ Lý do từ chối từ Ban Quản Trị:
+        </span>
+        <p style="margin:0;font-size:14px;color:#fca5a5;white-space:pre-wrap;line-height:1.6;font-weight:500;">
+          ${rejectionReason || 'Thông tin ngân hàng thụ hưởng chưa khớp với hồ sơ đăng ký, hoặc số dư khả dụng chưa đủ điều kiện rút theo thỏa thuận đối soát.'}
+        </p>
+      </div>
+
+      <!-- Transaction Details Table -->
+      <div style="background-color:#1a1a1a;border:1px solid #2e2e2e;padding:18px 20px;margin:22px 0;font-family:'DM Mono',Courier,monospace;">
+        <div style="font-size:10.5px;letter-spacing:1.5px;color:#d8ff48;text-transform:uppercase;margin-bottom:12px;font-weight:800;">
+          THÔNG TIN YÊU CẦU ĐỐI SOÁT
+        </div>
+        <table width="100%" border="0" cellspacing="0" cellpadding="6" style="font-size:12.5px;color:#e2e8f0;">
+          <tr>
+            <td width="38%" style="color:#94a3b8;font-weight:bold;">SỐ TIỀN YÊU CẦU:</td>
+            <td><strong style="color:#ffffff;font-size:15px;">${amtFormatted}</strong></td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">NGÂN HÀNG:</td>
+            <td><b>${bank.bank || 'Mặc định hồ sơ'}</b></td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">SỐ TÀI KHOẢN:</td>
+            <td style="color:#93c5fd;">${bank.accountNumber || '—'}</td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">CHỦ TÀI KHOẢN:</td>
+            <td style="text-transform:uppercase;">${bank.accountName || artist.name}</td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">TRẠNG THÁI:</td>
+            <td><span style="color:#ef4444;font-weight:bold;">TỪ CHỐI THANH TOÁN</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="font-size:13px;color:#94a3b8;line-height:1.6;">
+        Số dư của bạn đã được hoàn trả lại ví khả dụng trên hệ thống. Bạn có thể kiểm tra lại thông tin ngân hàng trong mục <i>Cài đặt hồ sơ</i> trên Artist Portal và gửi lại yêu cầu rút tiền bất cứ lúc nào.
+      </p>
+    `;
+  } else {
+    contentHtml = `
+      <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
+        Chào ${artist.name || 'Nghệ sĩ'},
+      </p>
+      <p style="color:#cbd5e1;line-height:1.65;">
+        Ban quản trị <b>UniFLOWs Record Label</b> xin thông báo khoản yêu cầu rút tiền của bạn đã được phê duyệt và <b>chuyển khoản hoàn tất</b> vào tài khoản ngân hàng thụ hưởng!
+      </p>
+
+      <!-- Transaction Details Table -->
+      <div style="background-color:#1a1a1a;border:1px solid #2e2e2e;padding:18px 20px;margin:22px 0;font-family:'DM Mono',Courier,monospace;">
+        <div style="font-size:10.5px;letter-spacing:1.5px;color:#d8ff48;text-transform:uppercase;margin-bottom:12px;font-weight:800;">
+          BIÊN NHẬN GIẢI NGÂN DOANH THU
+        </div>
+        <table width="100%" border="0" cellspacing="0" cellpadding="6" style="font-size:12.5px;color:#e2e8f0;">
+          <tr>
+            <td width="38%" style="color:#94a3b8;font-weight:bold;">SỐ TIỀN GIẢI NGÂN:</td>
+            <td><strong style="color:#d8ff48;font-size:16px;">${amtFormatted}</strong></td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">NGÂN HÀNG THỤ HƯỞNG:</td>
+            <td><b>${bank.bank || 'Mặc định hồ sơ'}</b></td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">SỐ TÀI KHOẢN:</td>
+            <td style="color:#93c5fd;">${bank.accountNumber || '—'}</td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">CHỦ TÀI KHOẢN:</td>
+            <td style="text-transform:uppercase;">${bank.accountName || artist.name}</td>
+          </tr>
+          <tr>
+            <td style="color:#94a3b8;font-weight:bold;">TRẠNG THÁI:</td>
+            <td><span style="color:#d8ff48;font-weight:bold;">ĐÃ THANH TOÁN (HOÀN TẤT)</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="font-size:13px;color:#94a3b8;line-height:1.6;">
+        Tùy theo hệ thống liên ngân hàng Napas, tiền sẽ được ghi có vào tài khoản của bạn trong vòng vài phút đến tối đa 24 giờ làm việc. Cảm ơn bạn đã luôn sáng tạo và đồng hành cùng UniFLOWs!
+      </p>
+    `;
+  }
+
+  const html = buildHtmlEmailLayout({
+    kicker: '06 / FINANCES & PAYOUT',
+    preheader: isRejected 
+      ? `Yêu cầu rút tiền ${amtFormatted} chưa được duyệt: ${rejectionReason || 'Vui lòng kiểm tra lại'}`
+      : `Khoản thanh toán ${amtFormatted} đã được giải ngân thành công`,
+    headerTitle: isRejected ? 'Yêu Cầu Rút Tiền Bị Từ Chối' : 'Xác Nhận Giải Ngân Doanh Thu',
+    badgeText: isRejected ? 'TỪ CHỐI THANH TOÁN' : 'ĐÃ THANH TOÁN',
+    badgeColor: isRejected ? '#fca5a5' : '#0b0b0b',
+    badgeBg: isRejected ? '#261214' : '#d8ff48',
+    badgeBorder: isRejected ? '#7f1d1d' : '#d8ff48',
+    contentHtml,
+    actionBtnText: 'Mở Artist Portal & Đối Soát',
+    actionBtnUrl: portalUrl,
+    footerNote: 'Nếu có bất kỳ thắc mắc nào về đối soát số dư, vui lòng phản hồi trực tiếp email này để bộ phận Tài chính hỗ trợ.'
+  });
+
+  return await sendEmail({ to: artist.email, subject, html });
+}
+
+// ----------------------------------------------------------------------------
+// 7. GỬI EMAIL THỬ NGHIỆM ĐỂ TEST CẤU HÌNH DOMAIN
 // ----------------------------------------------------------------------------
 export async function sendTestEmail(toEmail) {
   const cfg = getEmailConfig();
   const subject = `🧪 [UniFLOWs Test] Kiểm tra kết nối Email Domain: ${cfg.senderEmail}`;
 
   const contentHtml = `
-    <p style="font-size:16px;color:#0f172a;font-weight:700;margin-top:0;">
+    <p style="font-size:16px;color:#ffffff;font-weight:700;margin-top:0;">
       Xin chúc mừng! Hệ thống Email Domain của bạn đã hoạt động hoàn hảo.
     </p>
-    <p>
+    <p style="color:#cbd5e1;line-height:1.65;">
       Email này được gửi tự động từ địa chỉ <b>${cfg.senderEmail}</b> thông qua nhà cung cấp <b>${cfg.provider.toUpperCase()}</b>.
     </p>
-    <div style="background:#f0fdf4;border:1px solid #86efac;padding:14px;border-radius:6px;font-size:13px;color:#166534;margin:15px 0;">
-      ✓ Kết nối API thành công.<br>
+    <div style="background:#112217;border:1px solid #14532d;border-left:4px solid #d8ff48;padding:16px 20px;font-size:13px;color:#bbf7d0;margin:20px 0;line-height:1.7;font-family:'DM Mono',Courier,monospace;">
+      ✓ Kết nối API nhà cung cấp thành công.<br>
       ✓ Tên miền người gửi đã được xác thực.<br>
-      ✓ Sẵn sàng tự động gửi thư bàn giao tài khoản và thông báo bài hát.
+      ✓ Logo và layout Brutalism Homepage đã đồng bộ.<br>
+      ✓ Hệ thống sẵn sàng tự động gửi thư bàn giao, xét duyệt bài hát và đối soát rút tiền.
     </div>
   `;
 
   const html = buildHtmlEmailLayout({
+    kicker: '07 / SYSTEM VERIFICATION',
     preheader: 'Thử nghiệm kết nối Email Domain UniFLOWs thành công!',
     headerTitle: 'Kiểm Tra Kết Nối Email Domain',
     badgeText: 'TEST PASS',
-    badgeColor: '#10b981',
+    badgeColor: '#0b0b0b',
+    badgeBg: '#d8ff48',
+    badgeBorder: '#d8ff48',
     contentHtml,
     actionBtnText: 'Truy cập Admin Dashboard',
-    actionBtnUrl: `${window.location.origin}/admin.html`
+    actionBtnUrl: `${(typeof window !== 'undefined' && window.location.origin) ? window.location.origin : ''}/admin.html`
   });
 
   return await sendEmail({ to: toEmail, subject, html, text: 'Email thử nghiệm kết nối UniFLOWs thành công!' });
