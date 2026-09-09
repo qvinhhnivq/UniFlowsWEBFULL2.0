@@ -2619,7 +2619,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Logout handler
-const doAdminLogout = async () => {
+document.querySelector('#logout')?.addEventListener('click', async () => {
   if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi trang Quản trị?')) {
     if (isSupabaseConfigured()) {
       try { await supabase.auth.signOut(); } catch {}
@@ -2630,9 +2630,7 @@ const doAdminLogout = async () => {
     localStorage.removeItem('uniflows-user-email');
     location.href = 'login';
   }
-};
-document.querySelector('#logout')?.addEventListener('click', doAdminLogout);
-document.querySelector('#admin-top-logout')?.addEventListener('click', doAdminLogout);
+});
 
 // ==========================================
 // ARTIST NOTIFICATION DISPATCHER
