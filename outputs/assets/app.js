@@ -89,7 +89,13 @@ const navLinks = getNavLinks();
 if (!$('.nav')) {
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="nav">
-      <a href="${navLinks.home}" class="brand">UNIFLOWs<small>label / est. 2024</small></a>
+      <a href="${navLinks.home}" class="brand">
+        <img src="/assets/logo.jpg" alt="UniFLOWs Logo" class="brand-logo-img">
+        <div class="brand-text">
+          <span class="brand-name">UNIFLOWs</span>
+          <small>label / est. 2024</small>
+        </div>
+      </a>
       <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
       <nav class="nav-links">
         <a href="${navLinks.artists}" data-i18n="nav_artists">Nghệ sĩ</a>
