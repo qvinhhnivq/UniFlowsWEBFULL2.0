@@ -173,11 +173,11 @@ export function parseCSV(text) {
     const gCur  = iGrossC !==-1 ? parseRawNumber(cells[iGrossC]) : 0;
     const nCur  = iNetC   !==-1 ? parseRawNumber(cells[iNetC])   : 0;
 
-    if (gVnd  > 0) revenue = gVnd;
+    if (nPay  > 0) revenue = nPay;
     else if (nVnd  > 0) revenue = nVnd;
-    else if (nPay  > 0) revenue = nPay;
-    else if (gCur  > 0 && exRate > 0) revenue = gCur * exRate;
+    else if (gVnd  > 0) revenue = gVnd;
     else if (nCur  > 0 && exRate > 0) revenue = nCur * exRate;
+    else if (gCur  > 0 && exRate > 0) revenue = gCur * exRate;
 
     records.push({ artist, track, dsp, rawDsp:rawSrc, subSource:subSrc, configuration:config, streams, revenue, currency:'VND', isrc, territory, saleDate:date });
   }
