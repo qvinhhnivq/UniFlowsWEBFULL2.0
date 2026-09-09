@@ -1585,11 +1585,19 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
     submitPayoutBtn.textContent = 'Đang gửi...';
   }
 
+  const artistEmail = artist?.email || sessionEmail || '';
+  const bankInfoPayload = {
+    bank,
+    accountNumber,
+    accountName,
+    email: artistEmail
+  };
+
   const newPayoutItem = {
     id: 'payout-' + Date.now(),
     artist_id: currentArtistId,
     amount: String(amountVal),
-    bank_info: { bank, accountNumber, accountName },
+    bank_info: bankInfoPayload,
     status: 'Đang chờ xem xét',
     rejection_reason: '',
     created_at: new Date().toISOString()
@@ -1600,7 +1608,7 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
       const { data: inserted, error } = await supabase.from('payout_requests').insert({
         artist_id: currentArtistId,
         amount: String(amountVal),
-        bank_info: { bank, accountNumber, accountName },
+        bank_info: bankInfoPayload,
         status: 'Đang chờ xem xét',
         rejection_reason: ''
       }).select().single();

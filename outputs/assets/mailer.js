@@ -62,6 +62,31 @@ export async function sendEmail({ to, subject, html, text }) {
     return { success: false, error: 'Địa chỉ email người nhận không hợp lệ.' };
   }
 
+  // Tự động chuyển HTML sang plain-text nếu text không được truyền
+  function htmlToPlainText(raw) {
+    if (!raw) return '';
+    return raw
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&bull;/g, '•')
+      .replace(/&rarr;/g, '->')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  let plainText = (typeof text === 'string' && text.trim().length > 0)
+    ? text.trim()
+    : htmlToPlainText(html);
+
+  if (!plainText) {
+    plainText = subject || 'UniFLOWs Record Label Notification';
+  }
+
   const sender = `${cfg.senderName || 'UniFLOWs Label'} <${cfg.senderEmail}>`;
 
   // 1. Gửi qua Brevo (Sendinblue) API v3 (Khuyên dùng - hoạt động trực tiếp trên Browser không bị CORS)
@@ -84,7 +109,7 @@ export async function sendEmail({ to, subject, html, text }) {
           to: [{ email: to.trim() }],
           subject,
           htmlContent: html,
-          textContent: text || ''
+          textContent: plainText
         })
       });
 
@@ -115,7 +140,7 @@ export async function sendEmail({ to, subject, html, text }) {
           to: [to.trim()],
           subject,
           html,
-          text: text || ''
+          text: plainText
         })
       });
 
@@ -148,7 +173,7 @@ export async function sendEmail({ to, subject, html, text }) {
           to: to.trim(),
           subject,
           html,
-          text: text || ''
+          text: plainText
         })
       });
 
@@ -171,7 +196,7 @@ export async function sendEmail({ to, subject, html, text }) {
       const res = await fetch(cfg.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: sender, to: to.trim(), subject, html, text })
+        body: JSON.stringify({ from: sender, to: to.trim(), subject, html, text: plainText })
       });
 
       if (res.ok) {

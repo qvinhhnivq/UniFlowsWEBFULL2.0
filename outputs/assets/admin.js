@@ -774,6 +774,9 @@ async function loadPayoutRequests() {
     const artistName = req.artists?.name || data.artists.find(a => a.id === req.artist_id)?.name || req.artist_id || 'Nghệ sĩ';
     const dateStr = req.created_at ? new Date(req.created_at).toLocaleString('vi-VN') : 'Mới';
 
+    const matchedArtist = (data.artists || []).find(a => a.id === req.artist_id || a.username === req.artist_id);
+    const resolvedEmail = bank.email || matchedArtist?.email || '';
+
     return `
       <div class="item-editor" data-payout-id="${esc(req.id)}" data-artist-id="${esc(req.artist_id)}" data-payout-amount="${esc(req.amount)}" style="background:#fff;border:1px solid var(--ink);padding:18px;margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;">
@@ -803,6 +806,12 @@ async function loadPayoutRequests() {
             <span style="font-size:11px;opacity:0.6;text-transform:uppercase;display:block;">Tên chủ tài khoản:</span>
             <b style="text-transform:uppercase;">${esc(bank.accountName || '')}</b>
           </div>
+        </div>
+
+        <div style="margin:8px 0 14px;padding:10px 12px;background:#f8fafc;border:1px dashed #cbd5e1;display:flex;align-items:center;gap:10px;font-size:12px;">
+          <span style="font-weight:bold;color:#334155;white-space:nowrap;">📧 Email nhận thông báo:</span>
+          <input class="payout-artist-email-input" type="email" value="${esc(resolvedEmail)}" placeholder="Nhập email nghệ sĩ hoặc email test của bạn..." style="flex:1;padding:6px 10px;border:1px solid #cbd5e1;font-size:12px;background:#fff;font-family:monospace;">
+          <span style="color:#64748b;font-size:11px;">(Sẽ gửi thư xác nhận / từ chối tới email này)</span>
         </div>
 
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;">
@@ -849,6 +858,7 @@ async function loadPayoutRequests() {
       const rejection_reason = card?.querySelector('.payout-rejection-input')?.value.trim() || '';
       const artistId = card?.dataset.artistId;
       const amount = card?.dataset.payoutAmount;
+      const targetEmail = card?.querySelector('.payout-artist-email-input')?.value.trim() || '';
 
       btn.disabled = true; btn.textContent = 'Đang lưu...';
 
@@ -884,7 +894,10 @@ async function loadPayoutRequests() {
       }
 
       // Send automated email for payout update if enabled
-      let artistObj = await resolveArtistObj(artistId);
+      let artistObj = await resolveArtistObj(artistId) || {};
+      if (targetEmail) {
+        artistObj.email = targetEmail;
+      }
 
       const payoutReq = (payoutRequests || []).find(x => x.id === payoutId) || {};
       const payoutData = {
@@ -905,16 +918,18 @@ async function loadPayoutRequests() {
           });
 
           if (emailRes && emailRes.success) {
-            emailNotice = ` & đã tự động gửi email thông báo tới "${artistObj.email}"`;
+            emailNotice = ` & đã tự động gửi email thông báo tới "${artistObj.email}"!`;
           } else if (emailRes && !emailRes.disabled && !emailRes.skipped && emailRes.error) {
             emailNotice = ` ⚠️ (Cảnh báo email: ${emailRes.error})`;
             console.warn('Lỗi gửi email đối soát:', emailRes.error);
+            alert(`Cập nhật trạng thái thành công, NHƯNG không thể gửi email tới ${artistObj.email}: ${emailRes.error}`);
           } else if (emailRes && emailRes.disabled) {
             emailNotice = ` (Email tự động đang tắt trong Cấu hình)`;
           }
         } catch (eErr) {
           console.warn('Lỗi dispatch email payout:', eErr);
           emailNotice = ` ⚠️ (Lỗi gửi email: ${eErr.message})`;
+          alert(`Lỗi hệ thống khi gửi email: ${eErr.message}`);
         }
       } else if (!artistObj?.email) {
         emailNotice = ` ⚠️ (Nghệ sĩ "${artistId}" chưa có địa chỉ email trong hệ thống nên không thể gửi thư)`;
@@ -927,6 +942,10 @@ async function loadPayoutRequests() {
         if (idx >= 0) {
           cached[idx].status = status;
           cached[idx].rejection_reason = rejection_reason;
+          if (targetEmail) {
+            cached[idx].bank_info = cached[idx].bank_info || {};
+            cached[idx].bank_info.email = targetEmail;
+          }
           localStorage.setItem('uniflows-payouts', JSON.stringify(cached));
         }
       } catch {}
