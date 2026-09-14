@@ -23,7 +23,8 @@ import {
   sendReleaseApprovedEmail, 
   sendArtistNotificationEmail, 
   sendPayoutStatusEmail, 
-  sendTestEmail 
+  sendTestEmail,
+  sendBroadcastEmail 
 } from './mailer.js';
 import { compressImageFile, batchCompressImages, uploadImageSmart, formatBytes } from './image-optimizer.js';
 
@@ -135,12 +136,25 @@ function switchAdminTab(tabId) {
   if (tabId === 'admin-tab-distribution') {
     renderDistributionTab();
   }
+  if (tabId === 'admin-tab-requests') {
+    renderSpecialRequestsAdmin();
+  }
+
+  // Sync mobile select
+  const mobileSelect = document.querySelector('#admin-mobile-tab-select');
+  if (mobileSelect && mobileSelect.value !== tabId) {
+    mobileSelect.value = tabId;
+  }
 }
 
 document.querySelectorAll('#admin-tabs .admin-tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     switchAdminTab(btn.dataset.tab);
   });
+});
+
+document.querySelector('#admin-mobile-tab-select')?.addEventListener('change', (e) => {
+  switchAdminTab(e.target.value);
 });
 
 // Royalty Statement Dialog Close & Print Handlers
@@ -1705,6 +1719,40 @@ async function loadReleasesQueue() {
             <textarea class="rel-ar-feedback" rows="2" placeholder="Ví dụ: [01:15] Đoạn điệp khúc vocal cần mix sáng hơn. [02:30] Giảm bass outro để tránh vỡ tiếng..." style="background:#1e293b;border:1px solid #334155;color:#f8fafc;padding:8px;font-size:12px;border-radius:4px;">${esc(meta.arFeedback || '')}</textarea>
           </div>
         </div>
+
+        <!-- 01B: MULTI-TRACK EP / ALBUM TRACKLIST INSPECTOR -->
+        ${(() => {
+          const tracklist = r.tracklist || meta.tracklist || [];
+          if (!Array.isArray(tracklist) || tracklist.length <= 1) return '';
+          return `
+            <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:14px;margin:12px 0;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+                <strong style="font-size:12.5px;color:#0f172a;text-transform:uppercase;">
+                  💿 Danh Sách Track Trong Album (${tracklist.length} Bài Hát)
+                </strong>
+                <span style="font-size:11px;background:#0f172a;color:#fff;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;">
+                  ${esc(r.type || 'EP / Album')}
+                </span>
+              </div>
+              <div style="display:grid;gap:8px;">
+                ${tracklist.map((t, tIdx) => `
+                  <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid #e2e8f0;padding:8px 12px;border-radius:6px;flex-wrap:wrap;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:220px;">
+                      <b style="font-family:'DM Mono',monospace;font-size:11px;color:#64748b;">#${String(t.trackNum || tIdx + 1).padStart(2, '0')}</b>
+                      <strong style="font-size:13px;color:#0f172a;">${esc(t.title || 'Track ' + (tIdx + 1))}</strong>
+                      ${t.featuredArtist ? `<small style="color:#64748b;">(feat. ${esc(t.featuredArtist)})</small>` : ''}
+                      ${t.explicit ? '<span style="font-size:9.5px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:1px 4px;border-radius:3px;font-weight:bold;">[E]</span>' : ''}
+                      ${t.isrc ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:#0284c7;background:#f0f9ff;padding:1px 5px;border-radius:3px;">ISRC: ${esc(t.isrc)}</span>` : ''}
+                    </div>
+                    <div>
+                      ${t.audioUrl ? `<audio controls src="${esc(t.audioUrl)}" style="height:28px;max-width:240px;"></audio>` : '<small style="color:#94a3b8;font-size:11px;">Chưa có audio</small>'}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        })()}
 
         <!-- Direct Artwork URL & Audio Controls (Upload OR Paste Link) -->
         <div class="mini-grid" style="margin:12px 0;">
@@ -7095,6 +7143,668 @@ initQuickReleaseAdmin();
 initImageOptimizerAdmin();
 render();
 renderShortlinksAdmin();
+
+// ====================================================
+// 1. ADMIN NOTIFICATION CENTER (Live alerts from Artists)
+// ====================================================
+async function getAdminNotifications() {
+  let list = [];
+  try {
+    const raw = localStorage.getItem('uniflows-admin-notifications');
+    if (raw) list = JSON.parse(raw);
+  } catch (e) {
+    console.warn('Lỗi đọc local admin notifications:', e);
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('admin_notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const sbList = data.map(row => ({
+          id: row.id,
+          type: row.type || 'general',
+          title: row.title || '',
+          message: row.message || '',
+          artistId: row.artist_id || '',
+          artistName: row.artist_name || 'Nghệ sĩ',
+          artistAvatar: row.artist_avatar || '',
+          targetTab: row.target_tab || 'admin-tab-overview',
+          details: row.details || {},
+          isRead: row.is_read ?? false,
+          createdAt: row.created_at || new Date().toISOString()
+        }));
+
+        const idMap = new Map();
+        sbList.forEach(n => idMap.set(n.id, n));
+        list.forEach(n => {
+          if (!idMap.has(n.id)) idMap.set(n.id, n);
+        });
+        list = Array.from(idMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        try {
+          localStorage.setItem('uniflows-admin-notifications', JSON.stringify(list));
+        } catch (_) {}
+      }
+    } catch (e) {
+      console.warn('Lỗi fetch admin notifications từ Supabase:', e);
+    }
+  }
+
+  return list;
+}
+
+function updateAdminNotificationBadge(count) {
+  const badge = document.querySelector('#admin-notif-badge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function renderAdminNotificationsFlyout() {
+  const notifs = await getAdminNotifications();
+  const unreadCount = notifs.filter(n => !n.isRead).length;
+  updateAdminNotificationBadge(unreadCount);
+
+  const listEl = document.querySelector('#admin-notif-list');
+  if (!listEl) return;
+
+  if (notifs.length === 0) {
+    listEl.innerHTML = `
+      <div style="padding:24px 16px;text-align:center;color:#64748b;font-size:12px;">
+        <div style="font-size:24px;margin-bottom:6px;">📭</div>
+        Không có thông báo mới nào từ nghệ sĩ.
+      </div>`;
+    return;
+  }
+
+  const typeIcons = {
+    release: '🎵',
+    photo_update: '📸',
+    payout: '💰',
+    takedown: '🗑️',
+    catalog_transfer: '📦',
+    migration: '🚚',
+    copyright_claim: '🛡️',
+    general: '🔔'
+  };
+
+  listEl.innerHTML = notifs.map(n => {
+    const icon = typeIcons[n.type] || '🔔';
+    const timeStr = n.createdAt ? new Date(n.createdAt).toLocaleDateString('vi-VN', {
+      hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit'
+    }) : '';
+    const unreadStyle = !n.isRead ? 'background:#f0fdf4;border-left:3px solid #10b981;' : 'border-left:3px solid transparent;opacity:0.85;';
+
+    return `
+      <div class="admin-notif-item" data-notif-id="${n.id}" data-target-tab="${n.targetTab || ''}" style="padding:10px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:background 0.15s;${unreadStyle}">
+        <span style="font-size:18px;line-height:1;margin-top:2px;">${icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:2px;">
+            <strong style="font-size:12px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.artistName || 'Nghệ sĩ'}</strong>
+            <span style="font-size:10px;color:#94a3b8;flex-shrink:0;">${timeStr}</span>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#1e293b;line-height:1.3;margin-bottom:3px;">${n.title || ''}</div>
+          <div style="font-size:11px;color:#64748b;line-height:1.4;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${n.message || ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('.admin-notif-item').forEach(item => {
+    item.addEventListener('click', async () => {
+      const notifId = item.dataset.notifId;
+      const targetTab = item.dataset.targetTab;
+
+      try {
+        const raw = localStorage.getItem('uniflows-admin-notifications');
+        const list = raw ? JSON.parse(raw) : [];
+        const found = list.find(x => x.id === notifId);
+        if (found) {
+          found.isRead = true;
+          localStorage.setItem('uniflows-admin-notifications', JSON.stringify(list));
+        }
+      } catch (_) {}
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('admin_notifications').update({ is_read: true }).eq('id', notifId);
+        } catch (_) {}
+      }
+
+      const flyout = document.querySelector('#admin-notif-flyout');
+      if (flyout) flyout.style.display = 'none';
+
+      if (targetTab) {
+        switchAdminTab(targetTab);
+      }
+
+      renderAdminNotificationsFlyout();
+    });
+  });
+}
+
+function initAdminNotificationCenter() {
+  const notifBtn = document.querySelector('#admin-notif-btn');
+  const flyout = document.querySelector('#admin-notif-flyout');
+  const markReadBtn = document.querySelector('#admin-notif-mark-read-btn');
+
+  notifBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!flyout) return;
+    const isClosed = flyout.style.display === 'none' || !flyout.style.display;
+    flyout.style.display = isClosed ? 'block' : 'none';
+    if (isClosed) {
+      renderAdminNotificationsFlyout();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (flyout && flyout.style.display === 'block' && !flyout.contains(e.target) && e.target !== notifBtn) {
+      flyout.style.display = 'none';
+    }
+  });
+
+  markReadBtn?.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    try {
+      const raw = localStorage.getItem('uniflows-admin-notifications');
+      const list = raw ? JSON.parse(raw) : [];
+      list.forEach(n => { n.isRead = true; });
+      localStorage.setItem('uniflows-admin-notifications', JSON.stringify(list));
+    } catch (_) {}
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('admin_notifications').update({ is_read: true }).neq('id', '');
+      } catch (_) {}
+    }
+
+    renderAdminNotificationsFlyout();
+  });
+
+  renderAdminNotificationsFlyout();
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'uniflows-admin-notifications') {
+      renderAdminNotificationsFlyout();
+    }
+  });
+
+  setInterval(() => {
+    renderAdminNotificationsFlyout();
+  }, 20000);
+}
+
+// ====================================================
+// 2. SPECIAL REQUESTS ADMIN (Takedown, Catalog, etc.)
+// ====================================================
+let currentReqFilter = 'all';
+
+async function getSpecialRequests() {
+  let list = [];
+  try {
+    const raw = localStorage.getItem('uniflows-special-requests');
+    if (raw) list = JSON.parse(raw);
+  } catch (e) {
+    console.warn('Lỗi đọc local special requests:', e);
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('special_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const sbList = data.map(row => ({
+          id: row.id,
+          type: row.type,
+          title: row.title || '',
+          artistId: row.artist_id || '',
+          artistName: row.artist_name || 'Nghệ sĩ',
+          artistEmail: row.artist_email || '',
+          artistAvatar: row.artist_avatar || '',
+          details: row.details || {},
+          status: row.status || 'pending',
+          adminNote: row.admin_note || '',
+          createdAt: row.created_at || new Date().toISOString(),
+          updatedAt: row.updated_at || new Date().toISOString()
+        }));
+
+        const idMap = new Map();
+        sbList.forEach(r => idMap.set(r.id, r));
+        list.forEach(r => {
+          if (!idMap.has(r.id)) idMap.set(r.id, r);
+        });
+        list = Array.from(idMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        try {
+          localStorage.setItem('uniflows-special-requests', JSON.stringify(list));
+        } catch (_) {}
+      }
+    } catch (e) {
+      console.warn('Lỗi fetch special requests từ Supabase:', e);
+    }
+  }
+
+  return list;
+}
+
+async function updateSpecialRequestStatus(reqId, newStatus, adminNote = '') {
+  let list = [];
+  try {
+    const raw = localStorage.getItem('uniflows-special-requests');
+    if (raw) list = JSON.parse(raw);
+    const target = list.find(r => r.id === reqId);
+    if (target) {
+      target.status = newStatus;
+      if (adminNote) target.adminNote = adminNote;
+      target.updatedAt = new Date().toISOString();
+      localStorage.setItem('uniflows-special-requests', JSON.stringify(list));
+    }
+  } catch (e) {
+    console.warn('Lỗi cập nhật local special request:', e);
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('special_requests').update({
+        status: newStatus,
+        admin_note: adminNote,
+        updated_at: new Date().toISOString()
+      }).eq('id', reqId);
+    } catch (e) {
+      console.warn('Lỗi cập nhật special request Supabase:', e);
+    }
+  }
+
+  renderSpecialRequestsAdmin(currentReqFilter);
+}
+
+async function deleteSpecialRequest(reqId) {
+  if (!confirm('Bạn có chắc chắn muốn xoá yêu cầu này khỏi hệ thống?')) return;
+
+  try {
+    const raw = localStorage.getItem('uniflows-special-requests');
+    if (raw) {
+      const list = JSON.parse(raw).filter(r => r.id !== reqId);
+      localStorage.setItem('uniflows-special-requests', JSON.stringify(list));
+    }
+  } catch (_) {}
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('special_requests').delete().eq('id', reqId);
+    } catch (_) {}
+  }
+
+  renderSpecialRequestsAdmin(currentReqFilter);
+}
+
+async function renderSpecialRequestsAdmin(filter = currentReqFilter) {
+  currentReqFilter = filter;
+
+  // Update filter buttons active status
+  document.querySelectorAll('.req-filter-btn').forEach(btn => {
+    if (btn.dataset.reqFilter === filter) {
+      btn.classList.add('active');
+      btn.classList.remove('alt');
+    } else {
+      btn.classList.remove('active');
+      btn.classList.add('alt');
+    }
+  });
+
+  const listEl = document.querySelector('#special-requests-list');
+  if (!listEl) return;
+
+  const allRequests = await getSpecialRequests();
+
+  // Update count badges
+  const counts = {
+    all: allRequests.length,
+    takedown: allRequests.filter(r => r.type === 'takedown').length,
+    catalog_transfer: allRequests.filter(r => r.type === 'catalog_transfer').length,
+    copyright_claim: allRequests.filter(r => r.type === 'copyright_claim').length,
+    custom: allRequests.filter(r => !['takedown', 'catalog_transfer', 'copyright_claim'].includes(r.type)).length
+  };
+
+  const countAll = document.querySelector('#req-count-all');
+  const countTakedown = document.querySelector('#req-count-takedown');
+  const countCatalog = document.querySelector('#req-count-catalog');
+  const countCopyright = document.querySelector('#req-count-copyright');
+  const countCustom = document.querySelector('#req-count-custom');
+  const badgeTab = document.querySelector('#admin-requests-badge');
+
+  if (countAll) countAll.textContent = counts.all;
+  if (countTakedown) countTakedown.textContent = counts.takedown;
+  if (countCatalog) countCatalog.textContent = counts.catalog;
+  if (countCopyright) countCopyright.textContent = counts.copyright;
+  if (countCustom) countCustom.textContent = counts.custom;
+  if (badgeTab) {
+    const pendingCount = allRequests.filter(r => r.status === 'pending').length;
+    badgeTab.textContent = pendingCount;
+    badgeTab.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+  }
+
+  // Filter requests
+  const filtered = filter === 'all' 
+    ? allRequests 
+    : filter === 'custom' 
+      ? allRequests.filter(r => !['takedown', 'catalog_transfer', 'copyright_claim'].includes(r.type))
+      : allRequests.filter(r => r.type === filter);
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `
+      <div style="background:#fff;border:1px dashed #cbd5e1;padding:40px;text-align:center;border-radius:10px;">
+        <div style="font-size:32px;margin-bottom:8px;">📬</div>
+        <strong style="display:block;font-size:15px;color:#1e293b;">Không có yêu cầu nào trong mục này</strong>
+        <p style="font-size:12px;color:#64748b;margin:6px 0 0;">Khi nghệ sĩ gửi yêu cầu gỡ bài hát, chuyển catalog hoặc các hỗ trợ đặc biệt khác từ UniPORTAL, thông tin sẽ hiển thị tại đây.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const typeLabels = {
+    takedown: { text: '🗑️ Gỡ bài hát (Takedown)', color: '#fee2e2', textColor: '#991b1b' },
+    catalog_transfer: { text: '📦 Chuyển giao Catalog', color: '#e0e7ff', textColor: '#3730a3' },
+    copyright_claim: { text: '🛡️ Tranh chấp bản quyền', color: '#fef3c7', textColor: '#92400e' },
+    custom: { text: '✨ Dịch vụ & Hỗ trợ khác', color: '#f3e8ff', textColor: '#6b21a8' }
+  };
+
+  const statusBadges = {
+    pending: '<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">⏳ Chờ xử lý</span>',
+    in_progress: '<span style="background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">🔄 Đang xử lý</span>',
+    completed: '<span style="background:#d1fae5;color:#065f46;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">✅ Đã hoàn tất</span>',
+    rejected: '<span style="background:#fee2e2;color:#991b1b;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">❌ Đã từ chối</span>'
+  };
+
+  listEl.innerHTML = filtered.map(req => {
+    const typeMeta = typeLabels[req.type] || typeLabels.custom;
+    const timeStr = req.createdAt ? new Date(req.createdAt).toLocaleString('vi-VN') : '';
+    const details = req.details || {};
+
+    let detailsHtml = '';
+    if (req.type === 'takedown') {
+      detailsHtml = `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px 14px;border-radius:6px;margin:10px 0;font-size:12px;display:grid;gap:6px;">
+          <div><strong>Tên tác phẩm:</strong> ${details.releaseTitle || details.songTitle || 'Không rõ'}</div>
+          <div><strong>ISRC / UPC:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:3px;">${details.isrc || details.upc || 'N/A'}</code></div>
+          <div><strong>Lý do gỡ bài:</strong> ${details.reason || details.notes || 'Không ghi'}</div>
+          ${details.platforms ? `<div><strong>Nền tảng yêu cầu gỡ:</strong> ${details.platforms}</div>` : ''}
+        </div>
+      `;
+    } else if (req.type === 'catalog_transfer') {
+      detailsHtml = `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px 14px;border-radius:6px;margin:10px 0;font-size:12px;display:grid;gap:6px;">
+          <div><strong>Tên Catalog / Album:</strong> ${details.catalogName || details.title || 'Toàn bộ Catalog'}</div>
+          <div><strong>Đơn vị nhận chuyển giao (New Label/Distributor):</strong> <b>${details.targetDistributor || details.newLabel || 'Chưa ghi'}</b></div>
+          <div><strong>Số lượng bài hát:</strong> ${details.trackCount || 'N/A'}</div>
+          <div><strong>Thời gian chuyển dự kiến:</strong> ${details.effectiveDate || 'Ngay lập tức'}</div>
+          ${details.notes ? `<div><strong>Ghi chú:</strong> ${details.notes}</div>` : ''}
+        </div>
+      `;
+    } else {
+      detailsHtml = `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px 14px;border-radius:6px;margin:10px 0;font-size:12px;display:grid;gap:6px;">
+          <div><strong>Chi tiết nội dung yêu cầu:</strong></div>
+          <div style="white-space:pre-wrap;color:#334155;">${details.message || details.notes || req.message || 'Không có mô tả thêm.'}</div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="card special-req-card" data-req-id="${req.id}" style="background:#fff;border:2px solid var(--ink);border-radius:8px;padding:18px;position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="background:${typeMeta.color};color:${typeMeta.textColor};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:bold;letter-spacing:-0.01em;">
+              ${typeMeta.text}
+            </span>
+            ${statusBadges[req.status] || statusBadges.pending}
+          </div>
+          <div style="font-size:11px;color:#64748b;font-family:'DM Mono',monospace;">
+            ${timeStr}
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+          <h3 style="font-size:16px;margin:0;letter-spacing:-0.03em;color:#0f172a;">${req.title || 'Yêu cầu từ nghệ sĩ'}</h3>
+          <div style="font-size:12px;color:#475569;">
+            Gửi bởi: <strong style="color:#0f172a;">${req.artistName || 'Nghệ sĩ'}</strong> ${req.artistEmail ? `(&lt;${req.artistEmail}&gt;)` : ''}
+          </div>
+        </div>
+
+        ${detailsHtml}
+
+        <!-- Admin Note & Response -->
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;display:grid;gap:10px;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="text" class="req-admin-note-input" value="${req.adminNote || ''}" placeholder="Ghi chú nội bộ admin hoặc phản hồi cho nghệ sĩ..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;">
+            <button type="button" class="button alt btn-save-req-note" data-req-id="${req.id}" style="padding:8px 14px;font-size:11px;">💾 Lưu ghi chú</button>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="button btn-req-action" data-req-id="${req.id}" data-action="completed" style="background:#10b981;color:#fff;border-color:#10b981;padding:6px 14px;font-size:11px;font-weight:bold;">
+                ✓ Hoàn tất yêu cầu
+              </button>
+              <button type="button" class="button alt btn-req-action" data-req-id="${req.id}" data-action="in_progress" style="padding:6px 14px;font-size:11px;background:#f0f9ff;border-color:#0284c7;color:#0284c7;font-weight:bold;">
+                🔄 Đang xử lý
+              </button>
+              <button type="button" class="button alt btn-req-action" data-req-id="${req.id}" data-action="rejected" style="padding:6px 14px;font-size:11px;background:#fef2f2;border-color:#ef4444;color:#dc2626;">
+                ✕ Từ chối
+              </button>
+            </div>
+            <button type="button" class="button alt btn-delete-req" data-req-id="${req.id}" style="padding:6px 12px;font-size:11px;color:#94a3b8;border-color:#e2e8f0;margin-left:auto;">
+              🗑️ Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire event handlers
+  listEl.querySelectorAll('.btn-save-req-note').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.special-req-card');
+      const noteInput = card.querySelector('.req-admin-note-input');
+      const reqId = btn.dataset.reqId;
+      const targetReq = allRequests.find(r => r.id === reqId);
+      const currentStatus = targetReq ? targetReq.status : 'pending';
+      updateSpecialRequestStatus(reqId, currentStatus, noteInput.value.trim());
+      btn.textContent = '✓ Đã lưu';
+      setTimeout(() => { btn.textContent = '💾 Lưu ghi chú'; }, 2000);
+    });
+  });
+
+  listEl.querySelectorAll('.btn-req-action').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.special-req-card');
+      const noteInput = card.querySelector('.req-admin-note-input');
+      const reqId = btn.dataset.reqId;
+      const action = btn.dataset.action;
+      updateSpecialRequestStatus(reqId, action, noteInput.value.trim());
+    });
+  });
+
+  listEl.querySelectorAll('.btn-delete-req').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deleteSpecialRequest(btn.dataset.reqId);
+    });
+  });
+}
+
+// Wire filter buttons & refresh
+document.querySelectorAll('.req-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    renderSpecialRequestsAdmin(btn.dataset.reqFilter);
+  });
+});
+
+document.querySelector('#btn-refresh-special-requests')?.addEventListener('click', () => {
+  renderSpecialRequestsAdmin(currentReqFilter);
+});
+
+// ====================================================
+// 3. BROADCAST EMAIL ADMIN DISPATCHER
+// ====================================================
+function initBroadcastEmailAdmin() {
+  const openBtn = document.querySelector('#btn-open-broadcast-email');
+  const dialog = document.querySelector('#modal-admin-broadcast-email');
+  const closeBtn = document.querySelector('#close-admin-broadcast-btn');
+  const cancelBtn = document.querySelector('#cancel-admin-broadcast-btn');
+  const form = document.querySelector('#admin-broadcast-form');
+  const previewEl = document.querySelector('#broadcast-recipient-preview');
+
+  const getRecipientEmails = (targetType) => {
+    const data = getData();
+    const artistEmails = (data.artists || [])
+      .map(a => (a.email || '').trim().toLowerCase())
+      .filter(email => email.includes('@'));
+
+    let subscriberEmails = [];
+    try {
+      const rawSub = localStorage.getItem('uniflows-subscribers');
+      if (rawSub) subscriberEmails = JSON.parse(rawSub);
+    } catch (_) {}
+
+    let submissionEmails = [];
+    try {
+      const rawSubm = localStorage.getItem('uniflows-music-submissions');
+      if (rawSubm) {
+        const subms = JSON.parse(rawSubm);
+        submissionEmails = subms.map(s => (s.email || '').trim().toLowerCase()).filter(e => e.includes('@'));
+      }
+    } catch (_) {}
+
+    const cfg = getEmailConfig();
+    const testEmail = cfg.senderEmail || 'admin@uniflowslabel.com';
+
+    if (targetType === 'test') {
+      return [testEmail];
+    }
+    if (targetType === 'artists') {
+      return Array.from(new Set(artistEmails));
+    }
+    if (targetType === 'subscribers') {
+      return Array.from(new Set([...subscriberEmails, ...submissionEmails]));
+    }
+    // 'all'
+    return Array.from(new Set([...artistEmails, ...subscriberEmails, ...submissionEmails]));
+  };
+
+  const updateRecipientPreview = () => {
+    if (!previewEl) return;
+    const selRadio = form?.querySelector('input[name="broadcast_target"]:checked');
+    const targetType = selRadio ? selRadio.value : 'all';
+    const list = getRecipientEmails(targetType);
+    const targetName = {
+      all: 'tất cả mọi người',
+      artists: 'toàn bộ nghệ sĩ trong roster',
+      subscribers: 'khách hàng / người gửi demo',
+      test: 'chế độ gửi thử nghiệm (admin)'
+    }[targetType] || targetType;
+
+    previewEl.textContent = `🎯 Dự kiến gửi đến ${list.length} địa chỉ email (${targetName}).`;
+  };
+
+  openBtn?.addEventListener('click', () => {
+    updateRecipientPreview();
+    dialog?.showModal();
+  });
+
+  closeBtn?.addEventListener('click', () => dialog?.close());
+  cancelBtn?.addEventListener('click', () => dialog?.close());
+
+  form?.querySelectorAll('input[name="broadcast_target"]').forEach(radio => {
+    radio.addEventListener('change', updateRecipientPreview);
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const selRadio = form.querySelector('input[name="broadcast_target"]:checked');
+    const targetType = selRadio ? selRadio.value : 'all';
+    const recipients = getRecipientEmails(targetType);
+
+    if (recipients.length === 0) {
+      alert('Không tìm thấy địa chỉ email hợp lệ nào trong danh sách nhóm này!');
+      return;
+    }
+
+    const kicker = document.querySelector('#broadcast-kicker')?.value.trim() || 'THÔNG BÁO QUAN TRỌNG';
+    const subject = document.querySelector('#broadcast-subject')?.value.trim();
+    const headline = document.querySelector('#broadcast-headline')?.value.trim();
+    const content = document.querySelector('#broadcast-content')?.value.trim();
+    const ctaText = document.querySelector('#broadcast-cta-text')?.value.trim() || '';
+    const ctaUrl = document.querySelector('#broadcast-cta-url')?.value.trim() || '';
+
+    if (!subject || !content) {
+      alert('Vui lòng nhập đầy đủ tiêu đề và nội dung thông báo!');
+      return;
+    }
+
+    const confirmed = confirm(`Bạn có chắc chắn muốn gửi email broadcast này đến ${recipients.length} người nhận?`);
+    if (!confirmed) return;
+
+    const progressBox = document.querySelector('#broadcast-progress-box');
+    const progressBar = document.querySelector('#broadcast-progress-bar');
+    const progressText = document.querySelector('#broadcast-progress-text');
+    const progressPct = document.querySelector('#broadcast-progress-pct');
+    const logText = document.querySelector('#broadcast-log-text');
+    const submitBtn = document.querySelector('#submit-admin-broadcast-btn');
+
+    if (progressBox) progressBox.style.display = 'block';
+    if (submitBtn) submitBtn.disabled = true;
+    if (logText) logText.innerHTML = '';
+
+    try {
+      const result = await sendBroadcastEmail({
+        recipients,
+        subject,
+        kicker,
+        headline,
+        message: content,
+        ctaText,
+        ctaUrl,
+        onProgress: ({ sent, total, currentRecipient, success }) => {
+          const pct = Math.round((sent / total) * 100);
+          if (progressBar) progressBar.style.width = `${pct}%`;
+          if (progressPct) progressPct.textContent = `${pct}%`;
+          if (progressText) progressText.textContent = `Đang gửi ${sent} / ${total}...`;
+          if (logText) {
+            const statusIcon = success ? '✓' : '⚠️';
+            const logLine = document.createElement('div');
+            logLine.textContent = `${statusIcon} [${sent}/${total}] ${currentRecipient}`;
+            logText.prepend(logLine);
+          }
+        }
+      });
+
+      if (progressText) {
+        progressText.textContent = `✓ Đã hoàn tất: ${result.successCount} thành công, ${result.failCount} thất bại.`;
+      }
+      alert(`Đã gửi broadcast hoàn tất!\n- Thành công: ${result.successCount}\n- Thất bại: ${result.failCount}`);
+    } catch (err) {
+      alert(`Lỗi khi gửi broadcast: ${err.message}`);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+}
+
+// Initial calls
+initAdminNotificationCenter();
+renderSpecialRequestsAdmin();
+initBroadcastEmailAdmin();
+
 
 
 

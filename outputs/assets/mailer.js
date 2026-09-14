@@ -306,12 +306,9 @@ function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText, badge
                       </table>
                     </a>
                   </td>
-                  <td class="email-nav" align="right" valign="middle">
-                    <div style="font-family:'DM Mono',Courier,monospace;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#4b5563;">
-                      <a href="${origin}/releases.html" target="_blank" style="color:#4b5563;text-decoration:none;margin-left:14px;font-weight:600;">RELEASES</a>
-                      <a href="${origin}/artists.html" target="_blank" style="color:#4b5563;text-decoration:none;margin-left:14px;font-weight:600;">ARTISTS</a>
-                      <a href="${origin}/about.html" target="_blank" style="color:#4b5563;text-decoration:none;margin-left:14px;font-weight:600;">ABOUT</a>
-                      <a href="${origin}/contact.html" target="_blank" style="color:#4b5563;text-decoration:none;margin-left:14px;font-weight:600;">CONTACT</a>
+                  <td align="right" valign="middle">
+                    <div style="font-family:'DM Mono',Courier,monospace;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;font-weight:700;">
+                      OFFICIAL DISPATCH
                     </div>
                   </td>
                 </tr>
@@ -319,27 +316,18 @@ function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText, badge
             </td>
           </tr>
 
-          <!-- Hero Banner: Black Vinyl Section "WHERE THE MUSIC SPEAKS." -->
+          <!-- Hero Banner: Black Brutalist Typography "WHERE THE MUSIC SPEAKS." -->
           <tr>
-            <td style="background-color:#0b0b0b;padding:0;overflow:hidden;">
-              <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td class="hero-left" width="58%" valign="middle" style="padding:34px 34px 30px;">
-                    <div style="font-family:'DM Mono',Courier,monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">
-                      ${kicker || 'UNIFLOWS LABEL —'}
-                    </div>
-                    <div style="font-family:'Manrope',sans-serif;font-size:28px;line-height:1.08;font-weight:900;letter-spacing:-0.035em;color:#ffffff;text-transform:uppercase;">
-                      WHERE THE<br>MUSIC SPEAKS.
-                    </div>
-                    <div style="margin-top:14px;font-family:'DM Mono',Courier,monospace;font-size:10px;letter-spacing:2px;color:#d8ff48;text-transform:uppercase;font-weight:700;">
-                      MAKE THE WORLD MOVE.
-                    </div>
-                  </td>
-                  <td class="hero-right" width="42%" valign="middle" align="right" style="padding:0;background-color:#0b0b0b;">
-                    <img src="https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=480&q=80" alt="Vinyl Groove" width="260" style="display:block;width:100%;max-width:260px;height:160px;object-fit:cover;object-position:center;opacity:0.85;">
-                  </td>
-                </tr>
-              </table>
+            <td style="background-color:#0b0b0b;padding:36px 36px 32px;border-bottom:3px solid #d8ff48;">
+              <div style="font-family:'DM Mono',Courier,monospace;font-size:10px;font-weight:700;letter-spacing:2.5px;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">
+                ${kicker || 'UNIFLOWS LABEL —'}
+              </div>
+              <div style="font-family:'Manrope',sans-serif;font-size:30px;line-height:1.08;font-weight:900;letter-spacing:-0.035em;color:#ffffff;text-transform:uppercase;">
+                WHERE THE MUSIC SPEAKS.
+              </div>
+              <div style="margin-top:14px;font-family:'DM Mono',Courier,monospace;font-size:10.5px;letter-spacing:2px;color:#d8ff48;text-transform:uppercase;font-weight:700;">
+                MAKE THE WORLD MOVE.
+              </div>
             </td>
           </tr>
 
@@ -914,3 +902,90 @@ export async function sendTestEmail(toEmail) {
 
   return await sendEmail({ to: toEmail, subject, html, text: 'Email thử nghiệm kết nối UniFLOWs thành công!' });
 }
+
+// ----------------------------------------------------------------------------
+// 8. GỬI EMAIL THÔNG BÁO HÀNG LOẠT (BROADCAST NOTIFICATION DISPATCHER)
+// ----------------------------------------------------------------------------
+export async function sendBroadcastEmail({
+  recipientEmails = [],
+  subject,
+  kicker = 'THÔNG BÁO QUAN TRỌNG',
+  headerTitle = 'Thông Báo Từ UniFLOWs Label',
+  badgeText = 'BROADCAST',
+  contentHtml = '',
+  actionBtnText = '',
+  actionBtnUrl = '',
+  onProgress
+}) {
+  const cfg = getEmailConfig();
+  if (!cfg.enabled) {
+    return { success: false, error: 'Tính năng gửi email tự động đang tắt trong Cấu hình Admin.' };
+  }
+
+  const validEmails = Array.from(new Set(
+    recipientEmails
+      .map(e => String(e || '').trim().toLowerCase())
+      .filter(e => e && e.includes('@'))
+  ));
+
+  if (validEmails.length === 0) {
+    return { success: false, error: 'Không tìm thấy địa chỉ email người nhận hợp lệ nào.' };
+  }
+
+  const html = buildHtmlEmailLayout({
+    kicker: kicker.toUpperCase(),
+    preheader: subject,
+    headerTitle,
+    badgeText: badgeText.toUpperCase(),
+    badgeColor: '#000000',
+    badgeBg: '#d8ff48',
+    badgeBorder: '#000000',
+    contentHtml,
+    actionBtnText: actionBtnText || '',
+    actionBtnUrl: actionBtnUrl || ''
+  });
+
+  const results = {
+    total: validEmails.length,
+    sent: 0,
+    failed: 0,
+    errors: []
+  };
+
+  for (let i = 0; i < validEmails.length; i++) {
+    const toEmail = validEmails[i];
+    try {
+      const res = await sendEmail({ to: toEmail, subject, html });
+      if (res.success) {
+        results.sent++;
+      } else {
+        results.failed++;
+        results.errors.push({ email: toEmail, error: res.error || 'Lỗi gửi thư' });
+      }
+    } catch (err) {
+      results.failed++;
+      results.errors.push({ email: toEmail, error: err.message });
+    }
+
+    if (typeof onProgress === 'function') {
+      onProgress({
+        current: i + 1,
+        total: validEmails.length,
+        sent: results.sent,
+        failed: results.failed,
+        percent: Math.round(((i + 1) / validEmails.length) * 100)
+      });
+    }
+
+    // Khoảng nghỉ 120ms giữa mỗi email để tránh nghẽn mạng / rate limit
+    if (i < validEmails.length - 1) {
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+
+  return {
+    success: results.sent > 0,
+    ...results
+  };
+}
+

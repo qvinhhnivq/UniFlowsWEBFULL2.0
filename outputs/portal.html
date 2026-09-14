@@ -11,10 +11,28 @@
   <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body class="portal-body">
+  <!-- Mobile Header Bar -->
+  <header class="portal-mobile-bar" id="portal-mobile-header">
+    <button type="button" id="portal-mobile-menu-btn" class="portal-mobile-toggle" aria-label="Mở Menu">
+      <span>☰</span>
+    </button>
+    <a class="brand" href="index">UNIFLOWs<small>UniPORTAL</small></a>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="mobile-theme-toggle-btn" type="button" class="portal-mobile-action-btn" title="Đổi giao diện Sáng/Tối">🌙</button>
+      <button id="mobile-notif-btn" type="button" class="portal-mobile-action-btn" title="Thông báo" style="position:relative;">
+        🔔<span id="mobile-notif-badge" class="portal-mobile-badge" style="display:none;">0</span>
+      </button>
+    </div>
+  </header>
+  <div id="portal-drawer-backdrop" class="portal-drawer-backdrop"></div>
+
   <main class="portal">
     <!-- Left Navigation Sidebar -->
-    <aside class="portal-side">
-      <a class="brand" href="index">UNIFLOWs<small>UniPORTAL (by UniENGINE)</small></a>
+    <aside class="portal-side" id="portal-sidebar-drawer">
+      <div class="portal-sidebar-header-row">
+        <a class="brand" href="index">UNIFLOWs<small>UniPORTAL (by UniENGINE)</small></a>
+        <button type="button" id="portal-close-drawer-btn" class="portal-drawer-close-btn" aria-label="Đóng Menu">✕</button>
+      </div>
       <nav id="portal-nav">
         <a href="#overview" data-tab="tab-overview" class="active">
           <span>📊 Tổng quan</span>
@@ -523,6 +541,28 @@
             </div>
             <a href="mailto:distribution@uniflowslabel.com?subject=ISRC%20Assignment%20Request" class="button alt" style="text-align:center;padding:12px;font-size:11px;">Yêu cầu cấp mã ISRC</a>
           </div>
+
+          <div class="service-card" style="border-top:3px solid #f97316;">
+            <div>
+              <span style="font-size:28px;">🗑️</span>
+              <h3>Yêu Cầu Gỡ Bài Hát (Takedown)</h3>
+              <p>Gửi lệnh gỡ bài hát khỏi toàn bộ hoặc từng nền tảng cụ thể (Spotify, Apple Music, TikTok, Zing, v.v.).</p>
+            </div>
+            <button type="button" id="open-takedown-quick-btn" class="button" style="text-align:center;padding:12px;background:#f97316;color:#fff;border-color:#f97316;font-size:11px;font-weight:bold;">
+              🗑️ + Yêu cầu gỡ bài hát
+            </button>
+          </div>
+
+          <div class="service-card" style="border-top:3px solid #0284c7;">
+            <div>
+              <span style="font-size:28px;">📦</span>
+              <h3>Chuyển Giao Catalog Về Hãng</h3>
+              <p>Chuyển giao các tác phẩm từ nhà phân phối cũ về UniFLOWs để giữ nguyên lượt stream và playlist.</p>
+            </div>
+            <button type="button" id="open-catalog-transfer-btn" class="button" style="text-align:center;padding:12px;background:#0284c7;color:#fff;border-color:#0284c7;font-size:11px;font-weight:bold;">
+              📦 + Yêu cầu chuyển Catalog
+            </button>
+          </div>
         </div>
 
         <!-- Submitted Requests Live Tracker -->
@@ -807,20 +847,57 @@
             </div>
           </div>
 
-          <!-- Audio Upload Zone -->
-          <div>
-            <label style="font-weight:700;font-size:12px;text-transform:uppercase;display:block;margin-bottom:8px;">🎵 2. File Master Audio (WAV / FLAC / MP3)</label>
-            <div class="studio-dropzone" id="audio-dropzone">
-              <input id="audio-file" name="audioFile" type="file" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg">
-              <div class="dropzone-waveform">
-                <span></span><span></span><span></span><span></span><span></span><span></span>
+          <!-- Audio Upload Zone: Single Track vs Multi-Track Tracklist Studio -->
+          <div id="release-audio-manager" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <label style="font-weight:700;font-size:12px;text-transform:uppercase;margin:0;">🎵 2. File Master Audio & Danh Sách Bài Hát</label>
+              <div class="track-mode-switch" style="display:inline-flex;gap:4px;background:#e2e8f0;padding:2px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;">
+                <button type="button" id="track-mode-single-btn" class="track-mode-pill active" style="border:none;background:#fff;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:bold;color:#0f172a;">1 Bài (Single)</button>
+                <button type="button" id="track-mode-multi-btn" class="track-mode-pill" style="border:none;background:transparent;padding:4px 10px;border-radius:4px;cursor:pointer;color:#64748b;font-weight:bold;">Nhiều Bài (EP/Album)</button>
               </div>
-              <b id="audio-filename" style="font-size:14px;display:block;margin-bottom:4px;">Kéo thả hoặc chọn file Master Audio</b>
-              <span style="font-size:12px;color:#64748b;">16/24-bit · 44.1/48/96 kHz Stereo</span>
             </div>
-            <div class="field" style="margin-top:10px;">
-              <label style="font-size:10px;color:#64748b;">Hoặc dán Link Google Drive / Dropbox Master (0 MB Server):</label>
-              <input name="audioExternalUrl" id="audio-external-url" placeholder="https://drive.google.com/... hoặc https://dropbox.com/...">
+
+            <!-- Single Track Audio Uploader -->
+            <div id="single-audio-uploader">
+              <div class="studio-dropzone" id="audio-dropzone">
+                <input id="audio-file" name="audioFile" type="file" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg">
+                <div class="dropzone-waveform">
+                  <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <b id="audio-filename" style="font-size:14px;display:block;margin-bottom:4px;">Kéo thả hoặc chọn file Master Audio</b>
+                <span style="font-size:12px;color:#64748b;">16/24-bit · 44.1/48/96 kHz Stereo (WAV / FLAC / MP3)</span>
+              </div>
+              <div class="field" style="margin-top:10px;">
+                <label style="font-size:10px;color:#64748b;">Hoặc dán Link Google Drive / Dropbox Master (0 MB Server):</label>
+                <input name="audioExternalUrl" id="audio-external-url" placeholder="https://drive.google.com/... hoặc https://dropbox.com/...">
+              </div>
+            </div>
+
+            <!-- Multi-Track Tracklist Studio (For EP / Album) -->
+            <div id="multi-tracklist-studio" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                <div>
+                  <strong style="font-size:13px;color:#0f172a;">💿 Danh Sách Track Trong Album / EP</strong>
+                  <span id="tracklist-summary-badge" style="display:block;font-size:11px;color:#64748b;font-family:'DM Mono',monospace;">0 bài hát trong album</span>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <label class="button alt" style="padding:6px 12px;font-size:11px;margin:0;cursor:pointer;background:#fff;border:1px solid #cbd5e1;display:inline-flex;align-items:center;gap:6px;">
+                    📂 Tải Hàng Loạt Audio (Batch)
+                    <input type="file" id="batch-audio-input" multiple accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
+                  </label>
+                  <button type="button" id="btn-add-tracklist-item" class="button" style="padding:6px 12px;font-size:11px;background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;">
+                    + Thêm Bài Hát
+                  </button>
+                </div>
+              </div>
+
+              <!-- Track items container -->
+              <div id="tracklist-items-container" style="display:grid;gap:10px;max-height:340px;overflow-y:auto;padding-right:4px;">
+                <!-- Injected dynamically -->
+              </div>
+              <p style="font-size:11px;color:#64748b;margin:8px 0 0;font-style:italic;">
+                💡 Mẹo: Bấm "Tải Hàng Loạt Audio" để chọn cùng lúc nhiều file WAV/MP3, hệ thống sẽ tự động tạo từng Track theo thứ tự!
+              </p>
             </div>
           </div>
         </div>
@@ -1404,6 +1481,30 @@
       </div>
     </div>
   </dialog>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="portal-mobile-bottom-nav" id="portal-mobile-bottom-nav">
+    <a href="#overview" data-tab="tab-overview" class="portal-bottom-nav-item active">
+      <span class="portal-bnav-icon">📊</span>
+      <span class="portal-bnav-label">Tổng quan</span>
+    </a>
+    <a href="#releases" data-tab="tab-releases" class="portal-bottom-nav-item">
+      <span class="portal-bnav-icon">💿</span>
+      <span class="portal-bnav-label">Phát hành</span>
+    </a>
+    <button type="button" id="mobile-bottom-create-release-btn" class="portal-bottom-nav-item portal-bnav-highlight" title="Nộp phát hành mới">
+      <span class="portal-bnav-icon">⚡</span>
+      <span class="portal-bnav-label">+ Tạo Mới</span>
+    </button>
+    <a href="#earnings" data-tab="tab-earnings" class="portal-bottom-nav-item">
+      <span class="portal-bnav-icon">💰</span>
+      <span class="portal-bnav-label">Doanh thu</span>
+    </a>
+    <a href="#support" data-tab="tab-support" class="portal-bottom-nav-item">
+      <span class="portal-bnav-icon">🛡️</span>
+      <span class="portal-bnav-label">Yêu cầu</span>
+    </a>
+  </nav>
 
   <script type="module" src="/assets/portal.js"></script>
   <script>

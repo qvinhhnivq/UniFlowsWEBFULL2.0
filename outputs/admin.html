@@ -20,9 +20,56 @@
 </head>
 <body>
   <main class="admin" style="max-width: 1050px; padding-top: 4vw;">
-    <span class="eyebrow">Control Center / UniFLOWs Label</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+      <span class="eyebrow" style="margin:0;">Control Center / UniFLOWs Label</span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button type="button" id="btn-open-broadcast-email" class="button alt" style="padding:6px 12px;font-size:11px;background:#0f172a;color:#d8ff48;border-color:#0f172a;font-weight:bold;display:inline-flex;align-items:center;gap:6px;">
+          📢 Gửi Email Broadcast
+        </button>
+        <!-- Notification Bell -->
+        <div style="position:relative;display:inline-block;">
+          <button type="button" id="admin-notif-btn" class="button alt" style="position:relative;padding:6px 12px;font-size:14px;border:1px solid var(--ink);background:#fff;cursor:pointer;" title="Thông báo mới từ nghệ sĩ">
+            🔔 <span id="admin-notif-badge" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:10px;font-weight:bold;padding:2px 6px;border-radius:10px;display:none;">0</span>
+          </button>
+          <!-- Notification Flyout -->
+          <div id="admin-notif-flyout" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:380px;max-width:90vw;background:#fff;border:2px solid var(--ink);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.25);z-index:9999;overflow:hidden;">
+            <div style="padding:12px 16px;background:#0f172a;color:#fff;display:flex;justify-content:space-between;align-items:center;">
+              <strong style="font-size:13px;letter-spacing:-0.02em;">🔔 Thông Báo Mới Của Nghệ Sĩ</strong>
+              <button type="button" id="admin-notif-mark-read-btn" style="background:none;border:none;color:#38bdf8;font-size:11px;font-weight:bold;cursor:pointer;padding:0;">Đánh dấu đã đọc</button>
+            </div>
+            <div id="admin-notif-list" style="max-height:360px;overflow-y:auto;padding:8px 0;">
+              <p style="padding:20px;text-align:center;color:#64748b;font-size:12px;margin:0;">Chưa có thông báo mới nào</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <h1 style="font-size: clamp(36px, 5vw, 64px); margin: 8px 0 24px;">Admin Dashboard.</h1>
-    <p style="margin-top: -10px; margin-bottom: 25px; opacity: 0.8;">Quản lý toàn bộ hệ thống phát hành, đối soát doanh thu, thông tin nghệ sĩ và bài viết trên website.</p>
+    <p style="margin-top: -10px; margin-bottom: 20px; opacity: 0.8;">Quản lý toàn bộ hệ thống phát hành, đối soát doanh thu, thông tin nghệ sĩ và bài viết trên website.</p>
+
+    <!-- Mobile Quick Jump Tab Selector -->
+    <div class="admin-mobile-tab-select-wrap" style="margin-bottom:16px;">
+      <label style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;text-transform:uppercase;color:#64748b;display:block;margin-bottom:6px;">⚡ Chuyển nhanh mục quản trị (Mobile):</label>
+      <select id="admin-mobile-tab-select" style="width:100%;padding:12px;font-size:13px;font-weight:bold;border:2px solid var(--ink);background:#fff;border-radius:6px;font-family:inherit;">
+        <option value="admin-tab-overview">📊 00 / Dashboard Tổng quan</option>
+        <option value="admin-tab-releases">💿 01 / Duyệt phát hành & Waveform A&R</option>
+        <option value="admin-tab-pitching">🎯 02 / Pitching & Playlist Tracker</option>
+        <option value="admin-tab-artists">👥 03 / Quản lý Nghệ sĩ & Portal</option>
+        <option value="admin-tab-payouts">💳 04 / Quản lý Rút tiền</option>
+        <option value="admin-tab-copyright">🛡️ 05 / Bản quyền & Green-list</option>
+        <option value="admin-tab-articles">📰 06 / Bài viết & Tạp chí</option>
+        <option value="admin-tab-settings">⚙️ 07 / Cấu hình Trang & Email</option>
+        <option value="admin-tab-audit">🔐 08 / Nhật ký Bảo mật & Audit</option>
+        <option value="admin-tab-publishing">🎬 09 / UniPUBLISHING & Sync</option>
+        <option value="admin-tab-unihube">🎛️ 10 / Uni-HUBE (Sản xuất)</option>
+        <option value="admin-tab-collective48k">⚡ 11 / 48K Collective (Agency)</option>
+        <option value="admin-tab-submissions">🎵 12 / Nhận Demo & Tuyển Chọn A&R</option>
+        <option value="admin-tab-shortlinks">🔗 13 / Trình Rút Gọn Link (ShortURL)</option>
+        <option value="admin-tab-distribution">📊 14 / Đối Soát Phân Phối</option>
+        <option value="admin-tab-requests">📬 15 / Các Yêu Cầu Khác (Special Requests)</option>
+      </select>
+    </div>
 
     <!-- Admin Navigation Tabs -->
     <nav class="admin-nav-tabs" id="admin-tabs">
@@ -41,6 +88,10 @@
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-submissions" style="border-left: 2px solid #0284c7; background:#f0f9ff; font-weight:bold;">🎵 12 / Nhận Demo & Tuyển Chọn A&R</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-shortlinks" style="border-left: 2px solid #10b981; background:#ecfdf5; font-weight:bold;">🔗 13 / Trình Rút Gọn Link (ShortURL)</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-distribution" style="border-left: 2px solid var(--lime); background: #0f172a; color: #fff; font-weight:bold;">📊 14 / Đối Soát Phân Phối (Distribution & Royalty)</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-requests" style="border-left: 2px solid #ec4899; background: #fdf2f8; font-weight:bold;">
+        📬 15 / Các Yêu Cầu Khác (Special Requests)
+        <span class="tab-badge" id="badge-tab-requests" style="display:none;margin-left:6px;background:#ec4899;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;">0</span>
+      </button>
     </nav>
 
     <div id="notice" class="notice"></div>
@@ -1343,6 +1394,34 @@
         <!-- Injected dynamically by distribution-report.js -->
       </section>
 
+      <!-- ========================================== -->
+      <!-- TAB 15: CÁC YÊU CẦU KHÁC & DỊCH VỤ NGHỆ SĨ -->
+      <!-- ========================================== -->
+      <section id="admin-tab-requests" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;">📬 Các Yêu Cầu Khác & Dịch Vụ Nghệ Sĩ</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Tiếp nhận, thẩm định và xử lý các yêu cầu gỡ bài (Takedown), chuyển giao Catalog, tranh chấp bản quyền hoặc các đề xuất dịch vụ từ nghệ sĩ.</p>
+          </div>
+          <span class="kicker">Special Requests Hub</span>
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="requests-filter-bar" style="display:flex; gap:8px; margin: 18px 0; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="req-filter-btn active button" data-req-filter="all" style="padding:6px 14px; font-size:11px;">Tất cả yêu cầu (<span id="req-count-all">0</span>)</button>
+          <button type="button" class="req-filter-btn button alt" data-req-filter="takedown" style="padding:6px 14px; font-size:11px;">🗑️ Gỡ bài hát (<span id="req-count-takedown">0</span>)</button>
+          <button type="button" class="req-filter-btn button alt" data-req-filter="catalog_transfer" style="padding:6px 14px; font-size:11px;">📦 Chuyển Catalog (<span id="req-count-catalog">0</span>)</button>
+          <button type="button" class="req-filter-btn button alt" data-req-filter="copyright_claim" style="padding:6px 14px; font-size:11px;">🛡️ Bản quyền & Claims (<span id="req-count-copyright">0</span>)</button>
+          <button type="button" class="req-filter-btn button alt" data-req-filter="custom" style="padding:6px 14px; font-size:11px;">✨ Dịch vụ khác (<span id="req-count-custom">0</span>)</button>
+          <button type="button" id="btn-refresh-special-requests" class="button alt" style="margin-left:auto; padding:6px 14px; font-size:11px;">🔄 Làm mới</button>
+        </div>
+
+        <!-- Requests List Container -->
+        <div id="special-requests-list" style="display:grid; gap:14px;">
+          <p class="empty" style="padding:24px; background:#fff; border:1px solid var(--ink); border-radius:8px;">Đang tải danh sách yêu cầu...</p>
+        </div>
+      </section>
+
       <!-- Sticky Actions Bar -->
       <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10; display: flex; gap: 12px; align-items: center;">
         <button class="button" type="submit" id="save-all-btn" style="padding: 12px 24px; font-weight: bold;">Lưu toàn bộ lên Supabase</button>
@@ -1873,6 +1952,85 @@
         <div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:12.5px;padding:20px;">Chưa có ảnh nào được tải lên. Hãy chọn ảnh để trải nghiệm tốc độ nén!</div>
       </div>
     </div>
+  </dialog>
+
+  <!-- ========================================== -->
+  <!-- MODAL: GỬI THÔNG BÁO EMAIL TOÀN HỆ THỐNG (BROADCAST) -->
+  <!-- ========================================== -->
+  <dialog id="modal-admin-broadcast-email" style="max-width:760px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.35);max-height:92vh;">
+    <div style="background:#0f172a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
+      <div>
+        <span class="eyebrow" style="color:#d8ff48;margin:0;font-size:10px;">UniFLOWs Mass Email Engine</span>
+        <h2 style="font-size:18px;margin:2px 0 0;letter-spacing:-0.03em;color:#fff;">📢 Gửi Thông Báo Email Toàn Hệ Thống</h2>
+      </div>
+      <button type="button" class="close-btn" id="close-admin-broadcast-btn" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+
+    <form id="admin-broadcast-form" style="padding:22px;overflow-y:auto;display:grid;gap:16px;font-family:inherit;">
+      <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:14px;border-radius:8px;">
+        <label style="font-weight:bold;font-size:12px;display:block;margin-bottom:6px;text-transform:uppercase;">1. Nhóm Đối Tượng Nhận Thư (Target Audience):</label>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:8px;font-size:13px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="all" checked> <b>🌐 Tất cả mọi người (All)</b></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="artists"> <b>👥 Chỉ Nghệ Sĩ (Roster)</b></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="subscribers"> <b>✉️ Khách Hàng / Demo</b></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="test"> <b>🧪 Thử nghiệm (Admin)</b></label>
+        </div>
+        <div id="broadcast-recipient-preview" style="margin-top:10px;font-size:11px;color:#0284c7;font-family:'DM Mono',monospace;font-weight:bold;">
+          Đang tính toán số lượng email người nhận...
+        </div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;font-size:11px;">Nhãn thông báo (Kicker / Tag)</label>
+          <input id="broadcast-kicker" value="THÔNG BÁO QUAN TRỌNG" required placeholder="Ví dụ: THÔNG BÁO QUAN TRỌNG, CẬP NHẬT...">
+        </div>
+        <div class="field">
+          <label style="font-weight:bold;font-size:11px;">Tiêu đề thư (Email Subject) *</label>
+          <input id="broadcast-subject" required placeholder="Ví dụ: [UniFLOWs] Cập nhật điều khoản & tính năng mới">
+        </div>
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Tiêu đề chính trong email (Headline) *</label>
+        <input id="broadcast-headline" required placeholder="Ví dụ: Nâng Cấp Hệ Sinh Thái UniPORTAL & UniENGINE" value="Thông Báo Mới Từ UniFLOWs Label">
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Nội dung thông báo (Message Content) *</label>
+        <textarea id="broadcast-content" rows="6" required placeholder="Nhập nội dung thông báo gửi đến nghệ sĩ và người dùng..." style="line-height:1.6;font-family:inherit;"></textarea>
+      </div>
+
+      <div class="mini-grid">
+        <div class="field">
+          <label style="font-weight:bold;font-size:11px;">Tên nút hành động (Call To Action - Tùy chọn)</label>
+          <input id="broadcast-cta-text" placeholder="Ví dụ: Mở UniPORTAL Ngay">
+        </div>
+        <div class="field">
+          <label style="font-weight:bold;font-size:11px;">Đường link nút hành động (URL)</label>
+          <input id="broadcast-cta-url" placeholder="https://uniflowslabel.com/portal.html">
+        </div>
+      </div>
+
+      <!-- Progress status -->
+      <div id="broadcast-progress-box" style="display:none;background:#0f172a;color:#fff;padding:14px;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span id="broadcast-progress-text">Đang gửi thư...</span>
+          <span id="broadcast-progress-pct">0%</span>
+        </div>
+        <div style="background:#334155;height:8px;border-radius:4px;overflow:hidden;">
+          <div id="broadcast-progress-bar" style="width:0%;height:100%;background:#d8ff48;transition:width 0.2s ease;"></div>
+        </div>
+        <div id="broadcast-log-text" style="font-size:11px;color:#94a3b8;margin-top:6px;max-height:80px;overflow-y:auto;"></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #e2e8f0;padding-top:14px;">
+        <button type="button" class="button alt" id="cancel-admin-broadcast-btn">Hủy bỏ</button>
+        <button type="submit" id="submit-admin-broadcast-btn" class="button" style="background:#0f172a;color:#d8ff48;border-color:#0f172a;font-weight:bold;padding:12px 24px;">
+          🚀 Bắt Đầu Gửi Thư Hàng Loạt
+        </button>
+      </div>
+    </form>
   </dialog>
 
   <script type="module" src="/assets/admin.js"></script>

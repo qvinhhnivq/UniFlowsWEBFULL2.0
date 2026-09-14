@@ -242,6 +242,18 @@ if (artist) {
           }
         }
 
+        // Dispatch Admin Notification
+        await dispatchAdminNotification({
+          type: 'photo_request',
+          title: 'Yêu cầu cập nhật ảnh đại diện Website',
+          message: `Nghệ sĩ "${artist.name}" vừa gửi yêu cầu đổi ảnh đại diện mới trên website chính.`,
+          artistId: artist.id,
+          artistName: artist.name,
+          artistAvatar: finalPhotoUrl,
+          targetTab: 'admin-tab-artists',
+          details: reqObj
+        });
+
         checkPendingPhotoRequest();
         alert(`✓ Yêu cầu đổi ảnh của "${artist.name}" đã được gửi đến Admin!\n\nSau khi Admin phê duyệt, ảnh sẽ tự động xuất hiện trên Trang chủ, Trang nghệ sĩ và Trang cá nhân của bạn.`);
         photoModal.close();
@@ -548,15 +560,33 @@ nextStepBtn?.addEventListener('click', () => {
 
   // Step 2 Validation
   if (wizardCurrentStep === 2) {
-    const hasAudio = audioFileInput?.files[0] || document.querySelector('#audio-external-url')?.value.trim();
     const hasArt = artworkFileInput?.files[0] || document.querySelector('#artwork-external-url')?.value.trim();
-    if (!hasAudio) {
-      alert('Vui lòng tải lên File Master Audio hoặc dán Link Google Drive/Dropbox chứa Audio.');
-      return;
-    }
     if (!hasArt) {
       alert('Vui lòng tải lên Ảnh bìa Artwork hoặc dán Link URL Ảnh bìa.');
       return;
+    }
+
+    if (wizardTrackMode === 'multi') {
+      if (wizardTracks.length === 0) {
+        alert('Vui lòng thêm ít nhất 1 bài hát vào Album / EP bằng nút "+ Thêm Bài Hát" hoặc "Tải Hàng Loạt Audio".');
+        return;
+      }
+      for (let i = 0; i < wizardTracks.length; i++) {
+        if (!wizardTracks[i].title) {
+          alert(`Vui lòng nhập Tên bài hát cho Track #${i + 1}.`);
+          return;
+        }
+        if (!wizardTracks[i].audioFile && !wizardTracks[i].audioUrl) {
+          alert(`Vui lòng tải file Audio cho Track #${i + 1}: "${wizardTracks[i].title}".`);
+          return;
+        }
+      }
+    } else {
+      const hasAudio = audioFileInput?.files[0] || document.querySelector('#audio-external-url')?.value.trim();
+      if (!hasAudio) {
+        alert('Vui lòng tải lên File Master Audio hoặc dán Link Google Drive/Dropbox chứa Audio.');
+        return;
+      }
     }
   }
 
@@ -630,6 +660,407 @@ closeReleaseDialogBtn?.addEventListener('click', () => {
 
 cancelReleaseBtn?.addEventListener('click', () => {
   releaseDialog?.close();
+});
+
+// ====================================================
+// ADMIN NOTIFICATION DISPATCHER & SPECIAL REQUESTS
+// ====================================================
+export async function dispatchAdminNotification({
+  type = 'general',
+  title = 'Thông báo từ Portal',
+  message = '',
+  artistId = '',
+  artistName = '',
+  artistAvatar = '',
+  targetTab = 'admin-tab-overview',
+  details = {}
+}) {
+  const notifObj = {
+    id: 'notif-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+    type,
+    title,
+    message,
+    artistId: artistId || artist?.id || '',
+    artistName: artistName || artist?.name || 'Nghệ sĩ',
+    artistAvatar: artistAvatar || artist?.image || '',
+    targetTab,
+    details,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    const raw = localStorage.getItem('uniflows-admin-notifications');
+    const list = raw ? JSON.parse(raw) : [];
+    list.unshift(notifObj);
+    if (list.length > 100) list.length = 100;
+    localStorage.setItem('uniflows-admin-notifications', JSON.stringify(list));
+  } catch (e) {
+    console.warn('Lỗi lưu local admin notification:', e);
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('admin_notifications').insert([{
+        id: notifObj.id,
+        type: notifObj.type,
+        title: notifObj.title,
+        message: notifObj.message,
+        artist_id: notifObj.artistId,
+        artist_name: notifObj.artistName,
+        target_tab: notifObj.targetTab,
+        details: notifObj.details,
+        is_read: false,
+        created_at: notifObj.createdAt
+      }]);
+    } catch (e) {
+      console.warn('Supabase notifications table not present, stored locally:', e);
+    }
+  }
+
+  return notifObj;
+}
+
+export async function submitSpecialRequest({ type, title, details = {} }) {
+  const reqObj = {
+    id: 'req-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+    type, // 'takedown' | 'catalog_transfer' | 'copyright_claim' | 'custom'
+    title: title || `Yêu cầu từ ${artist?.name || 'Nghệ sĩ'}`,
+    artistId: artist?.id || currentArtistId || '',
+    artistName: artist?.name || 'Nghệ sĩ',
+    artistEmail: artist?.email || sessionEmail || '',
+    artistAvatar: artist?.image || '',
+    details,
+    status: 'pending',
+    adminNote: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    const raw = localStorage.getItem('uniflows-special-requests');
+    const list = raw ? JSON.parse(raw) : [];
+    list.unshift(reqObj);
+    localStorage.setItem('uniflows-special-requests', JSON.stringify(list));
+  } catch (e) {
+    console.warn('Lỗi lưu local special request:', e);
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('special_requests').insert([{
+        id: reqObj.id,
+        type: reqObj.type,
+        title: reqObj.title,
+        artist_id: reqObj.artistId,
+        artist_name: reqObj.artistName,
+        artist_email: reqObj.artistEmail,
+        details: reqObj.details,
+        status: 'pending',
+        created_at: reqObj.createdAt
+      }]);
+    } catch (e) {
+      console.warn('Supabase special_requests table not present, stored locally:', e);
+    }
+  }
+
+  let notifMsg = '';
+  if (type === 'takedown') {
+    notifMsg = `Nghệ sĩ "${artist?.name}" yêu cầu gỡ bài hát "${details.releaseTitle || 'Tác phẩm'}" khỏi [${(details.platforms || []).join(', ')}] - Lý do: ${details.reason || 'N/A'}`;
+  } else if (type === 'catalog_transfer') {
+    notifMsg = `Nghệ sĩ "${artist?.name}" yêu cầu chuyển giao tác phẩm "${details.title || 'Catalogue'}" từ ${details.currentDistributor || 'nhà phân phối cũ'}`;
+  } else {
+    notifMsg = reqObj.title;
+  }
+
+  await dispatchAdminNotification({
+    type: type === 'takedown' ? 'takedown_request' : (type === 'catalog_transfer' ? 'catalog_transfer' : 'special_request'),
+    title: `Yêu cầu mới: ${type === 'takedown' ? 'Gỡ bài hát' : (type === 'catalog_transfer' ? 'Chuyển Catalog' : 'Dịch vụ khác')}`,
+    message: notifMsg,
+    targetTab: 'admin-tab-requests',
+    details: reqObj
+  });
+
+  return reqObj;
+}
+
+// ====================================================
+// PORTAL MOBILE RESPONSIVE NAVIGATION
+// ====================================================
+function initPortalMobileNav() {
+  const menuBtn = document.querySelector('#portal-mobile-menu-btn');
+  const drawer = document.querySelector('#portal-sidebar-drawer');
+  const backdrop = document.querySelector('#portal-drawer-backdrop');
+  const closeBtn = document.querySelector('#portal-close-drawer-btn');
+  const mobileThemeBtn = document.querySelector('#mobile-theme-toggle-btn');
+  const themeToggleBtn = document.querySelector('#theme-toggle-btn');
+  const bottomCreateBtn = document.querySelector('#mobile-bottom-create-release-btn');
+  const bottomNavItems = document.querySelectorAll('#portal-mobile-bottom-nav .portal-bottom-nav-item[data-tab]');
+
+  function openDrawer() {
+    drawer?.classList.add('open');
+    backdrop?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    drawer?.classList.remove('open');
+    backdrop?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  menuBtn?.addEventListener('click', openDrawer);
+  closeBtn?.addEventListener('click', closeDrawer);
+  backdrop?.addEventListener('click', closeDrawer);
+
+  document.querySelectorAll('#portal-nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      closeDrawer();
+      const tab = link.getAttribute('data-tab');
+      bottomNavItems.forEach(b => {
+        if (b.getAttribute('data-tab') === tab) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+    });
+  });
+
+  bottomNavItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tabId = item.getAttribute('data-tab');
+      if (!tabId) return;
+
+      const sideLink = document.querySelector(`#portal-nav a[data-tab="${tabId}"]`);
+      if (sideLink) sideLink.click();
+
+      bottomNavItems.forEach(b => b.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  bottomCreateBtn?.addEventListener('click', () => {
+    openReleaseModalBtn?.click();
+  });
+
+  mobileThemeBtn?.addEventListener('click', () => {
+    themeToggleBtn?.click();
+  });
+}
+initPortalMobileNav();
+
+// ====================================================
+// TRACKLIST STUDIO: MULTI-TRACK FOR EP & ALBUM
+// ====================================================
+let wizardTrackMode = 'single'; // 'single' | 'multi'
+let wizardTracks = []; // [{ id, trackNum, title, featuredArtist, audioFile, audioUrl, explicit, isrc, duration }]
+
+function setTrackMode(mode) {
+  wizardTrackMode = mode;
+  const singleBtn = document.querySelector('#track-mode-single-btn');
+  const multiBtn = document.querySelector('#track-mode-multi-btn');
+  const singleUploader = document.querySelector('#single-audio-uploader');
+  const multiStudio = document.querySelector('#multi-tracklist-studio');
+
+  if (mode === 'multi') {
+    singleBtn?.classList.remove('active');
+    if (singleBtn) { singleBtn.style.background = 'transparent'; singleBtn.style.color = '#64748b'; }
+    multiBtn?.classList.add('active');
+    if (multiBtn) { multiBtn.style.background = '#fff'; multiBtn.style.color = '#0f172a'; }
+    if (singleUploader) singleUploader.style.display = 'none';
+    if (multiStudio) multiStudio.style.display = 'block';
+
+    if (wizardTracks.length === 0) {
+      addTrackItem({ title: 'Bài hát 01' });
+      addTrackItem({ title: 'Bài hát 02' });
+    }
+    renderWizardTracklist();
+  } else {
+    singleBtn?.classList.add('active');
+    if (singleBtn) { singleBtn.style.background = '#fff'; singleBtn.style.color = '#0f172a'; }
+    multiBtn?.classList.remove('active');
+    if (multiBtn) { multiBtn.style.background = 'transparent'; multiBtn.style.color = '#64748b'; }
+    if (singleUploader) singleUploader.style.display = 'block';
+    if (multiStudio) multiStudio.style.display = 'none';
+  }
+}
+
+document.querySelector('#track-mode-single-btn')?.addEventListener('click', () => setTrackMode('single'));
+document.querySelector('#track-mode-multi-btn')?.addEventListener('click', () => setTrackMode('multi'));
+
+document.querySelector('#wizard-type-select')?.addEventListener('change', (e) => {
+  const val = e.target.value;
+  if (val === 'EP' || val === 'Album' || val === 'Remix') {
+    setTrackMode('multi');
+  } else if (val === 'Single') {
+    if (wizardTracks.length <= 1) {
+      setTrackMode('single');
+    }
+  }
+});
+
+function addTrackItem(data = {}) {
+  const item = {
+    id: 'tr-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+    trackNum: wizardTracks.length + 1,
+    title: data.title || '',
+    featuredArtist: data.featuredArtist || '',
+    audioFile: data.audioFile || null,
+    audioUrl: data.audioUrl || '',
+    explicit: data.explicit || false,
+    isrc: data.isrc || '',
+    duration: data.duration || ''
+  };
+  wizardTracks.push(item);
+  renderWizardTracklist();
+  return item;
+}
+
+function renderWizardTracklist() {
+  const container = document.querySelector('#tracklist-items-container');
+  const badge = document.querySelector('#tracklist-summary-badge');
+  if (badge) {
+    badge.textContent = `${wizardTracks.length} bài hát trong album`;
+  }
+  if (!container) return;
+
+  if (wizardTracks.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:20px;background:#fff;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;font-size:12px;">
+        Chưa có bài hát nào trong album. Bấm <b>"+ Thêm bài hát"</b> hoặc <b>"Tải hàng loạt Audio"</b> để thêm!
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = wizardTracks.map((tr, idx) => {
+    const audioStateText = tr.audioFile 
+      ? `✓ ${tr.audioFile.name} (${(tr.audioFile.size / (1024 * 1024)).toFixed(1)} MB)` 
+      : (tr.audioUrl ? `✓ Link: ${tr.audioUrl.substring(0, 26)}...` : 'Chưa chọn file Audio');
+    const audioStateColor = (tr.audioFile || tr.audioUrl) ? '#16a34a' : '#dc2626';
+
+    return `
+      <div class="tracklist-card-row" data-track-idx="${idx}" style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:12px;display:grid;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:240px;">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;background:#0f172a;color:#fff;padding:3px 8px;border-radius:4px;white-space:nowrap;">
+              #${String(idx + 1).padStart(2, '0')}
+            </span>
+            <input type="text" class="track-input-title" placeholder="Tên bài hát *" value="${esc(tr.title)}" style="font-size:13px;font-weight:700;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;flex:1;min-width:140px;" required>
+            <input type="text" class="track-input-feat" placeholder="Nghệ sĩ feat (nếu có)" value="${esc(tr.featuredArtist)}" style="font-size:12px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;flex:1;min-width:120px;">
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button type="button" class="btn-track-up button alt" style="padding:4px 8px;font-size:10px;margin:0;" ${idx === 0 ? 'disabled' : ''} title="Đưa lên">▲</button>
+            <button type="button" class="btn-track-down button alt" style="padding:4px 8px;font-size:10px;margin:0;" ${idx === wizardTracks.length - 1 ? 'disabled' : ''} title="Đưa xuống">▼</button>
+            <button type="button" class="btn-track-remove button alt" style="padding:4px 8px;font-size:10px;margin:0;color:#dc2626;border-color:#fca5a5;" title="Xoá track này">✕</button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px dashed #e2e8f0;padding-top:8px;font-size:11px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label class="button alt" style="padding:4px 10px;font-size:10px;margin:0;cursor:pointer;background:#f8fafc;border:1px solid #cbd5e1;">
+              🎵 Chọn Audio
+              <input type="file" class="track-audio-input" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
+            </label>
+            <span class="track-audio-status" style="font-size:11px;color:${audioStateColor};font-family:'DM Mono',monospace;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              ${audioStateText}
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <select class="track-select-explicit" style="font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;">
+              <option value="false" ${!tr.explicit ? 'selected' : ''}>Clean</option>
+              <option value="true" ${tr.explicit ? 'selected' : ''}>[E] Explicit</option>
+            </select>
+            <input type="text" class="track-input-isrc" placeholder="Mã ISRC" value="${esc(tr.isrc)}" style="font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;width:110px;font-family:'DM Mono',monospace;">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.tracklist-card-row').forEach(row => {
+    const idx = parseInt(row.dataset.trackIdx, 10);
+    const item = wizardTracks[idx];
+    if (!item) return;
+
+    row.querySelector('.track-input-title')?.addEventListener('input', (e) => {
+      item.title = e.target.value;
+    });
+
+    row.querySelector('.track-input-feat')?.addEventListener('input', (e) => {
+      item.featuredArtist = e.target.value;
+    });
+
+    row.querySelector('.track-select-explicit')?.addEventListener('change', (e) => {
+      item.explicit = e.target.value === 'true';
+    });
+
+    row.querySelector('.track-input-isrc')?.addEventListener('input', (e) => {
+      item.isrc = e.target.value.trim();
+    });
+
+    row.querySelector('.track-audio-input')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        item.audioFile = file;
+        const statusEl = row.querySelector('.track-audio-status');
+        if (statusEl) {
+          statusEl.textContent = `✓ ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+          statusEl.style.color = '#16a34a';
+        }
+      }
+    });
+
+    row.querySelector('.btn-track-up')?.addEventListener('click', () => {
+      if (idx > 0) {
+        const temp = wizardTracks[idx];
+        wizardTracks[idx] = wizardTracks[idx - 1];
+        wizardTracks[idx - 1] = temp;
+        wizardTracks.forEach((t, i) => t.trackNum = i + 1);
+        renderWizardTracklist();
+      }
+    });
+
+    row.querySelector('.btn-track-down')?.addEventListener('click', () => {
+      if (idx < wizardTracks.length - 1) {
+        const temp = wizardTracks[idx];
+        wizardTracks[idx] = wizardTracks[idx + 1];
+        wizardTracks[idx + 1] = temp;
+        wizardTracks.forEach((t, i) => t.trackNum = i + 1);
+        renderWizardTracklist();
+      }
+    });
+
+    row.querySelector('.btn-track-remove')?.addEventListener('click', () => {
+      wizardTracks.splice(idx, 1);
+      wizardTracks.forEach((t, i) => t.trackNum = i + 1);
+      renderWizardTracklist();
+    });
+  });
+}
+
+document.querySelector('#btn-add-tracklist-item')?.addEventListener('click', () => {
+  addTrackItem();
+});
+
+document.querySelector('#batch-audio-input')?.addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+
+  setTrackMode('multi');
+  files.forEach(file => {
+    let cleanTitle = file.name.replace(/\.[^/.]+$/, '');
+    cleanTitle = cleanTitle.replace(/^[\d\s._-]+/, '').trim();
+    if (!cleanTitle) cleanTitle = file.name;
+
+    addTrackItem({
+      title: cleanTitle,
+      audioFile: file
+    });
+  });
+  e.target.value = '';
 });
 
 // File name change indicators & live visual feedback
@@ -1455,12 +1886,45 @@ form?.addEventListener('submit', async (e) => {
     let audioUrl = '';
     let artworkUrl = '';
 
-    // 1. Upload Master Audio hoặc dùng Link ngoài (Google Drive/Dropbox)
-    if (audioFile) {
-      submitBtn.textContent = 'Đang tải Audio...';
-      audioUrl = await uploadAudioFile(audioFile, `${artist.id}_${slug(v.title)}`);
-    } else if (v.audioExternalUrl && v.audioExternalUrl.trim()) {
-      audioUrl = v.audioExternalUrl.trim();
+    // 1. Upload Master Audio hoặc Multi-track EP/Album
+    let finalTracklist = [];
+    if (wizardTrackMode === 'multi' && wizardTracks.length > 0) {
+      submitBtn.textContent = `Đang chuẩn bị ${wizardTracks.length} tracks...`;
+      for (let i = 0; i < wizardTracks.length; i++) {
+        const tr = wizardTracks[i];
+        let tAudioUrl = tr.audioUrl || '';
+        if (tr.audioFile) {
+          submitBtn.textContent = `Đang tải Audio (${i + 1}/${wizardTracks.length}): ${tr.title || 'Track ' + (i + 1)}...`;
+          tAudioUrl = await uploadAudioFile(tr.audioFile, `${artist.id}_${slug(v.title)}_tr${i + 1}`);
+        }
+        finalTracklist.push({
+          trackNum: i + 1,
+          title: tr.title || `Track ${i + 1}`,
+          featuredArtist: tr.featuredArtist || '',
+          audioUrl: tAudioUrl,
+          explicit: tr.explicit === true,
+          isrc: tr.isrc || '',
+          duration: tr.duration || ''
+        });
+      }
+      if (finalTracklist[0]?.audioUrl) {
+        audioUrl = finalTracklist[0].audioUrl;
+      }
+    } else {
+      if (audioFile) {
+        submitBtn.textContent = 'Đang tải Audio...';
+        audioUrl = await uploadAudioFile(audioFile, `${artist.id}_${slug(v.title)}`);
+      } else if (v.audioExternalUrl && v.audioExternalUrl.trim()) {
+        audioUrl = v.audioExternalUrl.trim();
+      }
+      finalTracklist = [{
+        trackNum: 1,
+        title: v.title,
+        featuredArtist: v.featuredArtist || '',
+        audioUrl,
+        explicit: v.explicit === 'true',
+        isrc: (parsedTracks[0] && parsedTracks[0].isrc) || ''
+      }];
     }
 
     // 2. Upload Artwork hoặc dùng Link ngoài (URL ảnh trực tiếp)
@@ -1510,7 +1974,8 @@ form?.addEventListener('submit', async (e) => {
       },
       metadata: metadataPayload,
       audioUrl,
-      artworkUrl
+      artworkUrl,
+      tracklist: finalTracklist
     };
 
     // 4. Lưu vào Database
@@ -1527,7 +1992,7 @@ form?.addEventListener('submit', async (e) => {
         language: v.language,
         explicit: v.explicit === 'true',
         upc: v.upc,
-        tracks: parsedTracks,
+        tracks: finalTracklist.length > 0 ? finalTracklist : parsedTracks,
         primary_artist: v.primaryArtist,
         featured_artist: v.featuredArtist,
         songwriters: v.songwriters,
@@ -1541,7 +2006,10 @@ form?.addEventListener('submit', async (e) => {
         audio_url: audioUrl,
         artwork_url: artworkUrl,
         links,
-        metadata: metadataPayload
+        metadata: {
+          ...metadataPayload,
+          tracklist: finalTracklist
+        }
       }).select().single();
 
       if (dbError) throw dbError;
@@ -1553,13 +2021,27 @@ form?.addEventListener('submit', async (e) => {
     artist.products.unshift(newReleaseObj);
     await saveData(data);
 
+    // 6. Gửi thông báo đến Admin Notification Center
+    await dispatchAdminNotification({
+      type: 'new_release',
+      title: `Bản phát hành mới: "${v.title}" (${v.type || 'Single'})`,
+      message: `Nghệ sĩ "${artist.name}" vừa nộp bản phát hành mới "${v.title}" (${finalTracklist.length} bài hát) để duyệt.`,
+      artistId: artist.id,
+      artistName: artist.name,
+      artistAvatar: artworkUrl,
+      targetTab: 'admin-tab-releases',
+      details: newReleaseObj
+    });
+
     form.reset();
+    wizardTracks = [];
+    setTrackMode('single');
     if (audioFilename) audioFilename.textContent = 'Thả hoặc chọn file master WAV/FLAC vào đây';
     if (artworkFilename) artworkFilename.textContent = 'Artwork 3000 × 3000 px';
     if (primaryArtistInput) primaryArtistInput.value = artist.name;
 
     releaseDialog?.close();
-    showNotice(`✓ Đã gửi bản phát hành "${v.title}" thành công. Đang chờ UniFLOWs duyệt!`);
+    showNotice(`✓ Đã gửi bản phát hành "${v.title}" (${finalTracklist.length} bài hát) thành công. Đang chờ UniFLOWs duyệt!`);
     await renderReleases();
     switchTab('tab-releases');
   } catch (err) {
@@ -1797,6 +2279,17 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
       allCached.unshift(newPayoutItem);
       localStorage.setItem('uniflows-payouts', JSON.stringify(allCached));
     } catch {}
+
+    // Dispatch Admin Notification
+    await dispatchAdminNotification({
+      type: 'payout_request',
+      title: `Yêu cầu rút tiền: ₫ ${amountVal.toLocaleString('vi-VN')}`,
+      message: `Nghệ sĩ "${artist.name}" vừa gửi yêu cầu rút tiền ₫ ${amountVal.toLocaleString('vi-VN')} về ngân hàng ${bank} (${accountNumber}).`,
+      artistId: artist.id,
+      artistName: artist.name,
+      targetTab: 'admin-tab-payouts',
+      details: newPayoutItem
+    });
 
     payoutDialog?.close();
     showNotice(`✓ Yêu cầu rút số tiền ₫ ${amountVal.toLocaleString('vi-VN')} đã được gửi thành công tới Admin của UniFLOWs!`);
@@ -2659,6 +3152,20 @@ migIngestForm?.addEventListener('submit', async (e) => {
   artist.products.unshift(newMigrated);
   await saveData(data);
 
+  // Gửi vào bảng Special Requests & Thông báo Admin
+  await submitSpecialRequest({
+    type: 'catalog_transfer',
+    title: `Chuyển giao Catalog: "${title}" (ISRC: ${isrc})`,
+    details: {
+      title,
+      isrc,
+      upc,
+      releaseDate: date,
+      currentDistributor: distro,
+      spotifyUrl
+    }
+  });
+
   alert(`✓ Đã tiếp nhận hồ sơ chuyển giao tác phẩm "${title}" (ISRC: ${isrc}) từ ${distro}!\n\nUniFLOWs sẽ cấu hình Delivery Engine để giữ nguyên 100% lượt stream và playlist trên Spotify & Apple Music.`);
   migrationDialog?.close();
   migIngestForm.reset();
@@ -2687,9 +3194,33 @@ migTakedownForm?.addEventListener('submit', async (e) => {
     await saveData(data);
   }
 
+  // Gửi vào bảng Special Requests & Thông báo Admin
+  await submitSpecialRequest({
+    type: 'takedown',
+    title: `Yêu cầu gỡ bài hát: "${item?.title || relId}"`,
+    details: {
+      releaseId: relId,
+      releaseTitle: item?.title || relId,
+      platforms: checkboxes,
+      reason
+    }
+  });
+
   alert(`✓ Đã gửi lệnh gỡ bài hát khỏi [${checkboxes.join(', ')}] tới Admin của UniFLOWs với lý do: "${reason}".`);
   migrationDialog?.close();
   await renderReleases();
+});
+
+// Quick action buttons in Tab 5 (Support & Rights)
+document.querySelector('#open-takedown-quick-btn')?.addEventListener('click', () => {
+  migrationDialog?.showModal();
+  migTabTakedownBtn?.click();
+  populateTakedownReleases();
+});
+
+document.querySelector('#open-catalog-transfer-btn')?.addEventListener('click', () => {
+  migrationDialog?.showModal();
+  migTabIngestBtn?.click();
 });
 
 exportMetaBtn?.addEventListener('click', () => {
