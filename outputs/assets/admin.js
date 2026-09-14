@@ -25,7 +25,11 @@ import {
   sendPayoutStatusEmail, 
   sendTestEmail,
   sendBroadcastEmail,
-  sendDemoReplyEmail 
+  sendDemoReplyEmail,
+  sendTrackPlaylistUpdateEmail,
+  sendSpecialRequestStatusEmail,
+  sendPhotoRequestStatusEmail,
+  sendAppointmentConfirmationEmail
 } from './mailer.js';
 import { compressImageFile, batchCompressImages, uploadImageSmart, formatBytes } from './image-optimizer.js';
 
@@ -139,6 +143,9 @@ function switchAdminTab(tabId) {
   }
   if (tabId === 'admin-tab-requests') {
     renderSpecialRequestsAdmin();
+  }
+  if (tabId === 'admin-tab-appointments') {
+    renderAppointmentsAdmin();
   }
 
   // Sync mobile select
@@ -459,6 +466,7 @@ function renderSelectedArtistEditor() {
   artistsBox.innerHTML = artistEditor(currentArtist, idx);
   attachArtistUploadEvents();
   attachArtistReorderEvents();
+  attachArtistBalanceEvents(currentArtist, idx);
 }
 
 const artistEditor = (a, idx) => {
@@ -565,6 +573,53 @@ const artistEditor = (a, idx) => {
       </div>
     </div>
 
+    <!-- 03: ARTIST WALLET & FINANCIAL BALANCES (SỐ DƯ & VÍ NGHỆ SĨ) -->
+    <div style="background:#fdf2f8;border:2px solid #f472b6;padding:18px;margin:15px 0;border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span class="eyebrow" style="color:#be185d;margin:0;font-size:10px;">Artist Financial Ledger</span>
+          <h4 style="margin:2px 0 0;font-size:14px;text-transform:uppercase;color:#9d174d;">💳 Quản Lý Số Dư Khả Dụng & Doanh Thu Nghệ Sĩ</h4>
+        </div>
+        <span style="font-size:11px;background:#fce7f3;color:#be185d;padding:3px 8px;border-radius:12px;font-family:'DM Mono',monospace;font-weight:bold;">
+          Ví Portal Nghệ Sĩ
+        </span>
+      </div>
+
+      <div class="mini-grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label style="color:#9d174d;font-weight:bold;">Số dư khả dụng để rút (Payable Balance ₫) *</label>
+          <input data-key="payableBalance" class="artist-payable-balance-input" value="${esc(a.payableBalance || '0')}" placeholder="Ví dụ: 18,500,000" style="font-family:'DM Mono',monospace;font-weight:bold;font-size:15px;color:#9d174d;border-color:#f472b6;background:#fff;">
+          <small style="color:#64748b;font-size:11px;margin-top:4px;display:block;">💡 Đây là số tiền nghệ sĩ thấy tại mục "Số dư khả dụng" trên Portal và có thể tạo lệnh rút tiền.</small>
+        </div>
+
+        <div class="field">
+          <label style="color:#1e40af;font-weight:bold;">Tổng doanh thu tích lũy (Estimated Revenue ₫)</label>
+          <input data-key="estimatedRevenue" value="${esc(a.estimatedRevenue || '0')}" placeholder="Ví dụ: 25,000,000" style="font-family:'DM Mono',monospace;font-weight:bold;font-size:14px;color:#1e40af;background:#fff;">
+          <small style="color:#64748b;font-size:11px;margin-top:4px;display:block;">Tổng thu nhập ước tính ghi nhận trên hệ sinh thái.</small>
+        </div>
+
+        <div class="field" style="grid-column: 1 / -1;">
+          <label style="color:#059669;font-weight:bold;">Tổng lượt nghe hàng tháng (Monthly Streams)</label>
+          <input data-key="monthlyStreams" value="${esc(a.monthlyStreams || '0')}" placeholder="Ví dụ: 450,000" style="font-family:'DM Mono',monospace;font-weight:bold;font-size:14px;color:#059669;background:#fff;">
+          <small style="color:#64748b;font-size:11px;margin-top:4px;display:block;">Lượt stream hiển thị trên Portal và Profile nghệ sĩ.</small>
+        </div>
+      </div>
+
+      <!-- Quick Adjustment Control Bar -->
+      <div style="background:#fff;border:1px dashed #f472b6;padding:12px 14px;border-radius:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <span style="font-size:11px;font-weight:bold;color:#be185d;text-transform:uppercase;">⚡ Điều chỉnh nhanh số dư ví:</span>
+          <span style="font-size:10.5px;color:#64748b;">(Thao tác này chỉ cập nhật ví nghệ sĩ, tuyệt đối KHÔNG gửi email)</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="number" id="quick-adjust-amount-${idx}" placeholder="Nhập số tiền ₫..." style="width:160px;padding:6px 10px;font-size:12px;font-family:'DM Mono',monospace;font-weight:bold;border:1px solid #cbd5e1;border-radius:4px;">
+          <input type="text" id="quick-adjust-reason-${idx}" placeholder="Lý do điều chỉnh (Ví dụ: Ứng trước, thưởng, phạt)..." style="flex:1;min-width:200px;padding:6px 10px;font-size:12px;border:1px solid #cbd5e1;border-radius:4px;">
+          <button type="button" class="btn-quick-adjust-add button" data-idx="${idx}" style="background:#15803d;color:#fff;border-color:#15803d;font-weight:bold;padding:6px 12px;font-size:11px;">+ Cộng Tiền</button>
+          <button type="button" class="btn-quick-adjust-sub button" data-idx="${idx}" style="background:#dc2626;color:#fff;border-color:#dc2626;font-weight:bold;padding:6px 12px;font-size:11px;">- Trừ Tiền</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Contract & Accounting Cycle Settings -->
     <div style="background:#fffbe6;border:1px solid #ffe58f;padding:15px;margin:15px 0;">
       <h4 style="margin:0 0 10px;font-size:13px;text-transform:uppercase;color:#d48806;">📜 Hợp đồng & Kỳ đối soát doanh thu</h4>
@@ -644,6 +699,59 @@ function attachArtistUploadEvents() {
       }
     });
   });
+}
+
+function attachArtistBalanceEvents(artist, idx) {
+  const container = document.querySelector(`.item-editor[data-artist-idx="${idx}"]`);
+  if (!container) return;
+
+  const balanceInput = container.querySelector('.artist-payable-balance-input');
+  const addBtn = container.querySelector(`.btn-quick-adjust-add[data-idx="${idx}"]`);
+  const subBtn = container.querySelector(`.btn-quick-adjust-sub[data-idx="${idx}"]`);
+  const amtInput = container.querySelector(`#quick-adjust-amount-${idx}`);
+  const reasonInput = container.querySelector(`#quick-adjust-reason-${idx}`);
+
+  const adjustBalance = async (isAdd) => {
+    const rawAmt = amtInput ? parseFloat(amtInput.value) : 0;
+    if (!rawAmt || isNaN(rawAmt) || rawAmt <= 0) {
+      alert('Vui lòng nhập số tiền hợp lệ (> 0)!');
+      return;
+    }
+
+    const currentBal = parseInt(String(balanceInput ? balanceInput.value : (artist.payableBalance || 0)).replace(/[^0-9]/g, ''), 10) || 0;
+    const delta = isAdd ? rawAmt : -rawAmt;
+    const newBal = Math.max(0, currentBal + delta);
+    const reason = reasonInput ? reasonInput.value.trim() : '';
+
+    if (!confirm(`Xác nhận ${isAdd ? 'CỘNG' : 'TRỪ'} ₫ ${rawAmt.toLocaleString('vi-VN')} ${isAdd ? 'vào' : 'khỏi'} số dư của nghệ sĩ "${artist.name}"?\n\n- Số dư hiện tại: ₫ ${currentBal.toLocaleString('vi-VN')}\n- Số dư mới: ₫ ${newBal.toLocaleString('vi-VN')}`)) return;
+
+    if (balanceInput) {
+      balanceInput.value = newBal.toLocaleString('vi-VN');
+    }
+    artist.payableBalance = newBal.toLocaleString('vi-VN');
+
+    if (!artist.balanceAdjustments) artist.balanceAdjustments = [];
+    artist.balanceAdjustments.unshift({
+      id: `adj-${Date.now()}`,
+      date: new Date().toISOString(),
+      type: isAdd ? 'credit' : 'debit',
+      amount: rawAmt,
+      previousBalance: currentBal,
+      newBalance: newBal,
+      reason: reason || (isAdd ? 'Cộng tiền thủ công từ Admin' : 'Trừ tiền thủ công từ Admin'),
+      adjustedBy: 'Admin'
+    });
+
+    await saveData(data);
+    await logAuditEvent('Điều chỉnh số dư ví nghệ sĩ', `Admin đã ${isAdd ? 'cộng' : 'trừ'} ₫ ${rawAmt.toLocaleString('vi-VN')} cho "${artist.name}". Số dư mới: ₫ ${newBal.toLocaleString('vi-VN')}.${reason ? ` Lý do: ${reason}` : ''}`);
+    showNotice(`✓ Đã cập nhật số dư cho "${artist.name}": ₫ ${newBal.toLocaleString('vi-VN')} (Thao tác không gửi email)!`);
+
+    if (amtInput) amtInput.value = '';
+    if (reasonInput) reasonInput.value = '';
+  };
+
+  addBtn?.addEventListener('click', () => adjustBalance(true));
+  subBtn?.addEventListener('click', () => adjustBalance(false));
 }
 
 // ----------------------------------------------------
@@ -2228,8 +2336,20 @@ async function loadReleasesQueue() {
           } else if (emailRes && emailRes.disabled) {
             emailNotice = ` (Email tự động đang tắt trong Cấu hình)`;
           }
-        } else if (!targetArtistObj?.email) {
-          emailNotice = ` ⚠️ (Nghệ sĩ "${relArtistId}" chưa có email trong hệ thống)`;
+        }
+
+        // Check and send playlist update email if playlists changed
+        const oldPlaylists = Array.isArray(existingMeta.playlists) ? existingMeta.playlists : [];
+        const addedPlaylists = playlists.filter(p => !oldPlaylists.includes(p));
+        if (targetArtistObj && targetArtistObj.email && (addedPlaylists.length > 0 || (playlists.length > 0 && JSON.stringify(playlists) !== JSON.stringify(oldPlaylists)))) {
+          sendTrackPlaylistUpdateEmail({
+            artist: targetArtistObj,
+            trackTitle: relTitle,
+            newPlaylists: addedPlaylists.length > 0 ? addedPlaylists : playlists,
+            allPlaylists: playlists,
+            pitchStatus: status || 'In Playlist',
+            notes: arFeedback || 'Ca khúc của bạn đã được ban biên tập đưa vào danh sách phát.'
+          }).catch(err => console.warn('Lỗi gửi email playlist update:', err));
         }
       } catch (err) {
         console.warn('Lỗi gửi email release:', err);
@@ -2374,6 +2494,25 @@ function renderPitchingBoard() {
       if (isSupabaseConfigured()) {
         await supabase.from('releases').update({ metadata: meta }).eq('id', relId);
       }
+
+      // Notify artist of Pitching status change
+      try {
+        const artistObj = await resolveArtistObj(targetRel.artist_id);
+        if (artistObj && artistObj.email) {
+          const plArr = (meta.pitchingPlaylists || (Array.isArray(meta.playlists) ? meta.playlists.join(', ') : '')).split(',').map(s => s.trim()).filter(Boolean);
+          sendTrackPlaylistUpdateEmail({
+            artist: artistObj,
+            trackTitle: targetRel.title,
+            newPlaylists: plArr,
+            allPlaylists: plArr,
+            pitchStatus: newStatus,
+            notes: `Trạng thái Pitching chiến dịch đã được cập nhật thành "${newStatus}".`
+          }).catch(err => console.warn('Lỗi gửi email pitching status:', err));
+        }
+      } catch (err) {
+        console.warn('Lỗi gửi email pitching update:', err);
+      }
+
       showNotice(`✓ Đã chuyển trạng thái Pitching của "${targetRel.title}"!`);
       renderPitchingBoard();
     });
@@ -2396,6 +2535,25 @@ function renderPitchingBoard() {
         if (isSupabaseConfigured()) {
           await supabase.from('releases').update({ metadata: meta }).eq('id', relId);
         }
+
+        // Notify artist of target playlists update
+        try {
+          const artistObj = await resolveArtistObj(targetRel.artist_id);
+          if (artistObj && artistObj.email) {
+            const plArr = newVal.split(',').map(s => s.trim()).filter(Boolean);
+            sendTrackPlaylistUpdateEmail({
+              artist: artistObj,
+              trackTitle: targetRel.title,
+              newPlaylists: plArr,
+              allPlaylists: plArr,
+              pitchStatus: meta.pitchingStatus || 'Đang Pitching',
+              notes: 'Danh sách Playlist mục tiêu cho ca khúc đã được cập nhật.'
+            }).catch(err => console.warn('Lỗi gửi email pitching playlists:', err));
+          }
+        } catch (err) {
+          console.warn('Lỗi gửi email pitching update:', err);
+        }
+
         showNotice(`✓ Đã cập nhật Playlist mục tiêu cho "${targetRel.title}"!`);
         renderPitchingBoard();
       }
@@ -5348,31 +5506,33 @@ document.querySelector('#admin-submission-search')?.addEventListener('input', re
 // ----------------------------------------------------
 let currentDemoSubReplyIdx = null;
 
-function applyDemoReplyTemplate(type, artistName) {
+function applyDemoReplyTemplate(type, artistName, dossierCode = '') {
   const subjectInput = document.querySelector('#demo-reply-subject');
   const messageInput = document.querySelector('#demo-reply-message');
   if (!subjectInput || !messageInput) return;
 
+  const codeTag = dossierCode ? ` [${dossierCode}]` : '';
+
   const templates = {
     interview: {
-      subject: `[UniFLOWs A&R] Thư mời trao đổi & lắng nghe thêm demo mới — ${artistName}`,
-      message: `Xin chào ${artistName},\n\nĐội ngũ A&R của UniFLOWs đã lắng nghe bản demo của bạn và thực sự rất ấn tượng với phong cách âm nhạc cũng như năng lượng mà tác phẩm mang lại.\n\nChúng tôi rất mong muốn sắp xếp một buổi trò chuyện trực tiếp (hoặc online qua Google Meet) để lắng nghe thêm các dự án mới mà bạn đang ấp ủ, cũng như thảo luận về cơ hội đồng hành phát hành âm nhạc cùng UniFLOWs Label.\n\nBạn vui lòng phản hồi lại email này kèm khung thời gian rảnh thuận tiện nhất trong tuần tới của bạn nhé.\n\nRất mong sớm có dịp hợp tác cùng bạn!`
+      subject: `[UniFLOWs A&R] Thư mời trao đổi & lắng nghe thêm demo mới${codeTag} — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nĐội ngũ A&R của UniFLOWs đã lắng nghe bản demo của bạn và thực sự rất ấn tượng với phong cách âm nhạc cũng như năng lượng mà tác phẩm mang lại.\n\nChúng tôi rất mong muốn sắp xếp một buổi trò chuyện trực tiếp (hoặc online qua Google Meet) để lắng nghe thêm các dự án mới mà bạn đang ấp ủ, cũng như thảo luận về cơ hội đồng hành phát hành âm nhạc cùng UniFLOWs Label.\n\nBạn vui lòng gửi email phản hồi (hoặc bấm nút "Gửi Email Nhanh" bên dưới) kèm Mã hồ sơ [${dossierCode || 'Mã hồ sơ của bạn'}] trực tiếp tới: management@uniflowslabel.com cùng khung thời gian rảnh thuận tiện nhất trong tuần tới của bạn nhé.\n\nRất mong sớm có dịp hợp tác cùng bạn!`
     },
     stems: {
-      subject: `[UniFLOWs A&R] Yêu cầu bổ sung tệp thu âm Master WAV & Stems — ${artistName}`,
-      message: `Xin chào ${artistName},\n\nCảm ơn bạn đã gửi sản phẩm tới UniFLOWs. Đội ngũ A&R và Audio Engineering của chúng tôi đã tiến hành thẩm định bước đầu.\n\nĐể hoàn tất quy trình đánh giá kỹ thuật và chuẩn bị cho các phương án phát hành, bạn vui lòng phản hồi email này và đính kèm link tải (Google Drive / Dropbox) bao gồm:\n1. File Master WAV chất lượng cao (24-bit, 44.1kHz hoặc 48kHz)\n2. Bản Vocal Stems & Instrumental tách rời\n3. File văn bản Lời bài hát (Lyrics) chính xác\n\nChúc bạn một ngày làm việc sáng tạo!`
+      subject: `[UniFLOWs A&R] Yêu cầu bổ sung tệp thu âm Master WAV & Stems${codeTag} — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nCảm ơn bạn đã gửi sản phẩm tới UniFLOWs. Đội ngũ A&R và Audio Engineering của chúng tôi đã tiến hành thẩm định bước đầu.\n\nĐể hoàn tất quy trình đánh giá kỹ thuật và chuẩn bị cho các phương án phát hành, bạn vui lòng gửi email kèm Mã hồ sơ [${dossierCode || 'Mã hồ sơ của bạn'}] trực tiếp tới: management@uniflowslabel.com và đính kèm link tải (Google Drive / Dropbox) bao gồm:\n1. File Master WAV chất lượng cao (24-bit, 44.1kHz hoặc 48kHz)\n2. Bản Vocal Stems & Instrumental tách rời\n3. File văn bản Lời bài hát (Lyrics) chính xác\n\nChúc bạn một ngày làm việc sáng tạo!`
     },
     signed: {
-      subject: `🎉 [UniFLOWs Label] Đề xuất ký kết hợp đồng phân phối âm nhạc — ${artistName}`,
-      message: `Xin chào ${artistName},\n\nChúc mừng bạn! Sau khi hội đồng A&R đánh giá toàn diện, UniFLOWs Label chính thức gửi lời mời hợp tác và đề xuất ký hợp đồng phân phối toàn cầu cho sản phẩm của bạn qua hệ thống UniENGINE.\n\nChúng tôi sẽ liên hệ để trao đổi các điều khoản bảo đảm tối đa quyền tác giả, phân chia doanh thu bản quyền minh bạch và lộ trình quảng bá (Playlist Pitching / TikTok Campaign).\n\nBạn vui lòng phản hồi email này để người phụ trách hợp đồng gửi bản thảo thảo luận chi tiết nhé!`
+      subject: `🎉 [UniFLOWs Label] Đề xuất ký kết hợp đồng phân phối âm nhạc${codeTag} — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nChúc mừng bạn! Sau khi hội đồng A&R đánh giá toàn diện, UniFLOWs Label chính thức gửi lời mời hợp tác và đề xuất ký hợp đồng phân phối toàn cầu cho sản phẩm của bạn qua hệ thống UniENGINE.\n\nChúng tôi sẽ liên hệ để trao đổi các điều khoản bảo đảm tối đa quyền tác giả, phân chia doanh thu bản quyền minh bạch và lộ trình quảng bá (Playlist Pitching / TikTok Campaign).\n\nBạn vui lòng gửi email kèm Mã hồ sơ [${dossierCode || 'Mã hồ sơ của bạn'}] trực tiếp tới: management@uniflowslabel.com để người phụ trách hợp đồng gửi bản thảo thảo luận chi tiết nhé!`
     },
     encourage: {
-      subject: `[UniFLOWs Label] Thư cảm ơn & phản hồi về bản demo — ${artistName}`,
-      message: `Xin chào ${artistName},\n\nCảm ơn bạn rất nhiều vì đã tin tưởng lựa chọn gửi gắm tác phẩm âm nhạc của mình tới UniFLOWs Label. Chúng tôi trân trọng từng phút lắng nghe sản phẩm của bạn.\n\nTuy nhiên trong đợt phát hành quý này, màu sắc tác phẩm chưa hoàn toàn khớp với định hướng danh mục dự án mà hãng đang triển khai. Quyết định này hoàn toàn không phủ nhận tài năng và nỗ lực của bạn.\n\nChúng tôi khuyến khích bạn tiếp tục sáng tạo và luôn sẵn sàng chào đón bạn gửi những bản demo tiếp theo tới cổng tuyển sinh A&R của UniFLOWs trong tương lai!\n\nChúc bạn luôn giữ trọn ngọn lửa đam mê âm nhạc.`
+      subject: `[UniFLOWs Label] Thư cảm ơn & phản hồi về bản demo${codeTag} — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nCảm ơn bạn rất nhiều vì đã tin tưởng lựa chọn gửi gắm tác phẩm âm nhạc của mình tới UniFLOWs Label. Chúng tôi trân trọng từng phút lắng nghe sản phẩm của bạn.\n\nTuy nhiên trong đợt phát hành quý này, màu sắc tác phẩm chưa hoàn toàn khớp với định hướng danh mục dự án mà hãng đang triển khai. Quyết định này hoàn toàn không phủ nhận tài năng và nỗ lực của bạn.\n\nChúng tôi khuyến khích bạn tiếp tục sáng tạo và luôn sẵn sàng chào đón bạn gửi những bản demo tiếp theo tới cổng tuyển sinh A&R của UniFLOWs trong tương lai!\n\nNếu cần giải đáp thêm, bạn có thể liên hệ trực tiếp: management@uniflowslabel.com kèm Mã hồ sơ [${dossierCode || 'Mã hồ sơ của bạn'}].\n\nChúc bạn luôn giữ trọn ngọn lửa đam mê âm nhạc.`
     },
     custom: {
-      subject: `[UniFLOWs A&R] Phản hồi về bản demo gửi tới UniFLOWs Label — ${artistName}`,
-      message: `Xin chào ${artistName},\n\nĐội ngũ A&R của UniFLOWs đã nhận và lắng nghe bản demo bạn gửi.\n\n[Nhập nội dung phản hồi cụ thể tại đây...]\n\nTrân trọng,\nĐội ngũ A&R UniFLOWs Label\nmanagement@uniflowslabel.com`
+      subject: `[UniFLOWs A&R] Phản hồi về bản demo gửi tới UniFLOWs Label${codeTag} — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nĐội ngũ A&R của UniFLOWs đã nhận và lắng nghe bản demo của bạn (Mã hồ sơ: ${dossierCode || 'Hồ sơ demo'}).\n\n[Nhập nội dung phản hồi cụ thể tại đây...]\n\nĐể trao đổi thêm hoặc gửi tư liệu, bạn vui lòng gửi thư trực tiếp tới: management@uniflowslabel.com (kèm Mã hồ sơ) hoặc nhấn nút Gửi Mail Nhanh bên dưới.\n\nTrân trọng,\nĐội ngũ A&R UniFLOWs Label\nmanagement@uniflowslabel.com`
     }
   };
 
@@ -5388,10 +5548,17 @@ function openDemoReplyModal(idx) {
 
   currentDemoSubReplyIdx = idx;
 
+  // Ensure dossier code exists
+  if (!sub.dossierCode) {
+    const cleanNum = String(sub.id || '').replace(/[^0-9]/g, '');
+    sub.dossierCode = cleanNum ? `DEMO-${cleanNum.padStart(4, '0')}` : ('DEMO-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+  }
+
   const modal = document.querySelector('#modal-demo-reply-email');
   const targetNameEl = document.querySelector('#demo-reply-target-name');
   const targetEmailEl = document.querySelector('#demo-reply-target-email');
   const targetSongEl = document.querySelector('#demo-reply-target-song');
+  const targetCodeEl = document.querySelector('#demo-reply-target-code');
   const templateSel = document.querySelector('#demo-reply-template');
 
   const artistName = sub.artistName || sub.fullName || 'Nghệ sĩ';
@@ -5401,10 +5568,11 @@ function openDemoReplyModal(idx) {
   if (targetNameEl) targetNameEl.textContent = artistName;
   if (targetEmailEl) targetEmailEl.textContent = email || 'Chưa cung cấp email';
   if (targetSongEl) targetSongEl.textContent = trackInfo;
+  if (targetCodeEl) targetCodeEl.textContent = sub.dossierCode;
 
   if (templateSel) {
     templateSel.value = 'interview';
-    applyDemoReplyTemplate('interview', artistName);
+    applyDemoReplyTemplate('interview', artistName, sub.dossierCode);
   }
 
   if (modal) {
@@ -5442,7 +5610,8 @@ function initDemoReplyEmailModal() {
     const submissions = data.musicSubmissions || defaultData.musicSubmissions || [];
     const sub = currentDemoSubReplyIdx !== null ? submissions[currentDemoSubReplyIdx] : null;
     const artistName = sub ? (sub.artistName || sub.fullName || 'Nghệ sĩ') : 'Nghệ sĩ';
-    applyDemoReplyTemplate(templateSel.value, artistName);
+    const dossierCode = sub ? sub.dossierCode : '';
+    applyDemoReplyTemplate(templateSel.value, artistName, dossierCode);
   });
 
   form?.addEventListener('submit', async (e) => {
@@ -5482,18 +5651,19 @@ function initDemoReplyEmailModal() {
         trackName: sub.tracklistNotes || sub.demoUrl,
         subject,
         message,
-        demoUrl: sub.demoUrl
+        demoUrl: sub.demoUrl,
+        demoRefCode: sub.dossierCode
       });
 
       if (res && res.success) {
         if (autoStatusCheckbox && autoStatusCheckbox.checked) {
           sub.status = 'Đã liên hệ';
           await saveData(data);
-          await logAuditEvent('A&R Phản Hồi Demo', `Đã gửi email phản hồi demo tới "${sub.artistName || sub.fullName}" (${email}).`);
+          await logAuditEvent('A&R Phản Hồi Demo', `Đã gửi email phản hồi demo (Mã: ${sub.dossierCode}) tới "${sub.artistName || sub.fullName}" (${email}).`);
           renderMusicSubmissionsAdmin();
         }
 
-        showNotice(`✓ Đã gửi email phản hồi thành công tới ${email}!`);
+        showNotice(`✓ Đã gửi email phản hồi thành công tới ${email} (Mã: ${sub.dossierCode})!`);
         closeModal();
       } else {
         const errMsg = res?.error || 'Không thể gửi email. Vui lòng kiểm tra lại cấu hình Brevo / Resend trong Tab 06!';
@@ -6784,6 +6954,24 @@ async function loadArtistPhotoRequests() {
         } catch {}
       }
 
+      // 6. Send email notification to artist
+      try {
+        const artistObj = (data.artists || []).find(a => a.id === targetReq.artist_id || a.name === targetReq.artist_name || a.email === targetReq.artist_email) || {
+          name: targetReq.artist_name,
+          email: targetReq.artist_email
+        };
+        if (artistObj && artistObj.email) {
+          sendPhotoRequestStatusEmail({
+            artist: artistObj,
+            status: 'approved',
+            reviewNotes: 'Ảnh đã được ban quản trị phê duyệt và cập nhật trực tiếp lên website chính thức.',
+            newPhotoUrl: targetReq.requested_image
+          }).catch(e => console.warn('Lỗi gửi email duyệt ảnh:', e));
+        }
+      } catch (err) {
+        console.warn('Lỗi gửi email duyệt ảnh:', err);
+      }
+
       showNotice(`✓ Đã duyệt ảnh mới cho nghệ sĩ "${targetReq.artist_name}" và cập nhật lên Website thành công!`);
       await logAuditEvent('Duyệt ảnh nghệ sĩ', `Đã duyệt ảnh mới cho: ${targetReq.artist_name} (${targetReq.artist_id})`);
       renderArtistSelector();
@@ -6810,6 +6998,24 @@ async function loadArtistPhotoRequests() {
         try {
           await supabase.from('artist_photo_requests').update({ status: 'rejected', reject_reason: reason }).eq('id', reqId);
         } catch {}
+      }
+
+      // Send email notification to artist
+      try {
+        const artistObj = (data.artists || []).find(a => a.id === targetReq.artist_id || a.name === targetReq.artist_name || a.email === targetReq.artist_email) || {
+          name: targetReq.artist_name,
+          email: targetReq.artist_email
+        };
+        if (artistObj && artistObj.email) {
+          sendPhotoRequestStatusEmail({
+            artist: artistObj,
+            status: 'rejected',
+            reviewNotes: reason || 'Ảnh chưa đạt yêu cầu về chất lượng hoặc nhận diện.',
+            newPhotoUrl: targetReq.requested_image
+          }).catch(e => console.warn('Lỗi gửi email từ chối ảnh:', e));
+        }
+      } catch (err) {
+        console.warn('Lỗi gửi email từ chối ảnh:', err);
       }
 
       showNotice(`✕ Đã từ chối yêu cầu đổi ảnh của "${targetReq.artist_name}".`);
@@ -7411,6 +7617,7 @@ async function renderAdminNotificationsFlyout() {
     catalog_transfer: '📦',
     migration: '🚚',
     copyright_claim: '🛡️',
+    appointment: '📅',
     general: '🔔'
   };
 
@@ -7601,6 +7808,31 @@ async function updateSpecialRequestStatus(reqId, newStatus, adminNote = '') {
     } catch (e) {
       console.warn('Lỗi cập nhật special request Supabase:', e);
     }
+  }
+
+  // Send automated email notification to artist
+  try {
+    const raw = localStorage.getItem('uniflows-special-requests');
+    const target = raw ? JSON.parse(raw).find(r => r.id === reqId) : null;
+    if (target) {
+      let artObj = null;
+      if (target.artistEmail) {
+        artObj = { name: target.artistName || 'Nghệ sĩ', email: target.artistEmail };
+      } else if (target.artistId) {
+        artObj = (data.artists || []).find(a => a.id === target.artistId);
+      }
+      if (artObj && artObj.email) {
+        sendSpecialRequestStatusEmail({
+          artist: artObj,
+          requestType: target.type || 'special_request',
+          refCode: target.id ? target.id.substring(0, 8).toUpperCase() : 'REQ',
+          status: newStatus,
+          adminNotes: adminNote || ''
+        }).catch(err => console.warn('Lỗi gửi email special request status:', err));
+      }
+    }
+  } catch (err) {
+    console.warn('Lỗi gửi email special request:', err);
   }
 
   renderSpecialRequestsAdmin(currentReqFilter);
@@ -8120,11 +8352,665 @@ function initBroadcastEmailAdmin() {
   });
 }
 
+// ============================================================================
+// 16. APPOINTMENTS & A&R BOOKINGS ADMIN (LỊCH HẸN VÀ XÁC NHẬN MEETING)
+// ============================================================================
+let currentApptFilter = 'all';
+
+async function getAppointments() {
+  let list = [];
+  try {
+    const raw = localStorage.getItem('uniflows_appointments');
+    if (raw) list = JSON.parse(raw);
+  } catch (e) {
+    console.warn('Lỗi đọc local appointments:', e);
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .order('date', { ascending: true });
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const sbList = data.map(r => ({
+          id: r.id,
+          date: r.date,
+          timeSlot: r.time_slot || r.timeSlot,
+          durationMinutes: r.duration_minutes || r.durationMinutes || 45,
+          host: r.host || 'UniFLOWs A&R Team',
+          topicCategory: r.topic_category || r.topicCategory || 'Thẩm định Demo',
+          status: r.status || 'open',
+          slotNotes: r.slot_notes || r.slotNotes || '',
+          booker: r.booker || null,
+          meetingMethod: r.meeting_method || r.meetingMethod || '',
+          meetingLink: r.meeting_link || r.meetingLink || '',
+          adminNotes: r.admin_notes || r.adminNotes || '',
+          confirmedAt: r.confirmed_at || r.confirmedAt || null,
+          createdAt: r.created_at || r.createdAt || new Date().toISOString()
+        }));
+
+        const idMap = new Map();
+        sbList.forEach(r => idMap.set(r.id, r));
+        list.forEach(r => {
+          if (!idMap.has(r.id)) idMap.set(r.id, r);
+        });
+        list = Array.from(idMap.values());
+        try {
+          localStorage.setItem('uniflows_appointments', JSON.stringify(list));
+        } catch (_) {}
+      }
+    } catch (e) {
+      console.warn('Lỗi fetch appointments từ Supabase:', e);
+    }
+  }
+
+  // Seed default slots if empty
+  if (!Array.isArray(list) || list.length === 0) {
+    const today = new Date();
+    const d1 = new Date(today.getTime() + 2 * 86400000).toISOString().split('T')[0];
+    const d2 = new Date(today.getTime() + 3 * 86400000).toISOString().split('T')[0];
+    const d3 = new Date(today.getTime() + 5 * 86400000).toISOString().split('T')[0];
+
+    list = [
+      {
+        id: 'appt-sample-1',
+        date: d1,
+        timeSlot: '10:00 - 10:45',
+        durationMinutes: 45,
+        host: 'UniFLOWs A&R Lead Team',
+        topicCategory: 'Nghe & Thẩm định Demo A&R',
+        status: 'open',
+        slotNotes: 'Dành cho các ca khúc demo mới gửi trong tuần',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'appt-sample-2',
+        date: d1,
+        timeSlot: '14:30 - 15:15',
+        durationMinutes: 45,
+        host: 'A&R & Distribution Lead',
+        topicCategory: 'Ký hợp đồng & Phân phối Master',
+        status: 'open',
+        slotNotes: 'Tư vấn ký độc quyền & đối soát phân phối DSP',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'appt-sample-3',
+        date: d2,
+        timeSlot: '15:00 - 15:45',
+        durationMinutes: 45,
+        host: 'UniFLOWs A&R Team',
+        topicCategory: 'Tư vấn Chiến lược Ra mắt (Single/Album)',
+        status: 'open',
+        slotNotes: 'Chiến dịch pitching Spotify Editorial & TikTok Sound',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'appt-sample-4',
+        date: d3,
+        timeSlot: '16:00 - 17:00',
+        durationMinutes: 60,
+        host: 'Head of Production & A&R',
+        topicCategory: 'Gặp gỡ trực tiếp tại Studio',
+        status: 'open',
+        slotNotes: 'Trải nghiệm phòng thu UniFLOWs Studio',
+        createdAt: new Date().toISOString()
+      }
+    ];
+    try {
+      localStorage.setItem('uniflows_appointments', JSON.stringify(list));
+    } catch (_) {}
+  }
+
+  return list;
+}
+
+async function renderAppointmentsAdmin(filter = currentApptFilter) {
+  currentApptFilter = filter;
+
+  // Update filter buttons UI
+  document.querySelectorAll('.appt-filter-btn').forEach(btn => {
+    if (btn.dataset.apptFilter === filter) {
+      btn.classList.add('active');
+      btn.classList.remove('alt');
+    } else {
+      btn.classList.remove('active');
+      btn.classList.add('alt');
+    }
+  });
+
+  const listContainer = document.querySelector('#admin-appointments-list');
+  if (!listContainer) return;
+
+  const allSlots = await getAppointments();
+
+  // Update counters
+  const bookedCount = allSlots.filter(s => s.status === 'booked').length;
+  const openCount = allSlots.filter(s => s.status === 'open').length;
+  const confirmedCount = allSlots.filter(s => s.status === 'confirmed').length;
+  const doneCount = allSlots.filter(s => s.status === 'completed' || s.status === 'cancelled').length;
+
+  const countAllEl = document.querySelector('#appt-count-all');
+  const countBookedEl = document.querySelector('#appt-count-booked');
+  const countOpenEl = document.querySelector('#appt-count-open');
+  const countConfirmedEl = document.querySelector('#appt-count-confirmed');
+  const countDoneEl = document.querySelector('#appt-count-done');
+  const badgeNav = document.querySelector('#badge-tab-appointments');
+
+  if (countAllEl) countAllEl.textContent = allSlots.length;
+  if (countBookedEl) countBookedEl.textContent = bookedCount;
+  if (countOpenEl) countOpenEl.textContent = openCount;
+  if (countConfirmedEl) countConfirmedEl.textContent = confirmedCount;
+  if (countDoneEl) countDoneEl.textContent = doneCount;
+
+  if (badgeNav) {
+    badgeNav.textContent = bookedCount;
+    badgeNav.style.display = bookedCount > 0 ? 'inline-block' : 'none';
+  }
+
+  // Filter slots
+  let filtered = allSlots;
+  if (filter === 'booked') filtered = allSlots.filter(s => s.status === 'booked');
+  else if (filter === 'open') filtered = allSlots.filter(s => s.status === 'open');
+  else if (filter === 'confirmed') filtered = allSlots.filter(s => s.status === 'confirmed');
+  else if (filter === 'done') filtered = allSlots.filter(s => s.status === 'completed' || s.status === 'cancelled');
+
+  // Sort: booked first, then by date ascending
+  filtered.sort((a, b) => {
+    if (a.status === 'booked' && b.status !== 'booked') return -1;
+    if (b.status === 'booked' && a.status !== 'booked') return 1;
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  if (filtered.length === 0) {
+    listContainer.innerHTML = `
+      <div style="background:#fff;border:1px solid var(--ink);border-radius:10px;padding:32px 20px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">📭</div>
+        <strong style="font-size:14px;color:#0f172a;">Không có lịch hẹn nào trong mục này</strong>
+        <p style="font-size:12px;color:#64748b;margin:4px 0 0;">Bạn có thể tạo thêm khung giờ trống ở biểu mẫu bên trên để mở cho nghệ sĩ book.</p>
+      </div>
+    `;
+    return;
+  }
+
+  listContainer.innerHTML = filtered.map(slot => {
+    const isBooked = slot.status === 'booked';
+    const isConfirmed = slot.status === 'confirmed';
+    const isOpen = slot.status === 'open';
+    const isDone = slot.status === 'completed';
+    const isCancelled = slot.status === 'cancelled';
+
+    let statusBadge = '';
+    let borderStyle = 'border: 1px solid var(--ink);';
+    if (isBooked) {
+      statusBadge = '<span style="background:#fef3c7;color:#b45309;font-weight:bold;font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #fde68a;">🟡 Chờ Duyệt & Gán Link</span>';
+      borderStyle = 'border: 2px solid #f59e0b; background: #fffdf5;';
+    } else if (isConfirmed) {
+      statusBadge = '<span style="background:#dbeafe;color:#1d4ed8;font-weight:bold;font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #bfdbfe;">🔵 Đã Xác Nhận & Đã Gửi Mail</span>';
+      borderStyle = 'border: 1px solid #3b82f6; background: #fff;';
+    } else if (isOpen) {
+      statusBadge = '<span style="background:#dcfce7;color:#15803d;font-weight:bold;font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #bbf7d0;">🟢 Đang Mở Đặt</span>';
+      borderStyle = 'border: 1px solid #cbd5e1; background: #fff;';
+    } else if (isDone) {
+      statusBadge = '<span style="background:#f1f5f9;color:#475569;font-size:11px;padding:3px 8px;border-radius:4px;">✓ Đã hoàn thành</span>';
+      borderStyle = 'border: 1px solid #e2e8f0; background: #f8fafc; opacity: 0.85;';
+    } else {
+      statusBadge = '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;padding:3px 8px;border-radius:4px;">✕ Đã huỷ</span>';
+      borderStyle = 'border: 1px solid #fca5a5; background: #fff5f5; opacity: 0.8;';
+    }
+
+    const dateObj = new Date(slot.date + 'T00:00:00');
+    const dateFormatted = dateObj.toLocaleDateString('vi-VN', {
+      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+
+    const booker = slot.booker || null;
+
+    return `
+      <div class="appointment-card" style="border-radius:10px;padding:18px;${borderStyle}box-shadow:0 2px 8px rgba(0,0,0,0.04);display:flex;flex-direction:column;gap:12px;">
+        <!-- Top Info Line -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <strong style="font-size:15px;color:#0f172a;letter-spacing:-0.02em;">📅 ${dateFormatted}</strong>
+              <span style="font-family:'DM Mono',monospace;font-weight:bold;font-size:14px;color:#2563eb;background:#eff6ff;padding:2px 8px;border-radius:4px;">⏰ ${slot.timeSlot}</span>
+              <span style="font-size:11px;color:#64748b;font-family:'DM Mono',monospace;">(${slot.durationMinutes || 45} phút)</span>
+            </div>
+            <div style="font-size:12px;color:#475569;margin-top:4px;">
+              Chuyên đề: <b>${esc(slot.topicCategory || 'Gặp gỡ & Thẩm định Demo')}</b> | Đại diện: <b>${esc(slot.host || 'A&R Team')}</b>
+            </div>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+
+        ${slot.slotNotes ? `
+          <div style="font-size:11px;color:#64748b;font-style:italic;background:#f8fafc;padding:6px 10px;border-radius:4px;">
+            💬 Ghi chú slot: ${esc(slot.slotNotes)}
+          </div>
+        ` : ''}
+
+        <!-- Booker Information Details (if booked or confirmed) -->
+        ${booker ? `
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;display:grid;gap:6px;font-size:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+              <div>
+                👤 Người đặt: <strong style="color:#0f172a;font-size:13px;">${esc(booker.name)}</strong>
+                ${booker.artistName ? ` (Nghệ danh: <strong style="color:#2563eb;">${esc(booker.artistName)}</strong>)` : ''}
+              </div>
+              <span style="font-size:11px;color:#64748b;background:#e2e8f0;padding:2px 6px;border-radius:4px;">
+                ${booker.type === 'demo' ? '🎵 Gửi Demo' : booker.type === 'artist' ? '⭐ Nghệ sĩ Hãng' : booker.type === 'producer' ? '🎛️ Producer' : '💬 Đối tác'}
+              </span>
+            </div>
+            <div>
+              ✉️ Email: <code style="font-weight:bold;color:#0284c7;">${esc(booker.email)}</code> | 📞 Điện thoại: <b>${esc(booker.phone || 'Chưa cung cấp')}</b>
+            </div>
+            ${booker.demoLink ? `
+              <div>
+                🔗 Link demo: <a href="${esc(booker.demoLink)}" target="_blank" style="color:#2563eb;font-weight:bold;text-decoration:underline;">${esc(booker.demoLink)} ↗</a>
+              </div>
+            ` : ''}
+            ${booker.notes ? `
+              <div style="color:#475569;margin-top:2px;">
+                📝 Nội dung muốn trao đổi: <em>"${esc(booker.notes)}"</em>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        <!-- Meeting Method & Link Details (if confirmed) -->
+        ${isConfirmed ? `
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;font-size:12px;display:grid;gap:4px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <strong style="color:#1e40af;">🚀 Phương thức: ${esc(slot.meetingMethod || 'Google Meet')}</strong>
+              <span style="font-size:10px;color:#64748b;font-family:'DM Mono',monospace;">ĐÃ XÁC NHẬN: ${slot.confirmedAt ? new Date(slot.confirmedAt).toLocaleDateString('vi-VN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit' }) : ''}</span>
+            </div>
+            <div>
+              🔗 Link tham gia / Địa điểm: <a href="${esc(slot.meetingLink)}" target="_blank" style="color:#2563eb;font-weight:bold;font-family:'DM Mono',monospace;word-break:break-all;">${esc(slot.meetingLink)} ↗</a>
+            </div>
+            ${slot.adminNotes ? `
+              <div style="color:#475569;font-size:11px;margin-top:2px;">
+                💬 Hướng dẫn gửi kèm: <em>"${esc(slot.adminNotes)}"</em>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        <!-- Action Buttons -->
+        <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;border-top:1px solid #f1f5f9;padding-top:10px;margin-top:4px;">
+          ${isOpen ? `
+            <button type="button" class="btn-delete-appt-slot button alt remove" data-slot-id="${slot.id}" style="padding:6px 12px;font-size:11px;">
+              🗑️ Xoá Khung Giờ
+            </button>
+          ` : ''}
+
+          ${isBooked ? `
+            <button type="button" class="btn-open-confirm-modal button" data-slot-id="${slot.id}" style="background:#8b5cf6;color:#fff;border-color:#8b5cf6;font-weight:bold;padding:7px 16px;font-size:11px;">
+              ⚡ Thêm Phương Thức & Xác Nhận Lịch Hẹn
+            </button>
+            <button type="button" class="btn-cancel-appt-slot button alt remove" data-slot-id="${slot.id}" style="padding:6px 12px;font-size:11px;">
+              ✕ Huỷ Lịch
+            </button>
+          ` : ''}
+
+          ${isConfirmed ? `
+            <button type="button" class="btn-open-confirm-modal button alt" data-slot-id="${slot.id}" style="padding:6px 12px;font-size:11px;border-color:#3b82f6;color:#1d4ed8;">
+              ✏️ Sửa Link / Gửi Lại Email
+            </button>
+            <button type="button" class="btn-complete-appt-slot button" data-slot-id="${slot.id}" style="background:#15803d;color:#fff;border-color:#15803d;padding:6px 12px;font-size:11px;font-weight:bold;">
+              ✓ Đã Họp Xong
+            </button>
+            <button type="button" class="btn-cancel-appt-slot button alt remove" data-slot-id="${slot.id}" style="padding:6px 10px;font-size:11px;">
+              ✕ Huỷ
+            </button>
+          ` : ''}
+
+          ${isDone || isCancelled ? `
+            <button type="button" class="btn-reopen-appt-slot button alt" data-slot-id="${slot.id}" style="padding:5px 10px;font-size:11px;">
+              🔄 Mở Lại Khung Này
+            </button>
+            <button type="button" class="btn-delete-appt-slot button alt remove" data-slot-id="${slot.id}" style="padding:5px 10px;font-size:11px;">
+              🗑️ Xoá
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach button events
+  // 1. Delete slot
+  listContainer.querySelectorAll('.btn-delete-appt-slot').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.slotId;
+      if (!confirm('Bạn có chắc chắn muốn xoá khung giờ này?')) return;
+      let slots = await getAppointments();
+      slots = slots.filter(s => s.id !== id);
+      localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
+      if (isSupabaseConfigured()) {
+        try { await supabase.from('appointments').delete().eq('id', id); } catch (_) {}
+      }
+      showNotice('✓ Đã xoá khung giờ thành công!');
+      renderAppointmentsAdmin(currentApptFilter);
+    });
+  });
+
+  // 2. Open confirmation modal
+  listContainer.querySelectorAll('.btn-open-confirm-modal').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.slotId;
+      const slots = await getAppointments();
+      const targetSlot = slots.find(s => s.id === id);
+      if (!targetSlot) return;
+
+      const modal = document.querySelector('#modal-confirm-appointment');
+      if (!modal) return;
+
+      document.querySelector('#confirm-appt-id').value = targetSlot.id;
+      document.querySelector('#confirm-appt-booker-name').textContent = targetSlot.booker?.name || 'Khách';
+      document.querySelector('#confirm-appt-artist-name').textContent = targetSlot.booker?.artistName || 'N/A';
+      document.querySelector('#confirm-appt-booker-email').textContent = targetSlot.booker?.email || '';
+      document.querySelector('#confirm-appt-booker-phone').textContent = targetSlot.booker?.phone || 'Chưa cung cấp';
+      document.querySelector('#confirm-appt-topic').textContent = targetSlot.topicCategory || 'Gặp gỡ & Thẩm định Demo';
+
+      const apptCode = targetSlot.booker?.dossierCode || targetSlot.dossierCode || targetSlot.id;
+      const apptCodeEl = document.querySelector('#confirm-appt-code');
+      if (apptCodeEl) apptCodeEl.textContent = apptCode;
+
+      const dateObj = new Date(targetSlot.date + 'T00:00:00');
+      document.querySelector('#confirm-appt-datetime').textContent = `${dateObj.toLocaleDateString('vi-VN')} (${targetSlot.timeSlot})`;
+
+      const demoBox = document.querySelector('#confirm-appt-demo-box');
+      const demoLinkEl = document.querySelector('#confirm-appt-demo-link');
+      if (targetSlot.booker?.demoLink) {
+        demoBox.style.display = 'block';
+        demoLinkEl.href = targetSlot.booker.demoLink;
+        demoLinkEl.textContent = targetSlot.booker.demoLink;
+      } else {
+        demoBox.style.display = 'none';
+      }
+
+      // Pre-fill existing or default values
+      if (targetSlot.meetingMethod) {
+        document.querySelector('#confirm-appt-method').value = targetSlot.meetingMethod;
+      }
+      document.querySelector('#confirm-appt-link').value = targetSlot.meetingLink || 'https://meet.google.com/';
+      document.querySelector('#confirm-appt-notes').value = targetSlot.adminNotes || 'Bạn vui lòng vào link đúng giờ và chuẩn bị sẵn file WAV bản demo cùng lời bài hát nhé.';
+
+      modal.showModal();
+    });
+  });
+
+  // 3. Cancel slot booking
+  listContainer.querySelectorAll('.btn-cancel-appt-slot').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.slotId;
+      if (!confirm('Bạn có chắc muốn huỷ lịch hẹn này? Khung giờ sẽ được đánh dấu đã huỷ.')) return;
+      let slots = await getAppointments();
+      const target = slots.find(s => s.id === id);
+      if (target) {
+        target.status = 'cancelled';
+        localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
+        if (isSupabaseConfigured()) {
+          try { await supabase.from('appointments').update({ status: 'cancelled' }).eq('id', id); } catch (_) {}
+        }
+        showNotice('✕ Đã huỷ lịch hẹn.');
+        renderAppointmentsAdmin(currentApptFilter);
+      }
+    });
+  });
+
+  // 4. Complete slot
+  listContainer.querySelectorAll('.btn-complete-appt-slot').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.slotId;
+      let slots = await getAppointments();
+      const target = slots.find(s => s.id === id);
+      if (target) {
+        target.status = 'completed';
+        localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
+        if (isSupabaseConfigured()) {
+          try { await supabase.from('appointments').update({ status: 'completed' }).eq('id', id); } catch (_) {}
+        }
+        showNotice('✓ Đã đánh dấu lịch hẹn hoàn tất thành công!');
+        renderAppointmentsAdmin(currentApptFilter);
+      }
+    });
+  });
+
+  // 5. Re-open slot
+  listContainer.querySelectorAll('.btn-reopen-appt-slot').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.slotId;
+      let slots = await getAppointments();
+      const target = slots.find(s => s.id === id);
+      if (target) {
+        target.status = 'open';
+        target.booker = null;
+        target.meetingLink = '';
+        target.adminNotes = '';
+        localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
+        if (isSupabaseConfigured()) {
+          try { await supabase.from('appointments').update({ status: 'open', booker: null, meeting_link: '', admin_notes: '' }).eq('id', id); } catch (_) {}
+        }
+        showNotice('✓ Đã mở lại khung giờ này để nhận đặt lịch mới!');
+        renderAppointmentsAdmin(currentApptFilter);
+      }
+    });
+  });
+}
+
+function initAppointmentsAdmin() {
+  // 1. Setup shareable booking URL
+  const bookingUrl = window.location.origin + '/booking.html';
+  const urlInput = document.querySelector('#admin-booking-url-input');
+  const previewLink = document.querySelector('#btn-preview-booking-url');
+  const copyBtn = document.querySelector('#btn-copy-booking-url');
+
+  if (urlInput) urlInput.value = bookingUrl;
+  if (previewLink) previewLink.href = bookingUrl;
+
+  if (copyBtn && urlInput) {
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(urlInput.value);
+        copyBtn.textContent = '✓ Đã Copy!';
+        setTimeout(() => { copyBtn.textContent = '📋 Copy Link'; }, 2000);
+      } catch (_) {
+        urlInput.select();
+        document.execCommand('copy');
+        copyBtn.textContent = '✓ Đã Copy!';
+        setTimeout(() => { copyBtn.textContent = '📋 Copy Link'; }, 2000);
+      }
+    };
+  }
+
+  // 2. Set min date for new slot creation form to today
+  const dateInput = document.querySelector('#appt-new-date');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
+  }
+
+  // 3. New slot form submission
+  const createForm = document.querySelector('#form-create-appt-slot');
+  if (createForm) {
+    createForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const dateVal = document.querySelector('#appt-new-date').value;
+      const timeVal = document.querySelector('#appt-new-time').value.trim();
+      const durationVal = document.querySelector('#appt-new-duration').value;
+      const hostVal = document.querySelector('#appt-new-host').value.trim();
+      const categoryVal = document.querySelector('#appt-new-category').value;
+      const noteVal = document.querySelector('#appt-new-note').value.trim();
+
+      if (!dateVal || !timeVal) {
+        alert('Vui lòng chọn ngày và nhập khung giờ hẹn.');
+        return;
+      }
+
+      const newSlot = {
+        id: 'appt-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+        date: dateVal,
+        timeSlot: timeVal,
+        durationMinutes: parseInt(durationVal, 10) || 45,
+        host: hostVal || 'UniFLOWs A&R Lead Team',
+        topicCategory: categoryVal,
+        status: 'open',
+        slotNotes: noteVal,
+        createdAt: new Date().toISOString()
+      };
+
+      const slots = await getAppointments();
+      slots.push(newSlot);
+      localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('appointments').insert([{
+            id: newSlot.id,
+            date: newSlot.date,
+            time_slot: newSlot.timeSlot,
+            duration_minutes: newSlot.durationMinutes,
+            host: newSlot.host,
+            topic_category: newSlot.topicCategory,
+            status: 'open',
+            slot_notes: newSlot.slotNotes,
+            created_at: newSlot.createdAt
+          }]);
+        } catch (err) {
+          console.warn('Lỗi ghi Supabase appointment:', err);
+        }
+      }
+
+      showNotice(`✓ Đã thêm khung giờ trống ngày ${dateVal} (${timeVal}) thành công!`);
+      document.querySelector('#appt-new-time').value = '';
+      document.querySelector('#appt-new-note').value = '';
+      renderAppointmentsAdmin(currentApptFilter);
+    };
+  }
+
+  // 4. Filter buttons
+  document.querySelectorAll('.appt-filter-btn').forEach(btn => {
+    btn.onclick = () => {
+      renderAppointmentsAdmin(btn.dataset.apptFilter);
+    };
+  });
+
+  // 5. Refresh button
+  document.querySelector('#btn-refresh-appointments')?.addEventListener('click', () => {
+    renderAppointmentsAdmin(currentApptFilter);
+  });
+
+  // 6. Confirm appointment form submission (Modal)
+  const confirmForm = document.querySelector('#confirm-appt-form');
+  const confirmModal = document.querySelector('#modal-confirm-appointment');
+  const closeConfirmBtn = document.querySelector('#close-confirm-appt-btn');
+  const cancelConfirmBtn = document.querySelector('#cancel-confirm-appt-btn');
+
+  if (closeConfirmBtn && confirmModal) closeConfirmBtn.onclick = () => confirmModal.close();
+  if (cancelConfirmBtn && confirmModal) cancelConfirmBtn.onclick = () => confirmModal.close();
+
+  if (confirmForm) {
+    confirmForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const slotId = document.querySelector('#confirm-appt-id').value;
+      const method = document.querySelector('#confirm-appt-method').value;
+      const link = document.querySelector('#confirm-appt-link').value.trim();
+      const notes = document.querySelector('#confirm-appt-notes').value.trim();
+      const sendEmail = document.querySelector('#confirm-appt-auto-email').checked;
+
+      const submitBtn = document.querySelector('#submit-confirm-appt-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang xử lý & gửi email...';
+
+      try {
+        const slots = await getAppointments();
+        const targetSlot = slots.find(s => s.id === slotId);
+        if (!targetSlot) {
+          alert('Không tìm thấy lịch hẹn.');
+          return;
+        }
+
+        targetSlot.status = 'confirmed';
+        targetSlot.meetingMethod = method;
+        targetSlot.meetingLink = link;
+        targetSlot.adminNotes = notes;
+        targetSlot.confirmedAt = new Date().toISOString();
+
+        localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
+
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from('appointments').update({
+              status: 'confirmed',
+              meeting_method: method,
+              meeting_link: link,
+              admin_notes: notes,
+              confirmed_at: targetSlot.confirmedAt,
+              updated_at: new Date().toISOString()
+            }).eq('id', slotId);
+          } catch (err) {
+            console.warn('Lỗi update appointment Supabase:', err);
+          }
+        }
+
+        // Send confirmation email
+        let emailMsg = '';
+        if (sendEmail && targetSlot.booker?.email) {
+          try {
+            const isArtist = targetSlot.booker?.type === 'artist' || targetSlot.booker?.isArtist;
+            const refCode = targetSlot.booker?.dossierCode || targetSlot.dossierCode || targetSlot.id;
+            const mailRes = await sendAppointmentConfirmationEmail({
+              to: targetSlot.booker.email,
+              bookerName: targetSlot.booker.name || 'Bạn',
+              artistName: targetSlot.booker.artistName || '',
+              date: targetSlot.date,
+              timeSlot: targetSlot.timeSlot,
+              topic: targetSlot.topicCategory || 'Gặp gỡ A&R',
+              meetingMethod: method,
+              meetingLink: link,
+              notes: notes,
+              recipientType: isArtist ? 'artist' : 'demo',
+              demoRefCode: refCode
+            });
+            if (mailRes && mailRes.success) {
+              emailMsg = ` & đã tự động gửi email xác nhận kèm link tới "${targetSlot.booker.email}"!`;
+            } else if (mailRes && mailRes.error) {
+              emailMsg = ` ⚠️ (Cảnh báo email: ${mailRes.error})`;
+            }
+          } catch (err) {
+            console.warn('Lỗi dispatch appointment email:', err);
+            emailMsg = ` ⚠️ (Lỗi gửi email: ${err.message})`;
+          }
+        }
+
+        confirmModal.close();
+        showNotice(`✓ Đã xác nhận lịch hẹn thành công${emailMsg}`);
+        await logAuditEvent('Xác nhận lịch hẹn A&R', `Xác nhận lịch cho: ${targetSlot.booker?.name} (${targetSlot.booker?.email}) - ${method}`);
+        renderAppointmentsAdmin(currentApptFilter);
+      } catch (err) {
+        alert('Lỗi xác nhận lịch hẹn: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Xác Nhận & Gửi Email Cho Khách';
+      }
+    };
+  }
+
+  renderAppointmentsAdmin();
+}
+
 // Initial calls
 initAdminNotificationCenter();
 renderSpecialRequestsAdmin();
 initBroadcastEmailAdmin();
 initDemoReplyEmailModal();
+initAppointmentsAdmin();
 
 
 

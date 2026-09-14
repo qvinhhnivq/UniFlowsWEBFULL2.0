@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Đặt Lịch Hẹn A&R & Trao Đổi Dự Án — UniFLOWs Label</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:image" content="/og-image.jpg">
+  <link rel="stylesheet" href="/assets/app.css">
+  <style>
+    .booking-slot-card {
+      background: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .booking-slot-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      border-color: #8b5cf6;
+    }
+    .booking-slot-card.selected {
+      background: #faf5ff;
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.35);
+    }
+    .booking-slot-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+  </style>
+</head>
+<body data-page="booking">
+  <main style="max-width: 920px; margin: 0 auto; padding: 4vw 20px 80px;">
+    <!-- Page Header -->
+    <div style="margin-bottom: 28px;">
+      <span class="eyebrow" style="margin: 0 0 8px;">A&R Office Hours & Consultation / UniFLOWs Label</span>
+      <h1 style="font-size: clamp(32px, 4.5vw, 56px); margin: 6px 0 16px; letter-spacing: -0.04em;">
+        Đặt Lịch Gặp Đội Ngũ A&R.
+      </h1>
+      <p style="font-size: 15px; line-height: 1.6; opacity: 0.85; max-width: 680px; margin: 0;">
+        Dành riêng cho Nghệ sĩ ký kết và các bạn gửi Demo tuyển chọn. Bạn có thể chọn khung giờ trống bên dưới để gặp gỡ, nghe thử bản thu trực tiếp, trao đổi về chiến lược phát hành và ký hợp đồng bản quyền cùng UniFLOWs Label.
+      </p>
+    </div>
+
+    <!-- Booking Workflow Container -->
+    <div id="booking-main-container">
+      <!-- Step 1: Slot Selection -->
+      <section style="background: #fff; border: 1px solid var(--ink); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+          <div>
+            <span style="font-size: 11px; font-family: 'DM Mono', monospace; font-weight: bold; color: #8b5cf6; text-transform: uppercase;">Bước 01 / Chọn Thời Gian</span>
+            <h2 style="font-size: 18px; margin: 4px 0 0; letter-spacing: -0.02em;">Các Khung Giờ Đang Mở Đặt Lịch (Available Slots)</h2>
+          </div>
+          <span id="slots-count-tag" style="background: #f1f5f9; font-size: 12px; font-family: 'DM Mono', monospace; padding: 4px 10px; border-radius: 20px; font-weight: bold;">
+            Đang tải...
+          </span>
+        </div>
+
+        <!-- Slots Grid -->
+        <div id="booking-slots-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 14px;">
+          <p style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; grid-column: 1 / -1;">Đang kiểm tra lịch trống của ban A&R...</p>
+        </div>
+      </section>
+
+      <!-- Step 2: Information Form -->
+      <section id="booking-form-section" style="background: #fff; border: 1px solid var(--ink); border-radius: 12px; padding: 24px; display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+          <div>
+            <span style="font-size: 11px; font-family: 'DM Mono', monospace; font-weight: bold; color: #16a34a; text-transform: uppercase;">Bước 02 / Thông Tin Người Đặt</span>
+            <h2 style="font-size: 18px; margin: 4px 0 0; letter-spacing: -0.02em;">Xác Nhận & Điền Thông Tin Cuộc Hẹn</h2>
+          </div>
+          <button type="button" id="btn-cancel-slot-selection" style="background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; text-decoration: underline;">
+            Đổi khung giờ khác
+          </button>
+        </div>
+
+        <!-- Selected Slot Summary Banner -->
+        <div id="booking-selected-slot-banner" style="background: #0f172a; color: #fff; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="font-size: 11px; color: #d8ff48; font-family: 'DM Mono', monospace; font-weight: bold; text-transform: uppercase;">Khung giờ bạn đã chọn:</div>
+            <strong id="selected-slot-summary-text" style="font-size: 15px; letter-spacing: -0.02em;">...</strong>
+          </div>
+          <span id="selected-slot-host-text" style="font-size: 12px; color: #cbd5e1; background: #1e293b; padding: 4px 10px; border-radius: 4px;">...</span>
+        </div>
+
+        <form id="public-booking-form" style="display: grid; gap: 16px;">
+          <input type="hidden" id="selected-slot-id" value="">
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div class="field">
+              <label style="font-weight: bold; font-size: 11px;">Họ và tên của bạn *</label>
+              <input type="text" id="booker-name" required placeholder="Ví dụ: Nguyễn Văn Hoàng" style="padding: 11px; border: 1px solid var(--ink); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div class="field">
+              <label style="font-weight: bold; font-size: 11px;">Nghệ danh / Dự án âm nhạc *</label>
+              <input type="text" id="booker-artist-name" required placeholder="Ví dụ: Hoàng Dũng, Vũ. hoặc Tên nhóm" style="padding: 11px; border: 1px solid var(--ink); border-radius: 6px; font-size: 13px;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div class="field">
+              <label style="font-weight: bold; font-size: 11px;">Email nhận link Google Meet / Zoom *</label>
+              <input type="email" id="booker-email" required placeholder="email.cuaban@gmail.com" style="padding: 11px; border: 1px solid var(--ink); border-radius: 6px; font-size: 13px;">
+              <small style="font-size: 10px; color: #64748b; margin-top: 4px; display: block;">Link cuộc họp Google Meet/Zoom và thông báo xác nhận sẽ được gửi tự động tới email này.</small>
+            </div>
+            <div class="field">
+              <label style="font-weight: bold; font-size: 11px;">Số điện thoại / Zalo *</label>
+              <input type="tel" id="booker-phone" required placeholder="Ví dụ: 0987654321" style="padding: 11px; border: 1px solid var(--ink); border-radius: 6px; font-size: 13px;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div class="field">
+              <label style="font-weight: bold; font-size: 11px;">Vai trò của bạn trong dự án *</label>
+              <select id="booker-type" style="padding: 11px; border: 1px solid var(--ink); border-radius: 6px; font-size: 13px; font-weight: 600; background: #fff;">
+                <option value="demo">🎵 Tác giả / Nghệ sĩ gửi Demo tuyển chọn</option>
+                <option value="artist">⭐ Nghệ sĩ phát hành âm nhạc tại UniFLOWs</option>
+                <option value="producer">🎛️ Music Producer / Beatmaker / Mix-Master</option>
+                <option value="manager">👔 Quản lý Nghệ sĩ (Artist Manager / Label Partner)</option>
+                <option value="other">💬 Đối tác hợp tác truyền thông / Khác</option>
+              </select>
+            </div>
+            <div class="field">
+              <label style="font-weight: bold; font-size: 11px;">Link nghe trước Demo / Ca khúc (nếu có)</label>
+              <input type="url" id="booker-demo-link" placeholder="https://soundcloud.com/... hoặc Drive/YouTube" style="padding: 11px; border: 1px solid var(--ink); border-radius: 6px; font-size: 13px;">
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-weight: bold; font-size: 11px;">Nội dung chính hoặc câu hỏi bạn muốn trao đổi cùng A&R *</label>
+            <textarea id="booker-notes" rows="4" required placeholder="Ví dụ: Em muốn trao đổi về bản demo pop ballad mới sáng tác, định hướng pitching playlist Spotify và kế hoạch phát hành tháng tới..." style="padding: 12px; border: 1px solid var(--ink); border-radius: 6px; font-size: 13px; line-height: 1.6; font-family: inherit;"></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 16px; flex-wrap: wrap; gap: 12px;">
+            <div style="font-size: 12px; color: #64748b;">
+              🔒 Thông tin bản thu và thông tin liên hệ của bạn được cam kết bảo mật 100%.
+            </div>
+            <button type="submit" id="btn-submit-booking" class="button" style="background: #0f172a; color: #d8ff48; border-color: #0f172a; font-weight: bold; padding: 12px 28px; font-size: 13px; cursor: pointer;">
+              🚀 Xác Nhận Đặt Lịch Ngay
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <!-- Success Confirmation View -->
+    <div id="booking-success-container" style="display: none; background: #fff; border: 2px solid var(--ink); border-radius: 14px; padding: 36px 28px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.06); max-width: 680px; margin: 20px auto;">
+      <div style="font-size: 54px; margin-bottom: 12px;">🎉</div>
+      <span class="eyebrow" style="color: #16a34a; margin: 0 0 6px;">Booking Confirmed</span>
+      <h2 style="font-size: 28px; letter-spacing: -0.03em; margin: 4px 0 14px; color: #0f172a;">
+        Bạn Đã Đặt Lịch Hẹn Thành Công!
+      </h2>
+      <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0 auto 20px; max-width: 520px;">
+        Đội ngũ A&R UniFLOWs Label đã nhận được đăng ký của bạn. Ban quản trị sẽ thêm phòng họp Google Meet / Zoom và tự động gửi email xác nhận chi tiết tới hòm thư của bạn.
+      </p>
+
+      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 18px 20px; text-align: left; margin-bottom: 20px; font-size: 13px; display: grid; gap: 8px;">
+        <div>📌 <b>Mã hồ sơ / Lịch hẹn:</b> <span id="success-recap-code" style="font-weight: 800; color: #7c3aed; font-family: 'DM Mono', monospace; font-size: 14px;"></span></div>
+        <div>📅 <b>Thời gian:</b> <span id="success-recap-datetime" style="font-weight: 600; color: #0f172a;"></span></div>
+        <div>👤 <b>Người đặt:</b> <span id="success-recap-booker" style="font-weight: 600;"></span> (<span id="success-recap-artist" style="color: #2563eb; font-weight: bold;"></span>)</div>
+        <div>✉️ <b>Email nhận link:</b> <code id="success-recap-email" style="font-weight: bold; color: #0284c7;"></code></div>
+        <div>🎯 <b>Chuyên đề:</b> <span id="success-recap-topic" style="color: #64748b;"></span></div>
+      </div>
+
+      <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px; font-size: 12.5px; color: #334155; line-height: 1.65; text-align: left;">
+        💡 <b>Cần hỗ trợ, dời lịch hoặc gửi trước file demo Master WAV?</b><br>
+        Vui lòng liên hệ trực tiếp Ban Quản lý A&R qua email <b>management@uniflowslabel.com</b> kèm theo <b>Mã lịch hẹn</b> ở trên để được hỗ trợ xử lý nhanh nhất.
+      </div>
+
+      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <a href="/" class="button alt" style="padding: 10px 20px; font-size: 12px;">Về Trang Chủ UniFLOWs</a>
+        <a href="/portal.html" class="button" style="background: #0f172a; color: #d8ff48; border-color: #0f172a; padding: 10px 20px; font-size: 12px; font-weight: bold;">Vào UniPORTAL Nghệ Sĩ</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { getData, saveData } from '/assets/data.js';
+    import { supabase, isSupabaseConfigured } from '/assets/supabase.js';
+
+    let appointments = [];
+    let selectedSlotId = null;
+
+    // Load available slots
+    async function loadAvailableSlots() {
+      const grid = document.querySelector('#booking-slots-grid');
+      const countTag = document.querySelector('#slots-count-tag');
+
+      // 1. Read from localStorage
+      try {
+        const raw = localStorage.getItem('uniflows_appointments');
+        if (raw) appointments = JSON.parse(raw);
+      } catch (e) {
+        console.warn('Lỗi đọc local appointments:', e);
+      }
+
+      // 2. Read from Supabase if configured
+      if (isSupabaseConfigured()) {
+        try {
+          const { data, error } = await supabase
+            .from('appointments')
+            .select('*')
+            .order('date', { ascending: true });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            const mapped = data.map(r => ({
+              id: r.id,
+              date: r.date,
+              timeSlot: r.time_slot || r.timeSlot,
+              durationMinutes: r.duration_minutes || r.durationMinutes || 45,
+              host: r.host || 'UniFLOWs A&R Team',
+              topicCategory: r.topic_category || r.topicCategory || 'Thẩm định Demo',
+              status: r.status || 'open',
+              slotNotes: r.slot_notes || r.slotNotes || '',
+              booker: r.booker || null,
+              meetingMethod: r.meeting_method || r.meetingMethod || '',
+              meetingLink: r.meeting_link || r.meetingLink || '',
+              adminNotes: r.admin_notes || r.adminNotes || ''
+            }));
+            const idMap = new Map();
+            mapped.forEach(m => idMap.set(m.id, m));
+            appointments.forEach(a => { if (!idMap.has(a.id)) idMap.set(a.id, a); });
+            appointments = Array.from(idMap.values());
+            localStorage.setItem('uniflows_appointments', JSON.stringify(appointments));
+          }
+        } catch (err) {
+          console.warn('Lỗi fetch appointments từ Supabase:', err);
+        }
+      }
+
+      // Fallback sample slots if completely empty
+      if (!Array.isArray(appointments) || appointments.length === 0) {
+        const today = new Date();
+        const d1 = new Date(today.getTime() + 2 * 86400000).toISOString().split('T')[0];
+        const d2 = new Date(today.getTime() + 3 * 86400000).toISOString().split('T')[0];
+        const d3 = new Date(today.getTime() + 5 * 86400000).toISOString().split('T')[0];
+
+        appointments = [
+          {
+            id: 'appt-sample-1',
+            date: d1,
+            timeSlot: '10:00 - 10:45',
+            durationMinutes: 45,
+            host: 'UniFLOWs A&R Lead Team',
+            topicCategory: 'Nghe & Thẩm định Demo A&R',
+            status: 'open',
+            slotNotes: 'Dành cho các ca khúc demo mới gửi trong tuần'
+          },
+          {
+            id: 'appt-sample-2',
+            date: d1,
+            timeSlot: '14:30 - 15:15',
+            durationMinutes: 45,
+            host: 'A&R & Distribution Lead',
+            topicCategory: 'Ký hợp đồng & Phân phối Master',
+            status: 'open',
+            slotNotes: 'Tư vấn ký độc quyền & đối soát phân phối DSP'
+          },
+          {
+            id: 'appt-sample-3',
+            date: d2,
+            timeSlot: '15:00 - 15:45',
+            durationMinutes: 45,
+            host: 'UniFLOWs A&R Team',
+            topicCategory: 'Tư vấn Chiến lược Ra mắt (Single/Album)',
+            status: 'open',
+            slotNotes: 'Chiến dịch pitching Spotify Editorial & TikTok Sound'
+          },
+          {
+            id: 'appt-sample-4',
+            date: d3,
+            timeSlot: '16:00 - 17:00',
+            durationMinutes: 60,
+            host: 'Head of Production & A&R',
+            topicCategory: 'Gặp gỡ trực tiếp tại Studio',
+            status: 'open',
+            slotNotes: 'Trải nghiệm phòng thu UniFLOWs Studio'
+          }
+        ];
+        try {
+          localStorage.setItem('uniflows_appointments', JSON.stringify(appointments));
+        } catch (_) {}
+      }
+
+      // Filter only OPEN slots and not expired
+      const todayStr = new Date().toISOString().split('T')[0];
+      const openSlots = appointments.filter(s => s.status === 'open' && s.date >= todayStr);
+
+      countTag.textContent = `${openSlots.length} Khung giờ khả dụng`;
+
+      if (openSlots.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 36px 20px; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">⏳</div>
+            <h3 style="font-size: 15px; margin: 0 0 6px;">Hiện chưa có khung giờ trống mới</h3>
+            <p style="font-size: 13px; color: #64748b; margin: 0 0 14px;">Tất cả các khung giờ trong tuần này đã được đặt hoặc đang được xếp lịch. Vui lòng quay lại sau hoặc gửi email trực tiếp cho ban biên tập.</p>
+            <a href="mailto:demo@uniflowslabel.com" class="button alt" style="padding: 8px 16px; font-size: 11px;">✉️ Gửi Email A&R (demo@uniflowslabel.com)</a>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = openSlots.map(slot => {
+        const isSelected = slot.id === selectedSlotId;
+        const dateObj = new Date(slot.date + 'T00:00:00');
+        const formattedDate = dateObj.toLocaleDateString('vi-VN', {
+          weekday: 'long',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+
+        return `
+          <div class="booking-slot-card ${isSelected ? 'selected' : ''}" data-slot-id="${slot.id}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+              <div>
+                <span class="booking-slot-badge" style="background: #f3e8ff; color: #7e22ce;">📅 ${formattedDate}</span>
+                <div style="font-size: 16px; font-weight: 800; font-family: 'DM Mono', monospace; margin-top: 6px; color: #0f172a;">
+                  ⏰ ${slot.timeSlot}
+                </div>
+              </div>
+              <span style="font-size: 11px; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-family: 'DM Mono', monospace;">${slot.durationMinutes || 45}m</span>
+            </div>
+
+            <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-top: 2px;">
+              ${slot.topicCategory || 'Gặp gỡ & Thẩm định Demo'}
+            </div>
+
+            <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 4px;">
+              <span>👤</span> <span>${slot.host || 'UniFLOWs A&R Lead'}</span>
+            </div>
+
+            ${slot.slotNotes ? `<div style="font-size: 11px; color: #64748b; font-style: italic; background: #f8fafc; padding: 6px 8px; border-radius: 4px; line-height: 1.4;">${slot.slotNotes}</div>` : ''}
+
+            <div style="margin-top: 6px; padding-top: 8px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11px; font-weight: bold; color: ${isSelected ? '#8b5cf6' : '#16a34a'};">
+                ${isSelected ? '✓ Đang chọn khung này' : '🟢 Còn trống'}
+              </span>
+              <button type="button" class="button alt" style="padding: 4px 10px; font-size: 10px; pointer-events: none; background: ${isSelected ? '#8b5cf6' : '#fff'}; color: ${isSelected ? '#fff' : '#0f172a'};">
+                ${isSelected ? 'Đã Chọn' : 'Chọn Giờ'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Attach click listeners to cards
+      grid.querySelectorAll('.booking-slot-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const slotId = card.dataset.slotId;
+          selectSlot(slotId);
+        });
+      });
+    }
+
+    function selectSlot(slotId) {
+      selectedSlotId = slotId;
+      const targetSlot = appointments.find(s => s.id === slotId);
+      if (!targetSlot) return;
+
+      // Update UI cards
+      document.querySelectorAll('.booking-slot-card').forEach(card => {
+        if (card.dataset.slotId === slotId) {
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
+      });
+
+      // Show form section
+      const formSection = document.querySelector('#booking-form-section');
+      formSection.style.display = 'block';
+
+      // Update selected slot summary
+      const dateObj = new Date(targetSlot.date + 'T00:00:00');
+      const formattedDate = dateObj.toLocaleDateString('vi-VN', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      document.querySelector('#selected-slot-id').value = targetSlot.id;
+      document.querySelector('#selected-slot-summary-text').textContent = `${formattedDate} lúc ${targetSlot.timeSlot} (${targetSlot.topicCategory || 'Gặp gỡ A&R'})`;
+      document.querySelector('#selected-slot-host-text').textContent = `Host: ${targetSlot.host || 'A&R Team'}`;
+
+      // Smooth scroll to form
+      formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Cancel selection
+    document.querySelector('#btn-cancel-slot-selection')?.addEventListener('click', () => {
+      selectedSlotId = null;
+      document.querySelector('#booking-form-section').style.display = 'none';
+      document.querySelectorAll('.booking-slot-card').forEach(c => c.classList.remove('selected'));
+    });
+
+    // Form submission
+    document.querySelector('#public-booking-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const slotId = document.querySelector('#selected-slot-id').value;
+      const targetSlot = appointments.find(s => s.id === slotId);
+      if (!targetSlot) {
+        alert('Không tìm thấy khung giờ đã chọn. Vui lòng chọn lại.');
+        return;
+      }
+
+      const bookerName = document.querySelector('#booker-name').value.trim();
+      const artistName = document.querySelector('#booker-artist-name').value.trim();
+      const email = document.querySelector('#booker-email').value.trim();
+      const phone = document.querySelector('#booker-phone').value.trim();
+      const roleType = document.querySelector('#booker-type').value;
+      const demoLink = document.querySelector('#booker-demo-link').value.trim();
+      const notes = document.querySelector('#booker-notes').value.trim();
+
+      const submitBtn = document.querySelector('#btn-submit-booking');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang xử lý đăng ký...';
+
+      const dossierCode = 'APPT-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      const bookerData = {
+        name: bookerName,
+        artistName: artistName,
+        email: email,
+        phone: phone,
+        type: roleType,
+        demoLink: demoLink,
+        notes: notes,
+        dossierCode: dossierCode,
+        bookedAt: new Date().toISOString()
+      };
+
+      // 1. Update slot in local array
+      targetSlot.status = 'booked';
+      targetSlot.dossierCode = dossierCode;
+      targetSlot.booker = bookerData;
+      targetSlot.updatedAt = new Date().toISOString();
+
+      try {
+        localStorage.setItem('uniflows_appointments', JSON.stringify(appointments));
+      } catch (_) {}
+
+      // 2. Update Supabase appointments table if available
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('appointments').update({
+            status: 'booked',
+            booker: bookerData,
+            updated_at: new Date().toISOString()
+          }).eq('id', slotId);
+        } catch (err) {
+          console.warn('Lỗi cập nhật Supabase appointment:', err);
+        }
+      }
+
+      // 3. Create Admin Notification in uniflows-admin-notifications
+      try {
+        const rawNotifs = localStorage.getItem('uniflows-admin-notifications');
+        const notifs = rawNotifs ? JSON.parse(rawNotifs) : [];
+        notifs.unshift({
+          id: 'notif-appt-' + Date.now(),
+          type: 'appointment',
+          targetTab: 'admin-tab-appointments',
+          artistName: artistName || bookerName,
+          title: '📅 Lịch Hẹn A&R Mới Được Đặt!',
+          message: `${bookerName} (${artistName || 'Nghệ sĩ'}) đã đặt lịch gặp A&R lúc ${targetSlot.timeSlot} ngày ${targetSlot.date}. Vui lòng thêm link meeting & gửi mail xác nhận.`,
+          createdAt: new Date().toISOString(),
+          isRead: false
+        });
+        localStorage.setItem('uniflows-admin-notifications', JSON.stringify(notifs));
+      } catch (err) {
+        console.warn('Lỗi ghi local notification:', err);
+      }
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('admin_notifications').insert([{
+            type: 'appointment',
+            target_tab: 'admin-tab-appointments',
+            artist_name: artistName || bookerName,
+            title: '📅 Lịch Hẹn A&R Mới Được Đặt!',
+            message: `${bookerName} (${artistName || 'Nghệ sĩ'}) đã đặt lịch gặp A&R lúc ${targetSlot.timeSlot} ngày ${targetSlot.date}. Vui lòng thêm link meeting & gửi mail xác nhận.`,
+            created_at: new Date().toISOString(),
+            is_read: false
+          }]);
+        } catch (_) {}
+      }
+
+      // 4. Render Success View
+      document.querySelector('#booking-main-container').style.display = 'none';
+      const successBox = document.querySelector('#booking-success-container');
+      const dateObj = new Date(targetSlot.date + 'T00:00:00');
+      const formattedDate = dateObj.toLocaleDateString('vi-VN', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      document.querySelector('#success-recap-code').textContent = dossierCode;
+      document.querySelector('#success-recap-datetime').textContent = `${formattedDate} (⏰ ${targetSlot.timeSlot})`;
+      document.querySelector('#success-recap-booker').textContent = bookerName;
+      document.querySelector('#success-recap-artist').textContent = artistName;
+      document.querySelector('#success-recap-email').textContent = email;
+      document.querySelector('#success-recap-topic').textContent = targetSlot.topicCategory || 'Gặp gỡ & Thẩm định Demo';
+
+      successBox.style.display = 'block';
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    // Init
+    loadAvailableSlots();
+  </script>
+  <script type="module" src="/assets/app.js"></script>
+</body>
+</html>

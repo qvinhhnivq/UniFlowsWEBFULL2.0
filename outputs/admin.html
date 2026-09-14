@@ -68,6 +68,7 @@
         <option value="admin-tab-shortlinks">🔗 13 / Trình Rút Gọn Link (ShortURL)</option>
         <option value="admin-tab-distribution">📊 14 / Đối Soát Phân Phối</option>
         <option value="admin-tab-requests">📬 15 / Các Yêu Cầu Khác (Special Requests)</option>
+        <option value="admin-tab-appointments">📅 16 / Lịch Hẹn & Meeting A&R (Bookings)</option>
       </select>
     </div>
 
@@ -91,6 +92,10 @@
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-requests" style="border-left: 2px solid #ec4899; background: #fdf2f8; font-weight:bold;">
         📬 15 / Các Yêu Cầu Khác (Special Requests)
         <span class="tab-badge" id="badge-tab-requests" style="display:none;margin-left:6px;background:#ec4899;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;">0</span>
+      </button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-appointments" style="border-left: 2px solid #8b5cf6; background: #f5f3ff; font-weight:bold;">
+        📅 16 / Lịch Hẹn & Book Meeting
+        <span class="tab-badge" id="badge-tab-appointments" style="display:none;margin-left:6px;background:#8b5cf6;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;">0</span>
       </button>
     </nav>
 
@@ -1422,6 +1427,101 @@
         </div>
       </section>
 
+      <!-- ========================================== -->
+      <!-- TAB 16: LỊCH HẸN & BOOK MEETING A&R -->
+      <!-- ========================================== -->
+      <section id="admin-tab-appointments" class="tab-pane admin-section" style="border: 0; padding-top: 0; margin-top: 0;">
+        <div class="section-head" style="padding-left: 0; padding-right: 0;">
+          <div>
+            <h2 style="font-size: 24px; letter-spacing: -0.04em; margin: 0;">A&R Bookings & Lịch Hẹn Meeting</h2>
+            <p style="font-size: 13px; opacity: 0.8; margin: 4px 0 0;">Quản lý khung giờ trống, cung cấp link đặt lịch công khai cho nghệ sĩ & demo submitter, gán link Google Meet/Zoom và gửi mail tự động xác nhận.</p>
+          </div>
+          <span class="kicker">Appointment Center</span>
+        </div>
+
+        <!-- Shareable Link Banner -->
+        <div style="background: #0f172a; color: #fff; border-radius: 10px; padding: 18px 20px; margin: 18px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border: 2px solid var(--ink);">
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 16px;">🔗</span>
+              <strong style="font-size: 13px; letter-spacing: -0.02em; color: #d8ff48;">Đường Link Đặt Lịch Công Khai (Public Booking URL):</strong>
+            </div>
+            <p style="font-size: 11px; opacity: 0.75; margin: 0 0 8px;">Gửi đường link này cho Nghệ sĩ ký kết hoặc các bạn gửi Demo để họ tự do chọn khung giờ gặp gỡ đội ngũ A&R.</p>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="admin-booking-url-input" readonly value="" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 8px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; min-width: 280px; flex: 1;">
+              <button type="button" id="btn-copy-booking-url" class="button" style="background: #d8ff48; color: #0f172a; border-color: #d8ff48; font-weight: bold; padding: 8px 14px; font-size: 11px; cursor:pointer;">📋 Copy Link</button>
+              <a id="btn-preview-booking-url" href="/booking.html" target="_blank" class="button alt" style="background: #fff; color: #0f172a; border: none; padding: 8px 14px; font-size: 11px; text-decoration:none;">↗ Mở Trang Booking</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Slot Form & Calendar Settings Card -->
+        <div style="background: #fff; border: 1px solid var(--ink); border-radius: 10px; padding: 20px; margin-bottom: 22px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+            <strong style="font-size: 14px; letter-spacing: -0.02em;">➕ Tạo Thêm Khung Giờ Trống Mới (Add Available Slot)</strong>
+            <span style="font-size: 11px; color: #64748b; font-family: 'DM Mono', monospace;">SLOT CREATOR</span>
+          </div>
+          <form id="form-create-appt-slot" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end;">
+            <div class="field">
+              <label style="font-size: 11px; font-weight: bold;">Ngày hẹn (Date) *</label>
+              <input type="date" id="appt-new-date" required style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; font-weight: bold; background: #fff;">
+            </div>
+            <div class="field">
+              <label style="font-size: 11px; font-weight: bold;">Khung giờ (Time Slot) *</label>
+              <input type="text" id="appt-new-time" placeholder="Ví dụ: 09:30 - 10:15 hoặc 14:00" required style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+            </div>
+            <div class="field">
+              <label style="font-size: 11px; font-weight: bold;">Thời lượng dự kiến</label>
+              <select id="appt-new-duration" style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; font-weight: bold; background: #fff;">
+                <option value="30">30 Phút</option>
+                <option value="45" selected>45 Phút</option>
+                <option value="60">60 Phút (1 Tiếng)</option>
+                <option value="90">90 Phút</option>
+              </select>
+            </div>
+            <div class="field">
+              <label style="font-size: 11px; font-weight: bold;">Đại diện Host / A&R Lead</label>
+              <input type="text" id="appt-new-host" value="UniFLOWs A&R Lead Team" placeholder="Tên A&R / Host phụ trách" style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+            </div>
+            <div class="field">
+              <label style="font-size: 11px; font-weight: bold;">Chuyên đề / Mục đích</label>
+              <select id="appt-new-category" style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; font-weight: bold; background: #fff;">
+                <option value="Nghe & Thẩm định Demo A&R">🎧 Nghe & Thẩm định Demo A&R</option>
+                <option value="Ký hợp đồng & Phân phối Master">📑 Ký hợp đồng & Phân phối Master</option>
+                <option value="Tư vấn Chiến lược Ra mắt (Single/Album)">🚀 Tư vấn Chiến lược Ra mắt (Single/Album)</option>
+                <option value="Pitching Playlist & Truyền thông DSP">🎯 Pitching Playlist & Truyền thông DSP</option>
+                <option value="Gặp gỡ trực tiếp tại Studio">🎙️ Gặp gỡ trực tiếp tại Studio</option>
+                <option value="Trao đổi định hướng âm nhạc chung">💬 Trao đổi định hướng âm nhạc chung</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+              <label style="font-size: 11px; font-weight: bold;">Ghi chú hiển thị cho người đặt (Slot Note - Tùy chọn)</label>
+              <input type="text" id="appt-new-note" placeholder="Ví dụ: Dành riêng cho các nghệ sĩ Indie gửi bản demo acoustic hoặc pop ballad" style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+            </div>
+            <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px;">
+              <button type="submit" class="button" style="background: #8b5cf6; color: #fff; border-color: #8b5cf6; font-weight: bold; padding: 10px 20px; font-size: 12px;">
+                ➕ Thêm Khung Giờ Trống Này
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Filter Bar -->
+        <div style="display: flex; gap: 8px; margin: 18px 0; flex-wrap: wrap; align-items: center;">
+          <button type="button" class="appt-filter-btn active button" data-appt-filter="all" style="padding: 6px 14px; font-size: 11px;">Tất cả (<span id="appt-count-all">0</span>)</button>
+          <button type="button" class="appt-filter-btn button alt" data-appt-filter="booked" style="padding: 6px 14px; font-size: 11px; background:#fffbeb; border-color:#f59e0b; color:#b45309;">🟡 Chờ Duyệt Meeting (<span id="appt-count-booked">0</span>)</button>
+          <button type="button" class="appt-filter-btn button alt" data-appt-filter="open" style="padding: 6px 14px; font-size: 11px; background:#f0fdf4; border-color:#22c55e; color:#15803d;">🟢 Đang Mở Đặt (<span id="appt-count-open">0</span>)</button>
+          <button type="button" class="appt-filter-btn button alt" data-appt-filter="confirmed" style="padding: 6px 14px; font-size: 11px; background:#eff6ff; border-color:#3b82f6; color:#1d4ed8;">🔵 Đã Xác Nhận (<span id="appt-count-confirmed">0</span>)</button>
+          <button type="button" class="appt-filter-btn button alt" data-appt-filter="done" style="padding: 6px 14px; font-size: 11px;">⚪ Đã Xong / Huỷ (<span id="appt-count-done">0</span>)</button>
+          <button type="button" id="btn-refresh-appointments" class="button alt" style="margin-left: auto; padding: 6px 14px; font-size: 11px;">🔄 Làm mới danh sách</button>
+        </div>
+
+        <!-- Appointments List Container -->
+        <div id="admin-appointments-list" style="display: grid; gap: 14px;">
+          <p class="empty" style="padding: 24px; background: #fff; border: 1px solid var(--ink); border-radius: 8px;">Đang tải danh sách lịch hẹn...</p>
+        </div>
+      </section>
+
       <!-- Sticky Actions Bar -->
       <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10; display: flex; gap: 12px; align-items: center;">
         <button class="button" type="submit" id="save-all-btn" style="padding: 12px 24px; font-weight: bold;">Lưu toàn bộ lên Supabase</button>
@@ -2059,7 +2159,10 @@
 
     <form id="demo-reply-form" style="padding:20px;display:grid;gap:14px;overflow-y:auto;font-family:inherit;">
       <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;font-size:12px;display:grid;gap:4px;">
-        <div>Gửi tới: <strong id="demo-reply-target-name" style="color:#0f172a;"></strong> &lt;<code id="demo-reply-target-email" style="color:#0284c7;font-weight:bold;"></code>&gt;</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>Gửi tới: <strong id="demo-reply-target-name" style="color:#0f172a;"></strong> &lt;<code id="demo-reply-target-email" style="color:#0284c7;font-weight:bold;"></code>&gt;</div>
+          <span style="background:#0f172a;color:#d8ff48;font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;white-space:nowrap;">Mã HS: <span id="demo-reply-target-code">DEMO-001</span></span>
+        </div>
         <div style="color:#64748b;font-size:11px;">Bản thu demo: <span id="demo-reply-target-song" style="font-weight:600;"></span></div>
       </div>
 
@@ -2095,6 +2198,71 @@
             🚀 Gửi Email Phản Hồi Ngay
           </button>
         </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ========================================== -->
+  <!-- MODAL: XÁC NHẬN LỊCH HẸN & GỬI LINK MEETING -->
+  <!-- ========================================== -->
+  <dialog id="modal-confirm-appointment" style="max-width:640px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.35);max-height:92vh;">
+    <div style="background:#0f172a;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
+      <div>
+        <span class="eyebrow" style="color:#d8ff48;margin:0;font-size:10px;">A&R Meeting Coordination</span>
+        <h2 style="font-size:17px;margin:2px 0 0;letter-spacing:-0.03em;color:#fff;">📅 Thêm Phương Thức Meeting & Xác Nhận Lịch Hẹn</h2>
+      </div>
+      <button type="button" class="close-btn" id="close-confirm-appt-btn" style="background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+
+    <form id="confirm-appt-form" style="padding:20px;display:grid;gap:14px;overflow-y:auto;font-family:inherit;">
+      <input type="hidden" id="confirm-appt-id" value="">
+      <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:14px 16px;border-radius:8px;font-size:12px;display:grid;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>Người đặt: <strong id="confirm-appt-booker-name" style="color:#0f172a;font-size:13px;"></strong> (<span id="confirm-appt-artist-name" style="color:#2563eb;font-weight:bold;"></span>)</div>
+          <span id="confirm-appt-datetime" style="font-family:'DM Mono',monospace;font-weight:bold;color:#475569;background:#e2e8f0;padding:2px 8px;border-radius:4px;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>Email: <code id="confirm-appt-booker-email" style="color:#0284c7;font-weight:bold;"></code> | Điện thoại: <span id="confirm-appt-booker-phone" style="font-weight:600;"></span></div>
+          <span style="background:#7c3aed;color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">Mã: <span id="confirm-appt-code">APPT-001</span></span>
+        </div>
+        <div style="color:#64748b;font-size:11px;">Mục đích: <span id="confirm-appt-topic" style="font-weight:600;color:#0f172a;"></span></div>
+        <div id="confirm-appt-demo-box" style="display:none;font-size:11px;background:#f1f5f9;padding:6px 10px;border-radius:4px;">
+          Link demo: <a id="confirm-appt-demo-link" href="#" target="_blank" style="color:#2563eb;font-weight:bold;text-decoration:underline;"></a>
+        </div>
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Phương thức Meeting (Meeting Method) *</label>
+        <select id="confirm-appt-method" required style="padding:10px;border:1px solid var(--ink);background:#fff;font-size:12px;font-weight:bold;">
+          <option value="Google Meet">🟢 Google Meet (Khuyên dùng - Họp trực tuyến)</option>
+          <option value="Zoom Meeting">🔵 Zoom Cloud Meetings (Họp trực tuyến)</option>
+          <option value="Trực tiếp tại UniFLOWs Studio">🎙️ Trực tiếp tại UniFLOWs Studio (Offline)</option>
+          <option value="Điện thoại trực tiếp (Phone Call)">📞 Gọi điện thoại trực tiếp</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Đường link Meeting hoặc Địa chỉ Studio *</label>
+        <input id="confirm-appt-link" required style="padding:10px 12px;border:1px solid var(--ink);font-weight:600;font-family:'DM Mono',monospace;font-size:12px;" placeholder="https://meet.google.com/xxx-yyyy-zzz hoặc Địa chỉ UniFLOWs">
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Lời nhắn / Hướng dẫn chuẩn bị cho nghệ sĩ / bạn gửi demo</label>
+        <textarea id="confirm-appt-notes" rows="4" style="line-height:1.6;padding:10px;border:1px solid var(--ink);font-family:inherit;font-size:12px;" placeholder="Ví dụ: Bạn vui lòng chuẩn bị sẵn file WAV bản demo và danh sách các track dự kiến trong đợt phát hành..."></textarea>
+      </div>
+
+      <div style="background:#f0fdf4;border:1px solid #86efac;padding:10px 14px;border-radius:6px;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="confirm-appt-auto-email" checked style="cursor:pointer;">
+        <label for="confirm-appt-auto-email" style="font-size:12px;font-weight:600;color:#166534;cursor:pointer;margin:0;">
+          ✉️ Tự động gửi Email xác nhận kèm Link Meeting trực tiếp tới người đặt
+        </label>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #e2e8f0;padding-top:14px;">
+        <button type="button" class="button alt" id="cancel-confirm-appt-btn" style="padding:8px 16px;font-size:11px;">Đóng</button>
+        <button type="submit" id="submit-confirm-appt-btn" class="button" style="background:#8b5cf6;color:#fff;border-color:#8b5cf6;font-weight:bold;padding:10px 22px;font-size:12px;">
+          🚀 Xác Nhận & Gửi Email Cho Khách
+        </button>
       </div>
     </form>
   </dialog>

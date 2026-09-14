@@ -1525,6 +1525,9 @@ async function renderReleases() {
     }
   }
 
+  // Render Periodic Revenue Statements
+  renderArtistRevenueStatements(artist);
+
   // 3. Render Playlists Showcase
   const playlistShowcase = document.querySelector('#artist-playlists-showcase');
   if (playlistShowcase) {
@@ -1792,6 +1795,92 @@ async function renderReleases() {
       `;
     }
   }
+}
+
+// ----------------------------------------------------
+// RENDER ARTIST REVENUE STATEMENTS (REAL DISTRIBUTOR DATA)
+// ----------------------------------------------------
+function renderArtistRevenueStatements(art) {
+  const container = document.querySelector('#artist-revenue-statements-list');
+  if (!container) return;
+
+  const statements = art.revenueStatements || [];
+  if (statements.length === 0) {
+    container.innerHTML = `
+      <div style="background:var(--portal-card-bg);border:1px dashed var(--portal-card-border);border-radius:12px;padding:24px;text-align:center;color:var(--portal-text-muted);">
+        <div style="font-size:24px;margin-bottom:6px;">📊</div>
+        <p style="margin:0;font-size:13px;font-weight:600;">Chưa có bản báo cáo đối soát nào trong kỳ này.</p>
+        <span style="font-size:11px;opacity:0.8;">Báo cáo phân phối quốc tế (CSV/PDF) sẽ tự động xuất hiện tại đây sau khi được bộ phận đối soát kế toán đồng bộ.</span>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:grid;gap:14px;">
+      ${statements.map((stmt, idx) => {
+        const dsp = stmt.dspSummary || {};
+        const dateStr = stmt.syncedAt ? new Date(stmt.syncedAt).toLocaleDateString('vi-VN') : 'Kỳ này';
+        return `
+          <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:12px;padding:18px 22px;box-shadow:var(--portal-shadow);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--portal-card-border);padding-bottom:12px;margin-bottom:14px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;background:#0f172a;color:#fff;padding:2px 8px;border-radius:4px;">
+                    ${esc(stmt.statementNumber || `UFL-STMT-${idx + 1}`)}
+                  </span>
+                  <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--portal-text-muted);">
+                    📅 Đồng bộ ngày ${esc(dateStr)}
+                  </span>
+                </div>
+                <h4 style="margin:2px 0 0;font-size:16px;letter-spacing:-0.03em;">
+                  Kỳ đối soát: <strong>${esc(stmt.statementPeriod || 'Tháng đối soát')}</strong>
+                </h4>
+                <div style="font-size:11px;color:var(--portal-text-muted);margin-top:2px;">
+                  📎 Tệp nguồn: <code>${esc(stmt.fileName || 'revenue_report.csv')}</code>
+                  ${stmt.tracksCount ? ` · Bao gồm <b>${stmt.tracksCount}</b> bài hát` : ''}
+                </div>
+              </div>
+
+              <div style="text-align:right;">
+                <span style="font-size:10px;text-transform:uppercase;color:var(--portal-text-muted);font-family:'DM Mono',monospace;">Thực nhận (${esc(stmt.royaltyRate || '80%')})</span>
+                <strong style="display:block;font-size:24px;color:#16a34a;font-family:'DM Mono',monospace;letter-spacing:-0.04em;">
+                  ₫ ${(Number(stmt.netPayable) || 0).toLocaleString('vi-VN')}
+                </strong>
+                <span style="font-size:11px;color:var(--portal-text-muted);font-family:'DM Mono',monospace;">
+                  Tổng Gross: ₫ ${(Number(stmt.totalGrossRevenue) || 0).toLocaleString('vi-VN')}
+                </span>
+              </div>
+            </div>
+
+            <!-- DSP breakdown badges -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;background:var(--portal-hover-bg);padding:10px 14px;border-radius:8px;">
+              <div>
+                <span style="font-size:10px;color:#16a34a;font-weight:bold;">🟢 Spotify</span>
+                <b style="display:block;font-size:12px;font-family:'DM Mono',monospace;">₫ ${(Number(dsp.spotify?.revenue) || 0).toLocaleString('vi-VN')}</b>
+                <small style="font-size:10px;color:var(--portal-text-muted);">${(Number(dsp.spotify?.streams) || 0).toLocaleString('vi-VN')} plays</small>
+              </div>
+              <div>
+                <span style="font-size:10px;color:#dc2626;font-weight:bold;">🍎 Apple Music</span>
+                <b style="display:block;font-size:12px;font-family:'DM Mono',monospace;">₫ ${(Number(dsp.apple?.revenue) || 0).toLocaleString('vi-VN')}</b>
+                <small style="font-size:10px;color:var(--portal-text-muted);">${(Number(dsp.apple?.streams) || 0).toLocaleString('vi-VN')} plays</small>
+              </div>
+              <div>
+                <span style="font-size:10px;color:#ea580c;font-weight:bold;">📺 YouTube Music</span>
+                <b style="display:block;font-size:12px;font-family:'DM Mono',monospace;">₫ ${(Number(dsp.youtube?.revenue) || 0).toLocaleString('vi-VN')}</b>
+                <small style="font-size:10px;color:var(--portal-text-muted);">${(Number(dsp.youtube?.streams) || 0).toLocaleString('vi-VN')} plays</small>
+              </div>
+              <div>
+                <span style="font-size:10px;color:#2563eb;font-weight:bold;">🌐 Nền tảng khác</span>
+                <b style="display:block;font-size:12px;font-family:'DM Mono',monospace;">₫ ${(Number(dsp.other?.revenue) || 0).toLocaleString('vi-VN')}</b>
+                <small style="font-size:10px;color:var(--portal-text-muted);">${(Number(dsp.other?.streams) || 0).toLocaleString('vi-VN')} plays</small>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
 }
 
 // ----------------------------------------------------

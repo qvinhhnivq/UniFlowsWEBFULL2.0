@@ -25,6 +25,8 @@ export const DEFAULT_EMAIL_CONFIG = {
   }
 };
 
+const escapeHtml = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 export function getEmailConfig() {
   try {
     const raw = localStorage.getItem('uniflows-email-config');
@@ -247,9 +249,9 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
 // EMAIL TEMPLATE BUILDER: GIAO DIỆN EDITORIAL / HOMEPAGE BRUTALISM
 // Thiết kế đồng bộ 100% với Homepage UniFLOWs: Font Manrope, DM Mono, Playfair Display
 // Bố cục: Top bar điều hướng, Hero Banner vinyl "WHERE THE MUSIC SPEAKS.", 
-// Thân bài trắng tối giản, nút bấm đen sắc nét và Chân trang đen có thông báo No-reply.
+// Thân bài trắng tối giản, nút bấm đen sắc nét và Chân trang đen có hướng dẫn liên hệ quản lý.
 // ----------------------------------------------------------------------------
-export function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText, badgeColor, badgeBg, badgeBorder, contentHtml, actionBtnText, actionBtnUrl, footerNote }) {
+export function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText, badgeColor, badgeBg, badgeBorder, contentHtml, actionBtnText, actionBtnUrl, footerNote, recipientType = 'general', demoRefCode = null }) {
   const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
     ? window.location.origin 
     : 'https://uniflowslabel.com';
@@ -429,10 +431,19 @@ export function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText
               <!-- Optional Context Note -->
               ${footerNote ? `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #222222;color:#d1d5db;font-size:12px;font-family:'Manrope',sans-serif;text-align:left;line-height:1.5;">${footerNote}</div>` : ''}
 
-              <!-- Mandatory Support Note: No-Reply Notice & Management Contact -->
+              <!-- Mandatory Support Note: Management Contact (Directed to management@uniflowslabel.com) -->
               <div style="border-top:1px solid #222222;margin-top:20px;padding-top:18px;font-family:'DM Mono',Courier,monospace;font-size:11px;color:#9ca3af;line-height:1.65;text-align:center;">
-                Đây là email tự động (no-reply) từ hệ thống. Vui lòng không trả lời thư này.<br>
-                Để được hỗ trợ, vui lòng <b>liên hệ người phụ trách</b> của bạn hoặc gửi email về <a href="mailto:management@uniflowslabel.com" style="color:#d8ff48;text-decoration:none;font-weight:bold;">management@uniflowslabel.com</a>.
+                ${recipientType === 'artist' ? `
+                  Quý Nghệ sĩ cần giải đáp hoặc phản hồi thêm, vui lòng <b>liên hệ trực tiếp người phụ trách (A&R / Manager)</b> của bạn hoặc gửi email về <a href="mailto:management@uniflowslabel.com" style="color:#d8ff48;text-decoration:none;font-weight:bold;">management@uniflowslabel.com</a>.<br>
+                  <span style="font-size:10px;color:#6b7280;">(Vui lòng không nhấn Reply trực tiếp vào thông báo tự động này)</span>
+                ` : (recipientType === 'demo' || demoRefCode) ? `
+                  ${demoRefCode ? `Mã hồ sơ bản thu demo: <b style="color:#ffffff;font-family:'DM Mono',monospace;">${escapeHtml(demoRefCode)}</b><br>` : ''}
+                  Bạn cần phản hồi hoặc gửi thêm tư liệu bản thu, vui lòng gửi email trực tiếp tới <a href="mailto:management@uniflowslabel.com" style="color:#d8ff48;text-decoration:none;font-weight:bold;">management@uniflowslabel.com</a> ${demoRefCode ? `(kèm <b>Mã hồ sơ ${escapeHtml(demoRefCode)}</b>)` : ''}.<br>
+                  <span style="font-size:10px;color:#6b7280;">(Vui lòng không nhấn Reply trực tiếp vào thông báo tự động này)</span>
+                ` : `
+                  Nếu bạn cần trao đổi hoặc phản hồi lại thông tin này, vui lòng gửi email trực tiếp tới ban quản lý tại <a href="mailto:management@uniflowslabel.com" style="color:#d8ff48;text-decoration:none;font-weight:bold;">management@uniflowslabel.com</a>.<br>
+                  <span style="font-size:10px;color:#6b7280;">(Vui lòng không nhấn Reply trực tiếp vào thông báo tự động này)</span>
+                `}
               </div>
 
               <div style="margin-top:12px;font-size:9.5px;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;text-align:center;">
@@ -532,7 +543,8 @@ export async function sendAccountHandoverEmail(artist) {
     contentHtml,
     actionBtnText: 'Đăng Nhập UniPORTAL (by UniENGINE) Ngay',
     actionBtnUrl: loginUrl,
-    footerNote: 'Email này chứa thông tin bảo mật đăng nhập hệ thống.'
+    footerNote: 'Email này chứa thông tin bảo mật đăng nhập hệ thống.',
+    recipientType: 'artist'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -588,7 +600,8 @@ export async function sendReleaseRevisionEmail(artist, release, feedback) {
     badgeBorder: '#fecaca',
     contentHtml,
     actionBtnText: 'Mở UniPORTAL Cập Nhật Lại',
-    actionBtnUrl: releaseUrl
+    actionBtnUrl: portalUrl,
+    recipientType: 'artist'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -645,7 +658,8 @@ export async function sendReleaseRejectedEmail({ artist, release, reason }) {
     contentHtml,
     actionBtnText: 'Xem Chi Tiết Trên Portal',
     actionBtnUrl: portalUrl,
-    footerNote: 'UniFLOWs Label luôn sẵn sàng đồng hành và lắng nghe các sản phẩm âm nhạc tiếp theo của bạn.'
+    footerNote: 'UniFLOWs Label luôn sẵn sàng đồng hành và lắng nghe các sản phẩm âm nhạc tiếp theo của bạn.',
+    recipientType: 'artist'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -699,7 +713,8 @@ export async function sendReleaseApprovedEmail(artist, release) {
     badgeBorder: '#000000',
     contentHtml,
     actionBtnText: 'Mở Smart Link & Thống Kê',
-    actionBtnUrl: portalUrl
+    actionBtnUrl: portalUrl,
+    recipientType: 'artist'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -754,7 +769,8 @@ export async function sendArtistNotificationEmail(artist, notif) {
     badgeBorder: notif.type === 'important' ? '#fecaca' : '#000000',
     contentHtml,
     actionBtnText: notif.action_url ? 'Xem Chi Tiết Ngay' : 'Mở UniPORTAL (by UniENGINE)',
-    actionBtnUrl: actionUrl
+    actionBtnUrl: actionUrl,
+    recipientType: 'artist'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -890,7 +906,8 @@ export async function sendPayoutStatusEmail({ artist, payout, status, rejectionR
     badgeBorder: isRejected ? '#fecaca' : '#000000',
     contentHtml,
     actionBtnText: 'Mở UniPORTAL (by UniENGINE) & Đối Soát',
-    actionBtnUrl: portalUrl
+    actionBtnUrl: portalUrl,
+    recipientType: 'artist'
   });
 
   return await sendEmail({ to: artist.email, subject, html });
@@ -970,6 +987,7 @@ export async function sendBroadcastEmail({
   ctaText = '',
   actionBtnUrl = '',
   ctaUrl = '',
+  recipientType = 'general',
   onProgress
 }) {
   const cfg = getEmailConfig();
@@ -1019,7 +1037,8 @@ export async function sendBroadcastEmail({
     badgeBorder: '#000000',
     contentHtml: finalContentHtml,
     actionBtnText: finalBtnText,
-    actionBtnUrl: finalBtnUrl
+    actionBtnUrl: finalBtnUrl,
+    recipientType
   });
 
   const results = {
@@ -1078,35 +1097,66 @@ export async function sendBroadcastEmail({
 // ----------------------------------------------------------------------------
 // 9. SỰ KIỆN: PHẢN HỒI EMAIL A&R TRỰC TIẾP CHO HỒ SƠ DEMO (TAB 12 A&R DEMO)
 // ----------------------------------------------------------------------------
-export async function sendDemoReplyEmail({ to, artistName, trackName, subject, message, demoUrl }) {
+export async function sendDemoReplyEmail({ to, artistName, trackName, subject, message, demoUrl, demoRefCode }) {
   if (!to || !to.includes('@')) {
     return { success: false, error: 'Địa chỉ email người nhận không hợp lệ.' };
   }
+
+  const dossierCode = demoRefCode || ('DEMO-' + Math.random().toString(36).substring(2, 8).toUpperCase());
 
   const paragraphs = String(message || '')
     .split(/\n{2,}/)
     .map(p => `<p style="margin:0 0 14px;line-height:1.7;color:#334155;font-size:14px;">${p.replace(/\n/g, '<br>')}</p>`)
     .join('');
 
+  const quickMailSubject = encodeURIComponent(`[Mã Hồ Sơ: ${dossierCode}] Phản hồi về bản demo - ${artistName || 'Tác giả'}`);
+  const quickMailBody = encodeURIComponent(`Kính gửi Ban Biên Tập & A&R UniFLOWs Label,\n\nTôi gửi email phản hồi liên quan đến Hồ sơ demo số: ${dossierCode}\nNghệ danh: ${artistName || ''}\nBản thu: ${trackName || ''}\n\nNội dung trao đổi:\n`);
+  const quickMailtoUrl = `mailto:management@uniflowslabel.com?subject=${quickMailSubject}&body=${quickMailBody}`;
+
   const contentHtml = `
-    <div style="margin-bottom:16px;">
+    <div style="margin-bottom:18px;">
       ${paragraphs}
     </div>
-    ${trackName ? `
-      <div style="background:#f1f5f9;border:1px solid #cbd5e1;padding:12px 16px;border-radius:6px;font-size:12px;margin:16px 0;color:#475569;">
-        🎵 <b>Bản thu / Hồ sơ tham chiếu:</b> ${trackName}
+
+    <!-- Prominent Demo Dossier & Quick Mail Response Box -->
+    <div style="background:#f8fafc;border:2px solid #0f172a;border-radius:10px;padding:20px;margin:22px 0;box-shadow:4px 4px 0 #0f172a;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+        <span style="font-size:11px;font-family:'DM Mono',monospace;font-weight:bold;color:#64748b;text-transform:uppercase;">
+          MÃ HỒ SƠ BẢN THU (DEMO DOSSIER CODE)
+        </span>
+        <span style="font-size:11px;font-family:'DM Mono',monospace;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;font-weight:bold;border:1px solid #86efac;">
+          A&R REFERENCED
+        </span>
       </div>
-    ` : ''}
+      <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:900;letter-spacing:1.5px;color:#0f172a;margin-bottom:8px;">
+        ${escapeHtml(dossierCode)}
+      </div>
+      ${trackName ? `
+        <div style="font-size:12px;color:#475569;margin-bottom:12px;">
+          🎵 <b>Bản thu / Hồ sơ:</b> ${escapeHtml(trackName)}
+        </div>
+      ` : ''}
+      <p style="margin:0 0 14px;font-size:12.5px;color:#334155;line-height:1.65;">
+        📌 <b>Hướng dẫn phản hồi & liên hệ A&R:</b><br>
+        Vui lòng <b>KHÔNG nhấn Reply trực tiếp</b> vào thư thông báo tự động này. Khi bạn muốn phản hồi, gửi thêm bản thu chất lượng cao (WAV / Stems) hoặc trao đổi cùng đội ngũ A&R, bạn hãy gửi email trực tiếp tới <b>management@uniflowslabel.com</b> và <u>ghi kèm mã hồ sơ <b style="color:#0f172a;">${escapeHtml(dossierCode)}</b></u> ở tiêu đề email hoặc nhấn nút gửi thư nhanh bên dưới.
+      </p>
+      <div>
+        <a href="${quickMailtoUrl}" style="display:inline-block;background:#0f172a;color:#d8ff48;font-family:'DM Mono',monospace;font-size:11.5px;font-weight:bold;padding:12px 20px;border-radius:6px;text-decoration:none;border:1px solid #0f172a;">
+          ✉️ Gửi Email Nhanh Đến management@uniflowslabel.com ➔
+        </a>
+      </div>
+    </div>
+
     <div style="border-top:1px solid #e2e8f0;padding-top:14px;margin-top:20px;font-size:12.5px;color:#64748b;">
       Trân trọng,<br>
       <b style="color:#0f172a;">Đội ngũ Tuyển chọn & A&R — UniFLOWs Label</b><br>
-      <span>Liên hệ: <a href="mailto:management@uniflowslabel.com" style="color:#2563eb;text-decoration:none;">management@uniflowslabel.com</a></span>
+      <span>Email tiếp nhận phản hồi: <a href="mailto:management@uniflowslabel.com" style="color:#2563eb;text-decoration:none;font-weight:bold;">management@uniflowslabel.com</a></span>
     </div>
   `;
 
   const html = buildHtmlEmailLayout({
     kicker: 'A&R OUTREACH',
-    preheader: subject || `[UniFLOWs A&R] Phản hồi về bản demo của ${artistName || 'bạn'}`,
+    preheader: subject || `[UniFLOWs A&R] Phản hồi về bản demo của ${artistName || 'bạn'} (Mã: ${dossierCode})`,
     headerTitle: 'A&R DEMO FEEDBACK',
     badgeText: 'A&R DIRECT',
     badgeColor: '#15803d',
@@ -1115,16 +1165,282 @@ export async function sendDemoReplyEmail({ to, artistName, trackName, subject, m
     contentHtml,
     actionBtnText: demoUrl ? 'NGHE LẠI BẢN DEMO ↗' : undefined,
     actionBtnUrl: demoUrl || undefined,
-    footerNote: 'Email phản hồi trực tiếp từ Ban Tuyển chọn & Phát triển Nghệ sĩ (A&R) UniFLOWs Label.'
+    footerNote: `Email phản hồi từ Ban Tuyển chọn A&R UniFLOWs Label &bull; Hồ sơ số: ${dossierCode}`,
+    recipientType: 'demo',
+    demoRefCode: dossierCode
   });
 
   return await sendEmail({
     to,
-    subject: subject || `[UniFLOWs A&R] Phản hồi về bản demo gửi tới UniFLOWs Label`,
+    subject: subject || `[UniFLOWs A&R] [Mã: ${dossierCode}] Phản hồi về bản demo gửi tới UniFLOWs Label`,
     html,
     text: message,
     bypassEnabledCheck: true
   });
 }
+
+// ----------------------------------------------------------------------------
+// 10. SỰ KIỆN: CẬP NHẬT PLAYLIST BÀI HÁT / PITCHING STATUS CHO NGHỆ SĨ
+// ----------------------------------------------------------------------------
+export async function sendTrackPlaylistUpdateEmail({ artist, trackTitle, newPlaylists = [], allPlaylists = [], pitchStatus, notes }) {
+  if (!artist || !artist.email || !artist.email.includes('@')) {
+    return { success: false, error: 'Nghệ sĩ chưa có email hợp lệ.' };
+  }
+
+  const playlistBadges = (newPlaylists.length > 0 ? newPlaylists : allPlaylists).map(pl => `
+    <span style="display:inline-block;background:#d8ff48;color:#0b0b0b;font-family:'DM Mono',monospace;font-size:12px;font-weight:800;padding:5px 12px;border-radius:4px;border:1px solid #000;margin:3px 4px 3px 0;">
+      🎵 ${escapeHtml(pl)}
+    </span>
+  `).join('');
+
+  const contentHtml = `
+    <p style="font-size:16px;color:#111827;font-weight:700;margin-top:0;">
+      Xin chúc mừng ${escapeHtml(artist.name)}! Tác phẩm của bạn đã đạt cột mốc mới trên các nền tảng streaming.
+    </p>
+    <p style="color:#374151;line-height:1.65;">
+      Bài hát <strong>"${escapeHtml(trackTitle)}"</strong> của bạn vừa được cập nhật thành tích Playlist chính thức:
+    </p>
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:16px;border-radius:8px;margin:16px 0;">
+      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;font-family:'DM Mono',monospace;">Danh sách Playlists:</div>
+      <div>${playlistBadges || '<span style="color:#64748b;">Đang thẩm định Editorial</span>'}</div>
+      ${pitchStatus ? `<div style="margin-top:10px;font-size:12px;color:#0284c7;font-weight:bold;">🎯 Trạng thái Pitching: ${escapeHtml(pitchStatus)}</div>` : ''}
+      ${notes ? `<div style="margin-top:8px;font-size:12px;color:#475569;font-style:italic;">Ghi chú từ Curator: "${escapeHtml(notes)}"</div>` : ''}
+    </div>
+    <p style="font-size:13px;color:#475569;line-height:1.6;">
+      Hãy đăng nhập UniPORTAL để theo dõi biểu đồ tăng trưởng người nghe và phân tích thành tích playlist tại mục <b>Thống Kê (Insights)</b>.
+    </p>
+  `;
+
+  const html = buildHtmlEmailLayout({
+    kicker: 'PLAYLIST PLACEMENT & PITCHING',
+    preheader: `Bài hát "${trackTitle}" của bạn vừa được thêm vào Playlist chính thức!`,
+    headerTitle: 'CHÚC MỪNG PLAYLIST PLACEMENT',
+    badgeText: 'EDITORIAL HIT',
+    badgeColor: '#000',
+    badgeBg: '#d8ff48',
+    badgeBorder: '#000',
+    contentHtml,
+    actionBtnText: 'XEM THỐNG KÊ TRÊN UNIPORTAL ↗',
+    actionBtnUrl: (typeof window !== 'undefined' && window.location.origin) ? `${window.location.origin}/portal.html#insights` : undefined,
+    footerNote: 'Thông báo tự động từ Đội ngũ Curator & Editorial Pitching của UniFLOWs Label.',
+    recipientType: 'artist'
+  });
+
+  return await sendEmail({
+    to: artist.email,
+    subject: `🎉 [UniFLOWs Playlist] Bài hát "${trackTitle}" vừa được thêm vào Playlist chính thức!`,
+    html,
+    bypassEnabledCheck: true
+  });
+}
+
+// ----------------------------------------------------------------------------
+// 11. SỰ KIỆN: CẬP NHẬT TRẠNG THÁI YÊU CẦU ĐẶC BIỆT (SPECIAL REQUESTS)
+// ----------------------------------------------------------------------------
+export async function sendSpecialRequestStatusEmail({ artist, requestType, refCode, status, adminNotes }) {
+  if (!artist || !artist.email || !artist.email.includes('@')) {
+    return { success: false, error: 'Nghệ sĩ chưa có email.' };
+  }
+
+  const isApproved = status?.toLowerCase().includes('duyệt') || status?.toLowerCase().includes('thành công') || status?.toLowerCase().includes('hoàn tất');
+  const typeTitle = requestType === 'catalog_transfer' ? 'Chuyển quyền Catalog bài hát' : (requestType === 'song_takedown' ? 'Yêu cầu gỡ bài hát trên DSPs' : 'Yêu cầu hỗ trợ');
+
+  const contentHtml = `
+    <p style="font-size:15px;color:#111827;font-weight:700;margin-top:0;">
+      Kính gửi ${escapeHtml(artist.name)},
+    </p>
+    <p style="color:#374151;line-height:1.65;">
+      Ban Quản trị & Kỹ thuật UniFLOWs đã xử lý đơn yêu cầu <strong>${escapeHtml(typeTitle)}</strong> (Mã đơn: <code>${escapeHtml(refCode)}</code>) của bạn.
+    </p>
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:16px;border-radius:8px;margin:16px 0;">
+      <div style="font-size:12px;margin-bottom:6px;"><b>Trạng thái cập nhật:</b> <span style="font-weight:800;color:${isApproved ? '#16a34a' : '#dc2626'};">${escapeHtml(status)}</span></div>
+      ${adminNotes ? `<div style="font-size:13px;color:#334155;line-height:1.6;margin-top:8px;"><b>Phản hồi từ Ban Quản Trị:</b><br><div style="white-space:pre-wrap;background:#fff;padding:10px;border:1px solid #e2e8f0;border-radius:4px;margin-top:4px;">${escapeHtml(adminNotes)}</div></div>` : ''}
+    </div>
+  `;
+
+  const html = buildHtmlEmailLayout({
+    kicker: 'SPECIAL REQUEST UPDATE',
+    preheader: `Cập nhật yêu cầu ${typeTitle}: ${status}`,
+    headerTitle: 'KẾT QUẢ XỬ LÝ YÊU CẦU',
+    badgeText: isApproved ? 'ĐÃ PHÊ DUYỆT' : 'ĐÃ CẬP NHẬT',
+    badgeColor: isApproved ? '#15803d' : '#991b1b',
+    badgeBg: isApproved ? '#dcfce7' : '#fee2e2',
+    badgeBorder: isApproved ? '#86efac' : '#fca5a5',
+    contentHtml,
+    actionBtnText: 'MỞ UNIPORTAL ĐỂ KIỂM TRA ↗',
+    actionBtnUrl: (typeof window !== 'undefined' && window.location.origin) ? `${window.location.origin}/portal.html` : undefined,
+    recipientType: 'artist'
+  });
+
+  return await sendEmail({
+    to: artist.email,
+    subject: `[UniFLOWs] Cập nhật tiến độ: ${typeTitle} (${refCode}) — ${status}`,
+    html,
+    bypassEnabledCheck: true
+  });
+}
+
+// ----------------------------------------------------------------------------
+// 12. SỰ KIỆN: CẬP NHẬT YÊU CẦU ĐỔI ẢNH NGHỆ SĨ TRÊN WEBSITE CHÍNH
+// ----------------------------------------------------------------------------
+export async function sendPhotoRequestStatusEmail({ artist, status, reviewNotes, newPhotoUrl }) {
+  if (!artist || !artist.email || !artist.email.includes('@')) {
+    return { success: false, error: 'Nghệ sĩ chưa có email.' };
+  }
+
+  const isApproved = status === 'approved';
+  const contentHtml = `
+    <p style="font-size:15px;color:#111827;font-weight:700;margin-top:0;">
+      Xin chào ${escapeHtml(artist.name)},
+    </p>
+    <p style="color:#374151;line-height:1.65;">
+      ${isApproved 
+        ? 'Ảnh đại diện mới của bạn đã được Ban Quản Trị phê duyệt và chính thức hiển thị tại mục Nghệ Sĩ trên website trang chủ UniFLOWs!' 
+        : 'Yêu cầu thay đổi ảnh đại diện của bạn đã được phản hồi từ Ban Quản Trị.'}
+    </p>
+    ${reviewNotes ? `
+      <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:14px;border-radius:6px;margin:16px 0;font-size:13px;color:#334155;">
+        <b>Lời nhắn từ Quản trị viên:</b><br>
+        <span style="font-style:italic;">"${escapeHtml(reviewNotes)}"</span>
+      </div>
+    ` : ''}
+    ${(isApproved && newPhotoUrl) ? `
+      <div style="text-align:center;margin:16px 0;">
+        <img src="${escapeHtml(newPhotoUrl)}" alt="${escapeHtml(artist.name)}" style="max-width:260px;max-height:260px;border-radius:12px;border:2px solid #0b0b0b;object-fit:cover;">
+      </div>
+    ` : ''}
+  `;
+
+  const html = buildHtmlEmailLayout({
+    kicker: 'ARTIST PROFILE SYNC',
+    preheader: isApproved ? 'Ảnh đại diện mới của bạn đã lên website!' : 'Phản hồi về yêu cầu đổi ảnh đại diện',
+    headerTitle: 'ẢNH ĐẠI DIỆN WEBSITE CHÍNH',
+    badgeText: isApproved ? 'ĐÃ LÊN WEB' : 'CẦN ĐIỀU CHỈNH',
+    badgeColor: isApproved ? '#15803d' : '#b45309',
+    badgeBg: isApproved ? '#dcfce7' : '#fef3c7',
+    badgeBorder: isApproved ? '#86efac' : '#fcd34d',
+    contentHtml,
+    actionBtnText: isApproved ? 'XEM TRANG CHỦ UNIFLOWS ↗' : 'MỞ PORTAL ĐỔI LẠI ẢNH ↗',
+    actionBtnUrl: (typeof window !== 'undefined' && window.location.origin) ? (isApproved ? `${window.location.origin}/index.html#artists` : `${window.location.origin}/portal.html`) : undefined,
+    recipientType: 'artist'
+  });
+
+  return await sendEmail({
+    to: artist.email,
+    subject: `✨ [UniFLOWs] Yêu cầu cập nhật ảnh nghệ sĩ trên Website: ${isApproved ? 'Đã được duyệt lên trang chủ!' : 'Phản hồi từ Admin'}`,
+    html,
+    bypassEnabledCheck: true
+  });
+}
+
+// ----------------------------------------------------------------------------
+// 13. SỰ KIỆN: XÁC NHẬN LỊCH HẸN A&R MEETING (APPOINTMENT CONFIRMATION)
+// ----------------------------------------------------------------------------
+export async function sendAppointmentConfirmationEmail({ to, bookerName, artistName, date, timeSlot, topic, meetingMethod, meetingLink, notes, recipientType = 'general', demoRefCode = null }) {
+  if (!to || !to.includes('@')) {
+    return { success: false, error: 'Địa chỉ email người nhận không hợp lệ.' };
+  }
+
+  const dossierCode = demoRefCode || ('APPT-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+
+  const methodLabel = {
+    google_meet: 'Google Meet (Trực tuyến)',
+    zoom: 'Zoom Meeting (Trực tuyến)',
+    studio: 'Trực tiếp tại Studio UniFLOWs',
+    phone: 'Cuộc gọi thoại trực tiếp'
+  }[meetingMethod] || meetingMethod || 'Google Meet';
+
+  const quickMailSubject = encodeURIComponent(`[Mã Lịch Hẹn: ${dossierCode}] Phản hồi / Dời lịch hẹn A&R (${date}) - ${bookerName || artistName || 'Khách'}`);
+  const quickMailBody = encodeURIComponent(`Kính gửi Ban Điều Phối A&R UniFLOWs Label,\n\nTôi gửi email này liên quan đến Lịch hẹn A&R số: ${dossierCode}\nNgày: ${date} (${timeSlot})\nNgười đặt: ${bookerName || ''} (${artistName || ''})\n\nNội dung trao đổi / yêu cầu dời lịch:\n`);
+  const quickMailtoUrl = `mailto:management@uniflowslabel.com?subject=${quickMailSubject}&body=${quickMailBody}`;
+
+  const contentHtml = `
+    <p style="font-size:16px;color:#111827;font-weight:700;margin-top:0;">
+      Xin chào <strong>${escapeHtml(bookerName || artistName || 'Bạn')}</strong>,
+    </p>
+    <p style="color:#374151;line-height:1.65;">
+      Ban A&R & Đội ngũ Phát triển Nghệ sĩ của <strong>UniFLOWs Label</strong> đã chính thức xác nhận lịch hẹn của bạn:
+    </p>
+
+    <div style="background:#f8fafc;border:2px solid #0f172a;padding:18px 20px;border-radius:8px;margin:18px 0;box-shadow:4px 4px 0 #0f172a;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;line-height:1.8;">
+        <tr>
+          <td style="color:#64748b;font-weight:bold;width:150px;">📌 MÃ LỊCH HẸN:</td>
+          <td style="color:#7c3aed;font-weight:800;font-family:'DM Mono',monospace;font-size:14px;">${escapeHtml(dossierCode)}</td>
+        </tr>
+        <tr>
+          <td style="color:#64748b;font-weight:bold;">📅 NGÀY GẶP:</td>
+          <td style="color:#0f172a;font-weight:800;font-size:14px;">${escapeHtml(date)}</td>
+        </tr>
+        <tr>
+          <td style="color:#64748b;font-weight:bold;">🕒 KHUNG GIỜ:</td>
+          <td style="color:#0284c7;font-weight:800;font-family:'DM Mono',monospace;font-size:15px;">${escapeHtml(timeSlot)}</td>
+        </tr>
+        <tr>
+          <td style="color:#64748b;font-weight:bold;">🎯 CHỦ ĐỀ TRAO ĐỔI:</td>
+          <td style="color:#0f172a;font-weight:bold;">${escapeHtml(topic || 'A&R Demo Listening & Trao đổi Hợp đồng')}</td>
+        </tr>
+        <tr>
+          <td style="color:#64748b;font-weight:bold;">📍 HÌNH THỨC:</td>
+          <td style="color:#15803d;font-weight:bold;">${escapeHtml(methodLabel)}</td>
+        </tr>
+        ${meetingLink ? `
+          <tr>
+            <td style="color:#64748b;font-weight:bold;">🔗 LINK / ĐỊA CHỈ:</td>
+            <td><a href="${escapeHtml(meetingLink)}" target="_blank" style="color:#2563eb;font-weight:bold;word-break:break-all;">${escapeHtml(meetingLink)}</a></td>
+          </tr>
+        ` : ''}
+      </table>
+    </div>
+
+    ${notes ? `
+      <div style="background:#fefce8;border-left:4px solid #eab308;border:1px solid #fef08a;padding:12px 16px;font-size:12.5px;color:#854d0e;margin-bottom:16px;">
+        💡 <b>Lời nhắn & Hướng dẫn từ A&R:</b><br>
+        <span style="white-space:pre-wrap;">${escapeHtml(notes)}</span>
+      </div>
+    ` : ''}
+
+    <!-- Dedicated Support & Quick Mail Box -->
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:16px 18px;margin:20px 0;font-size:12.5px;color:#334155;line-height:1.65;">
+      <p style="margin:0 0 10px;">
+        📌 <b>Lưu ý khi phản hồi hoặc dời lịch:</b><br>
+        Vui lòng <b>KHÔNG</b> nhấn Reply trực tiếp vào email thông báo tự động này. Nếu bạn cần dời lịch hẹn, gửi trước bản demo WAV hoặc đặt câu hỏi trước buổi họp, vui lòng liên hệ trực tiếp email <b>management@uniflowslabel.com</b> ${recipientType === 'artist' ? 'hoặc liên hệ người phụ trách của bạn' : ''} kèm mã lịch hẹn <b>${escapeHtml(dossierCode)}</b> hoặc nhấn nút gửi thư nhanh bên dưới:
+      </p>
+      <div>
+        <a href="${quickMailtoUrl}" style="display:inline-block;background:#0f172a;color:#d8ff48;font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;padding:10px 18px;border-radius:6px;text-decoration:none;">
+          ✉️ Gửi Email Nhanh Đến management@uniflowslabel.com ➔
+        </a>
+      </div>
+    </div>
+
+    <p style="font-size:12.5px;color:#64748b;line-height:1.6;">
+      Vui lòng có mặt hoặc truy cập đường link trước giờ hẹn 5 phút để cuộc trao đổi diễn ra thuận lợi nhất.
+    </p>
+  `;
+
+  const html = buildHtmlEmailLayout({
+    kicker: 'A&R APPOINTMENT CONFIRMED',
+    preheader: `[Mã: ${dossierCode}] Xác nhận lịch hẹn A&R UniFLOWs vào ngày ${date} lúc ${timeSlot}`,
+    headerTitle: 'XÁC NHẬN LỊCH HẸN A&R MEETING',
+    badgeText: 'ĐÃ XÁC NHẬN',
+    badgeColor: '#000000',
+    badgeBg: '#d8ff48',
+    badgeBorder: '#000000',
+    contentHtml,
+    actionBtnText: meetingLink ? 'THAM GIA MEETING NGAY ↗' : undefined,
+    actionBtnUrl: meetingLink || undefined,
+    footerNote: `Email xác nhận lịch hẹn A&R UniFLOWs Label &bull; Mã: ${dossierCode}`,
+    recipientType,
+    demoRefCode: dossierCode
+  });
+
+  return await sendEmail({
+    to,
+    subject: `🎉 [UniFLOWs] [Mã: ${dossierCode}] Xác nhận lịch hẹn A&R Meeting: ${date} lúc ${timeSlot}`,
+    html,
+    bypassEnabledCheck: true
+  });
+}
+
 
 
