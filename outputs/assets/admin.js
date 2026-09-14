@@ -24,7 +24,8 @@ import {
   sendArtistNotificationEmail, 
   sendPayoutStatusEmail, 
   sendTestEmail,
-  sendBroadcastEmail 
+  sendBroadcastEmail,
+  sendDemoReplyEmail 
 } from './mailer.js';
 import { compressImageFile, batchCompressImages, uploadImageSmart, formatBytes } from './image-optimizer.js';
 
@@ -5179,6 +5180,9 @@ function renderMusicSubmissionsAdmin() {
           </div>
 
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn-email-demo-sub button" data-idx="${idx}" style="background:#15803d;color:#fff;border-color:#15803d;font-weight:bold;padding:6px 14px;font-size:11px;">
+              📧 Phản Hồi Email
+            </button>
             <button type="button" class="btn-onboard-sub-artist button" data-idx="${idx}" style="background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;padding:6px 14px;font-size:11px;">
               ✨ Chuyển thành Nghệ sĩ Portal
             </button>
@@ -5325,11 +5329,186 @@ function renderMusicSubmissionsAdmin() {
       renderMusicSubmissionsAdmin();
     });
   });
+
+  // Attach Reply Email Modal Trigger
+  feed.querySelectorAll('.btn-email-demo-sub').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      openDemoReplyModal(idx);
+    });
+  });
 }
 
 // Filter listeners for A&R Submissions
 document.querySelector('#admin-submission-status-filter')?.addEventListener('change', renderMusicSubmissionsAdmin);
 document.querySelector('#admin-submission-search')?.addEventListener('input', renderMusicSubmissionsAdmin);
+
+// ----------------------------------------------------
+// A&R DEMO EMAIL DIRECT OUTREACH MODAL CONTROLLER
+// ----------------------------------------------------
+let currentDemoSubReplyIdx = null;
+
+function applyDemoReplyTemplate(type, artistName) {
+  const subjectInput = document.querySelector('#demo-reply-subject');
+  const messageInput = document.querySelector('#demo-reply-message');
+  if (!subjectInput || !messageInput) return;
+
+  const templates = {
+    interview: {
+      subject: `[UniFLOWs A&R] Thư mời trao đổi & lắng nghe thêm demo mới — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nĐội ngũ A&R của UniFLOWs đã lắng nghe bản demo của bạn và thực sự rất ấn tượng với phong cách âm nhạc cũng như năng lượng mà tác phẩm mang lại.\n\nChúng tôi rất mong muốn sắp xếp một buổi trò chuyện trực tiếp (hoặc online qua Google Meet) để lắng nghe thêm các dự án mới mà bạn đang ấp ủ, cũng như thảo luận về cơ hội đồng hành phát hành âm nhạc cùng UniFLOWs Label.\n\nBạn vui lòng phản hồi lại email này kèm khung thời gian rảnh thuận tiện nhất trong tuần tới của bạn nhé.\n\nRất mong sớm có dịp hợp tác cùng bạn!`
+    },
+    stems: {
+      subject: `[UniFLOWs A&R] Yêu cầu bổ sung tệp thu âm Master WAV & Stems — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nCảm ơn bạn đã gửi sản phẩm tới UniFLOWs. Đội ngũ A&R và Audio Engineering của chúng tôi đã tiến hành thẩm định bước đầu.\n\nĐể hoàn tất quy trình đánh giá kỹ thuật và chuẩn bị cho các phương án phát hành, bạn vui lòng phản hồi email này và đính kèm link tải (Google Drive / Dropbox) bao gồm:\n1. File Master WAV chất lượng cao (24-bit, 44.1kHz hoặc 48kHz)\n2. Bản Vocal Stems & Instrumental tách rời\n3. File văn bản Lời bài hát (Lyrics) chính xác\n\nChúc bạn một ngày làm việc sáng tạo!`
+    },
+    signed: {
+      subject: `🎉 [UniFLOWs Label] Đề xuất ký kết hợp đồng phân phối âm nhạc — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nChúc mừng bạn! Sau khi hội đồng A&R đánh giá toàn diện, UniFLOWs Label chính thức gửi lời mời hợp tác và đề xuất ký hợp đồng phân phối toàn cầu cho sản phẩm của bạn qua hệ thống UniENGINE.\n\nChúng tôi sẽ liên hệ để trao đổi các điều khoản bảo đảm tối đa quyền tác giả, phân chia doanh thu bản quyền minh bạch và lộ trình quảng bá (Playlist Pitching / TikTok Campaign).\n\nBạn vui lòng phản hồi email này để người phụ trách hợp đồng gửi bản thảo thảo luận chi tiết nhé!`
+    },
+    encourage: {
+      subject: `[UniFLOWs Label] Thư cảm ơn & phản hồi về bản demo — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nCảm ơn bạn rất nhiều vì đã tin tưởng lựa chọn gửi gắm tác phẩm âm nhạc của mình tới UniFLOWs Label. Chúng tôi trân trọng từng phút lắng nghe sản phẩm của bạn.\n\nTuy nhiên trong đợt phát hành quý này, màu sắc tác phẩm chưa hoàn toàn khớp với định hướng danh mục dự án mà hãng đang triển khai. Quyết định này hoàn toàn không phủ nhận tài năng và nỗ lực của bạn.\n\nChúng tôi khuyến khích bạn tiếp tục sáng tạo và luôn sẵn sàng chào đón bạn gửi những bản demo tiếp theo tới cổng tuyển sinh A&R của UniFLOWs trong tương lai!\n\nChúc bạn luôn giữ trọn ngọn lửa đam mê âm nhạc.`
+    },
+    custom: {
+      subject: `[UniFLOWs A&R] Phản hồi về bản demo gửi tới UniFLOWs Label — ${artistName}`,
+      message: `Xin chào ${artistName},\n\nĐội ngũ A&R của UniFLOWs đã nhận và lắng nghe bản demo bạn gửi.\n\n[Nhập nội dung phản hồi cụ thể tại đây...]\n\nTrân trọng,\nĐội ngũ A&R UniFLOWs Label\nmanagement@uniflowslabel.com`
+    }
+  };
+
+  const selected = templates[type] || templates.custom;
+  subjectInput.value = selected.subject;
+  messageInput.value = selected.message;
+}
+
+function openDemoReplyModal(idx) {
+  const submissions = data.musicSubmissions || defaultData.musicSubmissions || [];
+  const sub = submissions[idx];
+  if (!sub) return;
+
+  currentDemoSubReplyIdx = idx;
+
+  const modal = document.querySelector('#modal-demo-reply-email');
+  const targetNameEl = document.querySelector('#demo-reply-target-name');
+  const targetEmailEl = document.querySelector('#demo-reply-target-email');
+  const targetSongEl = document.querySelector('#demo-reply-target-song');
+  const templateSel = document.querySelector('#demo-reply-template');
+
+  const artistName = sub.artistName || sub.fullName || 'Nghệ sĩ';
+  const email = sub.email || '';
+  const trackInfo = sub.tracklistNotes ? sub.tracklistNotes.slice(0, 100) : (sub.demoUrl || 'Bản thu A&R');
+
+  if (targetNameEl) targetNameEl.textContent = artistName;
+  if (targetEmailEl) targetEmailEl.textContent = email || 'Chưa cung cấp email';
+  if (targetSongEl) targetSongEl.textContent = trackInfo;
+
+  if (templateSel) {
+    templateSel.value = 'interview';
+    applyDemoReplyTemplate('interview', artistName);
+  }
+
+  if (modal) {
+    if (typeof modal.showModal === 'function') {
+      modal.showModal();
+    } else {
+      modal.style.display = 'block';
+    }
+  }
+}
+
+function initDemoReplyEmailModal() {
+  const modal = document.querySelector('#modal-demo-reply-email');
+  if (!modal) return;
+
+  const form = document.querySelector('#demo-reply-form');
+  const closeBtn = document.querySelector('#close-demo-reply-btn');
+  const cancelBtn = document.querySelector('#cancel-demo-reply-btn');
+  const templateSel = document.querySelector('#demo-reply-template');
+  const autoStatusCheckbox = document.querySelector('#demo-reply-auto-status');
+  const submitBtn = document.querySelector('#submit-demo-reply-btn');
+
+  const closeModal = () => {
+    if (typeof modal.close === 'function') {
+      modal.close();
+    } else {
+      modal.style.display = 'none';
+    }
+  };
+
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+
+  templateSel?.addEventListener('change', () => {
+    const submissions = data.musicSubmissions || defaultData.musicSubmissions || [];
+    const sub = currentDemoSubReplyIdx !== null ? submissions[currentDemoSubReplyIdx] : null;
+    const artistName = sub ? (sub.artistName || sub.fullName || 'Nghệ sĩ') : 'Nghệ sĩ';
+    applyDemoReplyTemplate(templateSel.value, artistName);
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submissions = data.musicSubmissions || defaultData.musicSubmissions || [];
+    const sub = currentDemoSubReplyIdx !== null ? submissions[currentDemoSubReplyIdx] : null;
+
+    if (!sub) {
+      alert('Không tìm thấy thông tin hồ sơ demo!');
+      return;
+    }
+
+    const email = (sub.email || '').trim();
+    if (!email || !email.includes('@')) {
+      alert('Ứng viên này chưa có địa chỉ email hợp lệ để gửi phản hồi!');
+      return;
+    }
+
+    const subject = document.querySelector('#demo-reply-subject')?.value.trim();
+    const message = document.querySelector('#demo-reply-message')?.value.trim();
+
+    if (!subject || !message) {
+      alert('Vui lòng điền đầy đủ tiêu đề và nội dung thư!');
+      return;
+    }
+
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : '🚀 Gửi Email Phản Hồi Ngay';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳ Đang gửi email...';
+    }
+
+    try {
+      const res = await sendDemoReplyEmail({
+        to: email,
+        artistName: sub.artistName || sub.fullName,
+        trackName: sub.tracklistNotes || sub.demoUrl,
+        subject,
+        message,
+        demoUrl: sub.demoUrl
+      });
+
+      if (res && res.success) {
+        if (autoStatusCheckbox && autoStatusCheckbox.checked) {
+          sub.status = 'Đã liên hệ';
+          await saveData(data);
+          await logAuditEvent('A&R Phản Hồi Demo', `Đã gửi email phản hồi demo tới "${sub.artistName || sub.fullName}" (${email}).`);
+          renderMusicSubmissionsAdmin();
+        }
+
+        showNotice(`✓ Đã gửi email phản hồi thành công tới ${email}!`);
+        closeModal();
+      } else {
+        const errMsg = res?.error || 'Không thể gửi email. Vui lòng kiểm tra lại cấu hình Brevo / Resend trong Tab 06!';
+        alert(`❌ Lỗi gửi email: ${errMsg}`);
+      }
+    } catch (err) {
+      alert(`❌ Đã xảy ra lỗi khi gửi thư: ${err.message}`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
+    }
+  });
+}
 
 // ============================================================================
 // 13. TRÌNH RÚT GỌN LINK & QR CODE (SHORTURL ENGINE)
@@ -7662,57 +7841,154 @@ function initBroadcastEmailAdmin() {
   const cancelBtn = document.querySelector('#cancel-admin-broadcast-btn');
   const form = document.querySelector('#admin-broadcast-form');
   const previewEl = document.querySelector('#broadcast-recipient-preview');
+  const testEmailBox = document.querySelector('#broadcast-test-email-box');
+  const testEmailInput = document.querySelector('#broadcast-test-email');
+  const configWarningBox = document.querySelector('#broadcast-config-warning');
 
-  const getRecipientEmails = (targetType) => {
-    const data = getData();
-    const artistEmails = (data.artists || [])
-      .map(a => (a.email || '').trim().toLowerCase())
-      .filter(email => email.includes('@'));
+  const getRecipientEmails = async (targetType) => {
+    // 1. Ensure latest data is loaded
+    let currentData = data;
+    if (!currentData || !Array.isArray(currentData.artists) || currentData.artists.length === 0) {
+      try {
+        currentData = await getData();
+      } catch (_) {
+        currentData = defaultData;
+      }
+    }
+    if (!currentData) currentData = defaultData;
 
+    // 2. Gather Artists
+    // Check currentData.artists, defaultData.artists, and provisioned accounts in localStorage
+    let rawArtistAccounts = null;
+    try {
+      rawArtistAccounts = localStorage.getItem('uniflows-artist-accounts');
+    } catch (_) {}
+    const provisionedAccounts = rawArtistAccounts ? JSON.parse(rawArtistAccounts) : [];
+
+    const artistMap = new Map();
+    (defaultData.artists || []).forEach(a => {
+      const email = (a.email || `${a.username || a.id}@uniflowslabel.com`).toLowerCase().trim();
+      artistMap.set(a.id, email);
+    });
+    (currentData.artists || []).forEach(a => {
+      const email = (a.email || `${a.username || a.id}@uniflowslabel.com`).toLowerCase().trim();
+      artistMap.set(a.id, email);
+    });
+    provisionedAccounts.forEach(acc => {
+      if (acc.email && acc.email.includes('@')) {
+        artistMap.set(acc.id || acc.username, acc.email.toLowerCase().trim());
+      }
+    });
+
+    const artistEmails = Array.from(new Set(Array.from(artistMap.values()).filter(e => e.includes('@'))));
+
+    // 3. Gather Customers & Newsletter Subscribers (EXCLUDING Demo Submissions per user request)
     let subscriberEmails = [];
     try {
       const rawSub = localStorage.getItem('uniflows-subscribers');
-      if (rawSub) subscriberEmails = JSON.parse(rawSub);
-    } catch (_) {}
-
-    let submissionEmails = [];
-    try {
-      const rawSubm = localStorage.getItem('uniflows-music-submissions');
-      if (rawSubm) {
-        const subms = JSON.parse(rawSubm);
-        submissionEmails = subms.map(s => (s.email || '').trim().toLowerCase()).filter(e => e.includes('@'));
+      if (rawSub) {
+        const parsed = JSON.parse(rawSub);
+        if (Array.isArray(parsed)) {
+          subscriberEmails = parsed.map(item => {
+            if (typeof item === 'string') return item.toLowerCase().trim();
+            if (item && typeof item.email === 'string') return item.email.toLowerCase().trim();
+            return '';
+          }).filter(e => e.includes('@'));
+        }
       }
     } catch (_) {}
 
+    // Also include any subscribers from currentData if present
+    if (Array.isArray(currentData.subscribers)) {
+      currentData.subscribers.forEach(s => {
+        const em = (typeof s === 'string' ? s : (s.email || '')).toLowerCase().trim();
+        if (em.includes('@')) subscriberEmails.push(em);
+      });
+    }
+
+    subscriberEmails = Array.from(new Set(subscriberEmails));
+    if (subscriberEmails.length === 0) {
+      // Default contact / newsletter recipients fallback
+      subscriberEmails = ['contact@uniflowslabel.com', 'press@uniflowslabel.com', 'booking@uniflowslabel.com'];
+    }
+
+    // 4. Admin / Test Email
     const cfg = getEmailConfig();
-    const testEmail = cfg.senderEmail || 'admin@uniflowslabel.com';
+    const customTestEmail = testEmailInput?.value.trim();
+    const testEmail = (customTestEmail && customTestEmail.includes('@')) 
+      ? customTestEmail 
+      : (cfg.senderEmail && cfg.senderEmail.includes('@') ? cfg.senderEmail : 'admin@uniflowslabel.com');
 
     if (targetType === 'test') {
       return [testEmail];
     }
     if (targetType === 'artists') {
-      return Array.from(new Set(artistEmails));
+      return artistEmails;
     }
     if (targetType === 'subscribers') {
-      return Array.from(new Set([...subscriberEmails, ...submissionEmails]));
+      return subscriberEmails;
     }
     // 'all'
-    return Array.from(new Set([...artistEmails, ...subscriberEmails, ...submissionEmails]));
+    const adminEmails = (currentData.adminAccounts || defaultData.adminAccounts || []).map(a => (a.email || '').toLowerCase().trim()).filter(e => e.includes('@'));
+    return Array.from(new Set([...artistEmails, ...subscriberEmails, ...adminEmails]));
   };
 
-  const updateRecipientPreview = () => {
+  const updateRecipientPreview = async () => {
     if (!previewEl) return;
     const selRadio = form?.querySelector('input[name="broadcast_target"]:checked');
     const targetType = selRadio ? selRadio.value : 'all';
-    const list = getRecipientEmails(targetType);
+
+    // Toggle test email input
+    if (testEmailBox) {
+      testEmailBox.style.display = targetType === 'test' ? 'block' : 'none';
+      if (targetType === 'test' && testEmailInput && !testEmailInput.value) {
+        const cfg = getEmailConfig();
+        testEmailInput.value = cfg.senderEmail || 'admin@uniflowslabel.com';
+      }
+    }
+
+    previewEl.innerHTML = '<span style="color:#64748b;">⏳ Đang tính toán danh sách email...</span>';
+    const list = await getRecipientEmails(targetType);
+
     const targetName = {
-      all: 'tất cả mọi người',
+      all: 'tất cả mọi người (Nghệ sĩ + Khách hàng & Subscribers + Quản trị)',
       artists: 'toàn bộ nghệ sĩ trong roster',
-      subscribers: 'khách hàng / người gửi demo',
+      subscribers: 'khách hàng & người đăng ký nhận tin (Subscribers)',
       test: 'chế độ gửi thử nghiệm (admin)'
     }[targetType] || targetType;
 
-    previewEl.textContent = `🎯 Dự kiến gửi đến ${list.length} địa chỉ email (${targetName}).`;
+    const samplePreview = list.slice(0, 5).join(', ') + (list.length > 5 ? ` và ${list.length - 5} email khác...` : '');
+
+    previewEl.innerHTML = `
+      <div style="margin-bottom:4px;">🎯 <b>Dự kiến gửi đến ${list.length} địa chỉ email</b> (${targetName}).</div>
+      <div style="font-size:11px;color:#334155;background:#f0f9ff;border:1px solid #bae6fd;padding:6px 10px;border-radius:4px;word-break:break-all;">
+        <b>Danh sách người nhận:</b> ${list.length > 0 ? samplePreview : 'Chưa có email nào'}
+      </div>
+    `;
+
+    // Check configuration status & show warning if not configured
+    const cfg = getEmailConfig();
+    if (configWarningBox) {
+      if (!cfg.enabled || !cfg.apiKey) {
+        configWarningBox.style.display = 'block';
+        configWarningBox.innerHTML = `
+          ⚠️ <b>Cảnh báo Cấu hình Email:</b> 
+          ${!cfg.enabled ? 'Tính năng gửi email tự động đang TẮT. ' : ''}
+          ${!cfg.apiKey ? 'Chưa nhập API Key (Brevo / Resend). ' : ''}
+          <button type="button" id="btn-goto-email-tab" style="background:none;border:none;color:#1d4ed8;font-weight:bold;text-decoration:underline;cursor:pointer;padding:0;margin-left:6px;font-size:12px;">
+            ⚙️ Mở Tab 06 để cấu hình ngay ↗
+          </button>
+        `;
+        document.querySelector('#btn-goto-email-tab')?.addEventListener('click', () => {
+          dialog?.close();
+          switchAdminTab('admin-tab-marketing');
+          const emailSec = document.querySelector('#email-cfg-enabled')?.closest('.card');
+          if (emailSec) emailSec.scrollIntoView({ behavior: 'smooth' });
+        });
+      } else {
+        configWarningBox.style.display = 'none';
+      }
+    }
   };
 
   openBtn?.addEventListener('click', () => {
@@ -7727,12 +8003,22 @@ function initBroadcastEmailAdmin() {
     radio.addEventListener('change', updateRecipientPreview);
   });
 
+  testEmailInput?.addEventListener('input', () => {
+    updateRecipientPreview();
+  });
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const cfg = getEmailConfig();
+    if (!cfg.apiKey && cfg.provider !== 'supabase_edge' && cfg.provider !== 'custom_webhook') {
+      alert(`⚠️ Bạn chưa nhập API Key cho nhà cung cấp ${cfg.provider ? cfg.provider.toUpperCase() : 'EMAIL'}!\n\nVui lòng vào Tab 06 / Cấu hình Email để nhập API Key và nhấn "Lưu Cấu Hình".`);
+      return;
+    }
+
     const selRadio = form.querySelector('input[name="broadcast_target"]:checked');
     const targetType = selRadio ? selRadio.value : 'all';
-    const recipients = getRecipientEmails(targetType);
+    const recipients = await getRecipientEmails(targetType);
 
     if (recipients.length === 0) {
       alert('Không tìm thấy địa chỉ email hợp lệ nào trong danh sách nhóm này!');
@@ -7762,40 +8048,74 @@ function initBroadcastEmailAdmin() {
     const submitBtn = document.querySelector('#submit-admin-broadcast-btn');
 
     if (progressBox) progressBox.style.display = 'block';
-    if (submitBtn) submitBtn.disabled = true;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Đang gửi thư hàng loạt...';
+    }
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressPct) progressPct.textContent = '0%';
+    if (progressText) progressText.textContent = `Bắt đầu gửi đến ${recipients.length} người nhận...`;
     if (logText) logText.innerHTML = '';
 
     try {
       const result = await sendBroadcastEmail({
-        recipients,
+        recipientEmails: recipients,
+        recipients: recipients,
         subject,
         kicker,
+        headerTitle: headline,
         headline,
+        contentHtml: content,
         message: content,
+        actionBtnText: ctaText,
         ctaText,
+        actionBtnUrl: ctaUrl,
         ctaUrl,
-        onProgress: ({ sent, total, currentRecipient, success }) => {
-          const pct = Math.round((sent / total) * 100);
+        onProgress: ({ current, total, sent, failed, percent, currentRecipient, success }) => {
+          const pct = percent || Math.round((current / total) * 100);
           if (progressBar) progressBar.style.width = `${pct}%`;
           if (progressPct) progressPct.textContent = `${pct}%`;
-          if (progressText) progressText.textContent = `Đang gửi ${sent} / ${total}...`;
+          if (progressText) progressText.textContent = `Đang gửi ${current} / ${total} (Thành công: ${sent}, Thất bại: ${failed})...`;
           if (logText) {
             const statusIcon = success ? '✓' : '⚠️';
             const logLine = document.createElement('div');
-            logLine.textContent = `${statusIcon} [${sent}/${total}] ${currentRecipient}`;
+            logLine.style.padding = '2px 0';
+            logLine.style.color = success ? '#86efac' : '#fca5a5';
+            logLine.textContent = `${statusIcon} [${current}/${total}] ${currentRecipient || ''}`;
             logText.prepend(logLine);
           }
         }
       });
 
-      if (progressText) {
-        progressText.textContent = `✓ Đã hoàn tất: ${result.successCount} thành công, ${result.failCount} thất bại.`;
+      if (!result.success && result.total === 0) {
+        alert(`❌ Không thể bắt đầu gửi:\n${result.error || 'Vui lòng kiểm tra lại danh sách người nhận.'}`);
+        if (progressText) progressText.textContent = `Thất bại: ${result.error || 'Lỗi gửi thư'}`;
+        return;
       }
-      alert(`Đã gửi broadcast hoàn tất!\n- Thành công: ${result.successCount}\n- Thất bại: ${result.failCount}`);
+
+      const totalSent = result.sent ?? result.successCount ?? 0;
+      const totalFailed = result.failed ?? result.failCount ?? 0;
+
+      if (progressText) {
+        progressText.textContent = `✓ Đã hoàn tất: ${totalSent} thành công, ${totalFailed} thất bại.`;
+      }
+      if (progressBar) progressBar.style.width = '100%';
+      if (progressPct) progressPct.textContent = '100%';
+
+      if (totalFailed > 0 && result.errors && result.errors.length > 0) {
+        const firstErr = result.errors[0];
+        alert(`Đã gửi broadcast hoàn tất!\n- Thành công: ${totalSent}\n- Thất bại: ${totalFailed}\n\nChi tiết lỗi gần nhất:\n${firstErr.email}: ${firstErr.error}`);
+      } else {
+        alert(`🎉 Đã gửi broadcast THÀNH CÔNG đến ${totalSent} người nhận!`);
+      }
     } catch (err) {
       alert(`Lỗi khi gửi broadcast: ${err.message}`);
+      if (progressText) progressText.textContent = `Lỗi: ${err.message}`;
     } finally {
-      if (submitBtn) submitBtn.disabled = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Bắt Đầu Gửi Thư Hàng Loạt';
+      }
     }
   });
 }
@@ -7804,6 +8124,7 @@ function initBroadcastEmailAdmin() {
 initAdminNotificationCenter();
 renderSpecialRequestsAdmin();
 initBroadcastEmailAdmin();
+initDemoReplyEmailModal();
 
 
 

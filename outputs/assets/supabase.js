@@ -178,7 +178,31 @@ export async function testSupabaseConnection() {
         report.tables.greenlist_requests = true;
       }
 
-      // 9. Test storage
+      // 9. Test admin_notifications
+      const { error: anErr } = await supabase.from('admin_notifications').select('id').limit(1);
+      if (anErr) {
+        report.tableErrors.admin_notifications = anErr.message;
+      } else {
+        report.tables.admin_notifications = true;
+      }
+
+      // 10. Test special_requests
+      const { error: srErr } = await supabase.from('special_requests').select('id').limit(1);
+      if (srErr) {
+        report.tableErrors.special_requests = srErr.message;
+      } else {
+        report.tables.special_requests = true;
+      }
+
+      // 11. Test artist_photo_requests
+      const { error: aprErr } = await supabase.from('artist_photo_requests').select('id').limit(1);
+      if (aprErr) {
+        report.tableErrors.artist_photo_requests = aprErr.message;
+      } else {
+        report.tables.artist_photo_requests = true;
+      }
+
+      // 12. Test storage
       report.storageErrors = {};
       try {
         const { error: artErr } = await supabase.storage.from('artworks').list('', { limit: 1 });
@@ -214,9 +238,10 @@ export async function testSupabaseConnection() {
     report.latencyMs = Date.now() - startTime;
     
     const passedCount = Object.values(report.tables).filter(Boolean).length;
+    const totalTablesCount = Object.keys(report.tables).length;
     if (passedCount > 0) {
       report.online = true;
-      report.details = `Đã kết nối thành công (${passedCount}/8 bảng phản hồi, độ trễ ${report.latencyMs}ms).`;
+      report.details = `Đã kết nối thành công (${passedCount}/${totalTablesCount} bảng phản hồi, độ trễ ${report.latencyMs}ms).`;
     } else {
       report.online = false;
       report.details = `Kết nối được máy chủ nhưng các bảng dữ liệu chưa sẵn sàng: ${report.errors.join('; ')}`;

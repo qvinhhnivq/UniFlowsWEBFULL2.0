@@ -1967,15 +1967,27 @@
     </div>
 
     <form id="admin-broadcast-form" style="padding:22px;overflow-y:auto;display:grid;gap:16px;font-family:inherit;">
+      <!-- Configuration Status Warning -->
+      <div id="broadcast-config-warning" style="display:none;background:#fef3c7;border:1px solid #fde047;border-left:4px solid #eab308;padding:12px 14px;border-radius:6px;font-size:12px;color:#854d0e;"></div>
+
       <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:14px;border-radius:8px;">
         <label style="font-weight:bold;font-size:12px;display:block;margin-bottom:6px;text-transform:uppercase;">1. Nhóm Đối Tượng Nhận Thư (Target Audience):</label>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:8px;font-size:13px;">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="all" checked> <b>🌐 Tất cả mọi người (All)</b></label>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="artists"> <b>👥 Chỉ Nghệ Sĩ (Roster)</b></label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="subscribers"> <b>✉️ Khách Hàng / Demo</b></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="subscribers"> <b>✉️ Khách Hàng & Subscribers</b></label>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="broadcast_target" value="test"> <b>🧪 Thử nghiệm (Admin)</b></label>
         </div>
-        <div id="broadcast-recipient-preview" style="margin-top:10px;font-size:11px;color:#0284c7;font-family:'DM Mono',monospace;font-weight:bold;">
+        <small style="display:block;color:#64748b;font-size:11px;margin-top:6px;">💡 <i>Lưu ý: Thư hàng loạt không bao gồm người gửi demo. Bạn có thể phản hồi riêng cho từng nghệ sĩ gửi demo bằng nút <b>"📧 Gửi Email Phản Hồi"</b> trực tiếp trong <b>Tab 12 (A&R Demo)</b>.</i></small>
+
+        <!-- Custom Test Email Input (Visible when "test" is selected) -->
+        <div id="broadcast-test-email-box" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #cbd5e1;">
+          <label style="font-weight:bold;font-size:11px;display:block;margin-bottom:4px;color:#0f172a;">Nhập địa chỉ email nhận thư thử nghiệm:</label>
+          <input type="email" id="broadcast-test-email" placeholder="Ví dụ: your-email@gmail.com" style="width:100%;padding:9px 12px;border:1px solid #94a3b8;border-radius:6px;font-size:13px;font-weight:600;">
+          <small style="color:#64748b;font-size:10.5px;display:block;margin-top:4px;">💡 Bạn có thể nhập bất kỳ địa chỉ email cá nhân nào để nhận và kiểm tra trực tiếp giao diện bức thư.</small>
+        </div>
+
+        <div id="broadcast-recipient-preview" style="margin-top:10px;font-size:12px;color:#0284c7;font-family:'DM Mono',monospace;font-weight:bold;">
           Đang tính toán số lượng email người nhận...
         </div>
       </div>
@@ -2029,6 +2041,60 @@
         <button type="submit" id="submit-admin-broadcast-btn" class="button" style="background:#0f172a;color:#d8ff48;border-color:#0f172a;font-weight:bold;padding:12px 24px;">
           🚀 Bắt Đầu Gửi Thư Hàng Loạt
         </button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ========================================== -->
+  <!-- MODAL: GỬI EMAIL PHẢN HỒI DEMO CHO NGHỆ SĨ -->
+  <!-- ========================================== -->
+  <dialog id="modal-demo-reply-email" style="max-width:680px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.35);max-height:92vh;">
+    <div style="background:#0f172a;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
+      <div>
+        <span class="eyebrow" style="color:#d8ff48;margin:0;font-size:10px;">A&R Direct Outreach</span>
+        <h2 style="font-size:17px;margin:2px 0 0;letter-spacing:-0.03em;color:#fff;">📧 Gửi Email Phản Hồi Demo A&R</h2>
+      </div>
+      <button type="button" class="close-btn" id="close-demo-reply-btn" style="background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+
+    <form id="demo-reply-form" style="padding:20px;display:grid;gap:14px;overflow-y:auto;font-family:inherit;">
+      <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;font-size:12px;display:grid;gap:4px;">
+        <div>Gửi tới: <strong id="demo-reply-target-name" style="color:#0f172a;"></strong> &lt;<code id="demo-reply-target-email" style="color:#0284c7;font-weight:bold;"></code>&gt;</div>
+        <div style="color:#64748b;font-size:11px;">Bản thu demo: <span id="demo-reply-target-song" style="font-weight:600;"></span></div>
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Chọn mẫu phản hồi nhanh (Template):</label>
+        <select id="demo-reply-template" style="padding:9px;border:1px solid var(--ink);background:#fff;font-size:12px;font-weight:bold;">
+          <option value="custom">📝 Tự soạn nội dung</option>
+          <option value="interview">🎉 Đạt yêu cầu — Mời phỏng vấn & Nghe thêm bài</option>
+          <option value="stems">💬 Cần bổ sung bản thu chất lượng cao (WAV / Stems)</option>
+          <option value="signed">✨ Đề xuất ký hợp đồng phân phối âm nhạc</option>
+          <option value="encourage">🌱 Chưa phù hợp đợt này — Khích lệ gửi tiếp demo sau</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Tiêu đề thư (Subject) *</label>
+        <input id="demo-reply-subject" required style="padding:9px 12px;border:1px solid var(--ink);font-weight:600;" placeholder="[UniFLOWs A&R] Phản hồi về bản demo...">
+      </div>
+
+      <div class="field">
+        <label style="font-weight:bold;font-size:11px;">Nội dung thư phản hồi (Message) *</label>
+        <textarea id="demo-reply-message" rows="7" required style="line-height:1.6;padding:12px;border:1px solid var(--ink);font-family:inherit;font-size:13px;" placeholder="Nhập lời nhắn gửi đến nghệ sĩ..."></textarea>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #e2e8f0;padding-top:12px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" id="demo-reply-auto-status" checked>
+          Tự động đổi trạng thái sang <b>"Đã liên hệ"</b>
+        </label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="button alt" id="cancel-demo-reply-btn" style="padding:8px 16px;font-size:11px;">Hủy bỏ</button>
+          <button type="submit" id="submit-demo-reply-btn" class="button" style="background:#15803d;color:#fff;border-color:#15803d;font-weight:bold;padding:8px 20px;font-size:11px;">
+            🚀 Gửi Email Phản Hồi Ngay
+          </button>
+        </div>
       </div>
     </form>
   </dialog>

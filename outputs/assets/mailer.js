@@ -51,11 +51,15 @@ export function saveEmailConfig(cfg) {
 // ----------------------------------------------------------------------------
 // CORE DISPATCHER: GỬI EMAIL QUA PROVIDER ĐÃ CHỌN
 // ----------------------------------------------------------------------------
-export async function sendEmail({ to, subject, html, text }) {
+export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = false }) {
   const cfg = getEmailConfig();
 
-  if (!cfg.enabled) {
-    return { success: false, disabled: true, message: 'Tính năng gửi email tự động đang tắt trong Cấu hình Admin.' };
+  if (!cfg.enabled && !bypassEnabledCheck) {
+    return { 
+      success: false, 
+      disabled: true, 
+      error: 'Tính năng gửi email tự động đang TẮT. Vui lòng vào Tab 06 / Cấu hình Email, tích chọn "Kích hoạt gửi Email tự động" và nhấn "Lưu Cấu Hình".' 
+    };
   }
 
   if (!to || !to.includes('@')) {
@@ -87,11 +91,20 @@ export async function sendEmail({ to, subject, html, text }) {
     plainText = subject || 'UniFLOWs Record Label Notification';
   }
 
-  const sender = `${cfg.senderName || 'UniFLOWs Label'} <${cfg.senderEmail}>`;
+  const senderName = cfg.senderName || 'UniFLOWs Record Label';
+  const senderEmail = (cfg.senderEmail && cfg.senderEmail.includes('@')) 
+    ? cfg.senderEmail.trim() 
+    : 'notifications@uniflowslabel.com';
+  const sender = `${senderName} <${senderEmail}>`;
 
   // 1. Gửi qua Brevo (Sendinblue) API v3 (Khuyên dùng - hoạt động trực tiếp trên Browser không bị CORS)
   if (cfg.provider === 'brevo') {
-    if (!cfg.apiKey) return { success: false, error: 'Chưa cấu hình API Key Brevo.' };
+    if (!cfg.apiKey || !cfg.apiKey.trim()) {
+      return { 
+        success: false, 
+        error: 'Chưa có API Key Brevo. Vui lòng vào Tab 06 / Cấu hình Email để dán API Key (bắt đầu bằng xkeysib-...).' 
+      };
+    }
 
     try {
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -103,8 +116,8 @@ export async function sendEmail({ to, subject, html, text }) {
         },
         body: JSON.stringify({
           sender: {
-            name: cfg.senderName || 'UniFLOWs Record Label',
-            email: cfg.senderEmail.trim()
+            name: senderName,
+            email: senderEmail
           },
           to: [{ email: to.trim() }],
           subject,
@@ -117,16 +130,27 @@ export async function sendEmail({ to, subject, html, text }) {
       if (res.ok) {
         return { success: true, messageId: json.messageId, provider: 'brevo' };
       } else {
-        return { success: false, error: json.message || `Lỗi Brevo HTTP ${res.status}`, details: json };
+        let errMsg = json.message || `Lỗi Brevo HTTP ${res.status}`;
+        if (errMsg.includes('sender.email is not verified') || errMsg.includes('unverified sender')) {
+          errMsg = `Email người gửi "${senderEmail}" chưa được xác thực (Verified Sender) trên tài khoản Brevo của bạn. Hãy vào Brevo Dashboard -> Senders & Domains để thêm email này.`;
+        } else if (errMsg.includes('Key not found') || res.status === 401) {
+          errMsg = 'API Key Brevo không hợp lệ hoặc đã bị xoá trên Brevo.';
+        }
+        return { success: false, error: errMsg, details: json };
       }
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: `Lỗi kết nối mạng khi gửi Brevo: ${err.message}` };
     }
   }
 
   // 2. Gửi qua Resend API
   if (cfg.provider === 'resend') {
-    if (!cfg.apiKey) return { success: false, error: 'Chưa cấu hình Resend API Key.' };
+    if (!cfg.apiKey || !cfg.apiKey.trim()) {
+      return { 
+        success: false, 
+        error: 'Chưa có Resend API Key. Vui lòng vào Tab 06 / Cấu hình Email để nhập API Key từ resend.com (bắt đầu bằng re_...).' 
+      };
+    }
 
     try {
       const res = await fetch('https://api.resend.com/emails', {
@@ -151,6 +175,13 @@ export async function sendEmail({ to, subject, html, text }) {
         return { success: false, error: json.message || `Lỗi Resend HTTP ${res.status}`, details: json };
       }
     } catch (err) {
+      // Resend blocks client-side browser fetch with CORS
+      if (err.name === 'TypeError' || err.message.includes('fetch') || err.message.includes('NetworkError')) {
+        return { 
+          success: false, 
+          error: 'Lỗi CORS trình duyệt: Resend API chặn yêu cầu gửi trực tiếp từ Client Browser. Bạn vui lòng chuyển sang nhà cung cấp Brevo (khuyên dùng, miễn phí 300 mail/ngày và chạy trực tiếp từ web không bị CORS) trong Tab 06.' 
+        };
+      }
       return { success: false, error: err.message };
     }
   }
@@ -218,7 +249,7 @@ export async function sendEmail({ to, subject, html, text }) {
 // Bố cục: Top bar điều hướng, Hero Banner vinyl "WHERE THE MUSIC SPEAKS.", 
 // Thân bài trắng tối giản, nút bấm đen sắc nét và Chân trang đen có thông báo No-reply.
 // ----------------------------------------------------------------------------
-function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText, badgeColor, badgeBg, badgeBorder, contentHtml, actionBtnText, actionBtnUrl, footerNote }) {
+export function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText, badgeColor, badgeBg, badgeBorder, contentHtml, actionBtnText, actionBtnUrl, footerNote }) {
   const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
     ? window.location.origin 
     : 'https://uniflowslabel.com';
@@ -870,14 +901,32 @@ export async function sendPayoutStatusEmail({ artist, payout, status, rejectionR
 // ----------------------------------------------------------------------------
 export async function sendTestEmail(toEmail) {
   const cfg = getEmailConfig();
-  const subject = `🧪 [UniFLOWs Test] Kiểm tra kết nối Email Domain: ${cfg.senderEmail}`;
+
+  if (!toEmail || !toEmail.includes('@')) {
+    return { success: false, error: 'Địa chỉ email người nhận thử nghiệm không hợp lệ.' };
+  }
+
+  if (cfg.provider === 'brevo' && (!cfg.apiKey || !cfg.apiKey.trim())) {
+    return { 
+      success: false, 
+      error: 'Chưa nhập API Key Brevo. Hãy dán API Key vào ô "API Key (Brevo / Resend)" trong Tab 06 và nhấn Lưu Cấu Hình.' 
+    };
+  }
+  if (cfg.provider === 'resend' && (!cfg.apiKey || !cfg.apiKey.trim())) {
+    return { 
+      success: false, 
+      error: 'Chưa nhập API Key Resend. Hãy dán API Key vào ô "API Key (Brevo / Resend)" trong Tab 06 và nhấn Lưu Cấu Hình.' 
+    };
+  }
+
+  const subject = `🧪 [UniFLOWs Test] Kiểm tra kết nối Email Domain: ${cfg.senderEmail || 'notifications@uniflowslabel.com'}`;
 
   const contentHtml = `
     <p style="font-size:16px;color:#111827;font-weight:700;margin-top:0;font-family:'Manrope',sans-serif;">
       Xin chúc mừng! Hệ thống Email Domain của bạn đã hoạt động hoàn hảo.
     </p>
     <p style="color:#374151;line-height:1.65;font-family:'Manrope',sans-serif;">
-      Email này được gửi tự động từ địa chỉ <b>${cfg.senderEmail}</b> thông qua nhà cung cấp <b>${cfg.provider.toUpperCase()}</b>.
+      Email này được gửi tự động từ địa chỉ <b>${cfg.senderEmail || 'notifications@uniflowslabel.com'}</b> thông qua nhà cung cấp <b>${(cfg.provider || 'BREVO').toUpperCase()}</b>.
     </p>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #16a34a;padding:16px 20px;font-size:13px;color:#166534;margin:20px 0;line-height:1.7;font-family:'DM Mono',Courier,monospace;">
       ✓ Kết nối API nhà cung cấp thành công.<br>
@@ -900,7 +949,8 @@ export async function sendTestEmail(toEmail) {
     actionBtnUrl: `${(typeof window !== 'undefined' && window.location.origin) ? window.location.origin : ''}/admin.html`
   });
 
-  return await sendEmail({ to: toEmail, subject, html, text: 'Email thử nghiệm kết nối UniFLOWs thành công!' });
+  // Bật cờ bypassEnabledCheck: true để admin luôn test được API Key ngay cả khi chưa bật toggle tự động
+  return await sendEmail({ to: toEmail, subject, html, text: 'Email thử nghiệm kết nối UniFLOWs thành công!', bypassEnabledCheck: true });
 }
 
 // ----------------------------------------------------------------------------
@@ -908,41 +958,68 @@ export async function sendTestEmail(toEmail) {
 // ----------------------------------------------------------------------------
 export async function sendBroadcastEmail({
   recipientEmails = [],
+  recipients = [],
   subject,
   kicker = 'THÔNG BÁO QUAN TRỌNG',
-  headerTitle = 'Thông Báo Từ UniFLOWs Label',
+  headerTitle,
+  headline,
   badgeText = 'BROADCAST',
   contentHtml = '',
+  message = '',
   actionBtnText = '',
+  ctaText = '',
   actionBtnUrl = '',
+  ctaUrl = '',
   onProgress
 }) {
   const cfg = getEmailConfig();
   if (!cfg.enabled) {
-    return { success: false, error: 'Tính năng gửi email tự động đang tắt trong Cấu hình Admin.' };
+    return { 
+      success: false, 
+      error: 'Tính năng gửi email tự động đang TẮT. Vui lòng vào Tab 06 / Cấu hình Email, tích chọn "Kích hoạt gửi Email tự động" và nhấn "Lưu Cấu Hình".' 
+    };
   }
 
+  // Hỗ trợ cả 2 tên tham số: recipientEmails hoặc recipients
+  const rawList = (Array.isArray(recipientEmails) && recipientEmails.length > 0)
+    ? recipientEmails
+    : (Array.isArray(recipients) ? recipients : []);
+
   const validEmails = Array.from(new Set(
-    recipientEmails
+    rawList
       .map(e => String(e || '').trim().toLowerCase())
       .filter(e => e && e.includes('@'))
   ));
 
   if (validEmails.length === 0) {
-    return { success: false, error: 'Không tìm thấy địa chỉ email người nhận hợp lệ nào.' };
+    return { success: false, error: 'Không tìm thấy địa chỉ email người nhận hợp lệ nào trong danh sách.' };
   }
+
+  const finalHeaderTitle = headerTitle || headline || 'Thông Báo Mới Từ UniFLOWs Label';
+  const rawContent = contentHtml || message || '';
+
+  // Chuyển định dạng xuống dòng thành các đoạn văn <p> đẹp mắt
+  const finalContentHtml = (rawContent.includes('<p') || rawContent.includes('<div'))
+    ? rawContent
+    : rawContent
+        .split(/\n\n+/)
+        .map(para => `<p style="margin:0 0 14px;color:#374151;line-height:1.65;font-size:15px;font-family:'Manrope',sans-serif;">${para.replace(/\n/g, '<br>')}</p>`)
+        .join('');
+
+  const finalBtnText = actionBtnText || ctaText || '';
+  const finalBtnUrl = actionBtnUrl || ctaUrl || '';
 
   const html = buildHtmlEmailLayout({
     kicker: kicker.toUpperCase(),
     preheader: subject,
-    headerTitle,
+    headerTitle: finalHeaderTitle,
     badgeText: badgeText.toUpperCase(),
     badgeColor: '#000000',
     badgeBg: '#d8ff48',
     badgeBorder: '#000000',
-    contentHtml,
-    actionBtnText: actionBtnText || '',
-    actionBtnUrl: actionBtnUrl || ''
+    contentHtml: finalContentHtml,
+    actionBtnText: finalBtnText,
+    actionBtnUrl: finalBtnUrl
   });
 
   const results = {
@@ -954,10 +1031,12 @@ export async function sendBroadcastEmail({
 
   for (let i = 0; i < validEmails.length; i++) {
     const toEmail = validEmails[i];
+    let isSuccess = false;
     try {
-      const res = await sendEmail({ to: toEmail, subject, html });
+      const res = await sendEmail({ to: toEmail, subject, html, bypassEnabledCheck: true });
       if (res.success) {
         results.sent++;
+        isSuccess = true;
       } else {
         results.failed++;
         results.errors.push({ email: toEmail, error: res.error || 'Lỗi gửi thư' });
@@ -973,19 +1052,79 @@ export async function sendBroadcastEmail({
         total: validEmails.length,
         sent: results.sent,
         failed: results.failed,
-        percent: Math.round(((i + 1) / validEmails.length) * 100)
+        percent: Math.round(((i + 1) / validEmails.length) * 100),
+        currentRecipient: toEmail,
+        success: isSuccess
       });
     }
 
-    // Khoảng nghỉ 120ms giữa mỗi email để tránh nghẽn mạng / rate limit
+    // Khoảng nghỉ 150ms giữa mỗi email để tránh nghẽn mạng / rate limit API
     if (i < validEmails.length - 1) {
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise(r => setTimeout(r, 150));
     }
   }
 
   return {
     success: results.sent > 0,
-    ...results
+    total: validEmails.length,
+    sent: results.sent,
+    successCount: results.sent,
+    failed: results.failed,
+    failCount: results.failed,
+    errors: results.errors
   };
 }
+
+// ----------------------------------------------------------------------------
+// 9. SỰ KIỆN: PHẢN HỒI EMAIL A&R TRỰC TIẾP CHO HỒ SƠ DEMO (TAB 12 A&R DEMO)
+// ----------------------------------------------------------------------------
+export async function sendDemoReplyEmail({ to, artistName, trackName, subject, message, demoUrl }) {
+  if (!to || !to.includes('@')) {
+    return { success: false, error: 'Địa chỉ email người nhận không hợp lệ.' };
+  }
+
+  const paragraphs = String(message || '')
+    .split(/\n{2,}/)
+    .map(p => `<p style="margin:0 0 14px;line-height:1.7;color:#334155;font-size:14px;">${p.replace(/\n/g, '<br>')}</p>`)
+    .join('');
+
+  const contentHtml = `
+    <div style="margin-bottom:16px;">
+      ${paragraphs}
+    </div>
+    ${trackName ? `
+      <div style="background:#f1f5f9;border:1px solid #cbd5e1;padding:12px 16px;border-radius:6px;font-size:12px;margin:16px 0;color:#475569;">
+        🎵 <b>Bản thu / Hồ sơ tham chiếu:</b> ${trackName}
+      </div>
+    ` : ''}
+    <div style="border-top:1px solid #e2e8f0;padding-top:14px;margin-top:20px;font-size:12.5px;color:#64748b;">
+      Trân trọng,<br>
+      <b style="color:#0f172a;">Đội ngũ Tuyển chọn & A&R — UniFLOWs Label</b><br>
+      <span>Liên hệ: <a href="mailto:management@uniflowslabel.com" style="color:#2563eb;text-decoration:none;">management@uniflowslabel.com</a></span>
+    </div>
+  `;
+
+  const html = buildHtmlEmailLayout({
+    kicker: 'A&R OUTREACH',
+    preheader: subject || `[UniFLOWs A&R] Phản hồi về bản demo của ${artistName || 'bạn'}`,
+    headerTitle: 'A&R DEMO FEEDBACK',
+    badgeText: 'A&R DIRECT',
+    badgeColor: '#15803d',
+    badgeBg: '#dcfce7',
+    badgeBorder: '#86efac',
+    contentHtml,
+    actionBtnText: demoUrl ? 'NGHE LẠI BẢN DEMO ↗' : undefined,
+    actionBtnUrl: demoUrl || undefined,
+    footerNote: 'Email phản hồi trực tiếp từ Ban Tuyển chọn & Phát triển Nghệ sĩ (A&R) UniFLOWs Label.'
+  });
+
+  return await sendEmail({
+    to,
+    subject: subject || `[UniFLOWs A&R] Phản hồi về bản demo gửi tới UniFLOWs Label`,
+    html,
+    text: message,
+    bypassEnabledCheck: true
+  });
+}
+
 
