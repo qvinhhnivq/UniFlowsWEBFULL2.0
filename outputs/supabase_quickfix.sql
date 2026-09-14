@@ -82,7 +82,37 @@ CREATE TABLE IF NOT EXISTS public.greenlist_requests (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 6. BỔ SUNG CỘT CHO CÁC BẢNG HIỆN HỮU (NẾU CHƯA CÓ)
+-- 6. BẢNG APPOINTMENTS (LỊCH HẸN & MEETING A&R BOOKING)
+-- Dùng cho Tab 16 & Trang Booking công khai (booking.html)
+CREATE TABLE IF NOT EXISTS public.appointments (
+  id text PRIMARY KEY,
+  date text NOT NULL,
+  time_slot text NOT NULL,
+  duration_minutes integer DEFAULT 45,
+  host text DEFAULT 'UniFLOWs A&R Team',
+  topic_category text DEFAULT 'Thẩm định Demo',
+  status text DEFAULT 'open', -- 'open', 'booked', 'confirmed', 'cancelled', 'completed'
+  slot_notes text DEFAULT '',
+  booker jsonb, -- { name, artistName, email, phone, type, demoLink, notes, dossierCode, bookedAt }
+  meeting_method text DEFAULT '', -- 'Google Meet', 'Zoom Meeting', 'Studio', 'Phone'
+  meeting_link text DEFAULT '',
+  admin_notes text DEFAULT '',
+  confirmed_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 7. BẢNG SUBSCRIBERS (NGƯỜI ĐĂNG KÝ NHẬN TIN NEWSLETTER THỰC TẾ)
+-- Dùng để lưu trữ danh bạ khách hàng đăng ký nhận tin từ website
+CREATE TABLE IF NOT EXISTS public.subscribers (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  email text UNIQUE NOT NULL,
+  name text DEFAULT '',
+  source text DEFAULT 'website_newsletter',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 8. BỔ SUNG CỘT CHO CÁC BẢNG HIỆN HỮU (NẾU CHƯA CÓ)
 -- Tạp chí nhiều ảnh (Magazine multi-image album)
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS author text DEFAULT 'UniFLOWs Editorial';
@@ -93,16 +123,26 @@ ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS updated_at timestamp with t
 ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS tracklist jsonb DEFAULT '[]'::jsonb;
 ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
 
--- Cập nhật thông tin nghệ sĩ & thông báo
+-- Bổ sung trường tài khoản đăng nhập & quản lý cho bảng artists
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS username text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS email text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS password text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS role_type text DEFAULT 'exclusive';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS show_on_web boolean DEFAULT true;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS payout_cycle text DEFAULT 'Hàng tháng (Monthly)';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS contract_term text DEFAULT '2026 - 2029';
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
+
 ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS action_url text;
 
--- 7. KÍCH HOẠT ROW LEVEL SECURITY (RLS) CHO CÁC BẢNG
+-- 9. KÍCH HOẠT ROW LEVEL SECURITY (RLS) CHO CÁC BẢNG
 ALTER TABLE public.admin_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.special_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.artist_photo_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.copyright_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.greenlist_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
 
 -- Làm sạch chính sách cũ trước khi tạo mới để tránh trùng lặp
 DROP POLICY IF EXISTS "Cho phép đọc công khai admin_notifications" ON public.admin_notifications;
@@ -115,6 +155,11 @@ DROP POLICY IF EXISTS "Cho phép đọc công khai copyright_reports" ON public.
 DROP POLICY IF EXISTS "Toàn quyền quản trị copyright_reports" ON public.copyright_reports;
 DROP POLICY IF EXISTS "Cho phép đọc công khai greenlist_requests" ON public.greenlist_requests;
 DROP POLICY IF EXISTS "Toàn quyền quản trị greenlist_requests" ON public.greenlist_requests;
+DROP POLICY IF EXISTS "Cho phép đọc công khai appointments" ON public.appointments;
+DROP POLICY IF EXISTS "Toàn quyền quản trị appointments" ON public.appointments;
+DROP POLICY IF EXISTS "Cho phép đặt lịch appointments" ON public.appointments;
+DROP POLICY IF EXISTS "Cho phép đăng ký nhận tin subscribers" ON public.subscribers;
+DROP POLICY IF EXISTS "Cho phép đọc subscribers" ON public.subscribers;
 
 -- Thiết lập chính sách RLS
 CREATE POLICY "Cho phép đọc công khai admin_notifications" ON public.admin_notifications FOR SELECT USING (true);
@@ -132,7 +177,14 @@ CREATE POLICY "Toàn quyền quản trị copyright_reports" ON public.copyright
 CREATE POLICY "Cho phép đọc công khai greenlist_requests" ON public.greenlist_requests FOR SELECT USING (true);
 CREATE POLICY "Toàn quyền quản trị greenlist_requests" ON public.greenlist_requests FOR ALL USING (true) WITH CHECK (true);
 
--- 8. TẠO & CẤU HÌNH STORAGE BUCKETS (artworks & audio-masters)
+CREATE POLICY "Cho phép đọc công khai appointments" ON public.appointments FOR SELECT USING (true);
+CREATE POLICY "Cho phép đặt lịch appointments" ON public.appointments FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Toàn quyền quản trị appointments" ON public.appointments FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Cho phép đăng ký nhận tin subscribers" ON public.subscribers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Cho phép đọc subscribers" ON public.subscribers FOR SELECT USING (true);
+
+-- 10. TẠO & CẤU HÌNH STORAGE BUCKETS (artworks & audio-masters)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES 
   ('artworks', 'artworks', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/*']),

@@ -8077,8 +8077,27 @@ function initBroadcastEmailAdmin() {
   const testEmailInput = document.querySelector('#broadcast-test-email');
   const configWarningBox = document.querySelector('#broadcast-config-warning');
 
-  const getRecipientEmails = async (targetType) => {
-    // 1. Ensure latest data is loaded
+  let isRecipientsListExpanded = false;
+
+  function renderRecipientsRows(items) {
+    if (!items || items.length === 0) {
+      return '<div style="font-size:11px;color:#94a3b8;font-style:italic;padding:8px 0;text-align:center;">Không tìm thấy email nào khớp với bộ lọc tìm kiếm.</div>';
+    }
+    return items.map((r, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;font-size:11.5px;gap:8px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
+          <span style="color:#94a3b8;font-family:'DM Mono',monospace;font-size:10px;min-width:22px;">#${i + 1}</span>
+          <code style="color:#0f172a;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.email}</code>
+          <span style="color:#64748b;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">(${r.name}${r.username ? ' &bull; @' + r.username : ''})</span>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:9.5px;font-weight:bold;padding:2px 6px;border-radius:4px;background:${r.badgeBg || '#f1f5f9'};color:${r.badgeColor || '#0f172a'};white-space:nowrap;">
+          ${r.badgeText || r.role}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  const getRecipientDetails = async (targetType) => {
     let currentData = data;
     if (!currentData || !Array.isArray(currentData.artists) || currentData.artists.length === 0) {
       try {
@@ -8089,80 +8108,200 @@ function initBroadcastEmailAdmin() {
     }
     if (!currentData) currentData = defaultData;
 
-    // 2. Gather Artists
-    // Check currentData.artists, defaultData.artists, and provisioned accounts in localStorage
+    // Template mock emails that should not be treated as real accounts unless explicitly provisioned
+    const templateMockEmails = [
+      'lumi@uniflowslabel.com',
+      'producer48k@uniflowslabel.com',
+      'vule@uniflowslabel.com',
+      'monotone@uniflowslabel.com'
+    ];
+
+    // 1. Gather Real Artist Accounts (Tài khoản nghệ sĩ / Portal thực tế đã tạo)
     let rawArtistAccounts = null;
     try {
       rawArtistAccounts = localStorage.getItem('uniflows-artist-accounts');
     } catch (_) {}
     const provisionedAccounts = rawArtistAccounts ? JSON.parse(rawArtistAccounts) : [];
 
-    const artistMap = new Map();
-    (defaultData.artists || []).forEach(a => {
-      const email = (a.email || `${a.username || a.id}@uniflowslabel.com`).toLowerCase().trim();
-      artistMap.set(a.id, email);
-    });
+    const artistAccountMap = new Map();
+
+    // From currentData.artists
     (currentData.artists || []).forEach(a => {
-      const email = (a.email || `${a.username || a.id}@uniflowslabel.com`).toLowerCase().trim();
-      artistMap.set(a.id, email);
+      const email = String(a.email || '').trim().toLowerCase();
+      // Bắt buộc phải có email hợp lệ; TUYỆT ĐỐI KHÔNG tự bịa đuôi @uniflowslabel.com khi không có email
+      if (!email || !email.includes('@')) return;
+
+      // Loại bỏ các email mock demo mặc định nếu chưa từng được cấp mật khẩu / tài khoản thực tế
+      const isMock = templateMockEmails.includes(email) && !a.password && !provisionedAccounts.some(p => String(p.email || '').toLowerCase() === email);
+      if (isMock) return;
+
+      artistAccountMap.set(email, {
+        email,
+        name: a.name || a.username || 'Nghệ sĩ',
+        username: a.username || a.id || '',
+        role: 'Tài khoản Nghệ sĩ / Portal',
+        type: 'artist',
+        badgeText: 'NGHỆ SĨ',
+        badgeBg: '#dcfce7',
+        badgeColor: '#15803d'
+      });
     });
+
+    // From provisioned accounts
     provisionedAccounts.forEach(acc => {
-      if (acc.email && acc.email.includes('@')) {
-        artistMap.set(acc.id || acc.username, acc.email.toLowerCase().trim());
+      const email = String(acc.email || '').trim().toLowerCase();
+      if (email && email.includes('@')) {
+        artistAccountMap.set(email, {
+          email,
+          name: acc.name || acc.username || 'Nghệ sĩ',
+          username: acc.username || acc.id || '',
+          role: 'Tài khoản Nghệ sĩ / Portal',
+          type: 'artist',
+          badgeText: 'NGHỆ SĨ',
+          badgeBg: '#dcfce7',
+          badgeColor: '#15803d'
+        });
       }
     });
 
-    const artistEmails = Array.from(new Set(Array.from(artistMap.values()).filter(e => e.includes('@'))));
+    // Check Supabase artists if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const { data: dbArtists } = await supabase.from('artists').select('id, name, username, email, password');
+        if (Array.isArray(dbArtists)) {
+          dbArtists.forEach(a => {
+            const email = String(a.email || '').trim().toLowerCase();
+            if (email && email.includes('@')) {
+              const isMock = templateMockEmails.includes(email) && !a.password;
+              if (!isMock) {
+                artistAccountMap.set(email, {
+                  email,
+                  name: a.name || a.username || 'Nghệ sĩ',
+                  username: a.username || a.id || '',
+                  role: 'Tài khoản Nghệ sĩ / Portal',
+                  type: 'artist',
+                  badgeText: 'NGHỆ SĨ',
+                  badgeBg: '#dcfce7',
+                  badgeColor: '#15803d'
+                });
+              }
+            }
+          });
+        }
+      } catch (_) {}
+    }
 
-    // 3. Gather Customers & Newsletter Subscribers (EXCLUDING Demo Submissions per user request)
-    let subscriberEmails = [];
+    const artistRecipients = Array.from(artistAccountMap.values());
+
+    // 2. Gather Real Subscribers (Khách hàng đăng ký nhận tin thực tế - TUYỆT ĐỐI KHÔNG thêm email giả định fallback)
+    const subscriberMap = new Map();
     try {
       const rawSub = localStorage.getItem('uniflows-subscribers');
       if (rawSub) {
         const parsed = JSON.parse(rawSub);
         if (Array.isArray(parsed)) {
-          subscriberEmails = parsed.map(item => {
-            if (typeof item === 'string') return item.toLowerCase().trim();
-            if (item && typeof item.email === 'string') return item.email.toLowerCase().trim();
-            return '';
-          }).filter(e => e.includes('@'));
+          parsed.forEach(item => {
+            const email = (typeof item === 'string' ? item : (item?.email || '')).trim().toLowerCase();
+            if (email && email.includes('@') && !['contact@uniflowslabel.com', 'press@uniflowslabel.com', 'booking@uniflowslabel.com'].includes(email)) {
+              subscriberMap.set(email, {
+                email,
+                name: (typeof item === 'object' && item?.name) ? item.name : 'Khách hàng / Subscriber',
+                username: '',
+                role: 'Đăng ký nhận tin',
+                type: 'subscriber',
+                badgeText: 'SUBSCRIBER',
+                badgeBg: '#eff6ff',
+                badgeColor: '#1d4ed8'
+              });
+            }
+          });
         }
       }
     } catch (_) {}
 
-    // Also include any subscribers from currentData if present
     if (Array.isArray(currentData.subscribers)) {
       currentData.subscribers.forEach(s => {
-        const em = (typeof s === 'string' ? s : (s.email || '')).toLowerCase().trim();
-        if (em.includes('@')) subscriberEmails.push(em);
+        const email = (typeof s === 'string' ? s : (s?.email || '')).trim().toLowerCase();
+        if (email && email.includes('@') && !['contact@uniflowslabel.com', 'press@uniflowslabel.com', 'booking@uniflowslabel.com'].includes(email)) {
+          subscriberMap.set(email, {
+            email,
+            name: (typeof s === 'object' && s?.name) ? s.name : 'Khách hàng / Subscriber',
+            username: '',
+            role: 'Đăng ký nhận tin',
+            type: 'subscriber',
+            badgeText: 'SUBSCRIBER',
+            badgeBg: '#eff6ff',
+            badgeColor: '#1d4ed8'
+          });
+        }
       });
     }
 
-    subscriberEmails = Array.from(new Set(subscriberEmails));
-    if (subscriberEmails.length === 0) {
-      // Default contact / newsletter recipients fallback
-      subscriberEmails = ['contact@uniflowslabel.com', 'press@uniflowslabel.com', 'booking@uniflowslabel.com'];
-    }
+    const subscriberRecipients = Array.from(subscriberMap.values());
 
-    // 4. Admin / Test Email
+    // 3. Gather Admin Accounts (Tài khoản Quản trị thực tế)
+    const adminMap = new Map();
+    (currentData.adminAccounts || []).forEach(a => {
+      const email = String(a.email || '').trim().toLowerCase();
+      if (email && email.includes('@')) {
+        adminMap.set(email, {
+          email,
+          name: a.name || a.username || 'Quản trị viên',
+          username: a.username || 'admin',
+          role: 'Ban Quản Trị (Admin)',
+          type: 'admin',
+          badgeText: 'ADMIN',
+          badgeBg: '#fef3c7',
+          badgeColor: '#b45309'
+        });
+      }
+    });
+
+    // 4. Test Email Mode
     const cfg = getEmailConfig();
-    const customTestEmail = testEmailInput?.value.trim();
+    const customTestEmail = testEmailInput?.value.trim().toLowerCase();
     const testEmail = (customTestEmail && customTestEmail.includes('@')) 
       ? customTestEmail 
-      : (cfg.senderEmail && cfg.senderEmail.includes('@') ? cfg.senderEmail : 'admin@uniflowslabel.com');
+      : (cfg.senderEmail && cfg.senderEmail.includes('@') ? cfg.senderEmail.toLowerCase() : 'admin@uniflowslabel.com');
 
     if (targetType === 'test') {
-      return [testEmail];
+      return [{
+        email: testEmail,
+        name: 'Email Thử Nghiệm Admin',
+        username: 'test',
+        role: 'Gửi thử nghiệm',
+        type: 'test',
+        badgeText: 'TEST',
+        badgeBg: '#f3e8ff',
+        badgeColor: '#7e22ce'
+      }];
     }
+
     if (targetType === 'artists') {
-      return artistEmails;
+      return artistRecipients;
     }
+
     if (targetType === 'subscribers') {
-      return subscriberEmails;
+      return subscriberRecipients;
     }
-    // 'all'
-    const adminEmails = (currentData.adminAccounts || defaultData.adminAccounts || []).map(a => (a.email || '').toLowerCase().trim()).filter(e => e.includes('@'));
-    return Array.from(new Set([...artistEmails, ...subscriberEmails, ...adminEmails]));
+
+    // targetType === 'all'
+    // Combine real created accounts (Nghệ sĩ + Subscribers + Admin), deduplicate by email
+    const combinedMap = new Map();
+    artistRecipients.forEach(r => combinedMap.set(r.email, r));
+    subscriberRecipients.forEach(r => {
+      if (!combinedMap.has(r.email)) combinedMap.set(r.email, r);
+    });
+    Array.from(adminMap.values()).forEach(r => {
+      if (!combinedMap.has(r.email)) combinedMap.set(r.email, r);
+    });
+
+    return Array.from(combinedMap.values());
+  };
+
+  const getRecipientEmails = async (targetType) => {
+    const details = await getRecipientDetails(targetType);
+    return details.map(d => d.email);
   };
 
   const updateRecipientPreview = async () => {
@@ -8179,24 +8318,100 @@ function initBroadcastEmailAdmin() {
       }
     }
 
-    previewEl.innerHTML = '<span style="color:#64748b;">⏳ Đang tính toán danh sách email...</span>';
-    const list = await getRecipientEmails(targetType);
+    previewEl.innerHTML = '<span style="color:#64748b;">⏳ Đang quét danh sách tài khoản hợp lệ...</span>';
+    const recipientDetails = await getRecipientDetails(targetType);
+    const list = recipientDetails.map(d => d.email);
 
     const targetName = {
-      all: 'tất cả mọi người (Nghệ sĩ + Khách hàng & Subscribers + Quản trị)',
-      artists: 'toàn bộ nghệ sĩ trong roster',
-      subscribers: 'khách hàng & người đăng ký nhận tin (Subscribers)',
+      all: 'tất cả tài khoản hệ thống (Nghệ sĩ + Quản trị + Khách hàng)',
+      artists: 'tài khoản nghệ sĩ đã tạo (Roster Accounts)',
+      subscribers: 'khách hàng & người đăng ký nhận tin thực tế (Subscribers)',
       test: 'chế độ gửi thử nghiệm (admin)'
     }[targetType] || targetType;
 
-    const samplePreview = list.slice(0, 5).join(', ') + (list.length > 5 ? ` và ${list.length - 5} email khác...` : '');
+    if (list.length === 0) {
+      previewEl.innerHTML = `
+        <div style="margin-bottom:6px;color:#b91c1c;font-weight:bold;">
+          ⚠️ Không tìm thấy email nào trong nhóm: <u>${targetName}</u> (0 địa chỉ email).
+        </div>
+        <div style="font-size:11.5px;color:#64748b;background:#fef2f2;border:1px solid #fecaca;padding:10px 12px;border-radius:6px;line-height:1.6;font-family:inherit;">
+          ${targetType === 'artists' 
+            ? 'Chưa có tài khoản nghệ sĩ nào có email được tạo. Bạn có thể vào <b>Tab 03 (Quản lý Nghệ sĩ & Portal)</b> ➔ bấm <b>"✨ + Cấp Tài Khoản Mới"</b> để thêm nghệ sĩ kèm email.' 
+            : (targetType === 'subscribers'
+              ? 'Chưa có khách hàng nào đăng ký nhận tin (Subscribers). Bạn có thể chọn nhóm <b>"🌐 Tất cả tài khoản"</b> hoặc <b>"🧪 Thử nghiệm"</b>.'
+              : 'Vui lòng kiểm tra lại dữ liệu tài khoản hoặc chọn nhóm đối tượng khác.')
+          }
+        </div>
+      `;
+      return;
+    }
+
+    const samplePreview = list.slice(0, 3).join(', ') + (list.length > 3 ? ` và ${list.length - 3} email khác` : '');
 
     previewEl.innerHTML = `
-      <div style="margin-bottom:4px;">🎯 <b>Dự kiến gửi đến ${list.length} địa chỉ email</b> (${targetName}).</div>
-      <div style="font-size:11px;color:#334155;background:#f0f9ff;border:1px solid #bae6fd;padding:6px 10px;border-radius:4px;word-break:break-all;">
-        <b>Danh sách người nhận:</b> ${list.length > 0 ? samplePreview : 'Chưa có email nào'}
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+        <div style="color:#0f172a;font-size:12px;">
+          🎯 <b>Dự kiến gửi đến <span style="color:#2563eb;font-size:14px;font-weight:900;">${list.length}</span> địa chỉ email</b> (${targetName}).
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button type="button" id="btn-toggle-view-recipients" style="background:#0f172a;color:#d8ff48;border:1px solid #0f172a;border-radius:4px;padding:4px 10px;font-size:11px;font-family:'DM Mono',monospace;font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+            <span id="toggle-view-icon">${isRecipientsListExpanded ? '▲' : '👁️'}</span>
+            <span id="toggle-view-text">${isRecipientsListExpanded ? 'Thu gọn ▴' : `Xem toàn bộ (${list.length} email) ▾`}</span>
+          </button>
+          <button type="button" id="btn-copy-recipients" style="background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;" title="Sao chép toàn bộ email">
+            📋 Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Compact preview -->
+      <div style="font-size:11.5px;color:#334155;background:#f0f9ff;border:1px solid #bae6fd;padding:8px 12px;border-radius:6px;word-break:break-all;line-height:1.5;">
+        <b>Danh sách tóm tắt:</b> <span style="font-family:'DM Mono',monospace;color:#0369a1;">${samplePreview}</span>
+      </div>
+
+      <!-- Expandable full recipients list container -->
+      <div id="broadcast-recipients-full-container" style="display:${isRecipientsListExpanded ? 'block' : 'none'};margin-top:10px;background:#ffffff;border:2px solid #0f172a;border-radius:8px;padding:12px;box-shadow:0 6px 16px rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;font-size:11px;">
+          <span style="font-weight:bold;text-transform:uppercase;color:#0f172a;">Toàn Bộ ${recipientDetails.length} Tài Khoản Nhận Thư:</span>
+          <input type="text" id="filter-recipients-search" placeholder="🔍 Lọc email / tên..." style="padding:3px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;width:170px;">
+        </div>
+        <div id="broadcast-recipients-scroll-list" style="max-height:190px;overflow-y:auto;display:grid;gap:6px;">
+          ${renderRecipientsRows(recipientDetails)}
+        </div>
       </div>
     `;
+
+    // Attach listeners
+    document.querySelector('#btn-toggle-view-recipients')?.addEventListener('click', () => {
+      isRecipientsListExpanded = !isRecipientsListExpanded;
+      const container = document.querySelector('#broadcast-recipients-full-container');
+      const icon = document.querySelector('#toggle-view-icon');
+      const text = document.querySelector('#toggle-view-text');
+      if (container) container.style.display = isRecipientsListExpanded ? 'block' : 'none';
+      if (icon) icon.textContent = isRecipientsListExpanded ? '▲' : '👁️';
+      if (text) text.textContent = isRecipientsListExpanded ? 'Thu gọn ▴' : `Xem toàn bộ (${list.length} email) ▾`;
+    });
+
+    document.querySelector('#btn-copy-recipients')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(list.join(', ')).then(() => {
+        showNotice(`✓ Đã sao chép ${list.length} email vào clipboard!`);
+      }).catch(() => {
+        alert(`Danh sách email:\n${list.join(', ')}`);
+      });
+    });
+
+    document.querySelector('#filter-recipients-search')?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = recipientDetails.filter(r => 
+        r.email.toLowerCase().includes(q) || 
+        r.name.toLowerCase().includes(q) || 
+        (r.username && r.username.toLowerCase().includes(q))
+      );
+      const scrollList = document.querySelector('#broadcast-recipients-scroll-list');
+      if (scrollList) {
+        scrollList.innerHTML = renderRecipientsRows(filtered);
+      }
+    });
 
     // Check configuration status & show warning if not configured
     const cfg = getEmailConfig();

@@ -83,7 +83,12 @@ export async function testSupabaseConnection() {
       notifications: false,
       payout_requests: false,
       copyright_reports: false,
-      greenlist_requests: false
+      greenlist_requests: false,
+      admin_notifications: false,
+      special_requests: false,
+      artist_photo_requests: false,
+      appointments: false,
+      subscribers: false
     },
     tableErrors: {},
     storage: {
@@ -202,7 +207,23 @@ export async function testSupabaseConnection() {
         report.tables.artist_photo_requests = true;
       }
 
-      // 12. Test storage
+      // 12. Test appointments (Bookings & Meetings)
+      const { error: apptErr } = await supabase.from('appointments').select('id').limit(1);
+      if (apptErr) {
+        report.tableErrors.appointments = apptErr.message;
+      } else {
+        report.tables.appointments = true;
+      }
+
+      // 13. Test subscribers (Newsletter)
+      const { error: subErr } = await supabase.from('subscribers').select('id').limit(1);
+      if (subErr) {
+        report.tableErrors.subscribers = subErr.message;
+      } else {
+        report.tables.subscribers = true;
+      }
+
+      // 14. Test storage
       report.storageErrors = {};
       try {
         const { error: artErr } = await supabase.storage.from('artworks').list('', { limit: 1 });
