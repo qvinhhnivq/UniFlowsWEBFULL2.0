@@ -1340,7 +1340,7 @@
           
           <div class="field" style="margin-bottom:12px;">
             <label style="font-weight:bold; font-size:11px;">1. Đường Link Gốc (Target URL) *</label>
-            <input type="url" id="admin-short-url" required placeholder="https://uniflowslabel.com/listen?release=vet-sang hoặc https://open.spotify.com/..." style="padding:10px; width:100%;">
+            <input type="url" id="admin-short-url" placeholder="https://uniflowslabel.com/listen?release=vet-sang hoặc https://open.spotify.com/..." style="padding:10px; width:100%;">
           </div>
 
           <div class="mini-grid" style="margin-bottom:14px;">
@@ -1348,7 +1348,7 @@
               <label style="font-weight:bold; font-size:11px;">2. Bí danh Viết Tắt (Slug) *</label>
               <div style="display:flex; align-items:center; border:1px solid var(--ink); background:#fff;">
                 <span style="font-family:'DM Mono',monospace; font-size:12px; padding:0 10px; color:#64748b; background:#f1f5f9; border-right:1px solid #cbd5e1; line-height:38px;">/s/</span>
-                <input type="text" id="admin-short-slug" required placeholder="vetsang" style="flex:1; border:none; padding:10px; font-weight:bold;">
+                <input type="text" id="admin-short-slug" placeholder="vetsang" style="flex:1; border:none; padding:10px; font-weight:bold;">
                 <button type="button" id="btn-admin-random-slug" style="background:#f8fafc; border:none; border-left:1px solid #cbd5e1; padding:0 12px; font-size:11px; font-weight:bold; cursor:pointer; height:38px;">🎲 Ngẫu nhiên</button>
               </div>
             </div>
@@ -1461,14 +1461,14 @@
             <strong style="font-size: 14px; letter-spacing: -0.02em;">➕ Tạo Thêm Khung Giờ Trống Mới (Add Available Slot)</strong>
             <span style="font-size: 11px; color: #64748b; font-family: 'DM Mono', monospace;">SLOT CREATOR</span>
           </div>
-          <form id="form-create-appt-slot" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end;">
+          <div id="form-create-appt-slot" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end;">
             <div class="field">
               <label style="font-size: 11px; font-weight: bold;">Ngày hẹn (Date) *</label>
-              <input type="date" id="appt-new-date" required style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; font-weight: bold; background: #fff;">
+              <input type="date" id="appt-new-date" style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; font-weight: bold; background: #fff;">
             </div>
             <div class="field">
               <label style="font-size: 11px; font-weight: bold;">Khung giờ (Time Slot) *</label>
-              <input type="text" id="appt-new-time" placeholder="Ví dụ: 09:30 - 10:15 hoặc 14:00" required style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
+              <input type="text" id="appt-new-time" placeholder="Ví dụ: 09:30 - 10:15 hoặc 14:00" style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
             </div>
             <div class="field">
               <label style="font-size: 11px; font-weight: bold;">Thời lượng dự kiến</label>
@@ -1499,11 +1499,11 @@
               <input type="text" id="appt-new-note" placeholder="Ví dụ: Dành riêng cho các nghệ sĩ Indie gửi bản demo acoustic hoặc pop ballad" style="padding: 9px 10px; border: 1px solid var(--ink); font-size: 12px; background: #fff;">
             </div>
             <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px;">
-              <button type="submit" class="button" style="background: #8b5cf6; color: #fff; border-color: #8b5cf6; font-weight: bold; padding: 10px 20px; font-size: 12px;">
+              <button type="button" id="btn-submit-create-slot" class="button" style="background: #8b5cf6; color: #fff; border-color: #8b5cf6; font-weight: bold; padding: 10px 20px; font-size: 12px; cursor: pointer;">
                 ➕ Thêm Khung Giờ Trống Này
               </button>
             </div>
-          </form>
+          </div>
         </div>
 
         <!-- Filter Bar -->
@@ -1524,7 +1524,7 @@
 
       <!-- Sticky Actions Bar -->
       <div class="actions" style="position: sticky; bottom: 20px; background: rgba(245,244,240,0.95); padding: 15px; border: 1px solid var(--ink); z-index: 10; display: flex; gap: 12px; align-items: center;">
-        <button class="button" type="submit" id="save-all-btn" style="padding: 12px 24px; font-weight: bold;">Lưu toàn bộ lên Supabase</button>
+        <button class="button" type="button" id="save-all-btn" style="padding: 12px 24px; font-weight: bold; cursor: pointer;">Lưu toàn bộ lên Supabase</button>
         <a class="button alt" href="/" target="_blank" style="padding: 12px 20px;">Xem website ↗</a>
         <button class="button alt" type="button" id="logout" style="background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; font-weight: 700; padding: 12px 20px; margin-left: auto;">
           <span>⏻</span> Đăng xuất

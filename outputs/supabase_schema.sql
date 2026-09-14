@@ -400,6 +400,13 @@ alter table public.artists add column if not exists payout_cycle text default 'H
 alter table public.artists add column if not exists contract_term text default '2024 - 2027';
 alter table public.artists add column if not exists updated_at timestamp with time zone default timezone('utc'::text, now());
 
+-- BUG FIX: Các cột này bị thiếu khiến email/số dư không lưu được lên Supabase
+alter table public.artists add column if not exists username text default '';
+alter table public.artists add column if not exists email text default '';
+alter table public.artists add column if not exists password text default '';
+alter table public.artists add column if not exists pending_balance text default '0';
+alter table public.artists add column if not exists spotify text default '';
+
 alter table public.releases add column if not exists show_on_web boolean default true;
 alter table public.releases add column if not exists updated_at timestamp with time zone default timezone('utc'::text, now());
 
@@ -437,4 +444,72 @@ create table if not exists public.greenlist_requests (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- BUG FIX: Bảng appointments bị thiếu hoàn toàn — đây là nguyên nhân booking không lưu được lên Supabase
+create table if not exists public.appointments (
+  id text primary key,
+  date text not null,
+  time_slot text not null,
+  duration_minutes integer default 45,
+  host text default 'UniFLOWs A&R Team',
+  topic_category text default 'Thẩm định Demo',
+  status text default 'open',
+  slot_notes text default '',
+  booker jsonb default null,
+  meeting_method text default '',
+  meeting_link text default '',
+  admin_notes text default '',
+  confirmed_at timestamp with time zone,
+  updated_at timestamp with time zone default timezone('utc'::text, now()),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
+alter table public.appointments enable row level security;
+create policy if not exists "Cho phép đọc công khai appointments" on public.appointments for select using (true);
+create policy if not exists "Toàn quyền quản trị appointments" on public.appointments for all using (true) with check (true);
+
+-- BUG FIX: Bảng admin_notifications, special_requests, artist_photo_requests cũng cần tạo nếu chưa có
+create table if not exists public.admin_notifications (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  message text,
+  type text default 'info',
+  is_read boolean default false,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table if not exists public.special_requests (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text,
+  request_type text,
+  details jsonb default '{}'::jsonb,
+  status text default 'pending',
+  admin_notes text default '',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table if not exists public.artist_photo_requests (
+  id uuid default gen_random_uuid() primary key,
+  artist_id text references public.artists(id) on delete cascade,
+  requested_image text not null,
+  status text default 'pending',
+  reject_reason text default '',
+  approved_at timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table if not exists public.subscribers (
+  id uuid default gen_random_uuid() primary key,
+  email text unique not null,
+  subscribed_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.admin_notifications enable row level security;
+alter table public.special_requests enable row level security;
+alter table public.artist_photo_requests enable row level security;
+alter table public.subscribers enable row level security;
+
+create policy if not exists "Toàn quyền quản trị admin_notifications" on public.admin_notifications for all using (true) with check (true);
+create policy if not exists "Toàn quyền quản trị special_requests" on public.special_requests for all using (true) with check (true);
+create policy if not exists "Toàn quyền quản trị artist_photo_requests" on public.artist_photo_requests for all using (true) with check (true);
+create policy if not exists "Cho phép đăng ký subscribers" on public.subscribers for all using (true) with check (true);

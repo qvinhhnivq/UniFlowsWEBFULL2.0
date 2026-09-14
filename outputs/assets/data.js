@@ -610,7 +610,7 @@ export async function getData() {
             name: a.name,
             username: a.username || stats.username || localCachedArtist.username || a.id,
             password: a.password || stats.password || localCachedArtist.password || (localCachedArtist.name ? `${localCachedArtist.name}@2026` : 'Uniflows@2026'),
-            email: a.email || stats.email || localCachedArtist.email || '',
+            email: (a.email && a.email.includes('@')) ? a.email : ((stats.email && stats.email.includes('@')) ? stats.email : (localCachedArtist.email || '')),
             showOnWeb: a.show_on_web !== undefined ? a.show_on_web : (stats.showOnWeb !== undefined ? stats.showOnWeb : (localCachedArtist.showOnWeb !== undefined ? localCachedArtist.showOnWeb : true)),
             roleType: a.role_type || stats.roleType || localCachedArtist.roleType || 'distribution',
             genre: a.genre || 'Music',
@@ -620,9 +620,10 @@ export async function getData() {
             instagram: a.instagram || '',
             youtube: a.youtube || '',
             tiktok: a.tiktok || '',
-            monthlyStreams: a.monthly_streams !== undefined ? a.monthly_streams : (localCachedArtist.monthlyStreams || '0'),
-            estimatedRevenue: a.estimated_revenue !== undefined ? a.estimated_revenue : (localCachedArtist.estimatedRevenue || '0'),
-            payableBalance: a.payable_balance !== undefined ? a.payable_balance : (localCachedArtist.payableBalance || '0'),
+            monthlyStreams: (a.monthly_streams !== undefined && a.monthly_streams !== null && a.monthly_streams !== '' && a.monthly_streams !== '0') ? a.monthly_streams : (stats.monthlyStreams || a.monthly_streams || localCachedArtist.monthlyStreams || '0'),
+            estimatedRevenue: (a.estimated_revenue !== undefined && a.estimated_revenue !== null && a.estimated_revenue !== '' && a.estimated_revenue !== '0') ? a.estimated_revenue : (stats.estimatedRevenue || a.estimated_revenue || localCachedArtist.estimatedRevenue || '0'),
+            payableBalance: (a.payable_balance !== undefined && a.payable_balance !== null && a.payable_balance !== '' && a.payable_balance !== '0') ? a.payable_balance : (stats.payableBalance || a.payable_balance || localCachedArtist.payableBalance || '0'),
+            balanceAdjustments: Array.isArray(stats.balanceAdjustments) ? stats.balanceAdjustments : (localCachedArtist.balanceAdjustments || []),
             publishingRevenue: stats.publishingRevenue || localCachedArtist.publishingRevenue || '0',
             publishingRoyaltyRate: stats.publishingRoyaltyRate || localCachedArtist.publishingRoyaltyRate || '75%',
             publishingContracts: Array.isArray(stats.publishingContracts) ? stats.publishingContracts : (localCachedArtist.publishingContracts || []),
@@ -746,22 +747,18 @@ export async function saveData(data) {
     try {
       const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
       if (settingsError) {
-        console.warn('Upsert site_settings full error, trying without optional columns:', settingsError);
-        const safePayload = {
+        console.warn('Upsert site_settings full error, trying standard columns:', settingsError);
+        const standardPayload = {
           id: 'main',
-          tagline: data.tagline,
-          hero_text: data.heroText,
-          about_title: data.aboutTitle,
-          about_text: data.aboutText,
-          email: data.email,
-          city: data.city,
-          shortlinks: data.shortlinks || defaultData.shortlinks || [],
-          announcements: data.announcements || defaultData.announcements,
-          publishing: data.publishing || defaultData.publishing,
-          unihube: data.unihube || defaultData.unihube,
+          tagline: data.tagline || '',
+          hero_text: data.heroText || '',
+          about_title: data.aboutTitle || '',
+          about_text: data.aboutText || '',
+          email: data.email || '',
+          city: data.city || '',
           updated_at: new Date().toISOString()
         };
-        await supabase.from('site_settings').upsert(safePayload);
+        await supabase.from('site_settings').upsert(standardPayload);
       }
     } catch (sErr) {
       console.warn('site_settings upsert caught error:', sErr);
@@ -769,11 +766,28 @@ export async function saveData(data) {
 
     // 2. Save artists & releases in parallel
     if (Array.isArray(data.artists)) {
+      // Sync local artist accounts for immediate local authentication
+      try {
+        const storedAccounts = data.artists.map(a => ({
+          id: a.id,
+          username: a.username || a.id,
+          email: a.email || '',
+          password: a.password || '',
+          name: a.name || a.id,
+          roleType: a.roleType || 'distribution',
+          showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false'
+        }));
+        localStorage.setItem('uniflows-artist-accounts', JSON.stringify(storedAccounts));
+      } catch (_) {}
+
+      const allReleasesToUpsert = [];
+
       const artistPromises = data.artists.filter(a => !MOCK_IDS.artists.includes(a.id)).map(async a => {
         const stats = {
           username: a.username || a.id,
           password: a.password || '',
           email: a.email || '',
+          payableBalance: String(a.payableBalance || '0'),
           showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false',
           roleType: a.roleType || 'distribution',
           payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
@@ -796,36 +810,73 @@ export async function saveData(data) {
           products: a.products || []
         };
 
-        const artistPayload = {
+        const fullArtistPayload = {
           id: a.id,
           name: a.name,
+          username: a.username || a.id,
+          email: a.email || '',
+          password: a.password || '',
+          role_type: a.roleType || 'distribution',
+          show_on_web: a.showOnWeb !== false && a.showOnWeb !== 'false',
           genre: a.genre || 'Music',
-          image: a.image,
-          bio: a.bio,
-          gallery: a.gallery || [],
+          image: a.image || '',
+          bio: a.bio || '',
+          gallery: Array.isArray(a.gallery) ? a.gallery : [],
           instagram: a.instagram || '',
           youtube: a.youtube || '',
           tiktok: a.tiktok || '',
           monthly_streams: String(a.monthlyStreams || '0'),
           estimated_revenue: String(a.estimatedRevenue || '0'),
           payable_balance: String(a.payableBalance || '0'),
-          stats: stats
+          payout_cycle: a.payoutCycle || 'Hàng tháng (Monthly)',
+          royalty_rate: a.royaltyRate || '80% Master',
+          contract_term: a.contractTerm || '2024 - 2027',
+          stats: stats,
+          updated_at: new Date().toISOString()
+        };
+
+        const standardArtistPayload = {
+          id: a.id,
+          name: a.name,
+          username: a.username || a.id,
+          email: a.email || '',
+          password: a.password || '',
+          genre: a.genre || 'Music',
+          image: a.image || '',
+          bio: a.bio || '',
+          gallery: Array.isArray(a.gallery) ? a.gallery : [],
+          instagram: a.instagram || '',
+          youtube: a.youtube || '',
+          tiktok: a.tiktok || '',
+          monthly_streams: String(a.monthlyStreams || '0'),
+          estimated_revenue: String(a.estimatedRevenue || '0'),
+          payable_balance: String(a.payableBalance || '0'),
+          payout_cycle: a.payoutCycle || 'Hàng tháng (Monthly)',
+          royalty_rate: a.royaltyRate || '80% Master',
+          contract_term: a.contractTerm || '2024 - 2027',
+          stats: stats,
+          updated_at: new Date().toISOString()
         };
 
         try {
-          const { error: aErr } = await supabase.from('artists').upsert({ ...artistPayload, updated_at: new Date().toISOString() });
+          const { error: aErr } = await supabase.from('artists').upsert(fullArtistPayload);
           if (aErr) {
-            await supabase.from('artists').upsert(artistPayload);
+            console.warn('Upsert artist full payload warning, retrying with standard payload:', aErr);
+            await supabase.from('artists').upsert(standardArtistPayload);
           }
-        } catch {
-          try { await supabase.from('artists').upsert(artistPayload); } catch {}
+        } catch (err) {
+          try {
+            await supabase.from('artists').upsert(standardArtistPayload);
+          } catch (err2) {
+            console.warn('Standard artist upsert error:', err2);
+          }
         }
 
-        // Save products into releases table
+        // Collect releases for batch upsert
         if (Array.isArray(a.products)) {
           for (const p of a.products) {
             const relSlug = p.slug || String(p.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            const relPayload = {
+            allReleasesToUpsert.push({
               id: p.id || `rel-${Date.now()}-${relSlug}`,
               artist_id: a.id,
               title: p.title || 'Untitled Release',
@@ -845,17 +896,21 @@ export async function saveData(data) {
                 percentage: p.percentage || 100,
                 ...(p.metadata || {})
               }
-            };
-            try {
-              await supabase.from('releases').upsert(relPayload);
-            } catch (e) {
-              // ignore individual release upsert conflict
-            }
+            });
           }
         }
       });
 
       await Promise.allSettled(artistPromises);
+
+      // Batch upsert releases to avoid individual sequential requests
+      if (allReleasesToUpsert.length > 0) {
+        try {
+          await supabase.from('releases').upsert(allReleasesToUpsert);
+        } catch (rErr) {
+          console.warn('Batch releases upsert error:', rErr);
+        }
+      }
     }
 
     // 3. Save articles

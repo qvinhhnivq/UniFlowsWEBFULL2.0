@@ -309,6 +309,37 @@ addAnnouncementBtn?.addEventListener('click', () => {
 // ----------------------------------------------------
 // ARTIST & USER MANAGER (SELECTOR + CARD EDITOR)
 // ----------------------------------------------------
+function syncCurrentlyEditedArtistToState() {
+  const artistContainer = document.querySelector('[data-artist]');
+  if (!artistContainer) return;
+  const origArtistId = artistContainer.dataset.artistId;
+  const artistIdxStr = artistContainer.dataset.artistIdx;
+  const editedArtistData = readItems('[data-artist]', 'artist')[0];
+
+  if (!editedArtistData) return;
+
+  let targetIdx = -1;
+  if (artistIdxStr !== undefined && artistIdxStr !== '') {
+    targetIdx = parseInt(artistIdxStr, 10);
+  }
+  if ((targetIdx < 0 || targetIdx >= data.artists.length) && origArtistId) {
+    targetIdx = data.artists.findIndex(a => a.id === origArtistId);
+  }
+  if (targetIdx < 0 && selectedArtistId) {
+    targetIdx = data.artists.findIndex(a => a.id === selectedArtistId);
+  }
+
+  if (targetIdx >= 0 && targetIdx < data.artists.length) {
+    data.artists[targetIdx] = { ...data.artists[targetIdx], ...editedArtistData };
+  } else if (editedArtistData.id || editedArtistData.name) {
+    data.artists.push(editedArtistData);
+  }
+
+  try {
+    localStorage.setItem('uniflows-content', JSON.stringify(data));
+  } catch (_) {}
+}
+
 function renderArtistSelector() {
   if (!artistSelectorGrid) return;
   if (!data.artists || data.artists.length === 0) {
@@ -380,6 +411,7 @@ function renderArtistSelector() {
 
   artistSelectorGrid.querySelectorAll('[data-select-artist-id]').forEach(card => {
     card.addEventListener('click', () => {
+      syncCurrentlyEditedArtistToState();
       selectedArtistId = card.dataset.selectArtistId;
       renderArtistSelector();
       renderSelectedArtistEditor();
@@ -452,6 +484,7 @@ function attachArtistReorderEvents() {
 }
 
 document.querySelector('#admin-user-type-filter')?.addEventListener('change', () => {
+  syncCurrentlyEditedArtistToState();
   renderArtistSelector();
 });
 
@@ -467,6 +500,7 @@ function renderSelectedArtistEditor() {
   attachArtistUploadEvents();
   attachArtistReorderEvents();
   attachArtistBalanceEvents(currentArtist, idx);
+  attachArtistLiveSync(currentArtist, idx);
 }
 
 const artistEditor = (a, idx) => {
@@ -496,7 +530,10 @@ const artistEditor = (a, idx) => {
           <button type="button" class="btn-move-artist-down button alt" data-id="${esc(a.id)}" ${idx === data.artists.length - 1 ? 'disabled' : ''} style="padding:3px 10px;font-size:10px;font-weight:bold;cursor:${idx === data.artists.length - 1 ? 'not-allowed;opacity:0.4' : 'pointer'};">▼ Xuống</button>
         </div>
       </div>
-      <button class="button alt remove" type="button" data-remove-artist="${idx}" style="padding:6px 12px;font-size:11px;">✕ Xóa tài khoản này</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="button btn-save-current-artist" type="button" data-save-artist="${idx}" style="background:#10b981;color:#fff;border-color:#10b981;font-weight:bold;padding:7px 16px;font-size:12px;cursor:pointer;">💾 Lưu Riêng Nghệ Sĩ Này</button>
+        <button class="button alt remove" type="button" data-remove-artist="${idx}" style="padding:6px 12px;font-size:11px;">✕ Xóa tài khoản này</button>
+      </div>
     </div>
 
     <!-- 01: Visibility & Role Settings -->
@@ -752,6 +789,76 @@ function attachArtistBalanceEvents(artist, idx) {
 
   addBtn?.addEventListener('click', () => adjustBalance(true));
   subBtn?.addEventListener('click', () => adjustBalance(false));
+}
+
+function attachArtistLiveSync(artist, idx) {
+  const container = document.querySelector(`.item-editor[data-artist-idx="${idx}"]`);
+  if (!container) return;
+
+  const updateField = (key, val) => {
+    if (key === 'showOnWeb' || key === 'published') {
+      val = val === 'true' || val === true;
+    }
+    if (key === 'gallery') {
+      val = typeof val === 'string' ? val.split('\n').map(x => x.trim()).filter(Boolean) : val;
+    }
+    artist[key] = val;
+    if (data.artists && data.artists[idx]) {
+      data.artists[idx][key] = val;
+    }
+    try {
+      localStorage.setItem('uniflows-content', JSON.stringify(data));
+    } catch (_) {}
+  };
+
+  container.addEventListener('input', (e) => {
+    const input = e.target;
+    if (!input || !input.dataset || !input.dataset.key) return;
+    const key = input.dataset.key;
+    const val = input.type === 'checkbox' ? input.checked : input.value.trim();
+    updateField(key, val);
+
+    if (key === 'name') {
+      const cardName = document.querySelector(`[data-select-artist-id="${artist.id}"] strong`);
+      if (cardName) cardName.textContent = input.value || 'Người dùng';
+    }
+  });
+
+  container.addEventListener('change', (e) => {
+    const input = e.target;
+    if (!input || !input.dataset || !input.dataset.key) return;
+    const key = input.dataset.key;
+    const val = input.type === 'checkbox' ? input.checked : input.value.trim();
+    updateField(key, val);
+  });
+
+  // Dedicated Save Current Artist Button
+  const saveBtnCurrent = container.querySelector('.btn-save-current-artist');
+  if (saveBtnCurrent) {
+    saveBtnCurrent.onclick = async () => {
+      saveBtnCurrent.disabled = true;
+      const origText = saveBtnCurrent.textContent;
+      saveBtnCurrent.textContent = '⏳ Đang lưu...';
+
+      try {
+        const updated = readItems(`.item-editor[data-artist-idx="${idx}"]`, 'artist')[0];
+        if (updated) {
+          data.artists[idx] = { ...data.artists[idx], ...updated };
+        }
+
+        await saveData(data);
+        await logAuditEvent('Cập nhật thông tin nghệ sĩ', `Đã lưu hồ sơ và số dư cho nghệ sĩ "${data.artists[idx]?.name || 'Nghệ sĩ'}".`);
+        showNotice(`✓ Đã lưu thành công thông tin & số dư cho "${data.artists[idx]?.name || 'Nghệ sĩ'}"!`);
+      } catch (err) {
+        console.error('Lỗi khi lưu nghệ sĩ:', err);
+        showNotice(`✕ Lỗi khi lưu: ${err.message || 'Không thể lưu'}`, true);
+      } finally {
+        saveBtnCurrent.disabled = false;
+        saveBtnCurrent.textContent = origText;
+        renderArtistSelector();
+      }
+    };
+  }
 }
 
 // ----------------------------------------------------
@@ -3165,101 +3272,104 @@ document.addEventListener('click', async e => {
   }
 });
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function executeFullSiteSave() {
+  if (!saveBtn) return;
   saveBtn.disabled = true;
   saveBtn.textContent = 'Đang lưu lên Supabase...';
 
-  // Read General Settings
-  ['tagline', 'heroText', 'aboutTitle', 'aboutText', 'city'].forEach(k => {
-    data[k] = form.elements[k]?.value || '';
-  });
+  try {
+    // 1. Read General Settings
+    ['tagline', 'heroText', 'aboutTitle', 'aboutText', 'city'].forEach(k => {
+      if (form && form.elements[k]) {
+        data[k] = form.elements[k].value || '';
+      }
+    });
 
-  // Read Emails
-  const customEmails = [];
-  document.querySelectorAll('.custom-email-row').forEach(row => {
-    const label = row.querySelector('.email-row-label')?.value.trim();
-    const email = row.querySelector('.email-row-value')?.value.trim();
-    if (label && email) customEmails.push({ label, email });
-  });
-  data.emails = customEmails;
+    // 2. Read Emails
+    const customEmails = [];
+    document.querySelectorAll('.custom-email-row').forEach(row => {
+      const label = row.querySelector('.email-row-label')?.value.trim();
+      const email = row.querySelector('.email-row-value')?.value.trim();
+      if (label && email) customEmails.push({ label, email });
+    });
+    data.emails = customEmails;
 
-  // Read Announcements
-  const customAnnouncements = [];
-  document.querySelectorAll('.custom-announcement-card').forEach((card, i) => {
-    const title = card.querySelector('.ann-title')?.value.trim();
-    const type = card.querySelector('.ann-type')?.value || 'info';
-    const date = card.querySelector('.ann-date')?.value.trim() || new Date().toLocaleDateString('vi-VN');
-    const content = card.querySelector('.ann-content')?.value.trim() || '';
-    const active = card.querySelector('.ann-active')?.value !== 'false';
-    if (title) {
-      customAnnouncements.push({
-        id: 'ann-' + (i + 1) + '-' + Date.now().toString(36),
-        title,
-        type,
-        date,
-        content,
-        active
-      });
-    }
-  });
-  data.announcements = customAnnouncements;
+    // 3. Read Announcements
+    const customAnnouncements = [];
+    document.querySelectorAll('.custom-announcement-card').forEach((card, i) => {
+      const title = card.querySelector('.ann-title')?.value.trim();
+      const type = card.querySelector('.ann-type')?.value || 'info';
+      const date = card.querySelector('.ann-date')?.value.trim() || new Date().toLocaleDateString('vi-VN');
+      const content = card.querySelector('.ann-content')?.value.trim() || '';
+      const active = card.querySelector('.ann-active')?.value !== 'false';
+      if (title) {
+        customAnnouncements.push({
+          id: 'ann-' + (i + 1) + '-' + Date.now().toString(36),
+          title,
+          type,
+          date,
+          content,
+          active
+        });
+      }
+    });
+    data.announcements = customAnnouncements;
 
-  // Update current edited artist data into state
-  const artistContainer = document.querySelector('[data-artist]');
-  const origArtistId = artistContainer?.dataset.artistId;
-  const artistIdxStr = artistContainer?.dataset.artistIdx;
-  const editedArtistData = readItems('[data-artist]', 'artist')[0];
+    // 4. Flush current edited artist data into state
+    syncCurrentlyEditedArtistToState();
 
-  if (editedArtistData) {
-    let targetIdx = -1;
-    if (artistIdxStr !== undefined && artistIdxStr !== '') {
-      targetIdx = parseInt(artistIdxStr, 10);
-    }
-    if ((targetIdx < 0 || targetIdx >= data.artists.length) && origArtistId) {
-      targetIdx = data.artists.findIndex(a => a.id === origArtistId);
-    }
-    if (targetIdx < 0 && selectedArtistId) {
-      targetIdx = data.artists.findIndex(a => a.id === selectedArtistId);
-    }
+    // 5. Update articles
+    data.articles = readItems('[data-article]', 'article');
 
-    if (targetIdx >= 0 && targetIdx < data.artists.length) {
-      data.artists[targetIdx] = { ...data.artists[targetIdx], ...editedArtistData };
-      selectedArtistId = editedArtistData.id || data.artists[targetIdx].id;
-    } else if (editedArtistData.id || editedArtistData.name) {
-      data.artists.push(editedArtistData);
-      selectedArtistId = editedArtistData.id;
+    // 6. Update UniPUBLISHING settings & pricing
+    if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing));
+    data.publishing.basePrices = {
+      commercial: parseInt(document.querySelector('#pub-price-commercial')?.value || '15000000', 10),
+      film: parseInt(document.querySelector('#pub-price-film')?.value || '10000000', 10),
+      series: parseInt(document.querySelector('#pub-price-series')?.value || '6000000', 10),
+      gaming: parseInt(document.querySelector('#pub-price-gaming')?.value || '4000000', 10),
+      creator: parseInt(document.querySelector('#pub-price-creator')?.value || '2500000', 10),
+      event: parseInt(document.querySelector('#pub-price-event')?.value || '5000000', 10)
+    };
+    data.publishing.bundleDiscounts = {
+      b10: { count: 10, discountPct: parseInt(document.querySelector('#pub-bundle-10')?.value || '15', 10), name: 'Gói Mini Sync (10 bài)' },
+      b15: { count: 15, discountPct: parseInt(document.querySelector('#pub-bundle-15')?.value || '25', 10), name: 'Gói Pro Film (15 bài)' },
+      b20: { count: 20, discountPct: parseInt(document.querySelector('#pub-bundle-20')?.value || '35', 10), name: 'Gói Agency Master (20 bài)' },
+      full: { discountPct: parseInt(document.querySelector('#pub-bundle-full')?.value || '50', 10), name: 'Cấp phép Toàn bộ Catalogue' }
+    };
+    data.publishing.terms = document.querySelector('#pub-terms-text')?.value || '';
+
+    // 7. Save to local storage & Supabase
+    const saved = await saveData(data);
+    await logAuditEvent('Cập nhật toàn bộ hệ thống', 'Lưu thay đổi nghệ sĩ, số dư, email và cấu hình toàn website');
+    
+    if (saved) {
+      showNotice('✓ Đã lưu toàn bộ dữ liệu, số dư nghệ sĩ và cấu hình hệ thống lên Supabase thành công!');
+    } else {
+      showNotice('✓ Đã lưu dữ liệu vào bộ nhớ máy (Offline/Local). Vui lòng kiểm tra lại kết nối Supabase.', true);
     }
+  } catch (err) {
+    console.error('Lỗi khi lưu hệ thống:', err);
+    showNotice(`✕ Có lỗi khi lưu: ${err.message || 'Vui lòng kiểm tra lại'}`, true);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Lưu toàn bộ lên Supabase';
+    render();
   }
+}
 
-  // Update articles
-  data.articles = readItems('[data-article]', 'article');
-
-  // Update UniPUBLISHING settings & pricing
-  if (!data.publishing) data.publishing = JSON.parse(JSON.stringify(defaultData.publishing));
-  data.publishing.basePrices = {
-    commercial: parseInt(document.querySelector('#pub-price-commercial')?.value || '15000000', 10),
-    film: parseInt(document.querySelector('#pub-price-film')?.value || '10000000', 10),
-    series: parseInt(document.querySelector('#pub-price-series')?.value || '6000000', 10),
-    gaming: parseInt(document.querySelector('#pub-price-gaming')?.value || '4000000', 10),
-    creator: parseInt(document.querySelector('#pub-price-creator')?.value || '2500000', 10),
-    event: parseInt(document.querySelector('#pub-price-event')?.value || '5000000', 10)
+if (saveBtn) {
+  saveBtn.onclick = (e) => {
+    e.preventDefault();
+    executeFullSiteSave();
   };
-  data.publishing.bundleDiscounts = {
-    b10: { count: 10, discountPct: parseInt(document.querySelector('#pub-bundle-10')?.value || '15', 10), name: 'Gói Mini Sync (10 bài)' },
-    b15: { count: 15, discountPct: parseInt(document.querySelector('#pub-bundle-15')?.value || '25', 10), name: 'Gói Pro Film (15 bài)' },
-    b20: { count: 20, discountPct: parseInt(document.querySelector('#pub-bundle-20')?.value || '35', 10), name: 'Gói Agency Master (20 bài)' },
-    full: { discountPct: parseInt(document.querySelector('#pub-bundle-full')?.value || '50', 10), name: 'Cấp phép Toàn bộ Catalogue' }
+}
+if (form) {
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    executeFullSiteSave();
   };
-  data.publishing.terms = document.querySelector('#pub-terms-text')?.value || '';
-
-  await saveData(data);
-  await logAuditEvent('Cập nhật UniPUBLISHING & Cấu hình hệ thống', 'Lưu thay đổi bảng giá và danh mục toàn website');
-  showNotice('✓ Đã lưu toàn bộ dữ liệu hệ thống và bảng giá UniPUBLISHING lên Supabase thành công!');
-  saveBtn.disabled = false;
-  saveBtn.textContent = 'Lưu toàn bộ lên Supabase';
-  render();
-});
+}
 
 // Logout handler
 document.querySelector('#logout')?.addEventListener('click', async () => {
@@ -7335,14 +7445,14 @@ function initQuickReleaseAdmin() {
         // Prepend to artist products
         targetArtist.products.unshift(releaseObj);
 
-        // Save data to localStorage
-        saveData(data);
+        // Save data to localStorage + Supabase
+        await saveData(data);
 
         // Sync to Supabase releases table
         if (isSupabaseConfigured()) {
           try {
-            await supabase.from('releases').upsert({
-              id: newReleaseId,
+            const { error: relErr } = await supabase.from('releases').upsert({
+              id: String(newReleaseId),
               artist_id: artistId,
               title,
               type,
@@ -7354,6 +7464,7 @@ function initQuickReleaseAdmin() {
               metadata: releaseObj.metadata,
               created_at: new Date().toISOString()
             });
+            if (relErr) console.warn('Lỗi lưu release lên Supabase:', relErr);
           } catch (dbErr) {
             console.warn('Lỗi lưu release lên Supabase:', dbErr);
           }
@@ -7362,21 +7473,68 @@ function initQuickReleaseAdmin() {
         modal.close();
 
         const smartLinkUrl = `${location.origin}/listen?release=${encodeURIComponent(cleanSlug)}`;
-        const artistPageUrl = `${location.origin}/artist-detail?id=${encodeURIComponent(artistId)}`;
-
-        alert(`🎉 PHÁT HÀNH NHANH THÀNH CÔNG!\n\n` +
-          `• Tác phẩm: "${title}" (${type})\n` +
-          `• Nghệ sĩ: ${targetArtist.name}\n` +
-          `• Đoạn preview: ${formatTimeMinSec(startSec)} ➔ ${formatTimeMinSec(startSec + activeSnippetDuration)} (${activeSnippetDuration}s)\n\n` +
-          `Đã đưa lên Website và tạo SmartLink thành công!\n` +
-          `SmartLink: ${smartLinkUrl}\n` +
-          `Trang nghệ sĩ: ${artistPageUrl}`);
 
         showNotice(`✓ Đã phát hành nhanh "${title}" lên Web & tạo SmartLink thành công!`);
         await logAuditEvent('Phát hành nhanh', `Đã phát hành "${title}" cho nghệ sĩ ${targetArtist.name} (Slug: ${cleanSlug})`);
 
-        // Refresh releases reviewer
-        loadReleasesQueue();
+        // ── AUTO-NAVIGATE: Chuyển sang Tab Releases để sửa SmartLink & cập nhật số liệu ──
+        // Tab Releases (admin-tab-releases) là nơi có toàn bộ form sửa SmartLink & streams
+        switchAdminTab('admin-tab-releases');
+
+        // Lọc theo nghệ sĩ vừa phát hành để dễ tìm
+        const artistFilterEl = document.querySelector('#admin-release-artist-filter');
+        if (artistFilterEl) {
+          artistFilterEl.value = artistId;
+        }
+
+        // Reload release queue rồi scroll đến release mới
+        await loadReleasesQueue();
+
+        setTimeout(() => {
+          // Tìm release card vừa tạo theo ID
+          const releaseCard = document.querySelector(`[data-release-id="${CSS.escape(String(newReleaseId))}"]`);
+          if (releaseCard) {
+            releaseCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Highlight nổi bật
+            releaseCard.style.outline = '3px solid #d8ff48';
+            releaseCard.style.outlineOffset = '4px';
+            releaseCard.style.boxShadow = '0 0 0 6px rgba(216,255,72,0.25)';
+            setTimeout(() => {
+              releaseCard.style.outline = '';
+              releaseCard.style.outlineOffset = '';
+              releaseCard.style.boxShadow = '';
+            }, 4000);
+          } else {
+            // Fallback: scroll đến đầu releases box
+            document.querySelector('#releases-reviewer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+
+          // Banner hướng dẫn cố định góc phải
+          document.getElementById('quick-release-edit-banner')?.remove();
+          const banner = document.createElement('div');
+          banner.id = 'quick-release-edit-banner';
+          banner.style.cssText = [
+            'position:fixed', 'bottom:24px', 'right:24px', 'z-index:9999',
+            'background:#0b0b0b', 'color:#fff', 'padding:16px 20px',
+            'max-width:380px', 'border-left:4px solid #d8ff48',
+            'box-shadow:0 8px 32px rgba(0,0,0,0.5)',
+            'font-family:"DM Mono",monospace', 'font-size:13px', 'line-height:1.6'
+          ].join(';');
+          const shortTitle = title.length > 28 ? title.slice(0, 28) + '…' : title;
+          banner.innerHTML = [
+            `<div style="font-weight:900;font-size:14px;color:#d8ff48;margin-bottom:6px;">🎉 "${shortTitle}" đã live!</div>`,
+            `<div style="font-size:11px;opacity:0.7;margin-bottom:10px;">Bài hát hiển thị trong tab <b>01 / Duyệt phát hành</b>.<br>Cập nhật link Spotify, Apple Music và số liệu ngay bên dưới.</div>`,
+            `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">`,
+            `  <a href="${smartLinkUrl}" target="_blank" style="background:#d8ff48;color:#0b0b0b;padding:6px 12px;font-weight:900;font-size:11px;text-decoration:none;white-space:nowrap;">↗ SmartLink</a>`,
+            `  <button onclick="document.getElementById('quick-release-edit-banner')?.remove();const el=document.querySelector('[data-release-id=\\'${CSS.escape(String(newReleaseId))}\\']');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.outline='3px solid #d8ff48';setTimeout(()=>{el.style.outline=''},2000);}"`,
+            `    style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.35);padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;">✏️ Đến mục sửa</button>`,
+            `  <button onclick="document.getElementById('quick-release-edit-banner')?.remove();"`,
+            `    style="background:transparent;color:rgba(255,255,255,0.4);border:none;padding:4px 6px;font-size:20px;cursor:pointer;margin-left:auto;line-height:1;">×</button>`,
+            `</div>`
+          ].join('');
+          document.body.appendChild(banner);
+          setTimeout(() => banner.remove(), 15000);
+        }, 600);
       } catch (err) {
         alert(`Lỗi phát hành nhanh: ${err.message}`);
       } finally {
@@ -9052,61 +9210,88 @@ function initAppointmentsAdmin() {
   }
 
   // 3. New slot form submission
+  const handleCreateNewSlot = async (e) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const dateInputEl = document.querySelector('#appt-new-date');
+    const timeInputEl = document.querySelector('#appt-new-time');
+    const durationInputEl = document.querySelector('#appt-new-duration');
+    const hostInputEl = document.querySelector('#appt-new-host');
+    const categoryInputEl = document.querySelector('#appt-new-category');
+    const noteInputEl = document.querySelector('#appt-new-note');
+
+    const dateVal = dateInputEl ? dateInputEl.value : '';
+    const timeVal = timeInputEl ? timeInputEl.value.trim() : '';
+    const durationVal = durationInputEl ? durationInputEl.value : '45';
+    const hostVal = hostInputEl ? hostInputEl.value.trim() : '';
+    const categoryVal = categoryInputEl ? categoryInputEl.value : '';
+    const noteVal = noteInputEl ? noteInputEl.value.trim() : '';
+
+    if (!dateVal || !timeVal) {
+      alert('Vui lòng chọn ngày và nhập khung giờ hẹn.');
+      return;
+    }
+
+    const newSlot = {
+      id: 'appt-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+      date: dateVal,
+      timeSlot: timeVal,
+      durationMinutes: parseInt(durationVal, 10) || 45,
+      host: hostVal || 'UniFLOWs A&R Lead Team',
+      topicCategory: categoryVal,
+      status: 'open',
+      slotNotes: noteVal,
+      createdAt: new Date().toISOString()
+    };
+
+    const slots = await getAppointments();
+    slots.push(newSlot);
+    try {
+      localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
+    } catch (_) {}
+
+    if (isSupabaseConfigured() && typeof supabase !== 'undefined' && supabase) {
+      try {
+        const { error: apptInsertErr } = await supabase.from('appointments').insert([{
+          id: newSlot.id,
+          date: newSlot.date,
+          time_slot: newSlot.timeSlot,
+          duration_minutes: newSlot.durationMinutes,
+          host: newSlot.host,
+          topic_category: newSlot.topicCategory,
+          status: 'open',
+          slot_notes: newSlot.slotNotes,
+          created_at: newSlot.createdAt
+        }]);
+        if (apptInsertErr) {
+          console.error('Lỗi ghi Supabase appointment:', apptInsertErr);
+          showNotice(`⚠️ Đã lưu local nhưng Supabase lỗi: ${apptInsertErr.message}`, true);
+        }
+    }
+
+    showNotice(`✓ Đã thêm khung giờ trống ngày ${dateVal} (${timeVal}) thành công!`);
+    if (timeInputEl) timeInputEl.value = '';
+    if (noteInputEl) noteInputEl.value = '';
+    await renderAppointmentsAdmin(currentApptFilter);
+  };
+
+  const submitSlotBtn = document.querySelector('#btn-submit-create-slot');
+  if (submitSlotBtn) {
+    submitSlotBtn.onclick = handleCreateNewSlot;
+  }
   const createForm = document.querySelector('#form-create-appt-slot');
   if (createForm) {
-    createForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const dateVal = document.querySelector('#appt-new-date').value;
-      const timeVal = document.querySelector('#appt-new-time').value.trim();
-      const durationVal = document.querySelector('#appt-new-duration').value;
-      const hostVal = document.querySelector('#appt-new-host').value.trim();
-      const categoryVal = document.querySelector('#appt-new-category').value;
-      const noteVal = document.querySelector('#appt-new-note').value.trim();
-
-      if (!dateVal || !timeVal) {
-        alert('Vui lòng chọn ngày và nhập khung giờ hẹn.');
-        return;
+    if (createForm.tagName === 'FORM') {
+      createForm.onsubmit = handleCreateNewSlot;
+    }
+    createForm.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT') {
+        e.preventDefault();
+        handleCreateNewSlot(e);
       }
-
-      const newSlot = {
-        id: 'appt-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-        date: dateVal,
-        timeSlot: timeVal,
-        durationMinutes: parseInt(durationVal, 10) || 45,
-        host: hostVal || 'UniFLOWs A&R Lead Team',
-        topicCategory: categoryVal,
-        status: 'open',
-        slotNotes: noteVal,
-        createdAt: new Date().toISOString()
-      };
-
-      const slots = await getAppointments();
-      slots.push(newSlot);
-      localStorage.setItem('uniflows_appointments', JSON.stringify(slots));
-
-      if (isSupabaseConfigured()) {
-        try {
-          await supabase.from('appointments').insert([{
-            id: newSlot.id,
-            date: newSlot.date,
-            time_slot: newSlot.timeSlot,
-            duration_minutes: newSlot.durationMinutes,
-            host: newSlot.host,
-            topic_category: newSlot.topicCategory,
-            status: 'open',
-            slot_notes: newSlot.slotNotes,
-            created_at: newSlot.createdAt
-          }]);
-        } catch (err) {
-          console.warn('Lỗi ghi Supabase appointment:', err);
-        }
-      }
-
-      showNotice(`✓ Đã thêm khung giờ trống ngày ${dateVal} (${timeVal}) thành công!`);
-      document.querySelector('#appt-new-time').value = '';
-      document.querySelector('#appt-new-note').value = '';
-      renderAppointmentsAdmin(currentApptFilter);
-    };
+    });
   }
 
   // 4. Filter buttons
