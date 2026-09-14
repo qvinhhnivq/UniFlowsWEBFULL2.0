@@ -121,7 +121,7 @@ export const translations = {
     contact_direct_label: 'Liên hệ trực tiếp',
 
     // Artist Portal Sidebar & Overview
-    portal_brand_sub: 'artist portal',
+    portal_brand_sub: 'UniPORTAL (by UniENGINE)',
     tab_overview: '📊 Tổng quan',
     tab_releases: '💿 Phát hành & Nhạc',
     tab_earnings: '💰 Doanh thu & Rút tiền',
@@ -308,7 +308,7 @@ export const translations = {
     contact_direct_label: 'Direct Contacts',
 
     // Artist Portal Sidebar & Overview
-    portal_brand_sub: 'artist portal',
+    portal_brand_sub: 'UniPORTAL (by UniENGINE)',
     tab_overview: '📊 Overview',
     tab_releases: '💿 Releases & Music',
     tab_earnings: '💰 Revenue & Payouts',

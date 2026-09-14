@@ -25,6 +25,7 @@ import {
   sendPayoutStatusEmail, 
   sendTestEmail 
 } from './mailer.js';
+import { compressImageFile, batchCompressImages, uploadImageSmart, formatBytes } from './image-optimizer.js';
 
 const isAdminAuth = sessionStorage.getItem('uniflows-admin') === 'true' || localStorage.getItem('uniflows-admin') === 'true';
 if (!isAdminAuth) {
@@ -223,7 +224,7 @@ function renderAnnouncementsEditor(announcements = []) {
         <div class="field">
           <label>Trạng thái hiển thị trên Portal</label>
           <select class="ann-active" style="padding:8px;border:1px solid var(--ink);background:#fff;">
-            <option value="true" ${ann.active !== false ? 'selected' : ''}>🟢 Hiển thị trên Artist Portal</option>
+            <option value="true" ${ann.active !== false ? 'selected' : ''}>🟢 Hiển thị trên UniPORTAL (by UniENGINE)</option>
             <option value="false" ${ann.active === false ? 'selected' : ''}>🔴 Tạm ẩn</option>
           </select>
         </div>
@@ -273,7 +274,7 @@ addAnnouncementBtn?.addEventListener('click', () => {
       <div class="field">
         <label>Trạng thái hiển thị trên Portal</label>
         <select class="ann-active" style="padding:8px;border:1px solid var(--ink);background:#fff;">
-          <option value="true" selected>🟢 Hiển thị trên Artist Portal</option>
+          <option value="true" selected>🟢 Hiển thị trên UniPORTAL (by UniENGINE)</option>
           <option value="false">🔴 Tạm ẩn</option>
         </select>
       </div>
@@ -633,7 +634,44 @@ function attachArtistUploadEvents() {
 // ----------------------------------------------------
 // ARTICLES & JOURNAL EDITOR
 // ----------------------------------------------------
-const articleEditor = (art, idx) => `
+// ARTICLE GALLERY RENDERER
+// ----------------------------------------------------
+function renderArticleGalleryHTML(images = [], artIdx) {
+  if (!images || images.length === 0) {
+    return `<div class="empty-gallery-msg" style="grid-column:1/-1;padding:16px;text-align:center;color:#94a3b8;font-size:12px;border:1px dashed #cbd5e1;border-radius:6px;background:#fff;">Chưa có ảnh nào trong album bài viết này. Hãy kéo thả ảnh hoặc bấm "+ Tải lên nhiều ảnh" ở trên.</div>`;
+  }
+  return images.map((img, gIdx) => {
+    const url = typeof img === 'string' ? img : (img.url || '');
+    const caption = typeof img === 'object' ? (img.caption || '') : '';
+    const size = typeof img === 'object' ? (img.size || '') : '';
+    return `
+      <div class="art-gal-card" data-img-idx="${gIdx}" data-art-idx="${artIdx}" style="background:#fff;border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,0.06);position:relative;">
+        <div style="position:relative;aspect-ratio:16/10;background:#0f172a;overflow:hidden;">
+          <img src="${esc(url)}" alt="Photo ${gIdx + 1}" style="width:100%;height:100%;object-fit:cover;display:block;">
+          <span style="position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.75);color:#fff;font-size:9.5px;font-weight:bold;padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">#${gIdx + 1}</span>
+          ${size ? `<span style="position:absolute;bottom:5px;right:5px;background:#d8ff48;color:#000;font-size:9px;font-weight:bold;padding:2px 5px;border-radius:3px;font-family:'DM Mono',monospace;">${esc(size)}</span>` : ''}
+        </div>
+        <div style="padding:8px;display:flex;flex-direction:column;gap:6px;flex:1;">
+          <input class="art-gal-caption-input" type="text" value="${esc(caption)}" placeholder="Chú thích ảnh..." data-img-idx="${gIdx}" data-art-idx="${artIdx}" style="font-size:11px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:4px;width:100%;background:#f8fafc;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px;border-top:1px solid #f1f5f9;">
+            <div style="display:flex;gap:3px;">
+              <button type="button" class="btn-art-gal-move-up button alt" data-img-idx="${gIdx}" data-art-idx="${artIdx}" title="Di chuyển lên trước" style="padding:2px 7px;font-size:10px;line-height:1.2;">▲</button>
+              <button type="button" class="btn-art-gal-move-down button alt" data-img-idx="${gIdx}" data-art-idx="${artIdx}" title="Di chuyển ra sau" style="padding:2px 7px;font-size:10px;line-height:1.2;">▼</button>
+            </div>
+            <div style="display:flex;gap:3px;">
+              <button type="button" class="btn-art-gal-set-cover button alt" data-img-idx="${gIdx}" data-art-idx="${artIdx}" data-img-url="${esc(url)}" title="Đặt làm ảnh bìa bài viết" style="padding:2px 6px;font-size:10px;color:#0284c7;line-height:1.2;">⭐ Bìa</button>
+              <button type="button" class="btn-art-gal-delete button alt remove" data-img-idx="${gIdx}" data-art-idx="${artIdx}" title="Xóa ảnh này" style="padding:2px 6px;font-size:10px;line-height:1.2;">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+const articleEditor = (art, idx) => {
+  const images = Array.isArray(art.images) ? art.images : [];
+  return `
   <div class="item-editor" data-article data-art-idx="${idx}" style="background:#fff;border:1px solid var(--ink);padding:20px;margin-bottom:15px;border-radius:8px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
       <h3 style="margin:0;font-size:18px;">Bài viết #${idx + 1}: ${esc(art.title)}</h3>
@@ -650,36 +688,264 @@ const articleEditor = (art, idx) => `
       <div class="field"><label>Tác giả / Bút danh</label><input data-key="author" value="${esc(art.author || 'UniFLOWs Editorial')}"></div>
       <div class="field"><label>Thời gian đọc dự kiến</label><input data-key="readTime" value="${esc(art.readTime || '3 phút đọc')}"></div>
       <div class="field" style="grid-column: 1 / -1;">
-        <label>URL Ảnh bìa (Hoặc tải tệp lên Supabase Storage)</label>
+        <label>URL Ảnh bìa (Hoặc tải tệp lên Supabase / Tự động nén WebP)</label>
         <input data-key="cover" id="article-cover-${idx}" value="${esc(art.cover || '')}" placeholder="https://...">
-        <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
+        <div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <input type="file" accept="image/*" class="article-cover-input" data-target="#article-cover-${idx}" data-status="#art-status-${idx}" style="font-size:11px;">
-          <span id="art-status-${idx}" style="font-size:11px;color:#008800;"></span>
+          <span id="art-status-${idx}" style="font-size:11px;color:#008800;font-weight:600;"></span>
         </div>
       </div>
       <div class="field"><label>Hiển thị trên Tạp chí (news.html)</label><select data-key="published"><option value="true" ${art.published !== false && art.published !== 'false' ? 'selected' : ''}>🟢 Công khai</option><option value="false" ${art.published === false || art.published === 'false' ? 'selected' : ''}>🔴 Ẩn bài viết</option></select></div>
     </div>
     <div class="field" style="margin-top:10px;"><label>Tóm tắt ngắn (Lead / Excerpt)</label><textarea data-key="excerpt" rows="2" placeholder="Tóm tắt nội dung bài viết...">${esc(art.excerpt || '')}</textarea></div>
     <div class="field"><label>Nội dung chi tiết (Hỗ trợ xuống dòng)</label><textarea data-key="body" rows="6" placeholder="Nội dung bài viết đầy đủ...">${esc(art.body || '')}</textarea></div>
+
+    <!-- Multi-image Gallery Section -->
+    <div class="field art-gallery-box" data-art-idx="${idx}" style="grid-column:1/-1;margin-top:15px;border-top:1.5px dashed #cbd5e1;padding-top:15px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <label style="font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin:0;color:#0f172a;">
+            📸 Album Ảnh Bài Viết (Multi-image Gallery)
+          </label>
+          <span style="font-size:11px;color:#64748b;">
+            Tự động nén WebP siêu nhẹ giảm ~90% dung lượng. Hỗ trợ chọn nhiều ảnh cùng lúc, kéo thả và sắp xếp thứ tự.
+          </span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label class="button" style="background:#0284c7;color:#fff;border-color:#0284c7;padding:6px 14px;font-size:11px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+            <span>+ Tải lên nhiều ảnh</span>
+            <input type="file" multiple accept="image/*" class="article-multi-upload-input" data-art-idx="${idx}" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+      <!-- Drag and drop zone -->
+      <div class="art-dropzone" data-art-idx="${idx}" style="border:2px dashed #94a3b8;border-radius:8px;padding:16px;text-align:center;background:#f8fafc;cursor:pointer;transition:all 0.2s ease;">
+        <span style="font-size:12.5px;color:#475569;font-weight:600;display:block;">
+          📥 Kéo &amp; Thả nhiều ảnh vào đây hoặc bấm nút "+ Tải lên nhiều ảnh"
+        </span>
+        <div class="art-upload-progress" style="display:none;font-size:11.5px;color:#0284c7;font-weight:bold;margin-top:8px;"></div>
+      </div>
+
+      <!-- Direct URL Input -->
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <input type="text" class="art-manual-img-url" placeholder="Hoặc dán URL ảnh trực tiếp (https://...) rồi bấm Thêm" style="flex:1;font-size:11px;padding:6px 10px;border:1px solid var(--ink);border-radius:4px;">
+        <button type="button" class="button alt btn-add-manual-img" data-art-idx="${idx}" style="padding:6px 12px;font-size:11px;font-weight:bold;">+ Thêm URL</button>
+      </div>
+
+      <!-- Gallery Grid Container -->
+      <div class="article-gallery-container" data-art-idx="${idx}" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:12px;margin-top:14px;">
+        ${renderArticleGalleryHTML(images, idx)}
+      </div>
+      <input type="hidden" data-key="images" class="art-gallery-hidden" id="art-images-json-${idx}" value="${esc(JSON.stringify(images))}">
+    </div>
   </div>
 `;
+};
 
 function attachArticleUploadEvents() {
+  // 1. Single Cover Upload with Auto-compression
   document.querySelectorAll('.article-cover-input').forEach(input => {
     input.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const inputEl = document.querySelector(e.target.dataset.target);
       const statusEl = document.querySelector(e.target.dataset.status);
-      if (statusEl) statusEl.textContent = 'Đang upload...';
+      if (statusEl) {
+        statusEl.textContent = 'Đang nén WebP & upload...';
+        statusEl.style.color = '#0284c7';
+      }
       try {
-        const publicUrl = await uploadArtworkFile(file, `article_${Date.now()}`);
+        const compressed = await compressImageFile(file, { maxWidth: 1600, quality: 0.85 });
+        const publicUrl = await uploadImageSmart(compressed.file, `article_${Date.now()}`);
         if (inputEl) inputEl.value = publicUrl;
-        if (statusEl) statusEl.textContent = '✓ Đã upload ảnh bìa thành công!';
+        if (statusEl) {
+          statusEl.innerHTML = `✓ Đã upload: <b>${compressed.originalSizeFormatted} ➔ ${compressed.compressedSizeFormatted} (-${compressed.savedPercent}%)</b>`;
+          statusEl.style.color = '#15803d';
+        }
       } catch (err) {
-        if (statusEl) statusEl.textContent = `Lỗi: ${err.message}`;
+        if (statusEl) {
+          statusEl.textContent = `Lỗi: ${err.message}`;
+          statusEl.style.color = '#ef4444';
+        }
       }
     });
+  });
+
+  // 2. Multi-image gallery handlers for each article
+  document.querySelectorAll('[data-article]').forEach(itemEl => {
+    const artIdx = parseInt(itemEl.dataset.artIdx, 10);
+    const multiInput = itemEl.querySelector('.article-multi-upload-input');
+    const dropzone = itemEl.querySelector('.art-dropzone');
+    const progressEl = itemEl.querySelector('.art-upload-progress');
+    const galleryContainer = itemEl.querySelector('.article-gallery-container');
+    const imagesHiddenInput = itemEl.querySelector('.art-gallery-hidden');
+    const manualInput = itemEl.querySelector('.art-manual-img-url');
+    const addManualBtn = itemEl.querySelector('.btn-add-manual-img');
+
+    if (!galleryContainer || !imagesHiddenInput) return;
+
+    let currentImages = [];
+    try {
+      currentImages = JSON.parse(imagesHiddenInput.value || '[]');
+    } catch {
+      currentImages = [];
+    }
+    currentImages = currentImages.map(img => typeof img === 'string' ? { url: img, caption: '', size: '' } : img);
+
+    const updateGalleryView = () => {
+      galleryContainer.innerHTML = renderArticleGalleryHTML(currentImages, artIdx);
+      imagesHiddenInput.value = JSON.stringify(currentImages);
+      attachGalleryCardEvents();
+    };
+
+    const attachGalleryCardEvents = () => {
+      // Caption changes
+      galleryContainer.querySelectorAll('.art-gal-caption-input').forEach(capInput => {
+        capInput.oninput = (e) => {
+          const gIdx = parseInt(e.target.dataset.imgIdx, 10);
+          if (currentImages[gIdx]) {
+            currentImages[gIdx].caption = e.target.value;
+            imagesHiddenInput.value = JSON.stringify(currentImages);
+          }
+        };
+      });
+
+      // Move Up
+      galleryContainer.querySelectorAll('.btn-art-gal-move-up').forEach(btn => {
+        btn.onclick = () => {
+          const gIdx = parseInt(btn.dataset.imgIdx, 10);
+          if (gIdx > 0) {
+            const temp = currentImages[gIdx];
+            currentImages[gIdx] = currentImages[gIdx - 1];
+            currentImages[gIdx - 1] = temp;
+            updateGalleryView();
+          }
+        };
+      });
+
+      // Move Down
+      galleryContainer.querySelectorAll('.btn-art-gal-move-down').forEach(btn => {
+        btn.onclick = () => {
+          const gIdx = parseInt(btn.dataset.imgIdx, 10);
+          if (gIdx < currentImages.length - 1) {
+            const temp = currentImages[gIdx];
+            currentImages[gIdx] = currentImages[gIdx + 1];
+            currentImages[gIdx + 1] = temp;
+            updateGalleryView();
+          }
+        };
+      });
+
+      // Set as Cover
+      galleryContainer.querySelectorAll('.btn-art-gal-set-cover').forEach(btn => {
+        btn.onclick = () => {
+          const coverInput = itemEl.querySelector(`#article-cover-${artIdx}`);
+          if (coverInput && btn.dataset.imgUrl) {
+            coverInput.value = btn.dataset.imgUrl;
+            showNotice('✓ Đã chọn ảnh này làm ảnh bìa bài viết!');
+          }
+        };
+      });
+
+      // Delete
+      galleryContainer.querySelectorAll('.btn-art-gal-delete').forEach(btn => {
+        btn.onclick = () => {
+          const gIdx = parseInt(btn.dataset.imgIdx, 10);
+          if (confirm('Xóa ảnh này khỏi album bài viết?')) {
+            currentImages.splice(gIdx, 1);
+            updateGalleryView();
+          }
+        };
+      });
+    };
+
+    // Process files batch
+    const handleFilesBatch = async (files) => {
+      if (!files || files.length === 0) return;
+      if (progressEl) {
+        progressEl.style.display = 'block';
+        progressEl.style.color = '#0284c7';
+        progressEl.textContent = `Đang nén & tối ưu ${files.length} ảnh...`;
+      }
+      try {
+        const results = await batchCompressImages(files, { maxWidth: 1600, quality: 0.85 }, (p) => {
+          if (progressEl) {
+            progressEl.textContent = `Đang tối ưu ảnh ${p.current}/${p.total} (${p.percent}%)...`;
+          }
+        });
+
+        for (const res of results) {
+          if (res.success) {
+            const publicUrl = await uploadImageSmart(res.result.file, `art_gal_${Date.now()}`);
+            currentImages.push({
+              url: publicUrl,
+              caption: '',
+              size: `${res.result.compressedSizeFormatted} (-${res.result.savedPercent}%)`
+            });
+          }
+        }
+        if (progressEl) {
+          progressEl.textContent = `✓ Đã nén và thêm ${results.filter(r => r.success).length} ảnh thành công!`;
+          progressEl.style.color = '#15803d';
+          setTimeout(() => { progressEl.style.display = 'none'; }, 4000);
+        }
+        updateGalleryView();
+      } catch (err) {
+        if (progressEl) {
+          progressEl.textContent = `Lỗi tải ảnh: ${err.message}`;
+          progressEl.style.color = '#ef4444';
+        }
+      }
+    };
+
+    // Multi file input listener
+    if (multiInput) {
+      multiInput.onchange = (e) => {
+        handleFilesBatch(e.target.files);
+        e.target.value = '';
+      };
+    }
+
+    // Drag and drop zone
+    if (dropzone) {
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.style.background = '#e0f2fe';
+        dropzone.style.borderColor = '#0284c7';
+      };
+      dropzone.ondragleave = (e) => {
+        e.preventDefault();
+        dropzone.style.background = '#f8fafc';
+        dropzone.style.borderColor = '#94a3b8';
+      };
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.style.background = '#f8fafc';
+        dropzone.style.borderColor = '#94a3b8';
+        if (e.dataTransfer?.files?.length) {
+          handleFilesBatch(e.dataTransfer.files);
+        }
+      };
+    }
+
+    // Add manual URL
+    if (addManualBtn && manualInput) {
+      addManualBtn.onclick = () => {
+        const val = manualInput.value.trim();
+        if (!val) return;
+        currentImages.push({
+          url: val,
+          caption: '',
+          size: 'External URL'
+        });
+        manualInput.value = '';
+        updateGalleryView();
+      };
+    }
+
+    // Initial attachment of card events
+    attachGalleryCardEvents();
   });
 }
 
@@ -2445,6 +2711,9 @@ function readItems(selector, kind) {
       if (input.dataset.key === 'showOnWeb' || input.dataset.key === 'published') {
         val = val === 'true' || val === true;
       }
+      if (input.dataset.key === 'images') {
+        try { val = JSON.parse(val || '[]'); } catch { val = []; }
+      }
       obj[input.dataset.key] = val;
     });
     if (kind === 'artist') {
@@ -2600,6 +2869,9 @@ document.addEventListener('click', async e => {
     itemEl.querySelectorAll('[data-key]').forEach(input => {
       let val = input.type === 'checkbox' ? input.checked : input.value.trim();
       if (input.dataset.key === 'published') val = val === 'true' || val === true;
+      if (input.dataset.key === 'images') {
+        try { val = JSON.parse(val || '[]'); } catch { val = []; }
+      }
       singleObj[input.dataset.key] = val;
     });
 
@@ -3073,7 +3345,7 @@ window.openAdminMetadataModal = function(releaseId) {
 
       <div>
         <label style="font-size:11px;color:#92400e;font-weight:bold;display:block;margin-bottom:6px;text-transform:uppercase;">
-          Phản hồi A&R gửi lại nghệ sĩ (Hiển thị trực tiếp trên Artist Portal):
+          Phản hồi A&R gửi lại nghệ sĩ (Hiển thị trực tiếp trên UniPORTAL (by UniENGINE)):
         </label>
         <textarea id="meta-modal-ar-feedback" rows="3" placeholder="Ví dụ: [01:15] Đoạn điệp khúc vocal cần mix sáng hơn. Bản thu đạt chuẩn chất lượng DSPs..." style="width:100%;padding:10px;font-size:12.5px;border:1px solid #d97706;border-radius:6px;background:#fff;font-family:inherit;">${esc(meta.arFeedback || '')}</textarea>
       </div>
@@ -4927,7 +5199,7 @@ function renderMusicSubmissionsAdmin() {
       if (!sub) return;
 
       const artistName = sub.artistName || sub.fullName || 'Nghệ sĩ mới';
-      if (!confirm(`Xác nhận chuyển ứng viên "${artistName}" thành Nghệ sĩ chính thức trên Artist Portal?`)) return;
+      if (!confirm(`Xác nhận chuyển ứng viên "${artistName}" thành Nghệ sĩ chính thức trên UniPORTAL (by UniENGINE)?`)) return;
 
       // Check if already in data.artists
       const existing = (data.artists || []).find(a => (a.email && a.email.toLowerCase() === sub.email?.toLowerCase()) || a.name.toLowerCase() === artistName.toLowerCase());
@@ -6148,14 +6420,682 @@ function initEmailConfigAdmin() {
   });
 }
 
+// ============================================================================
+// 14. ARTIST PHOTO CHANGE REQUESTS REVIEWER (ADMIN DUYỆT 1-CLICK LÊN WEB)
+// ============================================================================
+async function loadArtistPhotoRequests() {
+  const container = document.querySelector('#admin-photo-requests-list');
+  const counterEl = document.querySelector('#admin-photo-requests-counter');
+  if (!container) return;
+
+  let requests = [];
+  try {
+    requests = JSON.parse(localStorage.getItem('uniflows-artist-photo-requests') || '[]');
+  } catch {}
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: dbRequests, error } = await supabase
+        .from('artist_photo_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && Array.isArray(dbRequests) && dbRequests.length > 0) {
+        requests = dbRequests;
+        try { localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(requests)); } catch {}
+      }
+    } catch {}
+  }
+
+  const pendingRequests = requests.filter(r => r.status === 'pending');
+  if (counterEl) {
+    counterEl.textContent = `${pendingRequests.length} chờ duyệt`;
+    counterEl.style.background = pendingRequests.length > 0 ? '#fef3c7' : '#f1f5f9';
+    counterEl.style.color = pendingRequests.length > 0 ? '#b45309' : '#64748b';
+  }
+
+  if (pendingRequests.length === 0) {
+    container.innerHTML = `<div style="color:#94a3b8; font-size:12px; font-style:italic; padding:10px 0; grid-column:1/-1;">Không có yêu cầu đổi ảnh nào đang chờ duyệt. Mọi hồ sơ nghệ sĩ đang ở trạng thái mới nhất.</div>`;
+    return;
+  }
+
+  container.innerHTML = pendingRequests.map(req => {
+    const art = (data.artists || []).find(a => a.id === req.artist_id || a.name === req.artist_name || a.email === req.artist_email);
+    const currentImg = art?.image || req.current_image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80';
+    const newImg = req.requested_image;
+    const timeStr = new Date(req.created_at || Date.now()).toLocaleString('vi-VN');
+
+    return `
+      <div class="photo-req-card" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <strong style="font-size:14px; color:#0f172a; display:block;">${esc(req.artist_name)}</strong>
+            <span style="font-size:11px; font-family:'DM Mono',monospace; color:#64748b;">${esc(req.artist_email || req.artist_id)}</span>
+          </div>
+          <span style="font-size:10px; font-family:'DM Mono',monospace; background:#eff6ff; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:bold;">${timeStr}</span>
+        </div>
+
+        ${req.note ? `<p style="margin:0; font-size:11.5px; color:#475569; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid #e2e8f0; font-style:italic;">"${esc(req.note)}"</p>` : ''}
+
+        <!-- Comparison Preview -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; text-align:center; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:10px;">
+          <div>
+            <span style="font-size:9.5px; font-family:'DM Mono',monospace; color:#64748b; font-weight:bold; display:block; margin-bottom:4px;">ẢNH CŨ TRÊN WEB</span>
+            <div style="width:64px; height:64px; border-radius:50%; overflow:hidden; margin:0 auto; border:1px solid #cbd5e1; background:#000;">
+              <img src="${esc(currentImg)}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            </div>
+          </div>
+          <div>
+            <span style="font-size:9.5px; font-family:'DM Mono',monospace; color:#16a34a; font-weight:bold; display:block; margin-bottom:4px;">ẢNH MỚI XIN ĐỔI ➔</span>
+            <div style="width:64px; height:64px; border-radius:50%; overflow:hidden; margin:0 auto; border:2px solid #16a34a; background:#000;">
+              <img src="${esc(newImg)}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:auto; padding-top:4px;">
+          <button type="button" class="btn-approve-photo-req button" data-req-id="${req.id}" style="flex:1; background:#16a34a; color:#fff; border-color:#16a34a; padding:6px 12px; font-size:11px; font-weight:bold;">
+            ✅ Duyệt &amp; Đăng Web
+          </button>
+          <button type="button" class="btn-reject-photo-req button alt remove" data-req-id="${req.id}" style="padding:6px 10px; font-size:11px;">
+            ✕ Từ chối
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach Approve Events
+  container.querySelectorAll('.btn-approve-photo-req').forEach(btn => {
+    btn.onclick = async () => {
+      const reqId = btn.dataset.reqId;
+      const targetReq = requests.find(r => r.id === reqId);
+      if (!targetReq) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Đang duyệt...';
+
+      // 1. Update in data.artists
+      const artistIndex = (data.artists || []).findIndex(a => a.id === targetReq.artist_id || a.name === targetReq.artist_name || a.email === targetReq.artist_email);
+      if (artistIndex >= 0) {
+        data.artists[artistIndex].image = targetReq.requested_image;
+      }
+
+      // 2. Update cached data
+      saveData(data);
+
+      // 3. Update Supabase artists table
+      if (isSupabaseConfigured() && targetReq.artist_id) {
+        try {
+          await supabase.from('artists').update({ image: targetReq.requested_image }).eq('id', targetReq.artist_id);
+        } catch (err) {
+          console.warn('Lỗi cập nhật ảnh nghệ sĩ lên Supabase:', err);
+        }
+      }
+
+      // 4. Mark request approved
+      targetReq.status = 'approved';
+      targetReq.approved_at = new Date().toISOString();
+      localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(requests));
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('artist_photo_requests').update({ status: 'approved', approved_at: targetReq.approved_at }).eq('id', reqId);
+        } catch {}
+      }
+
+      // 5. Send in-app notification to artist
+      if (isSupabaseConfigured() && targetReq.artist_id) {
+        try {
+          await supabase.from('notifications').insert([{
+            artist_id: targetReq.artist_id,
+            title: 'Ảnh đại diện Website đã được phê duyệt',
+            message: 'Ban quản trị đã phê duyệt ảnh đại diện mới của bạn. Ảnh hiện đã xuất hiện trực tiếp trên trang chủ và trang nghệ sĩ uniflowslabel.com.',
+            type: 'info',
+            created_at: new Date().toISOString(),
+            read: false
+          }]);
+        } catch {}
+      }
+
+      showNotice(`✓ Đã duyệt ảnh mới cho nghệ sĩ "${targetReq.artist_name}" và cập nhật lên Website thành công!`);
+      await logAuditEvent('Duyệt ảnh nghệ sĩ', `Đã duyệt ảnh mới cho: ${targetReq.artist_name} (${targetReq.artist_id})`);
+      renderArtistSelector();
+      loadArtistPhotoRequests();
+    };
+  });
+
+  // Attach Reject Events
+  container.querySelectorAll('.btn-reject-photo-req').forEach(btn => {
+    btn.onclick = async () => {
+      const reqId = btn.dataset.reqId;
+      const targetReq = requests.find(r => r.id === reqId);
+      if (!targetReq) return;
+
+      const reason = prompt(`Lý do từ chối ảnh của "${targetReq.artist_name}" (tùy chọn):`, 'Ảnh chất lượng chưa đạt chuẩn hoặc sai tỉ lệ');
+      if (reason === null) return;
+
+      targetReq.status = 'rejected';
+      targetReq.reject_reason = reason;
+      targetReq.rejected_at = new Date().toISOString();
+      localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(requests));
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('artist_photo_requests').update({ status: 'rejected', reject_reason: reason }).eq('id', reqId);
+        } catch {}
+      }
+
+      showNotice(`✕ Đã từ chối yêu cầu đổi ảnh của "${targetReq.artist_name}".`);
+      loadArtistPhotoRequests();
+    };
+  });
+}
+
+function initArtistPhotoRequestsAdmin() {
+  loadArtistPhotoRequests();
+}
+
+// ============================================================================
+// 15. QUICK RELEASE CREATOR (ADMIN PHÁT HÀNH NHANH LÊN WEB VỚI PREVIEW 10S-30S)
+// ============================================================================
+function initQuickReleaseAdmin() {
+  const modal = document.querySelector('#quick-release-modal');
+  const openBtn = document.querySelector('#btn-open-quick-release-modal');
+  const closeBtn = document.querySelector('#close-quick-release-modal-btn');
+  const cancelBtn = document.querySelector('#cancel-quick-release-btn');
+  const form = document.querySelector('#quick-release-form');
+
+  const artistSelect = document.querySelector('#quick-rel-artist');
+  const titleInput = document.querySelector('#quick-rel-title');
+  const typeSelect = document.querySelector('#quick-rel-type');
+  const artFileInput = document.querySelector('#quick-rel-art-file');
+  const artUrlInput = document.querySelector('#quick-rel-art-url');
+  const artPreviewImg = document.querySelector('#quick-rel-art-preview');
+  const artStatusEl = document.querySelector('#quick-rel-art-status');
+
+  const audioFileInput = document.querySelector('#quick-rel-audio-file');
+  const audioUrlInput = document.querySelector('#quick-rel-audio-url');
+  const audioStatusEl = document.querySelector('#quick-rel-audio-status');
+  const audioPlayer = document.querySelector('#quick-rel-audio-element');
+
+  const startSlider = document.querySelector('#quick-rel-start-slider');
+  const startInput = document.querySelector('#quick-rel-start-input');
+  const totalLenEl = document.querySelector('#quick-rel-audio-total-len');
+  const snippetReadout = document.querySelector('#quick-rel-snippet-readout');
+  const testPlayBtn = document.querySelector('#quick-rel-test-play-btn');
+  const submitStatus = document.querySelector('#quick-rel-submit-status');
+
+  let activeSnippetDuration = 30;
+  let audioDuration = 180;
+  let testPlayTimer = null;
+  let isTestingSnippet = false;
+
+  let selectedCompressedArtworkFile = null;
+  let selectedAudioFile = null;
+
+  function formatTimeMinSec(secs) {
+    const s = Math.max(0, Math.floor(secs));
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+  }
+
+  function updateSnippetDisplay() {
+    const startSec = parseInt(startInput?.value || 30, 10);
+    const endSec = startSec + activeSnippetDuration;
+    if (snippetReadout) {
+      snippetReadout.textContent = `Đoạn phát: ${formatTimeMinSec(startSec)} ➔ ${formatTimeMinSec(endSec)} (${activeSnippetDuration}s)`;
+    }
+  }
+
+  function populateArtists() {
+    if (!artistSelect) return;
+    const artists = data.artists || [];
+    artistSelect.innerHTML = artists.map(a => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.id)})</option>`).join('');
+  }
+
+  if (openBtn && modal) {
+    openBtn.addEventListener('click', () => {
+      populateArtists();
+      if (titleInput) titleInput.value = '';
+      if (artUrlInput) artUrlInput.value = '';
+      if (artFileInput) artFileInput.value = '';
+      if (artStatusEl) artStatusEl.textContent = '';
+      if (audioFileInput) audioFileInput.value = '';
+      if (audioUrlInput) audioUrlInput.value = '';
+      if (audioStatusEl) audioStatusEl.textContent = '';
+      if (submitStatus) submitStatus.textContent = '';
+      selectedCompressedArtworkFile = null;
+      selectedAudioFile = null;
+      if (audioPlayer) audioPlayer.pause();
+      isTestingSnippet = false;
+      if (testPlayBtn) testPlayBtn.innerHTML = '<span>▶ Nghe Thử Đoạn Preview</span>';
+
+      modal.showModal();
+    });
+
+    const closeModal = () => {
+      if (audioPlayer) audioPlayer.pause();
+      clearTimeout(testPlayTimer);
+      modal.close();
+    };
+    closeBtn?.addEventListener('click', closeModal);
+    cancelBtn?.addEventListener('click', closeModal);
+
+    // Duration preset buttons
+    modal.querySelectorAll('.btn-snippet-dur').forEach(btn => {
+      btn.addEventListener('click', () => {
+        modal.querySelectorAll('.btn-snippet-dur').forEach(b => {
+          b.style.background = '#fff';
+          b.style.color = 'inherit';
+          b.style.borderColor = 'var(--ink)';
+        });
+        btn.style.background = '#0f172a';
+        btn.style.color = '#d8ff48';
+        btn.style.borderColor = '#0f172a';
+        activeSnippetDuration = parseInt(btn.dataset.sec, 10);
+        updateSnippetDisplay();
+      });
+    });
+
+    // Slider & Start input synchronization
+    startSlider?.addEventListener('input', (e) => {
+      if (startInput) startInput.value = e.target.value;
+      updateSnippetDisplay();
+    });
+    startInput?.addEventListener('input', (e) => {
+      if (startSlider) startSlider.value = e.target.value;
+      updateSnippetDisplay();
+    });
+
+    // Artwork file auto-compression (1:1 square, 1200x1200, WebP)
+    artFileInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (artStatusEl) {
+        artStatusEl.textContent = 'Đang tự động nén vuông 1:1 WebP...';
+        artStatusEl.style.color = '#0284c7';
+      }
+      try {
+        const res = await compressImageFile(file, {
+          maxWidth: 1200,
+          maxHeight: 1200,
+          square: true,
+          quality: 0.86,
+          format: 'image/webp'
+        });
+        selectedCompressedArtworkFile = res.file;
+        if (artPreviewImg) artPreviewImg.src = res.dataUrl;
+        if (artStatusEl) {
+          artStatusEl.innerHTML = `✓ Đã nén: <b>${res.originalSizeFormatted} ➔ ${res.compressedSizeFormatted} (-${res.savedPercent}%)</b>`;
+          artStatusEl.style.color = '#15803d';
+        }
+      } catch (err) {
+        if (artStatusEl) {
+          artStatusEl.textContent = `Lỗi nén ảnh: ${err.message}`;
+          artStatusEl.style.color = '#ef4444';
+        }
+      }
+    });
+
+    artUrlInput?.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url && artPreviewImg) {
+        artPreviewImg.src = url;
+        selectedCompressedArtworkFile = null;
+      }
+    });
+
+    // Audio file loading into audio element for preview calculation
+    audioFileInput?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedAudioFile = file;
+      const objectUrl = URL.createObjectURL(file);
+      if (audioPlayer) {
+        audioPlayer.src = objectUrl;
+        audioPlayer.load();
+      }
+      if (audioStatusEl) {
+        audioStatusEl.textContent = `✓ Đã nạp tệp: ${file.name} (${formatBytes(file.size)})`;
+        audioStatusEl.style.color = '#15803d';
+      }
+    });
+
+    audioUrlInput?.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url && audioPlayer) {
+        audioPlayer.src = url;
+        audioPlayer.load();
+        selectedAudioFile = null;
+      }
+    });
+
+    // When audio metadata is loaded
+    audioPlayer?.addEventListener('loadedmetadata', () => {
+      audioDuration = Math.floor(audioPlayer.duration || 180);
+      if (totalLenEl) {
+        totalLenEl.textContent = `Tổng thời lượng: ${formatTimeMinSec(audioDuration)}`;
+      }
+      if (startSlider) {
+        const maxStart = Math.max(10, audioDuration - activeSnippetDuration);
+        startSlider.max = maxStart;
+        if (parseInt(startSlider.value, 10) > maxStart) {
+          startSlider.value = Math.floor(maxStart / 2);
+          if (startInput) startInput.value = startSlider.value;
+        }
+      }
+      updateSnippetDisplay();
+    });
+
+    // Test Play Snippet Button
+    testPlayBtn?.addEventListener('click', () => {
+      if (!audioPlayer || !audioPlayer.src) {
+        alert('Vui lòng chọn tệp Audio hoặc dán URL nhạc trước khi nghe thử.');
+        return;
+      }
+
+      if (isTestingSnippet) {
+        audioPlayer.pause();
+        clearTimeout(testPlayTimer);
+        isTestingSnippet = false;
+        testPlayBtn.innerHTML = '<span>▶ Nghe Thử Đoạn Preview</span>';
+        return;
+      }
+
+      const startSec = parseInt(startInput?.value || 30, 10);
+      audioPlayer.currentTime = startSec;
+      audioPlayer.play().then(() => {
+        isTestingSnippet = true;
+        testPlayBtn.innerHTML = '<span>⏹ Dừng Nghe Thử</span>';
+
+        clearTimeout(testPlayTimer);
+        testPlayTimer = setTimeout(() => {
+          audioPlayer.pause();
+          isTestingSnippet = false;
+          testPlayBtn.innerHTML = '<span>▶ Nghe Thử Đoạn Preview</span>';
+        }, activeSnippetDuration * 1000);
+      }).catch(err => {
+        alert(`Không thể phát âm thanh: ${err.message}`);
+      });
+    });
+
+    // Submit Quick Release Form
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const artistId = artistSelect?.value;
+      const title = titleInput?.value.trim();
+      const type = typeSelect?.value || 'Single';
+      const startSec = parseInt(startInput?.value || 30, 10);
+
+      if (!artistId || !title) {
+        alert('Vui lòng chọn nghệ sĩ và nhập tên bài hát.');
+        return;
+      }
+
+      const submitBtn = document.querySelector('#submit-quick-release-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Đang tải lên & phát hành...';
+      }
+      if (submitStatus) submitStatus.textContent = 'Đang tải file lên đám mây...';
+
+      try {
+        // 1. Upload Artwork
+        let finalArtworkUrl = artUrlInput?.value.trim() || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=85';
+        if (selectedCompressedArtworkFile) {
+          finalArtworkUrl = await uploadImageSmart(selectedCompressedArtworkFile, `artwork_${slug(title)}_${Date.now()}`);
+        }
+
+        // 2. Upload Audio
+        let finalAudioUrl = audioUrlInput?.value.trim() || '';
+        if (selectedAudioFile) {
+          if (isSupabaseConfigured()) {
+            finalAudioUrl = await uploadAudioFile(selectedAudioFile, `master_${slug(title)}_${Date.now()}`);
+          } else {
+            finalAudioUrl = URL.createObjectURL(selectedAudioFile);
+          }
+        }
+
+        const cleanSlug = slug(title);
+        const newReleaseId = Date.now();
+        const todayDate = new Date().toISOString().split('T')[0];
+
+        // Find artist
+        const targetArtist = (data.artists || []).find(a => a.id === artistId);
+        if (!targetArtist) throw new Error('Không tìm thấy thông tin nghệ sĩ được chọn');
+
+        if (!Array.isArray(targetArtist.products)) {
+          targetArtist.products = [];
+        }
+
+        // Release Product Object
+        const releaseObj = {
+          id: newReleaseId,
+          title,
+          type,
+          slug: cleanSlug,
+          submissionStatus: 'Đã phát hành',
+          releaseDate: todayDate,
+          artworkUrl: finalArtworkUrl,
+          audioUrl: finalAudioUrl,
+          previewStart: startSec,
+          previewDuration: activeSnippetDuration,
+          previewMode: 'custom',
+          previewEnabled: true,
+          streams: '0',
+          revenue: '0',
+          links: {
+            spotify: `https://open.spotify.com/search/${encodeURIComponent(title + ' ' + targetArtist.name)}`,
+            apple: `https://music.apple.com/us/search?term=${encodeURIComponent(title + ' ' + targetArtist.name)}`,
+            youtube: `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' ' + targetArtist.name)}`
+          },
+          metadata: {
+            previewStart: startSec,
+            previewDuration: activeSnippetDuration,
+            previewMode: 'custom',
+            previewEnabled: true
+          }
+        };
+
+        // Prepend to artist products
+        targetArtist.products.unshift(releaseObj);
+
+        // Save data to localStorage
+        saveData(data);
+
+        // Sync to Supabase releases table
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from('releases').upsert({
+              id: newReleaseId,
+              artist_id: artistId,
+              title,
+              type,
+              slug: cleanSlug,
+              submission_status: 'Đã phát hành',
+              artwork_url: finalArtworkUrl,
+              audio_url: finalAudioUrl,
+              links: releaseObj.links,
+              metadata: releaseObj.metadata,
+              created_at: new Date().toISOString()
+            });
+          } catch (dbErr) {
+            console.warn('Lỗi lưu release lên Supabase:', dbErr);
+          }
+        }
+
+        modal.close();
+
+        const smartLinkUrl = `${location.origin}/listen?release=${encodeURIComponent(cleanSlug)}`;
+        const artistPageUrl = `${location.origin}/artist-detail?id=${encodeURIComponent(artistId)}`;
+
+        alert(`🎉 PHÁT HÀNH NHANH THÀNH CÔNG!\n\n` +
+          `• Tác phẩm: "${title}" (${type})\n` +
+          `• Nghệ sĩ: ${targetArtist.name}\n` +
+          `• Đoạn preview: ${formatTimeMinSec(startSec)} ➔ ${formatTimeMinSec(startSec + activeSnippetDuration)} (${activeSnippetDuration}s)\n\n` +
+          `Đã đưa lên Website và tạo SmartLink thành công!\n` +
+          `SmartLink: ${smartLinkUrl}\n` +
+          `Trang nghệ sĩ: ${artistPageUrl}`);
+
+        showNotice(`✓ Đã phát hành nhanh "${title}" lên Web & tạo SmartLink thành công!`);
+        await logAuditEvent('Phát hành nhanh', `Đã phát hành "${title}" cho nghệ sĩ ${targetArtist.name} (Slug: ${cleanSlug})`);
+
+        // Refresh releases reviewer
+        loadReleasesQueue();
+      } catch (err) {
+        alert(`Lỗi phát hành nhanh: ${err.message}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Phát Hành Lên Web Ngay';
+        }
+        if (submitStatus) submitStatus.textContent = '';
+      }
+    });
+  }
+}
+
+// ============================================================================
+// 16. STANDALONE IMAGE OPTIMIZER & CLOUD TOOL IN ADMIN
+// ============================================================================
+function initImageOptimizerAdmin() {
+  const modal = document.querySelector('#modal-admin-image-optimizer');
+  const openBtn = document.querySelector('#btn-open-img-optimizer-modal');
+  const closeBtn = document.querySelector('#close-img-optimizer-dialog-btn');
+
+  const maxWidthSelect = document.querySelector('#opt-tool-max-width');
+  const qualitySelect = document.querySelector('#opt-tool-quality');
+  const squareCheck = document.querySelector('#opt-tool-square');
+  const dropzone = document.querySelector('#opt-tool-dropzone');
+  const fileInput = document.querySelector('#opt-tool-file-input');
+  const progressEl = document.querySelector('#opt-tool-progress');
+  const resultsContainer = document.querySelector('#opt-tool-results');
+
+  if (openBtn && modal) {
+    openBtn.addEventListener('click', () => modal.showModal());
+    closeBtn?.addEventListener('click', () => modal.close());
+
+    const handleFiles = async (files) => {
+      if (!files || files.length === 0) return;
+      const maxWidth = parseInt(maxWidthSelect?.value || 1600, 10);
+      const quality = parseFloat(qualitySelect?.value || 0.85);
+      const square = squareCheck?.checked || false;
+
+      if (progressEl) {
+        progressEl.style.display = 'block';
+        progressEl.textContent = `Đang nén & tối ưu hóa ${files.length} ảnh...`;
+      }
+
+      try {
+        const compressedList = await batchCompressImages(files, {
+          maxWidth,
+          maxHeight: maxWidth,
+          quality,
+          square,
+          format: 'image/webp'
+        }, (p) => {
+          if (progressEl) {
+            progressEl.textContent = `Đang xử lý ${p.current}/${p.total} (${p.percent}%)...`;
+          }
+        });
+
+        if (resultsContainer && (resultsContainer.querySelector('.empty-opt-msg') || resultsContainer.innerHTML.includes('Chưa có ảnh'))) {
+          resultsContainer.innerHTML = '';
+        }
+
+        for (const item of compressedList) {
+          if (!item.success) continue;
+          const res = item.result;
+          const publicUrl = await uploadImageSmart(res.file, `opt_${Date.now()}`);
+
+          const card = document.createElement('div');
+          card.className = 'opt-result-card';
+          card.style.cssText = 'background:#fff; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 1px 3px rgba(0,0,0,0.06);';
+          card.innerHTML = `
+            <div style="aspect-ratio:16/10; background:#0f172a; overflow:hidden; position:relative;">
+              <img src="${res.dataUrl}" style="width:100%; height:100%; object-fit:cover; display:block;">
+              <span style="position:absolute; bottom:6px; right:6px; background:#d8ff48; color:#000; font-family:'DM Mono',monospace; font-size:10px; font-weight:900; padding:2px 6px; border-radius:3px;">
+                -${res.savedPercent}%
+              </span>
+            </div>
+            <div style="padding:10px; display:flex; flex-direction:column; gap:6px; flex:1;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-family:'DM Mono',monospace;">
+                <span style="color:#64748b;">${res.originalSizeFormatted}</span>
+                <span style="color:#16a34a; font-weight:bold;">➔ ${res.compressedSizeFormatted}</span>
+              </div>
+              <input type="text" readonly value="${esc(publicUrl)}" style="font-size:10.5px; font-family:'DM Mono',monospace; padding:4px 6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; width:100%;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:auto; padding-top:6px;">
+                <button type="button" class="btn-copy-url button alt" style="padding:4px 6px; font-size:10px; font-weight:bold;">📋 Copy URL</button>
+                <button type="button" class="btn-copy-md button alt" style="padding:4px 6px; font-size:10px; font-weight:bold;">Markdown</button>
+              </div>
+            </div>
+          `;
+
+          card.querySelector('.btn-copy-url')?.addEventListener('click', async (e) => {
+            await navigator.clipboard.writeText(publicUrl);
+            e.target.textContent = '✓ Đã chép!';
+            setTimeout(() => { e.target.textContent = '📋 Copy URL'; }, 2000);
+          });
+
+          card.querySelector('.btn-copy-md')?.addEventListener('click', async (e) => {
+            await navigator.clipboard.writeText(`![Image](${publicUrl})`);
+            e.target.textContent = '✓ Đã chép MD!';
+            setTimeout(() => { e.target.textContent = 'Markdown'; }, 2000);
+          });
+
+          resultsContainer?.prepend(card);
+        }
+
+        if (progressEl) {
+          progressEl.textContent = `✓ Đã tối ưu hóa xong ${compressedList.length} ảnh!`;
+          setTimeout(() => { progressEl.style.display = 'none'; }, 3500);
+        }
+      } catch (err) {
+        if (progressEl) {
+          progressEl.textContent = `Lỗi: ${err.message}`;
+          progressEl.style.color = '#ef4444';
+        }
+      }
+    };
+
+    dropzone?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+      e.target.value = '';
+    });
+
+    dropzone?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.style.background = '#e0f2fe';
+    });
+    dropzone?.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropzone.style.background = '#f0f9ff';
+    });
+    dropzone?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.background = '#f0f9ff';
+      if (e.dataTransfer?.files?.length) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+  }
+}
+
 initAccountProvisioning();
 initShortlinksAdmin();
 initSupabaseCloudAdmin();
 initArtistNotificationDispatcher();
 initAnnouncementsQuickSave();
 initEmailConfigAdmin();
+initArtistPhotoRequestsAdmin();
+initQuickReleaseAdmin();
+initImageOptimizerAdmin();
 render();
 renderShortlinksAdmin();
+
 
 
 

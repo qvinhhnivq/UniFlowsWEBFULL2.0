@@ -453,7 +453,7 @@ export async function sendAccountHandoverEmail(artist) {
       Ban quản trị <b>UniFLOWs Record Label</b> trân trọng hoan nghênh bạn chính thức gia nhập hệ sinh thái phát hành & phân phối âm nhạc độc lập của chúng tôi!
     </p>
     <p style="color:#374151;font-family:'Manrope',sans-serif;">
-      Dưới đây là thông tin định danh & mật khẩu đăng nhập vào <b>Artist Portal</b> dành riêng cho bạn để quản lý các bản phát hành, tải lên Master WAV, theo dõi số liệu streaming toàn cầu và nhận thanh toán doanh thu:
+      Dưới đây là thông tin định danh & mật khẩu đăng nhập vào <b>UniPORTAL (by UniENGINE)</b> dành riêng cho bạn để quản lý các bản phát hành, tải lên Master WAV, theo dõi số liệu streaming toàn cầu và nhận thanh toán doanh thu:
     </p>
 
     <!-- Handover Vault Card -->
@@ -498,20 +498,20 @@ export async function sendAccountHandoverEmail(artist) {
     </div>
 
     <div style="background-color:#fefce8;border-left:4px solid #eab308;border:1px solid #fef08a;padding:14px 18px;font-size:12.5px;color:#854d0e;line-height:1.5;">
-      ⚡ <b>Lưu ý bảo mật:</b> Vui lòng truy cập Portal và đổi mật khẩu trong lần đăng nhập đầu tiên tại mục <i>Cài đặt hồ sơ</i> để bảo vệ quyền riêng tư và dữ liệu đối soát của bạn.
+      ⚡ <b>Lưu ý bảo mật:</b> Vui lòng truy cập UniPORTAL và đổi mật khẩu trong lần đăng nhập đầu tiên tại mục <i>Cài đặt hồ sơ</i> để bảo vệ quyền riêng tư và dữ liệu đối soát của bạn.
     </div>
   `;
 
   const html = buildHtmlEmailLayout({
     kicker: '01 / ACCOUNT HANDOVER',
-    preheader: `Thông tin tài khoản Artist Portal UniFLOWs của bạn: Username: ${artist.username || artist.id}`,
-    headerTitle: 'Phiếu Bàn Giao Tài Khoản Artist Portal',
+    preheader: `Thông tin tài khoản UniPORTAL (by UniENGINE) của bạn: Username: ${artist.username || artist.id}`,
+    headerTitle: 'Phiếu Bàn Giao Tài Khoản UniPORTAL (by UniENGINE)',
     badgeText: 'MỚI KÍCH HOẠT',
     badgeColor: '#000000',
     badgeBg: '#d8ff48',
     badgeBorder: '#000000',
     contentHtml,
-    actionBtnText: 'Đăng Nhập Artist Portal Ngay',
+    actionBtnText: 'Đăng Nhập UniPORTAL (by UniENGINE) Ngay',
     actionBtnUrl: loginUrl,
     footerNote: 'Email này chứa thông tin bảo mật đăng nhập hệ thống.'
   });
@@ -555,7 +555,7 @@ export async function sendReleaseRevisionEmail(artist, release, feedback) {
     </div>
 
     <p style="font-size:13px;color:#6b7280;line-height:1.6;font-family:'Manrope',sans-serif;">
-      Sau khi hoàn tất chỉnh sửa, vui lòng vào Artist Portal để tải lại file hoặc cập nhật thông tin. Đội ngũ kiểm duyệt sẽ tiến hành duyệt lại trong vòng 24 giờ làm việc.
+      Sau khi hoàn tất chỉnh sửa, vui lòng vào UniPORTAL (by UniENGINE) để tải lại file hoặc cập nhật thông tin. Đội ngũ kiểm duyệt sẽ tiến hành duyệt lại trong vòng 24 giờ làm việc.
     </p>
   `;
 
@@ -568,40 +568,42 @@ export async function sendReleaseRevisionEmail(artist, release, feedback) {
     badgeBg: '#fef2f2',
     badgeBorder: '#fecaca',
     contentHtml,
-    actionBtnText: 'Mở Portal & Cập Nhật Bài Hát',
-    actionBtnUrl: portalUrl,
-    footerNote: 'Nếu bạn có thắc mắc về tiêu chuẩn âm thanh hoặc bản quyền sample, vui lòng liên hệ trực tiếp người phụ trách.'
+    actionBtnText: 'Mở UniPORTAL Cập Nhật Lại',
+    actionBtnUrl: releaseUrl
   });
 
   return await sendEmail({ to: artist.email, subject, html });
 }
 
 // ----------------------------------------------------------------------------
-// 3. SỰ KIỆN: TỪ CHỐI BẢN PHÁT HÀNH (RELEASE REJECTED)
+// 3. SỰ KIỆN: TỪ CHỐI PHÁT HÀNH HOÀN TOÀN (REJECT RELEASE)
 // ----------------------------------------------------------------------------
-export async function sendReleaseRejectedEmail(artist, release, reason) {
+export async function sendReleaseRejectedEmail({ artist, release, reason }) {
   const cfg = getEmailConfig();
   if (!cfg.enabled || !cfg.triggers.onReleaseRejected) return { skipped: true };
-  if (!artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email.' };
+  if (!artist || !artist.email) return { success: false, error: 'Nghệ sĩ chưa có địa chỉ email trong hồ sơ.' };
 
+  const subject = `❌ [UniFLOWs A&R] Thông báo từ chối phát hành: ${release.title}`;
   const origin = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')) 
     ? window.location.origin 
     : 'https://uniflowslabel.com';
   const portalUrl = `${origin}/portal.html?tab=releases`;
-  const subject = `❌ [UniFLOWs] Thông báo xét duyệt bản phát hành "${release.title}"`;
 
   const contentHtml = `
     <p style="font-size:16px;color:#111827;font-weight:700;margin-top:0;font-family:'Manrope',sans-serif;">
-      Chào ${artist.name},
+      Chào ${artist.name || 'Nghệ sĩ'},
     </p>
-    <p style="color:#374151;font-family:'Manrope',sans-serif;">
-      Rất tiếc, sau khi thẩm định kỹ thuật và chính sách bản quyền âm nhạc, bản phát hành <b>"${release.title}"</b> chưa đủ điều kiện để đưa vào luồng phân phối thương mại trên hệ thống của UniFLOWs.
+    <p style="color:#374151;line-height:1.65;font-family:'Manrope',sans-serif;">
+      Hội đồng thẩm định âm nhạc và A&R của <b>UniFLOWs Label</b> đã hoàn tất quá trình nghe thẩm định bản phát hành <b>"${release.title}"</b> của bạn.
+    </p>
+    <p style="color:#374151;line-height:1.65;font-family:'Manrope',sans-serif;">
+      Rất tiếc, trong đợt kiểm duyệt này, bản phát hành chưa đáp ứng đủ tiêu chuẩn phân phối thương mại lên các DSP toàn cầu theo chính sách của hãng.
     </p>
 
-    <!-- Reason Box -->
-    <div style="background-color:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;padding:18px 20px;margin:22px 0;">
+    <!-- Feedback Card -->
+    <div style="background-color:#fef2f2;border:1px solid #fecaca;border-left:4px solid #ef4444;padding:18px 20px;margin:22px 0;">
       <span style="display:block;font-family:'DM Mono',Courier,monospace;color:#dc2626;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;margin-bottom:6px;">
-        Lý do từ chối:
+        ⚠️ Lý do không tiếp nhận từ Ban Biên Tập:
       </span>
       <p style="margin:0;font-size:14px;color:#991b1b;white-space:pre-wrap;line-height:1.6;font-weight:500;">
         ${reason || 'Sản phẩm vi phạm bản quyền mẫu sample chưa được cấp phép (cleared sample), chất lượng âm thanh không đạt chuẩn thương mại hoặc thông tin tác giả/nhà sản xuất chưa được xác minh đầy đủ.'}
@@ -609,7 +611,7 @@ export async function sendReleaseRejectedEmail(artist, release, reason) {
     </div>
 
     <p style="font-size:13px;color:#6b7280;line-height:1.6;font-family:'Manrope',sans-serif;">
-      Bạn luôn có thể trao đổi thêm với bộ phận A&R hoặc tải lên các bản demo mới trên Artist Portal bất cứ lúc nào.
+      Bạn luôn có thể trao đổi thêm với bộ phận A&R hoặc tải lên các bản demo mới trên UniPORTAL (by UniENGINE) bất cứ lúc nào.
     </p>
   `;
 
@@ -732,7 +734,7 @@ export async function sendArtistNotificationEmail(artist, notif) {
     badgeBg: notif.type === 'important' ? '#fef2f2' : '#d8ff48',
     badgeBorder: notif.type === 'important' ? '#fecaca' : '#000000',
     contentHtml,
-    actionBtnText: notif.action_url ? 'Xem Chi Tiết Ngay' : 'Mở Artist Portal',
+    actionBtnText: notif.action_url ? 'Xem Chi Tiết Ngay' : 'Mở UniPORTAL (by UniENGINE)',
     actionBtnUrl: actionUrl
   });
 
@@ -810,7 +812,7 @@ export async function sendPayoutStatusEmail({ artist, payout, status, rejectionR
       </div>
 
       <p style="font-size:13px;color:#6b7280;line-height:1.6;font-family:'Manrope',sans-serif;">
-        Số dư của bạn đã được hoàn trả lại ví khả dụng trên hệ thống. Bạn có thể kiểm tra lại thông tin ngân hàng trong mục <i>Cài đặt hồ sơ</i> trên Artist Portal và gửi lại yêu cầu rút tiền bất cứ lúc nào.
+        Số dư của bạn đã được hoàn trả lại ví khả dụng trên hệ thống. Bạn có thể kiểm tra lại thông tin ngân hàng trong mục <i>Cài đặt hồ sơ</i> trên UniPORTAL (by UniENGINE) và gửi lại yêu cầu rút tiền bất cứ lúc nào.
       </p>
     `;
   } else {
@@ -868,7 +870,7 @@ export async function sendPayoutStatusEmail({ artist, payout, status, rejectionR
     badgeBg: isRejected ? '#fef2f2' : '#d8ff48',
     badgeBorder: isRejected ? '#fecaca' : '#000000',
     contentHtml,
-    actionBtnText: 'Mở Artist Portal & Đối Soát',
+    actionBtnText: 'Mở UniPORTAL (by UniENGINE) & Đối Soát',
     actionBtnUrl: portalUrl
   });
 

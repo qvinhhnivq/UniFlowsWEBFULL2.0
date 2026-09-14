@@ -210,6 +210,8 @@
           </div>
 
           <button type="button" id="admin-refresh-releases-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">🔄 Làm mới</button>
+          <button type="button" id="btn-open-quick-release-modal" class="button" style="background:#16a34a;color:#fff;border-color:#16a34a;padding:7px 16px;font-size:11.5px;font-weight:bold;margin-left:auto;display:inline-flex;align-items:center;gap:6px;">⚡ + Phát Hành Nhanh Lên Web (Quick Release)</button>
+          <button type="button" id="btn-open-img-optimizer-modal" class="button alt" style="padding:7px 14px;font-size:11.5px;font-weight:bold;">🖼️ Tiện Ích Nén Ảnh WebP</button>
         </div>
 
         <div id="releases-reviewer">
@@ -312,6 +314,23 @@
           <div id="artist-selector-grid" class="artist-picker-grid"></div>
         </div>
 
+        <!-- Section: Artist Photo Change Requests Reviewer -->
+        <div id="artist-photo-requests-panel" style="background:#fff; border:2px solid #0284c7; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 4px 14px rgba(2,132,199,0.08);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:14px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:20px;">📸</span>
+              <div>
+                <h3 style="margin:0; font-size:16px; color:#0369a1;">Yêu Cầu Đổi Ảnh Đại Diện Website Từ Nghệ Sĩ</h3>
+                <p style="margin:2px 0 0; font-size:11.5px; color:#64748b;">Nghệ sĩ chủ động gửi ảnh đại diện mới qua UniPORTAL. Admin duyệt 1-click để đưa thẳng lên Web.</p>
+              </div>
+            </div>
+            <span id="admin-photo-requests-counter" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-family:'DM Mono',monospace; font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px;">0 chờ duyệt</span>
+          </div>
+          <div id="admin-photo-requests-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:14px;">
+            <div style="color:#94a3b8; font-size:12px; font-style:italic; padding:10px 0;">Không có yêu cầu đổi ảnh nào đang chờ duyệt.</div>
+          </div>
+        </div>
+
         <div id="artists-editor"></div>
 
         <!-- Section 03.1: Trung Tâm Gửi Thông Báo & Tin Nhắn Tới Nghệ Sĩ -->
@@ -322,7 +341,7 @@
                 <span style="font-size:18px;">📢</span>
                 <h3 style="font-size: 17px; margin: 0; color: #1e3a8a;">Trung Tâm Gửi Thông Báo Nghệ Sĩ (Artist Notification Dispatcher)</h3>
               </div>
-              <p style="font-size: 12px; color: #64748b; margin: 4px 0 0;">Gửi thông báo trực tiếp đến chuông thông báo (Bell) của Nghệ sĩ trên Artist Portal và đồng bộ vào bảng Supabase <code>notifications</code>.</p>
+              <p style="font-size: 12px; color: #64748b; margin: 4px 0 0;">Gửi thông báo trực tiếp đến chuông thông báo (Bell) của Nghệ sĩ trên UniPORTAL (by UniENGINE) và đồng bộ vào bảng Supabase <code>notifications</code>.</p>
             </div>
             <span class="kicker" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;">Direct Dispatch</span>
           </div>
@@ -364,7 +383,7 @@
             <div class="field" style="grid-column: 1 / -1;">
               <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600;">
                 <input type="checkbox" id="notif-sync-banner" checked>
-                Đồng thời hiển thị trên Banner Thông Báo Đầu Trang của Artist Portal (Portal Broadcast)
+                Đồng thời hiển thị trên Banner Thông Báo Đầu Trang của UniPORTAL (Portal Broadcast)
               </label>
             </div>
           </div>
@@ -549,8 +568,8 @@
         <div style="background: #fff; border: 1px solid var(--ink); padding: 20px; margin-top: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
             <div>
-              <h3 style="font-size: 16px; margin: 0;">03 / Thông báo Banner Cổng Nghệ Sĩ (Artist Portal Top Banner)</h3>
-              <p style="font-size: 12px; opacity: 0.75; margin: 4px 0 0;">Thông báo dạng thanh ghim (Pin Banner) hiển thị ở đầu trang Artist Portal.</p>
+              <h3 style="font-size: 16px; margin: 0;">03 / Thông báo Banner Cổng Nghệ Sĩ (UniPORTAL Top Banner)</h3>
+              <p style="font-size: 12px; opacity: 0.75; margin: 4px 0 0;">Thông báo dạng thanh ghim (Pin Banner) hiển thị ở đầu trang UniPORTAL (by UniENGINE).</p>
             </div>
             <div style="display:flex; gap:8px;">
               <button type="button" id="add-announcement-btn" class="button alt" style="padding: 6px 12px; font-size: 11px;">+ Thêm Banner mới</button>
@@ -815,7 +834,7 @@
               <h3 style="font-size:16px;margin:4px 0 6px;letter-spacing:-0.03em;">💿 3.1. Thêm từ Kho Bản Phát Hành (Portal Roster)</h3>
               <p style="font-size:12px;color:#64748b;margin:0 0 14px;">Chọn bất kỳ bài hát nào đã phát hành trong hệ thống để đưa vào thư viện UniPUBLISHING.</p>
               <div class="field">
-                <label style="font-weight:700;">Chọn tác phẩm từ Artist Portal:</label>
+                <label style="font-weight:700;">Chọn tác phẩm từ UniPORTAL (by UniENGINE):</label>
                 <select id="portal-release-to-sync-select" style="padding:10px;background:#fff;border:1px solid var(--ink);border-radius:6px;font-size:13px;width:100%;">
                   <!-- Dynamically Injected -->
                 </select>
@@ -1672,6 +1691,187 @@
     </div>
     <div style="padding:20px;overflow-y:auto;max-height:calc(90vh - 180px);background:#0f172a;">
       <pre id="schema-sql-content-preview" style="color:#38bdf8;font-family:'DM Mono',monospace;font-size:11.5px;margin:0;white-space:pre-wrap;line-height:1.5;"></pre>
+    </div>
+  </dialog>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: QUICK RELEASE CREATOR (PHÁT HÀNH NHANH LÊN WEB)         -->
+  <!-- ============================================================== -->
+  <dialog id="quick-release-modal" style="max-width:min(680px, 94vw);width:100%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 65px rgba(0,0,0,0.5);color:var(--ink);">
+    <div style="padding:24px;">
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; border-bottom:1px solid #e2e8f0; padding-bottom:14px;">
+        <div>
+          <span style="font-family:'DM Mono',monospace; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#16a34a; font-weight:800; display:block; margin-bottom:4px;">⚡ FAST WEB INGESTION &amp; SMARTLINK</span>
+          <h2 style="margin:0; font-size:22px; letter-spacing:-0.03em;">Phát Hành Nhanh Lên Web</h2>
+          <p style="margin:4px 0 0; font-size:12px; color:#64748b;">Nhập nhanh thông tin, chọn 10–30s đoạn nhạc preview để tự động phát hành lên website và tạo SmartLink.</p>
+        </div>
+        <button type="button" id="close-quick-release-modal-btn" class="button alt" style="padding:4px 10px; font-size:12px;">✕</button>
+      </div>
+
+      <form id="quick-release-form">
+        <div class="mini-grid" style="grid-template-columns: 1fr 1fr; gap:14px;">
+          <!-- 1. Select Artist -->
+          <div class="field" style="grid-column:1/-1;">
+            <label style="font-weight:700;">Nghệ sĩ phát hành <span style="color:#ef4444;">*</span></label>
+            <select id="quick-rel-artist" required style="width:100%; padding:9px 12px; border:1px solid var(--ink); background:#fff; font-size:13px; font-weight:600;">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <!-- 2. Track Title -->
+          <div class="field">
+            <label style="font-weight:700;">Tên bản phát hành (Title) <span style="color:#ef4444;">*</span></label>
+            <input id="quick-rel-title" placeholder="Ví dụ: Lạc Trôi, Mùa Hạ 2019..." required style="padding:9px 12px; border:1px solid var(--ink); font-size:13px; width:100%;">
+          </div>
+
+          <!-- 3. Release Type -->
+          <div class="field">
+            <label style="font-weight:700;">Loại phát hành</label>
+            <select id="quick-rel-type" style="width:100%; padding:9px 12px; border:1px solid var(--ink); background:#fff; font-size:13px;">
+              <option value="Single">Single (Đĩa đơn)</option>
+              <option value="EP">EP (Đĩa mở rộng)</option>
+              <option value="Album">Album</option>
+              <option value="Remix">Remix / Bootleg</option>
+            </select>
+          </div>
+
+          <!-- 4. Artwork Cover (1:1) -->
+          <div class="field" style="grid-column:1/-1;">
+            <label style="font-weight:700;">Ảnh Artwork Bìa (Vuông 1:1) <span style="color:#ef4444;">*</span></label>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div style="width:72px; height:72px; background:#0f172a; border:1px solid var(--ink); border-radius:6px; overflow:hidden; flex-shrink:0;">
+                <img id="quick-rel-art-preview" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=400&q=80" style="width:100%; height:100%; object-fit:cover; display:block;">
+              </div>
+              <div style="flex:1;">
+                <input type="file" id="quick-rel-art-file" accept="image/*" style="font-size:11.5px; width:100%;">
+                <input type="url" id="quick-rel-art-url" placeholder="Hoặc dán URL ảnh artwork (https://...)" style="margin-top:6px; padding:6px 10px; font-size:11.5px; width:100%; border:1px solid #cbd5e1; border-radius:4px;">
+                <span id="quick-rel-art-status" style="font-size:11px; color:#15803d; font-weight:600; display:block; margin-top:3px;"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Audio File / URL -->
+          <div class="field" style="grid-column:1/-1;">
+            <label style="font-weight:700;">Tệp Âm Thanh (Master WAV/MP3) <span style="color:#ef4444;">*</span></label>
+            <input type="file" id="quick-rel-audio-file" accept="audio/*" style="font-size:11.5px; width:100%; padding:6px 0;">
+            <input type="url" id="quick-rel-audio-url" placeholder="Hoặc dán URL âm thanh trực tiếp (https://...mp3/wav)" style="margin-top:6px; padding:7px 10px; font-size:12px; width:100%; border:1px solid #cbd5e1; border-radius:4px;">
+            <span id="quick-rel-audio-status" style="font-size:11px; color:#0284c7; font-weight:600; display:block; margin-top:3px;"></span>
+          </div>
+
+          <!-- 6. Interactive Preview Snippet Selector (10s-30s) -->
+          <div class="field" style="grid-column:1/-1; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:16px; margin-top:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+              <div>
+                <label style="font-weight:800; font-size:12.5px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px; display:block; margin:0;">
+                  🎧 Bộ Chọn Đoạn Nhạc Nghe Thử SmartLink (10s – 30s)
+                </label>
+                <span style="font-size:11px; color:#64748b;">Đoạn nhạc phát khi khán giả bấm nghe thử trên trang SmartLink /listen</span>
+              </div>
+              <div id="quick-rel-snippet-readout" style="font-family:'DM Mono',monospace; font-size:12px; font-weight:800; background:#d8ff48; color:#000; padding:4px 10px; border-radius:4px; border:1px solid #000;">
+                Đoạn phát: 00:30 ➔ 01:00 (30s)
+              </div>
+            </div>
+
+            <!-- Duration preset buttons -->
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+              <span style="font-size:11px; font-weight:700; color:#475569;">Thời lượng snippet:</span>
+              <button type="button" class="btn-snippet-dur button alt" data-sec="10" style="padding:4px 10px; font-size:11px; font-weight:700;">10 giây</button>
+              <button type="button" class="btn-snippet-dur button alt" data-sec="15" style="padding:4px 10px; font-size:11px; font-weight:700;">15 giây</button>
+              <button type="button" class="btn-snippet-dur button alt" data-sec="20" style="padding:4px 10px; font-size:11px; font-weight:700;">20 giây</button>
+              <button type="button" class="btn-snippet-dur button alt" data-sec="30" style="padding:4px 10px; font-size:11px; font-weight:700; background:#0f172a; color:#d8ff48; border-color:#0f172a;">30 giây</button>
+            </div>
+
+            <!-- Time Slider -->
+            <div style="margin-bottom:12px;">
+              <div style="display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:11px; color:#64748b; margin-bottom:4px;">
+                <span>00:00</span>
+                <span id="quick-rel-audio-total-len">Chưa tải file audio</span>
+              </div>
+              <input type="range" id="quick-rel-start-slider" min="0" max="180" step="1" value="30" style="width:100%; cursor:pointer; accent-color:#16a34a;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; flex-wrap:wrap; gap:8px;">
+                <label style="font-size:11px; font-weight:600; color:#334151;">Bắt đầu từ giây thứ: 
+                  <input type="number" id="quick-rel-start-input" min="0" value="30" style="width:65px; padding:3px 6px; font-family:'DM Mono',monospace; font-size:12px; font-weight:bold; border:1px solid #cbd5e1; border-radius:4px; text-align:center;">
+                  giây
+                </label>
+                <button type="button" id="quick-rel-test-play-btn" class="button" style="background:#0f172a; color:#d8ff48; border-color:#0f172a; padding:6px 14px; font-size:11px; font-weight:bold; display:inline-flex; align-items:center; gap:5px;">
+                  <span>▶ Nghe Thử Đoạn Preview</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Hidden Audio Player for testing snippet -->
+            <audio id="quick-rel-audio-element" preload="metadata" style="display:none;"></audio>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:18px; margin-top:18px; flex-wrap:wrap; gap:10px;">
+          <span id="quick-rel-submit-status" style="font-size:12px; font-weight:bold;"></span>
+          <div style="display:flex; gap:10px; margin-left:auto;">
+            <button type="button" id="cancel-quick-release-btn" class="button alt">Hủy bỏ</button>
+            <button type="submit" id="submit-quick-release-btn" class="button" style="background:#16a34a; color:#fff; border-color:#16a34a; font-weight:900; padding:10px 24px; font-size:13px;">
+              🚀 Phát Hành Lên Web Ngay
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: IMAGE OPTIMIZER & WEBP COMPRESSOR                       -->
+  <!-- ============================================================== -->
+  <dialog id="modal-admin-image-optimizer" style="max-width:860px;width:95%;border:2px solid var(--ink);padding:0;background:#fff;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.35);max-height:90vh;">
+    <div style="background:#0f172a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:10px;border-top-right-radius:10px;">
+      <div>
+        <span class="eyebrow" style="color:#d8ff48;margin:0;font-size:10px;">UniENGINE CLIENT-SIDE COMPRESSION</span>
+        <h2 style="font-size:18px;margin:2px 0 0;letter-spacing:-0.03em;">🖼️ Tiện Ích Nén Ảnh &amp; Tải Lên Đám Mây</h2>
+      </div>
+      <button type="button" class="close-btn" id="close-img-optimizer-dialog-btn" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <div style="padding:22px;max-height:calc(90vh - 120px);overflow-y:auto;">
+      <!-- Options Bar -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:11.5px;font-weight:bold;color:#475569;display:block;margin-bottom:4px;">Kích thước tối đa (Width):</label>
+          <select id="opt-tool-max-width" style="padding:6px;font-size:12px;width:100%;border:1px solid var(--ink);background:#fff;">
+            <option value="800">800px (Avatar / Nhỏ)</option>
+            <option value="1200">1200px (Artwork Vuông)</option>
+            <option value="1600" selected>1600px (Bài viết / Tiêu chuẩn)</option>
+            <option value="2400">2400px (Banner lớn)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11.5px;font-weight:bold;color:#475569;display:block;margin-bottom:4px;">Chất lượng nén (Quality):</label>
+          <select id="opt-tool-quality" style="padding:6px;font-size:12px;width:100%;border:1px solid var(--ink);background:#fff;">
+            <option value="0.75">75% (Siêu nhẹ - tối đa)</option>
+            <option value="0.85" selected>85% (Khuyên dùng - mắt thường không phân biệt)</option>
+            <option value="0.92">92% (High-res tối ưu)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11.5px;font-weight:bold;color:#475569;display:block;margin-bottom:4px;">Tỉ lệ ảnh:</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px;cursor:pointer;">
+            <input type="checkbox" id="opt-tool-square">
+            <span>Cắt vuông 1:1 (Center Crop)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Dropzone -->
+      <div id="opt-tool-dropzone" style="border:2px dashed #0284c7;background:#f0f9ff;border-radius:8px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px;transition:all 0.2s ease;">
+        <span style="font-size:24px;display:block;margin-bottom:6px;">📸</span>
+        <strong style="font-size:14px;color:#0369a1;display:block;margin-bottom:4px;">Kéo &amp; Thả nhiều ảnh vào đây hoặc bấm để chọn tệp</strong>
+        <span style="font-size:12px;color:#64748b;">Hỗ trợ JPG, PNG, WebP dung lượng lớn. Tự động nén WebP giảm ~90% dung lượng.</span>
+        <input type="file" id="opt-tool-file-input" multiple accept="image/*" style="display:none;">
+      </div>
+
+      <div id="opt-tool-progress" style="display:none;font-family:'DM Mono',monospace;font-size:12px;color:#0284c7;font-weight:bold;margin-bottom:12px;"></div>
+
+      <!-- Result Cards Container -->
+      <div id="opt-tool-results" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:14px;">
+        <div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:12.5px;padding:20px;">Chưa có ảnh nào được tải lên. Hãy chọn ảnh để trải nghiệm tốc độ nén!</div>
+      </div>
     </div>
   </dialog>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>UniFLOWs Distribution Portal</title>
+  <title>UniPORTAL (by UniENGINE) — UNIFLOWs</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
@@ -14,7 +14,7 @@
   <main class="portal">
     <!-- Left Navigation Sidebar -->
     <aside class="portal-side">
-      <a class="brand" href="index">UNIFLOWs<small>artist portal</small></a>
+      <a class="brand" href="index">UNIFLOWs<small>UniPORTAL (by UniENGINE)</small></a>
       <nav id="portal-nav">
         <a href="#overview" data-tab="tab-overview" class="active">
           <span>📊 Tổng quan</span>
@@ -74,6 +74,8 @@
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
               <span class="portal-verified-pill">✓ OFFICIAL ARTIST</span>
               <span id="portal-role-badge" style="display:none; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.4; padding: 3px 10px; border-radius: 4px; text-transform: uppercase;"></span>
+              <button id="btn-open-photo-request" type="button" class="portal-theme-pill" style="font-size:11px;padding:4px 12px;box-shadow:none;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:5px;">📷 Đổi ảnh Website</button>
+              <span id="portal-photo-req-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:#fef3c7;color:#b45309;border:1px solid #fde68a;">⏳ Chờ duyệt ảnh mới</span>
             </div>
             <h1 style="margin:0;font-size:clamp(30px,3.8vw,48px);letter-spacing:-0.05em;line-height:1.1;font-weight:800;">Xin chào, <em id="artist-display-name">Nghệ sĩ.</em></h1>
             <p id="portal-welcome-desc" style="margin:8px 0 0;font-size:14px;color:var(--portal-text-muted);font-weight:500;">Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP toàn cầu.</p>
@@ -1339,6 +1341,66 @@
             <button type="submit" class="button" style="background:#dc2626;color:#fff;border-color:#dc2626;font-weight:bold;">Gửi Yêu Cầu Gỡ Bài</button>
           </div>
         </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal: Artist Website Profile Photo Change Request -->
+  <dialog id="modal-artist-photo-request" style="padding:0; border:1px solid var(--portal-card-border); box-shadow:0 25px 60px rgba(0,0,0,0.5); border-radius:12px; max-width:min(540px, 94vw); width:100%; background:var(--portal-card-bg); color:var(--portal-text-main);">
+    <div style="padding:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; border-bottom:1px solid var(--portal-card-border); padding-bottom:14px;">
+        <div>
+          <span style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#0284c7; font-weight:800; display:block; margin-bottom:4px;">OFFICIAL ROSTER PROFILE</span>
+          <h3 style="margin:0; font-size:20px; letter-spacing:-0.03em;">Đổi Ảnh Đại Diện Website Chính</h3>
+        </div>
+        <button type="button" id="close-photo-modal-btn" class="button alt" style="padding:4px 10px; font-size:12px;">✕</button>
+      </div>
+
+      <p style="font-size:13px; color:var(--portal-text-muted); line-height:1.5; margin:0 0 18px;">
+        Ảnh đại diện mới sẽ hiển thị tại <b>Trang chủ</b>, danh sách <b>Nghệ sĩ (artists.html)</b> và <b>Trang cá nhân (artist.html)</b> của bạn trên uniflowslabel.com. Sau khi gửi, Admin sẽ kiểm duyệt và duyệt lên website.
+      </p>
+
+      <!-- Side by Side Preview -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; text-align:center;">
+        <div style="background:rgba(0,0,0,0.03); border:1px solid var(--portal-card-border); padding:12px; border-radius:8px;">
+          <span style="font-size:11px; font-family:'DM Mono',monospace; color:var(--portal-text-muted); display:block; margin-bottom:8px; font-weight:700;">ẢNH HIỆN TẠI TRÊN WEB</span>
+          <div style="width:100px; height:100px; margin:0 auto; border-radius:50%; overflow:hidden; border:2px solid var(--portal-card-border); background:#000;">
+            <img id="photo-modal-cur-img" src="" alt="Current" style="width:100%; height:100%; object-fit:cover; display:block;">
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.03); border:1px dashed #0284c7; padding:12px; border-radius:8px;">
+          <span style="font-size:11px; font-family:'DM Mono',monospace; color:#0284c7; display:block; margin-bottom:8px; font-weight:700;">ẢNH MỚI XEM TRƯỚC (1:1)</span>
+          <div style="width:100px; height:100px; margin:0 auto; border-radius:50%; overflow:hidden; border:2px solid #0284c7; background:#000;">
+            <img id="photo-modal-new-img" src="" alt="Preview" style="width:100%; height:100%; object-fit:cover; display:block;">
+          </div>
+        </div>
+      </div>
+
+      <!-- File Picker & Auto-Compression Status -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:6px;">Chọn tệp ảnh mới (Tự động nén vuông 1:1 siêu nét WebP):</label>
+        <input type="file" id="photo-modal-file-input" accept="image/*" style="width:100%; font-size:12px; padding:8px; border:1px solid var(--portal-card-border); border-radius:6px; background:var(--portal-card-bg); color:var(--portal-text-main);">
+        <div id="photo-modal-compress-info" style="font-size:11px; color:#15803d; font-family:'DM Mono',monospace; margin-top:6px; font-weight:600; display:none;"></div>
+      </div>
+
+      <!-- External URL alternative -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:6px;">Hoặc dán URL ảnh trực tiếp:</label>
+        <input type="url" id="photo-modal-url-input" placeholder="https://..." style="width:100%; font-size:12px; padding:8px 12px; border:1px solid var(--portal-card-border); border-radius:6px; background:var(--portal-card-bg); color:var(--portal-text-main);">
+      </div>
+
+      <!-- Artist Note to Admin -->
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:6px;">Ghi chú gửi Admin (Tùy chọn):</label>
+        <textarea id="photo-modal-note-input" rows="2" placeholder="Ví dụ: Ảnh photoshoot concept mới cho Single sắp phát hành..." style="width:100%; font-size:12px; padding:8px 12px; border:1px solid var(--portal-card-border); border-radius:6px; background:var(--portal-card-bg); color:var(--portal-text-main); font-family:inherit;"></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-card-border); padding-top:16px; flex-wrap:wrap; gap:10px;">
+        <span id="photo-modal-status-msg" style="font-size:12px; font-weight:600;"></span>
+        <div style="display:flex; gap:10px; margin-left:auto;">
+          <button type="button" id="cancel-photo-modal-btn" class="button alt" style="padding:8px 16px; font-size:12px;">Hủy bỏ</button>
+          <button type="button" id="submit-photo-req-btn" class="button" style="background:#0284c7; color:#fff; border-color:#0284c7; font-weight:bold; padding:8px 20px; font-size:12px;">🚀 Gửi Yêu Cầu Cho Admin</button>
+        </div>
       </div>
     </div>
   </dialog>

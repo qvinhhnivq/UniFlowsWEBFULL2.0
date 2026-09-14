@@ -1,5 +1,5 @@
 /**
- * UniFLOWs Label — Distribution & Royalty Report Engine v4.0
+ * UniFLOWs Label — Distribution & Royalty Report UniENGINE
  * Swiss Editorial Brutalist UI — Paper / Ink / Lime palette
  * Matches uniflowslabel.com design language exactly.
  */
@@ -540,7 +540,7 @@ export function generateRoyaltyStatementHTML() {
   <!-- FOOTER STRIP -->
   <div style="background:#0b0b0b;color:rgba(255,255,255,0.45);padding:12px 36px;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:8.5px;text-transform:uppercase;letter-spacing:1px;">
     <span>UniFLOWs Entertainment JSC · Confidential Royalty Statement · ${statId}</span>
-    <span style="color:#d8ff48;font-weight:900;">ENGINE 4.0</span>
+    <span style="color:#d8ff48;font-weight:900;">UniENGINE</span>
   </div>
 </div>`;
 }
@@ -677,7 +677,7 @@ export function renderDistributionTab() {
       <h2 style="font-size:clamp(32px,4vw,52px);letter-spacing:-0.06em;font-weight:900;margin:0;line-height:.9;">Distribution<br>&amp; Royalty Report.</h2>
     </div>
     <div style="text-align:right;">
-      <div style="background:var(--ink);color:var(--lime);font:10px 'DM Mono',monospace;font-weight:900;padding:6px 14px;text-transform:uppercase;letter-spacing:1.5px;display:inline-block;margin-bottom:8px;">⚡ Engine 4.0 Active</div>
+      <div style="background:var(--ink);color:var(--lime);font:10px 'DM Mono',monospace;font-weight:900;padding:6px 14px;text-transform:uppercase;letter-spacing:1.5px;display:inline-block;margin-bottom:8px;">⚡ UniENGINE Active</div>
       <div style="font:11px 'DM Mono',monospace;opacity:0.5;">${state.records.length} bản ghi · ${state.fileName}</div>
     </div>
   </div>

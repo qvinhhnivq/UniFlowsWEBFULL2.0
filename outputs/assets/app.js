@@ -338,6 +338,9 @@ function articleDetail() {
     root.innerHTML = '<p>Không tìm thấy bài viết.</p>';
     return;
   }
+
+  const images = Array.isArray(a.images) ? a.images : [];
+
   root.innerHTML = `
     <article class="article-detail">
       ${a.cover ? `<img class="article-cover" src="${esc(a.cover)}" alt="${esc(a.title)}">` : ''}
@@ -346,12 +349,107 @@ function articleDetail() {
       <p class="lead">${esc(a.excerpt)}</p>
       <div class="article-meta">Bởi ${esc(a.author || 'UniFLOWs Editorial')} · ${esc(a.readTime || '3 phút đọc')}</div>
       <div class="article-body">${esc(a.body).replace(/\n/g, '<br>')}</div>
+
+      ${images.length > 0 ? `
+        <section class="article-gallery" style="margin: 50px 0; border-top: 1px solid var(--line); padding-top: 40px;">
+          <div class="section-head" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: baseline;">
+            <h2 style="font-size: clamp(22px, 3vw, 36px); letter-spacing: -0.04em; margin: 0; text-transform: uppercase;">Album Hình Ảnh</h2>
+            <span class="kicker" style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase;">${images.length} hình ảnh</span>
+          </div>
+          <div class="article-gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+            ${images.map((img, i) => {
+              const url = typeof img === 'string' ? img : (img.url || '');
+              const caption = typeof img === 'object' ? (img.caption || '') : '';
+              return `
+                <figure class="article-gallery-item" data-gal-idx="${i}" style="margin:0; cursor:pointer; background:#fff; border:1px solid var(--ink); overflow:hidden; transition:transform 0.15s ease;">
+                  <div style="aspect-ratio:16/10; overflow:hidden; background:#0f172a;">
+                    <img src="${esc(url)}" alt="${esc(caption || a.title)}" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.3s ease;">
+                  </div>
+                  ${caption ? `<figcaption style="padding:10px 14px; font-size:12px; font-family:'DM Mono',monospace; color:var(--text-muted); line-height:1.4; border-top:1px solid #e2e8f0;">${esc(caption)}</figcaption>` : ''}
+                </figure>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      ` : ''}
+
       <div class="article-actions">
         <button id="share-article">Chia sẻ bài viết ↗</button>
         <a class="card-link" href="news">← Quay lại tạp chí</a>
       </div>
     </article>
   `;
+
+  // Attach Lightbox event for gallery items
+  if (images.length > 0) {
+    let currentLightboxIdx = 0;
+    const galleryItems = root.querySelectorAll('.article-gallery-item');
+
+    const openLightbox = (idx) => {
+      currentLightboxIdx = idx;
+      let overlay = document.querySelector('#article-lightbox-modal');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'article-lightbox-modal';
+        overlay.className = 'article-lightbox-overlay';
+        document.body.appendChild(overlay);
+      }
+
+      const curImg = images[currentLightboxIdx];
+      const curUrl = typeof curImg === 'string' ? curImg : (curImg.url || '');
+      const curCap = typeof curImg === 'object' ? (curImg.caption || '') : '';
+
+      overlay.innerHTML = `
+        <span class="article-lightbox-counter">${currentLightboxIdx + 1} / ${images.length}</span>
+        <button type="button" class="article-lightbox-close" title="Đóng (Esc)">✕</button>
+        ${images.length > 1 ? `<button type="button" class="article-lightbox-nav article-lightbox-prev" title="Ảnh trước (←)">❮</button>` : ''}
+        ${images.length > 1 ? `<button type="button" class="article-lightbox-nav article-lightbox-next" title="Ảnh kế tiếp (→)">❯</button>` : ''}
+        <div class="article-lightbox-img-wrap">
+          <img src="${esc(curUrl)}" alt="Image ${currentLightboxIdx + 1}">
+          ${curCap ? `<div class="article-lightbox-caption">${esc(curCap)}</div>` : ''}
+        </div>
+      `;
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+
+      overlay.querySelector('.article-lightbox-close')?.addEventListener('click', closeLightbox);
+      overlay.querySelector('.article-lightbox-prev')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openLightbox((currentLightboxIdx - 1 + images.length) % images.length);
+      });
+      overlay.querySelector('.article-lightbox-next')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openLightbox((currentLightboxIdx + 1) % images.length);
+      });
+      overlay.onclick = (e) => {
+        if (e.target === overlay) closeLightbox();
+      };
+    };
+
+    const closeLightbox = () => {
+      const overlay = document.querySelector('#article-lightbox-modal');
+      if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    };
+
+    galleryItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const idx = parseInt(item.dataset.galIdx, 10);
+        openLightbox(idx);
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const overlay = document.querySelector('#article-lightbox-modal');
+      if (!overlay || overlay.style.display === 'none') return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') openLightbox((currentLightboxIdx - 1 + images.length) % images.length);
+      if (e.key === 'ArrowRight') openLightbox((currentLightboxIdx + 1) % images.length);
+    });
+  }
+
   $('#share-article')?.addEventListener('click', async () => {
     try {
       await navigator.share({ title: a.title, url: location.href });

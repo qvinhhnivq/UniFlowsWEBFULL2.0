@@ -675,18 +675,30 @@ export async function getData() {
     });
 
     if (articlesData && articlesData.length > 0) {
-      merged.articles = articlesData.map(art => ({
-        id: art.id,
-        title: art.title,
-        category: art.category,
-        date: art.date,
-        author: art.author,
-        readTime: art.read_time,
-        cover: art.cover,
-        excerpt: art.excerpt,
-        body: art.body,
-        published: art.published
-      }));
+      merged.articles = articlesData.map(art => {
+        const localCachedArt = (cached.articles || []).find(x => x.id === art.id) || {};
+        let parsedImages = [];
+        if (Array.isArray(art.images)) parsedImages = art.images;
+        else if (typeof art.images === 'string') {
+          try { parsedImages = JSON.parse(art.images || '[]'); } catch {}
+        } else if (Array.isArray(localCachedArt.images)) {
+          parsedImages = localCachedArt.images;
+        }
+
+        return {
+          id: art.id,
+          title: art.title,
+          category: art.category,
+          date: art.date,
+          author: art.author,
+          readTime: art.read_time,
+          cover: art.cover,
+          images: parsedImages,
+          excerpt: art.excerpt,
+          body: art.body,
+          published: art.published
+        };
+      });
     } else if (cached.articles && cached.articles.length > 0) {
       merged.articles = cached.articles;
     } else {
@@ -876,6 +888,7 @@ export async function saveSingleArticle(art) {
     author: art.author || 'UniFLOWs Editorial',
     readTime: art.readTime || '3 phút đọc',
     cover: art.cover || '',
+    images: Array.isArray(art.images) ? art.images : [],
     excerpt: art.excerpt || '',
     body: art.body || '',
     published: art.published === true || art.published === 'true'
@@ -906,6 +919,14 @@ export async function saveSingleArticle(art) {
       published: normalizedArt.published
     };
 
+    // Attempt upsert with images column if it exists
+    try {
+      const payloadWithImages = { ...payload, images: normalizedArt.images };
+      const { error: errImages } = await supabase.from('articles').upsert(payloadWithImages);
+      if (!errImages) return { success: true };
+    } catch {}
+
+    // Fallback: upsert without images column if table does not have images column
     const { error } = await supabase.from('articles').upsert(payload);
     if (error) throw error;
     return { success: true };

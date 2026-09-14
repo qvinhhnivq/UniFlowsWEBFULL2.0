@@ -1,6 +1,7 @@
 import { getData, saveData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
+import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimizer.js';
 import './security.js';
 
 // Kiểm tra quyền đăng nhập
@@ -80,11 +81,181 @@ if (artist) {
 
   const avatarEl = document.querySelector('#portal-artist-avatar');
   if (avatarEl && artist.image) avatarEl.src = artist.image;
+  if (avatarEl) {
+    avatarEl.style.cursor = 'pointer';
+    avatarEl.title = 'Nhấn để đổi ảnh đại diện trên website chính';
+    avatarEl.addEventListener('click', () => {
+      document.querySelector('#btn-open-photo-request')?.click();
+    });
+  }
 
   const sidebarNameEl = document.querySelector('#sidebar-artist-name');
   if (sidebarNameEl) sidebarNameEl.textContent = artist.name;
   const sidebarAvatarEl = document.querySelector('#sidebar-artist-avatar');
   if (sidebarAvatarEl && artist.image) sidebarAvatarEl.src = artist.image;
+
+  // ----------------------------------------------------
+  // ARTIST WEBSITE PROFILE PHOTO CHANGE REQUEST FLOW
+  // ----------------------------------------------------
+  const photoModal = document.querySelector('#modal-artist-photo-request');
+  const openPhotoModalBtn = document.querySelector('#btn-open-photo-request');
+  const closePhotoModalBtn = document.querySelector('#close-photo-modal-btn');
+  const cancelPhotoModalBtn = document.querySelector('#cancel-photo-modal-btn');
+  const curPhotoImg = document.querySelector('#photo-modal-cur-img');
+  const newPhotoImg = document.querySelector('#photo-modal-new-img');
+  const photoFileInput = document.querySelector('#photo-modal-file-input');
+  const photoUrlInput = document.querySelector('#photo-modal-url-input');
+  const photoNoteInput = document.querySelector('#photo-modal-note-input');
+  const submitPhotoBtn = document.querySelector('#submit-photo-req-btn');
+  const photoCompressInfo = document.querySelector('#photo-modal-compress-info');
+  const photoStatusMsg = document.querySelector('#photo-modal-status-msg');
+  const photoReqBadge = document.querySelector('#portal-photo-req-badge');
+
+  let selectedCompressedPhotoBlob = null;
+  let selectedPhotoUrl = '';
+
+  function checkPendingPhotoRequest() {
+    let requests = [];
+    try {
+      requests = JSON.parse(localStorage.getItem('uniflows-artist-photo-requests') || '[]');
+    } catch {}
+    const myPending = requests.find(r => r.artist_id === artist.id && r.status === 'pending');
+    if (myPending && photoReqBadge) {
+      photoReqBadge.style.display = 'inline-block';
+      photoReqBadge.title = `Đã gửi lúc: ${new Date(myPending.created_at).toLocaleString('vi-VN')}`;
+    } else if (photoReqBadge) {
+      photoReqBadge.style.display = 'none';
+    }
+  }
+
+  if (openPhotoModalBtn && photoModal) {
+    openPhotoModalBtn.addEventListener('click', () => {
+      if (curPhotoImg) curPhotoImg.src = artist.image || '';
+      if (newPhotoImg) newPhotoImg.src = artist.image || '';
+      if (photoFileInput) photoFileInput.value = '';
+      if (photoUrlInput) photoUrlInput.value = '';
+      if (photoNoteInput) photoNoteInput.value = '';
+      if (photoCompressInfo) photoCompressInfo.style.display = 'none';
+      if (photoStatusMsg) photoStatusMsg.textContent = '';
+      selectedCompressedPhotoBlob = null;
+      selectedPhotoUrl = '';
+
+      photoModal.showModal();
+    });
+
+    const closePhotoModal = () => photoModal.close();
+    closePhotoModalBtn?.addEventListener('click', closePhotoModal);
+    cancelPhotoModalBtn?.addEventListener('click', closePhotoModal);
+
+    // File selection with auto-compression (square 1:1, 800x800, WebP)
+    photoFileInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (photoCompressInfo) {
+        photoCompressInfo.style.display = 'block';
+        photoCompressInfo.textContent = 'Đang tự động nén & crop vuông 1:1 WebP...';
+        photoCompressInfo.style.color = '#0284c7';
+      }
+
+      try {
+        const res = await compressImageFile(file, {
+          maxWidth: 800,
+          maxHeight: 800,
+          square: true,
+          quality: 0.88,
+          format: 'image/webp'
+        });
+
+        selectedCompressedPhotoBlob = res.file;
+        selectedPhotoUrl = res.dataUrl;
+
+        if (newPhotoImg) newPhotoImg.src = res.dataUrl;
+        if (photoCompressInfo) {
+          photoCompressInfo.style.display = 'block';
+          photoCompressInfo.style.color = '#15803d';
+          photoCompressInfo.innerHTML = `✓ Đã nén vuông: <b>${res.originalSizeFormatted} ➔ ${res.compressedSizeFormatted} (-${res.savedPercent}%)</b>`;
+        }
+      } catch (err) {
+        if (photoCompressInfo) {
+          photoCompressInfo.style.display = 'block';
+          photoCompressInfo.style.color = '#ef4444';
+          photoCompressInfo.textContent = `Lỗi nén ảnh: ${err.message}`;
+        }
+      }
+    });
+
+    // URL input
+    photoUrlInput?.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        selectedPhotoUrl = url;
+        selectedCompressedPhotoBlob = null;
+        if (newPhotoImg) newPhotoImg.src = url;
+        if (photoCompressInfo) photoCompressInfo.style.display = 'none';
+      }
+    });
+
+    // Submit request
+    submitPhotoBtn?.addEventListener('click', async () => {
+      if (!selectedPhotoUrl && !selectedCompressedPhotoBlob) {
+        alert('Vui lòng chọn tệp ảnh mới hoặc nhập URL ảnh xem trước.');
+        return;
+      }
+
+      submitPhotoBtn.disabled = true;
+      submitPhotoBtn.textContent = 'Đang tải lên & gửi duyệt...';
+      if (photoStatusMsg) photoStatusMsg.textContent = 'Đang gửi yêu cầu...';
+
+      try {
+        let finalPhotoUrl = selectedPhotoUrl;
+        if (selectedCompressedPhotoBlob) {
+          finalPhotoUrl = await uploadImageSmart(selectedCompressedPhotoBlob, `artist_avatar_${artist.id}_${Date.now()}`);
+        }
+
+        const reqObj = {
+          id: `photo_req_${Date.now()}`,
+          artist_id: artist.id,
+          artist_name: artist.name,
+          artist_email: artist.email,
+          current_image: artist.image || '',
+          requested_image: finalPhotoUrl,
+          note: photoNoteInput?.value.trim() || '',
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+
+        // Save to localStorage
+        let requests = [];
+        try {
+          requests = JSON.parse(localStorage.getItem('uniflows-artist-photo-requests') || '[]');
+        } catch {}
+        requests.unshift(reqObj);
+        localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(requests));
+
+        // Attempt save to Supabase if table exists
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from('artist_photo_requests').insert([reqObj]);
+          } catch (dbErr) {
+            console.warn('Supabase photo request table not available, stored in local sync:', dbErr);
+          }
+        }
+
+        checkPendingPhotoRequest();
+        alert(`✓ Yêu cầu đổi ảnh của "${artist.name}" đã được gửi đến Admin!\n\nSau khi Admin phê duyệt, ảnh sẽ tự động xuất hiện trên Trang chủ, Trang nghệ sĩ và Trang cá nhân của bạn.`);
+        photoModal.close();
+      } catch (err) {
+        alert(`Lỗi khi gửi yêu cầu: ${err.message}`);
+      } finally {
+        submitPhotoBtn.disabled = false;
+        submitPhotoBtn.textContent = '🚀 Gửi Yêu Cầu Cho Admin';
+        if (photoStatusMsg) photoStatusMsg.textContent = '';
+      }
+    });
+  }
+
+  checkPendingPhotoRequest();
 
   // Role Badge & Banner Setup
   const roleBadgeEl = document.querySelector('#portal-role-badge');
