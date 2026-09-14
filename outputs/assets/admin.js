@@ -7445,14 +7445,14 @@ function initQuickReleaseAdmin() {
         // Prepend to artist products
         targetArtist.products.unshift(releaseObj);
 
-        // Save data to localStorage + Supabase
-        await saveData(data);
+        // Save data to localStorage
+        saveData(data);
 
         // Sync to Supabase releases table
         if (isSupabaseConfigured()) {
           try {
-            const { error: relErr } = await supabase.from('releases').upsert({
-              id: String(newReleaseId),
+            await supabase.from('releases').upsert({
+              id: newReleaseId,
               artist_id: artistId,
               title,
               type,
@@ -7464,7 +7464,6 @@ function initQuickReleaseAdmin() {
               metadata: releaseObj.metadata,
               created_at: new Date().toISOString()
             });
-            if (relErr) console.warn('Lỗi lưu release lên Supabase:', relErr);
           } catch (dbErr) {
             console.warn('Lỗi lưu release lên Supabase:', dbErr);
           }
@@ -7473,68 +7472,21 @@ function initQuickReleaseAdmin() {
         modal.close();
 
         const smartLinkUrl = `${location.origin}/listen?release=${encodeURIComponent(cleanSlug)}`;
+        const artistPageUrl = `${location.origin}/artist-detail?id=${encodeURIComponent(artistId)}`;
+
+        alert(`🎉 PHÁT HÀNH NHANH THÀNH CÔNG!\n\n` +
+          `• Tác phẩm: "${title}" (${type})\n` +
+          `• Nghệ sĩ: ${targetArtist.name}\n` +
+          `• Đoạn preview: ${formatTimeMinSec(startSec)} ➔ ${formatTimeMinSec(startSec + activeSnippetDuration)} (${activeSnippetDuration}s)\n\n` +
+          `Đã đưa lên Website và tạo SmartLink thành công!\n` +
+          `SmartLink: ${smartLinkUrl}\n` +
+          `Trang nghệ sĩ: ${artistPageUrl}`);
 
         showNotice(`✓ Đã phát hành nhanh "${title}" lên Web & tạo SmartLink thành công!`);
         await logAuditEvent('Phát hành nhanh', `Đã phát hành "${title}" cho nghệ sĩ ${targetArtist.name} (Slug: ${cleanSlug})`);
 
-        // ── AUTO-NAVIGATE: Chuyển sang Tab Releases để sửa SmartLink & cập nhật số liệu ──
-        // Tab Releases (admin-tab-releases) là nơi có toàn bộ form sửa SmartLink & streams
-        switchAdminTab('admin-tab-releases');
-
-        // Lọc theo nghệ sĩ vừa phát hành để dễ tìm
-        const artistFilterEl = document.querySelector('#admin-release-artist-filter');
-        if (artistFilterEl) {
-          artistFilterEl.value = artistId;
-        }
-
-        // Reload release queue rồi scroll đến release mới
-        await loadReleasesQueue();
-
-        setTimeout(() => {
-          // Tìm release card vừa tạo theo ID
-          const releaseCard = document.querySelector(`[data-release-id="${CSS.escape(String(newReleaseId))}"]`);
-          if (releaseCard) {
-            releaseCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Highlight nổi bật
-            releaseCard.style.outline = '3px solid #d8ff48';
-            releaseCard.style.outlineOffset = '4px';
-            releaseCard.style.boxShadow = '0 0 0 6px rgba(216,255,72,0.25)';
-            setTimeout(() => {
-              releaseCard.style.outline = '';
-              releaseCard.style.outlineOffset = '';
-              releaseCard.style.boxShadow = '';
-            }, 4000);
-          } else {
-            // Fallback: scroll đến đầu releases box
-            document.querySelector('#releases-reviewer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-
-          // Banner hướng dẫn cố định góc phải
-          document.getElementById('quick-release-edit-banner')?.remove();
-          const banner = document.createElement('div');
-          banner.id = 'quick-release-edit-banner';
-          banner.style.cssText = [
-            'position:fixed', 'bottom:24px', 'right:24px', 'z-index:9999',
-            'background:#0b0b0b', 'color:#fff', 'padding:16px 20px',
-            'max-width:380px', 'border-left:4px solid #d8ff48',
-            'box-shadow:0 8px 32px rgba(0,0,0,0.5)',
-            'font-family:"DM Mono",monospace', 'font-size:13px', 'line-height:1.6'
-          ].join(';');
-          const shortTitle = title.length > 28 ? title.slice(0, 28) + '…' : title;
-          banner.innerHTML = [
-            `<div style="font-weight:900;font-size:14px;color:#d8ff48;margin-bottom:6px;">🎉 "${shortTitle}" đã live!</div>`,
-            `<div style="font-size:11px;opacity:0.7;margin-bottom:10px;">Bài hát hiển thị trong tab <b>01 / Duyệt phát hành</b>.<br>Cập nhật link Spotify, Apple Music và số liệu ngay bên dưới.</div>`,
-            `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">`,
-            `  <a href="${smartLinkUrl}" target="_blank" style="background:#d8ff48;color:#0b0b0b;padding:6px 12px;font-weight:900;font-size:11px;text-decoration:none;white-space:nowrap;">↗ SmartLink</a>`,
-            `  <button onclick="document.getElementById('quick-release-edit-banner')?.remove();const el=document.querySelector('[data-release-id=\\'${CSS.escape(String(newReleaseId))}\\']');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.outline='3px solid #d8ff48';setTimeout(()=>{el.style.outline=''},2000);}"`,
-            `    style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.35);padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;">✏️ Đến mục sửa</button>`,
-            `  <button onclick="document.getElementById('quick-release-edit-banner')?.remove();"`,
-            `    style="background:transparent;color:rgba(255,255,255,0.4);border:none;padding:4px 6px;font-size:20px;cursor:pointer;margin-left:auto;line-height:1;">×</button>`,
-            `</div>`
-          ].join('');
-          document.body.appendChild(banner);
-          setTimeout(() => banner.remove(), 15000);
-        }, 600);
+        // Refresh releases reviewer
+        loadReleasesQueue();
       } catch (err) {
         alert(`Lỗi phát hành nhanh: ${err.message}`);
       } finally {
