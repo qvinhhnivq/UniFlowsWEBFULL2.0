@@ -1,0 +1,37 @@
+/* ==============================================================================
+   GradientWaves — Vanilla JS & CSS Port of React Bits @react-bits/GradientWaves-JS-CSS
+   Raymarched sine waves rolling toward a soft, hazy horizon
+   ============================================================================== */
+
+.gradient-waves-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gradient-waves-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.portal-gradient-waves-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.5s ease;
+}
+
+[data-theme="dark"] .portal-gradient-waves-backdrop,
+.portal-body.dark-mode .portal-gradient-waves-backdrop {
+  display: none !important;
+}

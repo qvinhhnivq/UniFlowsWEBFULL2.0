@@ -5,7 +5,7 @@ import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimi
 import './security.js';
 import { initCardNav } from './card-nav.js';
 import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
-import { initIridescence } from './iridescence.js';
+import { initGradientWaves } from './gradient-waves.js';
 import { initDither } from './dither.js';
 // Kiểm tra quyền đăng nhập
 const rawAuth = sessionStorage.getItem('uniflows-artist') || localStorage.getItem('uniflows-artist');
@@ -7418,23 +7418,39 @@ async function loadArtistServiceRequests() {
 }
 
 // ==========================================
-// Theme Toggle (Light: Iridescence / Dark: Dither Retro Waves)
+// Theme Toggle (Light: GradientWaves / Dark: Dither Retro Waves)
 // ==========================================
-let portalIridescenceInstance = null;
+let portalGradientWavesInstance = null;
 let portalDitherInstance = null;
 
-function setupPortalIridescence() {
-  const bgEl = document.querySelector('#portal-iridescence-bg');
-  if (bgEl && !portalIridescenceInstance) {
+function setupPortalGradientWaves() {
+  const bgEl = document.querySelector('#portal-gradient-waves-bg');
+  if (bgEl && !portalGradientWavesInstance) {
     try {
-      portalIridescenceInstance = initIridescence(bgEl, {
-        color: [0.85, 0.85, 0.9],
-        mouseReact: false,
-        amplitude: 0.08,
-        speed: 0.6
+      portalGradientWavesInstance = initGradientWaves(bgEl, {
+        horizonColor: '#f1edff',
+        waveColor: '#FF9FFC',
+        crestColor: '#FFFFFF',
+        speed: 0.4,
+        amplitude: 2.5,
+        waveScale: 0.6,
+        waveRatio: 0.9,
+        swell: 35,
+        turbulence: 20,
+        tilt: 1.11,
+        zoom: 1,
+        height: 5.5,
+        fogDepth: 15,
+        detail: 'medium',
+        brightness: 1,
+        opacity: 1,
+        mouseInteraction: true,
+        parallaxStrength: 0.5,
+        grain: true,
+        grainIntensity: 0.05
       });
     } catch (err) {
-      console.warn('Iridescence init warning:', err);
+      console.warn('GradientWaves init warning:', err);
     }
   }
 }
@@ -7480,13 +7496,25 @@ function applyPortalTheme(theme) {
   if (isDark) {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.body.classList.add('dark-mode');
+    if (portalGradientWavesInstance) {
+      portalGradientWavesInstance.stop();
+    }
     // Active WebGL Dither Shader in dark mode
     setupPortalDither();
+    if (portalDitherInstance) {
+      portalDitherInstance.start();
+    }
   } else {
     document.documentElement.removeAttribute('data-theme');
     document.body.classList.remove('dark-mode');
-    // Active WebGL Iridescence Shader in light mode
-    setupPortalIridescence();
+    if (portalDitherInstance) {
+      portalDitherInstance.stop();
+    }
+    // Active WebGL GradientWaves Shader in light mode
+    setupPortalGradientWaves();
+    if (portalGradientWavesInstance) {
+      portalGradientWavesInstance.start();
+    }
   }
 
   // Update top nav theme slider
