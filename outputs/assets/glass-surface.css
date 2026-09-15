@@ -183,6 +183,9 @@ dialog:hover .glass-surface-glare {
 .portal-filter-bar,
 #portal-announcements-section > div,
 #tab-overview > div:first-child,
+#tab-earnings > div,
+.financial-statement-card,
+.earnings-table > div,
 dialog,
 .portal-mobile-bottom-nav {
   position: relative;
@@ -1632,4 +1635,214 @@ dialog[open].release-dialog-shell {
     0 0 20px rgba(56, 189, 248, 0.25),
     0 0 2px 1px rgba(255, 255, 255, 0.4) inset !important;
 }
+
+/* ==============================================================================
+   12. LUMINOUS HIGH-CONTRAST LIQUID GLASS FOR REVENUE & FINANCIAL STATEMENTS
+   ============================================================================== */
+#tab-earnings {
+  color: var(--portal-text-main) !important;
+}
+
+#tab-earnings .section-head h2 {
+  color: #ffffff !important;
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+}
+
+#tab-earnings .section-head p {
+  color: #94a3b8 !important;
+  font-size: 13.5px !important;
+}
+
+#tab-earnings .kicker {
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+}
+
+/* Contract & Accounting Card */
+#tab-earnings > div:nth-child(2) {
+  background: rgba(16, 20, 36, 0.72) !important;
+  backdrop-filter: blur(45px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(45px) saturate(220%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 20px !important;
+  box-shadow:
+    0 0 2px 1px rgba(255, 255, 255, 0.25) inset,
+    0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+#portal-contract-term {
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+}
+
+#portal-payout-cycle,
+#portal-royalty-rate {
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+}
+
+/* Financial Statement Main Glass Box */
+.financial-statement-card {
+  background: rgba(14, 18, 34, 0.78) !important;
+  backdrop-filter: blur(50px) saturate(240%) brightness(108%) !important;
+  -webkit-backdrop-filter: blur(50px) saturate(240%) brightness(108%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 24px !important;
+  padding: 32px !important;
+  margin-bottom: 28px !important;
+  box-shadow:
+    0 0 2.5px 1.5px rgba(255, 255, 255, 0.35) inset,
+    0 0 16px 4px rgba(255, 255, 255, 0.08) inset,
+    0 28px 70px rgba(0, 0, 0, 0.75) !important;
+}
+
+.financial-statement-card span {
+  color: #94a3b8 !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+}
+
+#artist-payable-balance {
+  color: #ffffff !important;
+  font-size: clamp(34px, 3.6vw, 44px) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.05em !important;
+  text-shadow: 0 0 25px rgba(255, 255, 255, 0.25) !important;
+}
+
+#artist-pending-balance {
+  color: #cbd5e1 !important;
+  font-size: clamp(30px, 3.2vw, 38px) !important;
+  font-weight: 800 !important;
+}
+
+#artist-pending-payout {
+  color: #fbbf24 !important;
+  font-size: clamp(30px, 3.2vw, 38px) !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.3) !important;
+}
+
+#request-payout-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  border-radius: 9999px !important;
+  padding: 13px 28px !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+  cursor: pointer !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+#request-payout-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 14px 35px rgba(16, 185, 129, 0.6), inset 0 1px 3px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Payout Progress Track Glass */
+.payout-flow-track {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px !important;
+  margin-top: 24px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  padding: 18px 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 16px !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1) !important;
+}
+
+.payout-flow-step {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+}
+
+.payout-flow-step.active {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.payout-flow-step .step-dot {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  background: #475569 !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.payout-flow-step.active .step-dot {
+  background: #10b981 !important;
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 0 12px #10b981 !important;
+}
+
+/* DSP Breakdown Cards */
+.earnings-table {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 18px !important;
+  margin: 24px 0 !important;
+  background: transparent !important;
+}
+
+.earnings-table > div {
+  background: rgba(14, 18, 34, 0.72) !important;
+  backdrop-filter: blur(35px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(35px) saturate(220%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 18px !important;
+  padding: 24px !important;
+  display: grid !important;
+  gap: 8px !important;
+  box-shadow:
+    0 0 2px 1px rgba(255, 255, 255, 0.2) inset,
+    0 16px 40px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.earnings-table > div:hover {
+  transform: translateY(-3px) !important;
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  box-shadow:
+    0 0 2px 1px rgba(255, 255, 255, 0.35) inset,
+    0 0 16px rgba(56, 189, 248, 0.25),
+    0 24px 50px rgba(0, 0, 0, 0.7) !important;
+}
+
+.earnings-table span {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11.5px !important;
+  text-transform: uppercase !important;
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+}
+
+.earnings-table b {
+  font-size: clamp(24px, 2.6vw, 30px) !important;
+  letter-spacing: -0.05em !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+}
+
+.earnings-table small {
+  font-size: 11.5px !important;
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+}
+
 

@@ -426,8 +426,8 @@ export function initPortalGlassSurfaces() {
     });
   }
 
-  // 3. Stats & Metric Cards
-  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card, .portal-grid-stats > div').forEach(card => {
+  // 3. Stats & Metric Cards & Financial Statement Cards
+  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card, .portal-grid-stats > div, .financial-statement-card, .earnings-table > div, #tab-earnings > div:nth-child(2)').forEach(card => {
     enhanceWithGlassSurface(card, {
       borderRadius: 20,
       distortionScale: -150,
