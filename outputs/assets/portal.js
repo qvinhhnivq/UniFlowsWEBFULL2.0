@@ -4755,15 +4755,15 @@ async function renderReleases() {
     });
 
     if (allPlaylists.length === 0) {
-      playlistShowcase.innerHTML = '<p class="empty" style="font-size:13px;padding:16px;background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:10px;color:var(--portal-text-muted);">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>';
+      playlistShowcase.innerHTML = '<p class="empty" style="font-size:13.5px;color:var(--portal-text-muted);margin:0;">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>';
     } else {
       playlistShowcase.innerHTML = `
         <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:14px;">
           ${allPlaylists.map(item => `
-            <div style="background:var(--portal-card-bg);border:1px solid #fed7aa;padding:16px;border-radius:12px;box-shadow:var(--portal-shadow);">
-              <div style="font-size:10px;color:#c2410c;font-weight:700;text-transform:uppercase;margin-bottom:4px;font-family:'DM Mono',monospace;">🌟 Editorial Playlist</div>
-              <div style="font-weight:700;font-size:15px;margin-bottom:4px;">${esc(item.playlist)}</div>
-              <div style="font-size:12px;color:var(--portal-text-muted);">Bản phát hành: <em>${esc(item.track)}</em></div>
+            <div style="background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);padding:16px 18px;border-radius:14px;box-shadow:var(--glass-shadow);">
+              <div style="font-size:10px;color:#f59e0b;font-weight:800;text-transform:uppercase;margin-bottom:4px;font-family:'DM Mono',monospace;letter-spacing:0.5px;">🌟 Editorial Playlist</div>
+              <div style="font-weight:800;font-size:15px;margin-bottom:4px;color:var(--portal-text-main);">${esc(item.playlist)}</div>
+              <div style="font-size:12.5px;color:var(--portal-text-muted);">Bản phát hành: <em style="color:#ffffff;">${esc(item.track)}</em></div>
             </div>
           `).join('')}
         </div>

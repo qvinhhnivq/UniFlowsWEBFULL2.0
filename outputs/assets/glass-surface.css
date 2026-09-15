@@ -138,24 +138,37 @@ dialog:hover .glass-surface-glare {
 }
 
 /* Explicit Dark Mode Universal High-Contrast Boost */
+html[data-theme="dark"],
+[data-theme="dark"],
 [data-theme="dark"] .portal-body,
 [data-theme="dark"] .portal-main,
-.portal-body.dark-mode {
+.portal-body.dark-mode,
+.dark-mode {
   color: #ffffff !important;
 }
 
-[data-theme="dark"] .portal-body h1,
-[data-theme="dark"] .portal-body h2,
-[data-theme="dark"] .portal-body h3,
-[data-theme="dark"] .portal-body h4,
-[data-theme="dark"] .portal-body h5,
-[data-theme="dark"] .portal-body h6,
-[data-theme="dark"] .portal-body strong,
-[data-theme="dark"] .portal-body b,
-[data-theme="dark"] .portal-body th,
-[data-theme="dark"] .portal-body .section-head h2,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] strong,
+html[data-theme="dark"] b,
+html[data-theme="dark"] th,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] strong,
+[data-theme="dark"] b,
+[data-theme="dark"] th,
 [data-theme="dark"] .section-head h2,
-[data-theme="dark"] .portal-body .eyebrow,
+[data-theme="dark"] .section-head h1,
+[data-theme="dark"] .section-head h3,
+.section-head h2,
 .portal-body.dark-mode h1,
 .portal-body.dark-mode h2,
 .portal-body.dark-mode h3,
@@ -166,32 +179,54 @@ dialog:hover .glass-surface-glare {
 .portal-body.dark-mode b,
 .portal-body.dark-mode th,
 .portal-body.dark-mode .section-head h2,
-.portal-body.dark-mode .eyebrow {
+.portal-body.dark-mode .section-head h1,
+.portal-body.dark-mode .section-head h3 {
   color: #ffffff !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-[data-theme="dark"] .portal-body p,
-[data-theme="dark"] .portal-body label,
-[data-theme="dark"] .portal-body small,
-[data-theme="dark"] .portal-body span:not(.tag):not(.badge):not(.notif-counter-pill):not(.notif-pulse-dot):not(.step-dot),
-[data-theme="dark"] .portal-body .section-head p,
+html:not([data-theme="dark"]) body:not(.dark-mode) h1,
+html:not([data-theme="dark"]) body:not(.dark-mode) h2,
+html:not([data-theme="dark"]) body:not(.dark-mode) h3,
+html:not([data-theme="dark"]) body:not(.dark-mode) h4,
+html:not([data-theme="dark"]) body:not(.dark-mode) strong,
+html:not([data-theme="dark"]) body:not(.dark-mode) b,
+html:not([data-theme="dark"]) body:not(.dark-mode) .section-head h2 {
+  color: #090d16 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] p,
+html[data-theme="dark"] label,
+html[data-theme="dark"] small,
+[data-theme="dark"] p,
+[data-theme="dark"] label,
+[data-theme="dark"] small,
+[data-theme="dark"] span:not(.tag):not(.badge):not(.notif-counter-pill):not(.notif-pulse-dot):not(.step-dot):not(.notif-badge-tag),
 [data-theme="dark"] .section-head p,
 .portal-body.dark-mode p,
 .portal-body.dark-mode label,
 .portal-body.dark-mode small,
-.portal-body.dark-mode span:not(.tag):not(.badge):not(.notif-counter-pill):not(.notif-pulse-dot):not(.step-dot),
+.portal-body.dark-mode span:not(.tag):not(.badge):not(.notif-counter-pill):not(.notif-pulse-dot):not(.step-dot):not(.notif-badge-tag),
 .portal-body.dark-mode .section-head p {
   color: #e2e8f0 !important;
 }
 
+html:not([data-theme="dark"]) body:not(.dark-mode) p,
+html:not([data-theme="dark"]) body:not(.dark-mode) label,
+html:not([data-theme="dark"]) body:not(.dark-mode) .section-head p {
+  color: #475569 !important;
+}
+
 [data-theme="dark"] .portal-body .kicker,
-.portal-body.dark-mode .kicker {
+.portal-body.dark-mode .kicker,
+html[data-theme="dark"] .kicker {
   color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .portal-body .eyebrow,
-.portal-body.dark-mode .eyebrow {
+.portal-body.dark-mode .eyebrow,
+html[data-theme="dark"] .eyebrow {
   color: #38bdf8 !important;
 }
 
@@ -286,6 +321,9 @@ dialog:hover .glass-surface-glare {
 .portal-chart-card,
 .portal-territory-card,
 .portal-release-card,
+.portal-filter-card,
+.portal-demographics-card,
+.portal-playlists-card,
 .portal-dsp-box,
 .portal-dsp-grid > div,
 .portal-announcement-card,
@@ -295,19 +333,15 @@ dialog:hover .glass-surface-glare {
 .contract-card,
 .portal-filter-bar,
 .portal-empty-chart,
-.portal-search-bar-wrap,
 #portal-announcements-section > div,
 #portal-announcements-section .portal-announcement-card,
 #tab-overview > div:not(.section-head):not(.portal-grid-stats),
-#tab-releases > div:not(.section-head):not(.filter-chips):not(.portal-search-bar-wrap):not(.release-queue),
+#tab-releases > div:not(.section-head):not(.filter-chips):not(.portal-search-bar-wrap):not(.release-queue):not(.portal-filter-card),
 #tab-earnings > div:not(.section-head):not(.earnings-table),
-#tab-insights > div:not(.section-head),
+#tab-insights > div:not(.section-head):not(.portal-chart-card):not(.portal-demographics-card):not(.portal-playlists-card),
 #tab-support > div:not(.section-head):not(.service-card-grid),
 #tab-calendar > div:not(.section-head),
 #tab-lyrics > div:not(.section-head):not(.hide-mobile-grid),
-#portal-demographics-container,
-#portal-demographics-container > div,
-#artist-playlists-showcase > div,
 #artist-revenue-statements-list > div,
 #track-earnings-list > div,
 #payout-history-list > div,
@@ -341,10 +375,11 @@ dialog,
 .portal-chart-card::before,
 .portal-territory-card::before,
 .portal-release-card::before,
+.portal-filter-card::before,
+.portal-demographics-card::before,
+.portal-playlists-card::before,
 .portal-dsp-box::before,
 .portal-announcement-card::before,
-#portal-demographics-container > div::before,
-#artist-playlists-showcase > div::before,
 #artist-revenue-statements-list > div::before,
 #track-earnings-list > div::before,
 #payout-history-list > div::before,
@@ -667,23 +702,49 @@ dialog,
 
 .portal-filter-card .portal-search-bar-wrap {
   width: 100% !important;
-  background: rgba(24, 27, 44, 0.75) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
   border-radius: 12px !important;
   padding: 0 16px !important;
   display: flex !important;
   align-items: center !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+[data-theme="dark"] .portal-filter-card .portal-search-bar-wrap,
+.portal-body.dark-mode .portal-filter-card .portal-search-bar-wrap {
+  background: rgba(24, 27, 44, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+.portal-filter-card .portal-search-bar-wrap:focus-within {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25) !important;
+}
+
+.portal-filter-card .portal-search-icon {
+  font-size: 14px !important;
+  opacity: 0.65;
+  flex-shrink: 0 !important;
 }
 
 .portal-filter-card .portal-search-bar {
   width: 100% !important;
   background: transparent !important;
   border: none !important;
-  color: #ffffff !important;
+  color: var(--portal-text-main) !important;
   font-size: 13.5px !important;
   padding: 12px 0 12px 10px !important;
   outline: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .portal-filter-card .portal-search-bar,
+.portal-body.dark-mode .portal-filter-card .portal-search-bar {
+  color: #ffffff !important;
 }
 
 .portal-filter-card .filter-chips {

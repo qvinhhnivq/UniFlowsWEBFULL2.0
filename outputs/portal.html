@@ -402,21 +402,21 @@
         </div>
 
         <!-- Audience Demographics (Authentic State) -->
-        <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:14px;padding:24px;margin-top:20px;box-shadow:var(--portal-shadow);">
-          <h4 style="margin:0 0 12px;font-size:14px;text-transform:uppercase;color:var(--portal-text-muted);font-family:'DM Mono',monospace;" data-i18n="demographics_title">👥 Nhân khẩu học Người nghe (Audience Demographics)</h4>
+        <div class="portal-demographics-card" style="border-top:3px solid #8b5cf6;padding:24px 26px;margin-top:20px;">
+          <h4 style="margin:0 0 14px;font-size:13.5px;text-transform:uppercase;color:var(--portal-text-muted);font-family:'DM Mono',monospace;letter-spacing:0.5px;" data-i18n="demographics_title">👥 Nhân khẩu học Người nghe (Audience Demographics)</h4>
           <div id="portal-demographics-container">
-            <div style="padding:20px;background:var(--portal-hover-bg);border:1px dashed var(--portal-card-border);border-radius:10px;text-align:center;">
-              <p style="font-size:13px;color:var(--portal-text-muted);margin:0;line-height:1.5;" data-i18n="demographics_empty">
-                📊 <em>Chưa đủ dữ liệu mẫu nhân khẩu học. Báo cáo độ tuổi, giới tính và thiết bị của người nghe sẽ tự động tổng hợp khi catalogue đạt ngưỡng tối thiểu theo tiêu chuẩn DSP Telemetry (Spotify for Artists / Apple Music).</em>
-              </p>
-            </div>
+            <p style="font-size:13.5px;color:var(--portal-text-muted);margin:0;line-height:1.6;" data-i18n="demographics_empty">
+              📊 <em>Chưa đủ dữ liệu mẫu nhân khẩu học. Báo cáo độ tuổi, giới tính và thiết bị của người nghe sẽ tự động tổng hợp khi catalogue đạt ngưỡng tối thiểu theo tiêu chuẩn DSP Telemetry (Spotify for Artists / Apple Music).</em>
+            </p>
           </div>
         </div>
 
         <!-- Editorial Placements Showcase -->
-        <div style="margin-top:30px;">
-          <h3 style="font-size:18px;letter-spacing:-0.03em;margin-bottom:12px;" data-i18n="playlists_showcase_title">🌟 Thành tích Playlist (Editorial Placements)</h3>
-          <div id="artist-playlists-showcase"></div>
+        <div class="portal-playlists-card" style="border-top:3px solid #f59e0b;padding:24px 26px;margin-top:20px;">
+          <h3 style="font-size:18px;letter-spacing:-0.03em;margin:0 0 14px;" data-i18n="playlists_showcase_title">🌟 Thành tích Playlist (Editorial Placements)</h3>
+          <div id="artist-playlists-showcase">
+            <p class="empty" style="font-size:13.5px;color:var(--portal-text-muted);margin:0;" data-i18n="playlists_empty">Chưa có playlist biên tập ghi nhận trong kỳ này.</p>
+          </div>
         </div>
       </section>
 
