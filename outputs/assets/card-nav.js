@@ -122,7 +122,40 @@ export async function initCardNav(mountTarget, options = {}) {
     });
   });
 
-  // 2. Drawer Menu Toggle Button
+  // 2. Theme Switcher Slider (Cần gạt sáng/tối)
+  const isDarkInitial = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark' || localStorage.getItem('uniflows-portal-theme') === 'dark';
+  const themeSwitch = el('button', {
+    type: 'button',
+    class: 'card-nav-theme-slider' + (isDarkInitial ? ' is-dark' : ' is-light'),
+    id: 'top-nav-theme-slider',
+    'aria-label': 'Chuyển đổi giao diện sáng tối',
+    title: isDarkInitial ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'
+  }, [
+    el('span', { class: 'slider-track' }, [
+      el('span', { class: 'slider-thumb' }, [
+        el('span', { class: 'slider-icon sun' }, ['☀️']),
+        el('span', { class: 'slider-icon moon' }, ['🌙'])
+      ])
+    ])
+  ]);
+
+  themeSwitch.addEventListener('click', () => {
+    if (typeof opts.onThemeToggle === 'function') {
+      const isNowDark = opts.onThemeToggle();
+      themeSwitch.classList.toggle('is-dark', isNowDark);
+      themeSwitch.classList.toggle('is-light', !isNowDark);
+    } else {
+      const isDark = document.body.classList.contains('dark-mode');
+      const nextDark = !isDark;
+      document.body.classList.toggle('dark-mode', nextDark);
+      document.documentElement.setAttribute('data-theme', nextDark ? 'dark' : 'light');
+      localStorage.setItem('uniflows-portal-theme', nextDark ? 'dark' : 'light');
+      themeSwitch.classList.toggle('is-dark', nextDark);
+      themeSwitch.classList.toggle('is-light', !nextDark);
+    }
+  });
+
+  // 3. Drawer Menu Toggle Button
   const toggleBtn = el('button', {
     class: 'card-nav-btn',
     type: 'button',
@@ -134,6 +167,7 @@ export async function initCardNav(mountTarget, options = {}) {
   if (opts.buttonTextColor) toggleBtn.style.color = opts.buttonTextColor;
 
   barRight.appendChild(langSwitch);
+  barRight.appendChild(themeSwitch);
   barRight.appendChild(toggleBtn);
   bar.appendChild(barLeft);
   bar.appendChild(barRight);
@@ -277,7 +311,9 @@ export async function initCardNav(mountTarget, options = {}) {
       if (statusEl && role) statusEl.textContent = role;
     },
     setTheme(isDark) {
-      // Kept dark permanently
+      themeSwitch.classList.toggle('is-dark', isDark);
+      themeSwitch.classList.toggle('is-light', !isDark);
+      themeSwitch.title = isDark ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối';
     },
     setLanguage(lang) {
       langSwitch.querySelectorAll('.card-nav-lang-btn').forEach(b => {

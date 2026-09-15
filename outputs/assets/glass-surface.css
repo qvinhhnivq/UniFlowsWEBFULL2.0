@@ -4,23 +4,42 @@
    Designed for UniPORTAL & UniFLOWs
    ============================================================================== */
 
-:root,
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.58);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.95);
+  --glass-border-subtle: rgba(226, 232, 240, 0.85);
+  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 40%, rgba(168, 85, 247, 0.35) 70%, rgba(56, 189, 248, 0.4) 100%);
+  --glass-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03), inset 0 1px 1.5px 0 rgba(255, 255, 255, 1), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.4);
+  --glass-shadow-hover: 0 24px 50px rgba(15, 23, 42, 0.09), 0 4px 12px rgba(15, 23, 42, 0.04), inset 0 1.5px 2px 0 rgba(255, 255, 255, 1), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.5);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.3) 45%, rgba(168, 85, 247, 0.2) 75%, rgba(56, 189, 248, 0.2) 100%);
+  --glass-blur: 24px;
+  
+  --portal-bg: #f8fafc;
+  --portal-card-bg: rgba(255, 255, 255, 0.78);
+  --portal-card-border: rgba(255, 255, 255, 0.95);
+  --portal-text-main: #090d16;
+  --portal-text-muted: #334155;
+  --portal-text-dim: #64748b;
+}
+
 [data-theme="dark"],
 .portal-body.dark-mode {
-  --glass-bg: rgba(12, 14, 26, 0.52);
-  --glass-bg-subtle: rgba(18, 22, 38, 0.42);
-  --glass-bg-elevated: rgba(15, 18, 34, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-border-subtle: rgba(255, 255, 255, 0.1);
-  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.08) 40%, rgba(168, 85, 247, 0.65) 75%, rgba(56, 189, 248, 0.65) 100%);
-  --glass-shadow: 0 0 2px 1.5px rgba(255, 255, 255, 0.35) inset, 0 0 14px 4px rgba(255, 255, 255, 0.08) inset, 0 28px 70px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.25);
-  --glass-shadow-hover: 0 0 2.5px 2px rgba(255, 255, 255, 0.5) inset, 0 0 20px 6px rgba(56, 189, 248, 0.2) inset, 0 38px 90px rgba(0, 0, 0, 0.9), 0 0 2px rgba(255, 255, 255, 0.45);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(168, 85, 247, 0.5) 75%, rgba(56, 189, 248, 0.5) 100%);
-  --glass-blur: 42px;
+  --glass-bg: rgba(13, 15, 24, 0.52);
+  --glass-bg-subtle: rgba(18, 20, 32, 0.38);
+  --glass-bg-elevated: rgba(24, 26, 42, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-border-subtle: rgba(255, 255, 255, 0.08);
+  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.06) 40%, rgba(168, 85, 247, 0.6) 75%, rgba(56, 189, 248, 0.4) 100%);
+  --glass-shadow: 0 28px 70px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+  --glass-shadow-hover: 0 38px 90px rgba(0, 0, 0, 0.85), 0 0 2px rgba(255, 255, 255, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(168, 85, 247, 0.4) 75%, rgba(56, 189, 248, 0.3) 100%);
+  --glass-blur: 32px;
   
   --portal-bg: #06070a;
-  --portal-card-bg: rgba(12, 14, 26, 0.52);
-  --portal-card-border: rgba(255, 255, 255, 0.2);
+  --portal-card-bg: rgba(13, 15, 24, 0.52);
+  --portal-card-border: rgba(255, 255, 255, 0.16);
   --portal-text-main: #f8fafc;
   --portal-text-muted: #cbd5e1;
   --portal-text-dim: #94a3b8;
@@ -183,9 +202,6 @@ dialog:hover .glass-surface-glare {
 .portal-filter-bar,
 #portal-announcements-section > div,
 #tab-overview > div:first-child,
-#tab-earnings > div,
-.financial-statement-card,
-.earnings-table > div,
 dialog,
 .portal-mobile-bottom-nav {
   position: relative;
@@ -715,6 +731,7 @@ dialog::backdrop {
   backdrop-filter: blur(28px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
   border-bottom: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
 }
 
 .card-nav-dropdown {
@@ -722,6 +739,38 @@ dialog::backdrop {
   backdrop-filter: blur(40px) saturate(220%) !important;
   -webkit-backdrop-filter: blur(40px) saturate(220%) !important;
   border-bottom: 1px solid var(--glass-border) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25) !important;
+}
+
+.card-nav-card {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+.card-nav-card:hover {
+  background: var(--glass-bg-elevated) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+.card-nav-btn {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-nav-lang-switch,
+.card-nav-theme-slider {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
 }
 
 /* ==============================================================================
@@ -1461,388 +1510,3 @@ dialog[open].release-dialog-shell {
 .profile-tab-panel.active {
   display: block;
 }
-
-/* ==============================================================================
-   11. COMPREHENSIVE ULTRA LIQUID GLASS ACCENTS FOR ALL PORTAL MODULES
-   ============================================================================== */
-
-/* Profile Settings Glass Form Fields & Dropdowns */
-#profile-settings-dialog input:not([type="checkbox"]):not([type="radio"]),
-#profile-settings-dialog select,
-#profile-settings-dialog textarea,
-.searchable-bank-wrapper .bank-search-input {
-  background: rgba(255, 255, 255, 0.06) !important;
-  backdrop-filter: blur(24px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-  border: 1px solid var(--glass-border) !important;
-  color: var(--portal-text-main) !important;
-  border-radius: 14px !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.15) inset,
-    inset 0 2px 6px rgba(0, 0, 0, 0.4) !important;
-  transition: all 0.22s ease !important;
-}
-
-#profile-settings-dialog input:focus,
-#profile-settings-dialog textarea:focus,
-.searchable-bank-wrapper .bank-search-input:focus {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border-color: #38bdf8 !important;
-  box-shadow:
-    0 0 16px rgba(56, 189, 248, 0.35),
-    0 0 2px 1px rgba(255, 255, 255, 0.4) inset !important;
-}
-
-.bank-dropdown-list {
-  background: rgba(12, 14, 26, 0.95) !important;
-  backdrop-filter: blur(40px) saturate(220%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(220%) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 2px 1px rgba(255, 255, 255, 0.2) inset !important;
-}
-
-/* Release Studio Ultra Liquid Glass */
-dialog[open].release-dialog-shell {
-  background: rgba(10, 12, 24, 0.75) !important;
-  backdrop-filter: blur(55px) saturate(240%) brightness(105%) !important;
-  -webkit-backdrop-filter: blur(55px) saturate(240%) brightness(105%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  box-shadow:
-    0 0 2.5px 1.5px rgba(255, 255, 255, 0.4) inset,
-    0 0 18px 4px rgba(255, 255, 255, 0.08) inset,
-    0 40px 100px rgba(0, 0, 0, 0.85) !important;
-}
-
-.release-modal-header {
-  background: rgba(18, 22, 40, 0.6) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-}
-
-.release-stepper {
-  background: rgba(12, 14, 26, 0.5) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-.stepper-item.active {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-bottom-color: #38bdf8 !important;
-  box-shadow: inset 0 -2px 10px rgba(56, 189, 248, 0.25) !important;
-}
-
-.studio-dropzone,
-.release-dropzone-box {
-  background: rgba(255, 255, 255, 0.04) !important;
-  backdrop-filter: blur(28px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
-  border: 2px dashed rgba(255, 255, 255, 0.25) !important;
-  border-radius: 20px !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.15) inset,
-    0 10px 30px rgba(0, 0, 0, 0.3) !important;
-  transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-}
-
-.studio-dropzone:hover,
-.release-dropzone-box:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: #38bdf8 !important;
-  box-shadow:
-    0 0 20px rgba(56, 189, 248, 0.3),
-    0 0 2px 1px rgba(255, 255, 255, 0.3) inset !important;
-  transform: translateY(-2px);
-}
-
-/* Payout Hub Liquid Glass */
-#payout-dialog,
-#payout-method-dialog {
-  background: rgba(10, 12, 24, 0.75) !important;
-  backdrop-filter: blur(50px) saturate(240%) brightness(105%) !important;
-  -webkit-backdrop-filter: blur(50px) saturate(240%) brightness(105%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  box-shadow:
-    0 0 2.5px 1.5px rgba(255, 255, 255, 0.35) inset,
-    0 0 16px 4px rgba(255, 255, 255, 0.08) inset,
-    0 40px 100px rgba(0, 0, 0, 0.85) !important;
-}
-
-.bank-option-item {
-  background: rgba(255, 255, 255, 0.05) !important;
-  backdrop-filter: blur(24px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  border-radius: 18px !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.15) inset,
-    0 6px 20px rgba(0, 0, 0, 0.25) !important;
-  transition: all 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-}
-
-.bank-option-item:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 16px rgba(255, 255, 255, 0.15),
-    0 0 2px 1px rgba(255, 255, 255, 0.3) inset !important;
-}
-
-.bank-option-item.selected {
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(168, 85, 247, 0.25)) !important;
-  border-color: #38bdf8 !important;
-  box-shadow:
-    0 0 22px rgba(56, 189, 248, 0.4),
-    0 0 2px 1.5px rgba(255, 255, 255, 0.5) inset !important;
-}
-
-/* Notification Drawer Liquid Glass */
-.notif-drawer-glass-box {
-  background: rgba(10, 12, 22, 0.72) !important;
-  backdrop-filter: blur(55px) saturate(250%) brightness(105%) !important;
-  -webkit-backdrop-filter: blur(55px) saturate(250%) brightness(105%) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.25) inset,
-    -20px 0 60px rgba(0, 0, 0, 0.85) !important;
-}
-
-.notif-card-item {
-  background: rgba(255, 255, 255, 0.05) !important;
-  backdrop-filter: blur(28px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 18px !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.15) inset,
-    0 6px 20px rgba(0, 0, 0, 0.3) !important;
-  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-}
-
-.notif-card-item:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  box-shadow:
-    0 0 16px rgba(255, 255, 255, 0.15),
-    0 0 2px 1px rgba(255, 255, 255, 0.35) inset,
-    0 10px 30px rgba(0, 0, 0, 0.4) !important;
-}
-
-.notif-card-item.unread {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(168, 85, 247, 0.18)) !important;
-  border-color: rgba(56, 189, 248, 0.45) !important;
-  box-shadow:
-    0 0 20px rgba(56, 189, 248, 0.25),
-    0 0 2px 1px rgba(255, 255, 255, 0.4) inset !important;
-}
-
-/* ==============================================================================
-   12. LUMINOUS HIGH-CONTRAST LIQUID GLASS FOR REVENUE & FINANCIAL STATEMENTS
-   ============================================================================== */
-#tab-earnings {
-  color: var(--portal-text-main) !important;
-}
-
-#tab-earnings .section-head h2 {
-  color: #ffffff !important;
-  font-size: 26px !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.04em !important;
-}
-
-#tab-earnings .section-head p {
-  color: #94a3b8 !important;
-  font-size: 13.5px !important;
-}
-
-#tab-earnings .kicker {
-  color: #38bdf8 !important;
-  font-weight: 800 !important;
-}
-
-/* Contract & Accounting Card */
-#tab-earnings > div:nth-child(2) {
-  background: rgba(16, 20, 36, 0.72) !important;
-  backdrop-filter: blur(45px) saturate(220%) !important;
-  -webkit-backdrop-filter: blur(45px) saturate(220%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 20px !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.25) inset,
-    0 16px 40px rgba(0, 0, 0, 0.5) !important;
-}
-
-#portal-contract-term {
-  color: #ffffff !important;
-  font-size: 15px !important;
-  font-weight: 800 !important;
-}
-
-#portal-payout-cycle,
-#portal-royalty-rate {
-  color: #38bdf8 !important;
-  font-weight: 800 !important;
-  font-size: 13px !important;
-}
-
-/* Financial Statement Main Glass Box */
-.financial-statement-card {
-  background: rgba(14, 18, 34, 0.78) !important;
-  backdrop-filter: blur(50px) saturate(240%) brightness(108%) !important;
-  -webkit-backdrop-filter: blur(50px) saturate(240%) brightness(108%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  border-radius: 24px !important;
-  padding: 32px !important;
-  margin-bottom: 28px !important;
-  box-shadow:
-    0 0 2.5px 1.5px rgba(255, 255, 255, 0.35) inset,
-    0 0 16px 4px rgba(255, 255, 255, 0.08) inset,
-    0 28px 70px rgba(0, 0, 0, 0.75) !important;
-}
-
-.financial-statement-card span {
-  color: #94a3b8 !important;
-  font-weight: 800 !important;
-  font-size: 11px !important;
-  letter-spacing: 0.5px !important;
-}
-
-#artist-payable-balance {
-  color: #ffffff !important;
-  font-size: clamp(34px, 3.6vw, 44px) !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.05em !important;
-  text-shadow: 0 0 25px rgba(255, 255, 255, 0.25) !important;
-}
-
-#artist-pending-balance {
-  color: #cbd5e1 !important;
-  font-size: clamp(30px, 3.2vw, 38px) !important;
-  font-weight: 800 !important;
-}
-
-#artist-pending-payout {
-  color: #fbbf24 !important;
-  font-size: clamp(30px, 3.2vw, 38px) !important;
-  font-weight: 800 !important;
-  text-shadow: 0 0 20px rgba(251, 191, 36, 0.3) !important;
-}
-
-#request-payout-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: #ffffff !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-  border-radius: 9999px !important;
-  padding: 13px 28px !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
-  cursor: pointer !important;
-  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-}
-
-#request-payout-btn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 14px 35px rgba(16, 185, 129, 0.6), inset 0 1px 3px rgba(255, 255, 255, 0.8) !important;
-}
-
-/* Payout Progress Track Glass */
-.payout-flow-track {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 16px !important;
-  margin-top: 24px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  padding: 18px 20px !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 16px !important;
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1) !important;
-}
-
-.payout-flow-step {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  font-family: 'DM Mono', monospace !important;
-  font-size: 12px !important;
-  color: #94a3b8 !important;
-  font-weight: 700 !important;
-}
-
-.payout-flow-step.active {
-  color: #ffffff !important;
-  font-weight: 800 !important;
-}
-
-.payout-flow-step .step-dot {
-  width: 10px !important;
-  height: 10px !important;
-  border-radius: 50% !important;
-  background: #475569 !important;
-  border: 2px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-.payout-flow-step.active .step-dot {
-  background: #10b981 !important;
-  border-color: #a7f3d0 !important;
-  box-shadow: 0 0 12px #10b981 !important;
-}
-
-/* DSP Breakdown Cards */
-.earnings-table {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 18px !important;
-  margin: 24px 0 !important;
-  background: transparent !important;
-}
-
-.earnings-table > div {
-  background: rgba(14, 18, 34, 0.72) !important;
-  backdrop-filter: blur(35px) saturate(220%) !important;
-  -webkit-backdrop-filter: blur(35px) saturate(220%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 18px !important;
-  padding: 24px !important;
-  display: grid !important;
-  gap: 8px !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.2) inset,
-    0 16px 40px rgba(0, 0, 0, 0.5) !important;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
-}
-
-.earnings-table > div:hover {
-  transform: translateY(-3px) !important;
-  border-color: rgba(56, 189, 248, 0.5) !important;
-  box-shadow:
-    0 0 2px 1px rgba(255, 255, 255, 0.35) inset,
-    0 0 16px rgba(56, 189, 248, 0.25),
-    0 24px 50px rgba(0, 0, 0, 0.7) !important;
-}
-
-.earnings-table span {
-  font-family: 'DM Mono', monospace !important;
-  font-size: 11.5px !important;
-  text-transform: uppercase !important;
-  color: #38bdf8 !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.5px !important;
-}
-
-.earnings-table b {
-  font-size: clamp(24px, 2.6vw, 30px) !important;
-  letter-spacing: -0.05em !important;
-  font-weight: 900 !important;
-  color: #ffffff !important;
-}
-
-.earnings-table small {
-  font-size: 11.5px !important;
-  color: #94a3b8 !important;
-  font-weight: 600 !important;
-}
-
-

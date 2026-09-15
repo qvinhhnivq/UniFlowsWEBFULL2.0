@@ -5,6 +5,7 @@ import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimi
 import './security.js';
 import { initCardNav } from './card-nav.js';
 import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
+import { initGradientWaves } from './gradient-waves.js';
 import { initDither } from './dither.js';
 // Kiểm tra quyền đăng nhập
 const rawAuth = sessionStorage.getItem('uniflows-artist') || localStorage.getItem('uniflows-artist');
@@ -162,11 +163,11 @@ if (artist) {
     avatarEl.style.cursor = 'pointer';
     avatarEl.title = 'Nhấn để xem và đổi ảnh đại diện trong Hồ sơ';
     avatarEl.addEventListener('click', () => {
-      const openBtn = document.querySelector('#open-profile-settings-btn');
-      if (openBtn) openBtn.click();
-      setTimeout(() => {
-        document.querySelector('.profile-tab-btn[data-tab="profile-tab-photo"]')?.click();
-      }, 50);
+      if (typeof window.openProfileSettingsDialog === 'function') {
+        window.openProfileSettingsDialog('profile-tab-photo');
+      } else {
+        document.querySelector('#profile-settings-dialog')?.showModal();
+      }
     });
   }
 
@@ -210,7 +211,7 @@ if (artist) {
         textColor: "#ffffff",
         links: [
           { label: "Doanh thu & Rút tiền", hash: "#earnings", tab: "tab-earnings", ariaLabel: "Doanh thu và rút tiền" },
-          { label: "Hồ sơ & Cài đặt", onClick: () => document.querySelector('#open-profile-settings-btn')?.click(), ariaLabel: "Hồ sơ và cài đặt" },
+          { label: "Hồ sơ & Cài đặt", onClick: () => window.openProfileSettingsDialog?.(), ariaLabel: "Hồ sơ và cài đặt" },
           { label: "Đăng xuất Nghệ sĩ", action: "logout", ariaLabel: "Đăng xuất", isDanger: true }
         ]
       }
@@ -237,7 +238,7 @@ if (artist) {
         return nextTheme === 'dark';
       },
       onProfileClick: () => {
-        document.querySelector('#open-profile-settings-btn')?.click();
+        window.openProfileSettingsDialog?.();
       }
     });
   }
@@ -6078,10 +6079,18 @@ function initProfileSettingsDialog() {
   }
 
   // Open & Close Handlers
+  window.openProfileSettingsDialog = function(targetTab = null) {
+    populateProfileData();
+    if (targetTab) {
+      const tabBtn = document.querySelector(`.profile-tab-btn[data-tab="${targetTab}"]`);
+      if (tabBtn) tabBtn.click();
+    }
+    profileDialog.showModal();
+  };
+
   openProfileBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      populateProfileData();
-      profileDialog.showModal();
+      window.openProfileSettingsDialog();
     });
   });
 
@@ -6455,12 +6464,13 @@ function initProfileSettingsDialog() {
 
 function openSettingsBankingTab() {
   payoutDialog?.close();
-  const profileDialog = document.querySelector('#profile-settings-dialog');
-  if (profileDialog) {
+  if (typeof window.openProfileSettingsDialog === 'function') {
+    window.openProfileSettingsDialog('profile-tab-banking');
+  } else {
+    const profileDialog = document.querySelector('#profile-settings-dialog');
     const bankingTabBtn = document.querySelector('.profile-tab-btn[data-tab="profile-tab-banking"]');
     bankingTabBtn?.click();
-    const openProfileBtn = document.querySelector('#open-profile-settings-btn');
-    openProfileBtn?.click();
+    profileDialog?.showModal();
   }
 }
 
@@ -7417,9 +7427,42 @@ async function loadArtistServiceRequests() {
 }
 
 // ==========================================
-// Permanent Dark Mode with Dither Retro Waves & Liquid Glass
+// Theme Toggle (Light: GradientWaves / Dark: Dither Retro Waves)
 // ==========================================
+let portalGradientWavesInstance = null;
 let portalDitherInstance = null;
+
+function setupPortalGradientWaves() {
+  const bgEl = document.querySelector('#portal-gradient-waves-bg');
+  if (bgEl && !portalGradientWavesInstance) {
+    try {
+      portalGradientWavesInstance = initGradientWaves(bgEl, {
+        horizonColor: '#f1edff',
+        waveColor: '#FF9FFC',
+        crestColor: '#FFFFFF',
+        speed: 0.4,
+        amplitude: 2.5,
+        waveScale: 0.6,
+        waveRatio: 0.9,
+        swell: 35,
+        turbulence: 20,
+        tilt: 1.11,
+        zoom: 1,
+        height: 5.5,
+        fogDepth: 15,
+        detail: 'medium',
+        brightness: 1,
+        opacity: 1,
+        mouseInteraction: true,
+        parallaxStrength: 0.5,
+        grain: true,
+        grainIntensity: 0.05
+      });
+    } catch (err) {
+      console.warn('GradientWaves init warning:', err);
+    }
+  }
+}
 
 function setupPortalDither() {
   const ditherEl = document.querySelector('#portal-dither-bg');
@@ -7443,40 +7486,57 @@ function setupPortalDither() {
 }
 
 function initPortalTheme() {
-  // Always lock in Dark Mode for Ultra Liquid Glass aesthetic
-  applyPortalTheme('dark');
-  localStorage.setItem('uniflows-theme', 'dark');
+  const savedTheme = localStorage.getItem('uniflows-theme') || 'light';
+  applyPortalTheme(savedTheme);
 
   const toggleButtons = document.querySelectorAll('#theme-toggle-btn, #theme-toggle-header-btn');
   toggleButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      // Kept dark permanently
-      applyPortalTheme('dark');
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const newTheme = isDark ? 'light' : 'dark';
+      applyPortalTheme(newTheme);
+      localStorage.setItem('uniflows-theme', newTheme);
     });
   });
 }
 
-function applyPortalTheme(theme = 'dark') {
-  document.documentElement.setAttribute('data-theme', 'dark');
-  document.body.classList.add('dark-mode');
-
-  // Active WebGL Dither Shader in dark mode
-  setupPortalDither();
-  if (portalDitherInstance) {
-    portalDitherInstance.start();
+function applyPortalTheme(theme) {
+  const isDark = (theme === 'dark');
+  if (isDark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.classList.add('dark-mode');
+    if (portalGradientWavesInstance) {
+      portalGradientWavesInstance.stop();
+    }
+    // Active WebGL Dither Shader in dark mode
+    setupPortalDither();
+    if (portalDitherInstance) {
+      portalDitherInstance.start();
+    }
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.body.classList.remove('dark-mode');
+    if (portalDitherInstance) {
+      portalDitherInstance.stop();
+    }
+    // Active WebGL GradientWaves Shader in light mode
+    setupPortalGradientWaves();
+    if (portalGradientWavesInstance) {
+      portalGradientWavesInstance.start();
+    }
   }
 
-  // Update top nav theme slider to Dark state
+  // Update top nav theme slider
   if (window.cardNavInstance && typeof window.cardNavInstance.setTheme === 'function') {
-    window.cardNavInstance.setTheme(true);
+    window.cardNavInstance.setTheme(isDark);
   }
 
-  // Update all icons and text labels
+  // Update all icons and text labels across header & sidebar
   document.querySelectorAll('.theme-mode-icon').forEach(el => {
-    el.textContent = '🌙';
+    el.textContent = isDark ? '☀️' : '🌙';
   });
   document.querySelectorAll('.theme-mode-text').forEach(el => {
-    el.textContent = 'Chế độ Kính Tối';
+    el.textContent = isDark ? 'Chế độ Sáng' : 'Chế độ Tối';
   });
 }
 
