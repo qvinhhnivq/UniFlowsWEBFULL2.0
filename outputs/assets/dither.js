@@ -385,13 +385,26 @@ export class Dither {
     this.animId = requestAnimationFrame(render);
   }
 
+  start() {
+    if (!this.animId) {
+      this.animate();
+    }
+  }
+
+  stop() {
+    if (this.animId) {
+      cancelAnimationFrame(this.animId);
+      this.animId = null;
+    }
+  }
+
   setOptions(newOpts = {}) {
     Object.assign(this.options, newOpts);
     this.resize();
   }
 
   destroy() {
-    if (this.animId) cancelAnimationFrame(this.animId);
+    this.stop();
     window.removeEventListener('resize', this._handleResize);
     if (this._handleMouseMove) {
       window.removeEventListener('mousemove', this._handleMouseMove);

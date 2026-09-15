@@ -7492,16 +7492,17 @@ function setupPortalDither() {
 }
 
 function initPortalTheme() {
-  const savedTheme = localStorage.getItem('uniflows-theme') || 'light';
+  const savedTheme = localStorage.getItem('uniflows-theme') || localStorage.getItem('uniflows-portal-theme') || 'light';
   applyPortalTheme(savedTheme);
 
-  const toggleButtons = document.querySelectorAll('#theme-toggle-btn, #theme-toggle-header-btn');
+  const toggleButtons = document.querySelectorAll('#theme-toggle-btn, #theme-toggle-header-btn, #mobile-theme-toggle-btn');
   toggleButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
       const newTheme = isDark ? 'light' : 'dark';
       applyPortalTheme(newTheme);
       localStorage.setItem('uniflows-theme', newTheme);
+      localStorage.setItem('uniflows-portal-theme', newTheme);
     });
   });
 }
@@ -7511,26 +7512,31 @@ function applyPortalTheme(theme) {
   if (isDark) {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.body.classList.add('dark-mode');
-    if (portalGradientWavesInstance) {
+    if (portalGradientWavesInstance?.stop) {
       portalGradientWavesInstance.stop();
     }
     // Active WebGL Dither Shader in dark mode
     setupPortalDither();
     if (portalDitherInstance) {
-      portalDitherInstance.start();
+      portalDitherInstance.resize?.();
+      portalDitherInstance.start?.();
     }
   } else {
     document.documentElement.removeAttribute('data-theme');
     document.body.classList.remove('dark-mode');
-    if (portalDitherInstance) {
+    if (portalDitherInstance?.stop) {
       portalDitherInstance.stop();
     }
     // Active WebGL GradientWaves Shader in light mode
     setupPortalGradientWaves();
     if (portalGradientWavesInstance) {
-      portalGradientWavesInstance.start();
+      portalGradientWavesInstance.setSize?.();
+      portalGradientWavesInstance.start?.();
     }
   }
+
+  localStorage.setItem('uniflows-theme', theme);
+  localStorage.setItem('uniflows-portal-theme', theme);
 
   // Update top nav theme slider
   if (window.cardNavInstance && typeof window.cardNavInstance.setTheme === 'function') {

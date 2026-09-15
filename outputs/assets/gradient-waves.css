@@ -27,11 +27,14 @@
   height: 100vh;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.85;
-  transition: opacity 0.5s ease;
+  opacity: 0.92;
+  visibility: visible;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s ease;
 }
 
 [data-theme="dark"] .portal-gradient-waves-backdrop,
 .portal-body.dark-mode .portal-gradient-waves-backdrop {
-  display: none !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }

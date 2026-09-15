@@ -123,7 +123,8 @@ export async function initCardNav(mountTarget, options = {}) {
   });
 
   // 2. Theme Switcher Slider (Cần gạt sáng/tối)
-  const isDarkInitial = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark' || localStorage.getItem('uniflows-portal-theme') === 'dark';
+  const savedTheme = localStorage.getItem('uniflows-theme') || localStorage.getItem('uniflows-portal-theme') || 'light';
+  const isDarkInitial = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark' || savedTheme === 'dark';
   const themeSwitch = el('button', {
     type: 'button',
     class: 'card-nav-theme-slider' + (isDarkInitial ? ' is-dark' : ' is-light'),
@@ -145,10 +146,11 @@ export async function initCardNav(mountTarget, options = {}) {
       themeSwitch.classList.toggle('is-dark', isNowDark);
       themeSwitch.classList.toggle('is-light', !isNowDark);
     } else {
-      const isDark = document.body.classList.contains('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
       const nextDark = !isDark;
       document.body.classList.toggle('dark-mode', nextDark);
       document.documentElement.setAttribute('data-theme', nextDark ? 'dark' : 'light');
+      localStorage.setItem('uniflows-theme', nextDark ? 'dark' : 'light');
       localStorage.setItem('uniflows-portal-theme', nextDark ? 'dark' : 'light');
       themeSwitch.classList.toggle('is-dark', nextDark);
       themeSwitch.classList.toggle('is-light', !nextDark);

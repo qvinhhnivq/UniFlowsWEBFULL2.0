@@ -177,18 +177,19 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,Arial
 }
 
 .portal-body {
-  background: var(--portal-bg);
+  background: transparent;
   color: var(--portal-text-main);
   font-family: Manrope, Arial, sans-serif;
   margin: 0;
   line-height: 1.5;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: color 0.35s ease, background-color 0.35s ease;
 }
 
 .portal {
   display: block;
   width: 100%;
   min-height: 100vh;
+  background: transparent;
 }
 
 /* Sidebar */
@@ -302,7 +303,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,Arial
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  background: var(--portal-bg);
+  background: transparent !important;
 }
 
 /* Profile Header Bar */
@@ -553,19 +554,18 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,Arial
 
 .portal-search-bar {
   width: 100%;
-  padding: 14px 18px 14px 44px;
-  border: 1px solid var(--portal-card-border);
-  background: var(--portal-card-bg);
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
   color: var(--portal-text-main);
-  font-size: 15px;
+  font-size: 14px;
   font-family: inherit;
-  box-shadow: 3px 3px 0 var(--portal-card-border);
+  box-shadow: none;
 }
 
 .portal-search-bar:focus {
   outline: none;
-  background: #fff;
-  border-color: #0b0b0b;
+  background: transparent;
 }
 
 .portal-search-icon {

@@ -105,12 +105,13 @@ dialog:hover .glass-surface-glare {
 .portal-body {
   position: relative;
   min-height: 100vh;
-  background-color: var(--portal-bg) !important;
+  background-color: transparent !important;
   color: var(--portal-text-main);
   overflow-x: hidden;
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: color 0.35s ease;
 }
 
 /* High Contrast Text Boost */
@@ -236,10 +237,10 @@ html[data-theme="dark"] .eyebrow {
 }
 
 [data-theme="dark"] .portal-body select,
-[data-theme="dark"] .portal-body input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] .portal-body input:not([type="checkbox"]):not([type="radio"]):not(.portal-search-bar),
 [data-theme="dark"] .portal-body textarea,
 .portal-body.dark-mode select,
-.portal-body.dark-mode input:not([type="checkbox"]):not([type="radio"]),
+.portal-body.dark-mode input:not([type="checkbox"]):not([type="radio"]):not(.portal-search-bar),
 .portal-body.dark-mode textarea {
   background: rgba(24, 27, 44, 0.88) !important;
   color: #ffffff !important;
@@ -250,6 +251,7 @@ html[data-theme="dark"] .eyebrow {
 .portal-main {
   position: relative !important;
   z-index: 2 !important;
+  background: transparent !important;
 }
 
 .section-head {
@@ -776,25 +778,41 @@ dialog,
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.25) !important;
 }
 
-.portal-filter-card .portal-search-icon {
+.portal-filter-card .portal-search-icon,
+.portal-search-bar-wrap .portal-search-icon {
   font-size: 14px !important;
   opacity: 0.65;
   flex-shrink: 0 !important;
+  margin-right: 6px !important;
 }
 
-.portal-filter-card .portal-search-bar {
+.portal-filter-card .portal-search-bar,
+.portal-search-bar-wrap .portal-search-bar,
+input.portal-search-bar,
+[data-theme="dark"] .portal-filter-card .portal-search-bar,
+[data-theme="dark"] .portal-search-bar-wrap .portal-search-bar,
+[data-theme="dark"] input.portal-search-bar,
+.portal-body.dark-mode .portal-filter-card .portal-search-bar,
+.portal-body.dark-mode .portal-search-bar-wrap .portal-search-bar,
+.portal-body.dark-mode input.portal-search-bar {
   width: 100% !important;
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
+  border-radius: 0 !important;
   color: var(--portal-text-main) !important;
   font-size: 13.5px !important;
-  padding: 12px 0 12px 10px !important;
+  padding: 12px 0 12px 6px !important;
   outline: none !important;
   box-shadow: none !important;
 }
 
 [data-theme="dark"] .portal-filter-card .portal-search-bar,
-.portal-body.dark-mode .portal-filter-card .portal-search-bar {
+[data-theme="dark"] .portal-search-bar-wrap .portal-search-bar,
+[data-theme="dark"] input.portal-search-bar,
+.portal-body.dark-mode .portal-filter-card .portal-search-bar,
+.portal-body.dark-mode .portal-search-bar-wrap .portal-search-bar,
+.portal-body.dark-mode input.portal-search-bar {
   color: #ffffff !important;
 }
 
