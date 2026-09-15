@@ -1,60 +1,138 @@
 /* ==============================================================================
-   GLASS SURFACE — REACT BITS PORT (VANILLA JS + CSS + SVG FILTERS)
-   High-end Apple-style Liquid Glass & Chromatic Aberration Glassmorphism
-   Designed for UniPORTAL & UniFLOWs Editorial Brutalist Architecture
+   FULL GLASS SYSTEM — REACT BITS PORT (VANILLA JS + CSS + SVG FILTERS)
+   Complete Liquid Glass, Ambient Aurora Mesh & Refractive Glassmorphism
+   Designed for UniPORTAL & UniFLOWs
    ============================================================================== */
 
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg: rgba(255, 255, 255, 0.65);
   --glass-bg-subtle: rgba(255, 255, 255, 0.45);
-  --glass-border: rgba(255, 255, 255, 0.85);
-  --glass-border-dark: rgba(0, 0, 0, 0.12);
-  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 100%);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-border-subtle: rgba(255, 255, 255, 0.4);
+  --glass-border-dark: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --glass-shadow-hover: 0 24px 55px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.05) 100%);
   --glass-blur: 24px;
+  
+  --portal-bg: #f8f9fa;
+  --portal-card-bg: rgba(255, 255, 255, 0.7);
+  --portal-card-border: rgba(255, 255, 255, 0.8);
+  --portal-text-main: #09090b;
+  --portal-text-muted: #475569;
 }
 
-[data-theme="dark"] {
-  --glass-bg: rgba(18, 18, 22, 0.75);
-  --glass-bg-subtle: rgba(18, 18, 22, 0.5);
-  --glass-border: rgba(255, 255, 255, 0.14);
-  --glass-border-dark: rgba(0, 0, 0, 0.4);
-  --glass-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.2);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.01) 100%);
+[data-theme="dark"],
+.portal-body.dark-mode {
+  --glass-bg: rgba(18, 18, 24, 0.68);
+  --glass-bg-subtle: rgba(18, 18, 24, 0.45);
+  --glass-bg-elevated: rgba(26, 26, 36, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-subtle: rgba(255, 255, 255, 0.07);
+  --glass-border-dark: rgba(0, 0, 0, 0.35);
+  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.15);
+  --glass-shadow-hover: 0 30px 65px rgba(0, 0, 0, 0.6), 0 0 2px rgba(255, 255, 255, 0.25);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.01) 100%);
   --glass-blur: 28px;
+  
+  --portal-bg: #090a0f;
+  --portal-card-bg: rgba(18, 18, 24, 0.68);
+  --portal-card-border: rgba(255, 255, 255, 0.12);
+  --portal-text-main: #f8fafc;
+  --portal-text-muted: #94a3b8;
 }
 
-/* Base Glass Surface Container */
-.glass-surface {
+/* ==============================================================================
+   1. AMBIENT LIQUID AURORA BACKDROP FOR PORTAL BODY
+   ============================================================================== */
+.portal-body {
   position: relative;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  min-height: 100vh;
+  background-color: var(--portal-bg) !important;
+  color: var(--portal-text-main);
+  overflow-x: hidden;
+}
+
+/* Dynamic Ambient Glow Mesh */
+.portal-body::before,
+.portal-body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.65;
+  transition: opacity 0.5s ease;
+}
+
+/* Light Theme Mesh Orbs */
+.portal-body::before {
+  top: -10%;
+  left: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, rgba(129, 140, 248, 0.15) 50%, transparent 70%);
+}
+
+.portal-body::after {
+  bottom: -15%;
+  right: -10%;
+  width: 65vw;
+  height: 65vw;
+  background: radial-gradient(circle, rgba(216, 255, 72, 0.2) 0%, rgba(56, 189, 248, 0.15) 50%, transparent 70%);
+}
+
+/* Dark Theme Mesh Orbs */
+[data-theme="dark"] .portal-body::before,
+.portal-body.dark-mode::before {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.12) 50%, transparent 70%);
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .portal-body::after,
+.portal-body.dark-mode::after {
+  background: radial-gradient(circle, rgba(216, 255, 72, 0.15) 0%, rgba(16, 185, 129, 0.12) 50%, transparent 70%);
+  opacity: 0.8;
+}
+
+/* ==============================================================================
+   2. CORE GLASS SURFACE UTILITIES
+   ============================================================================== */
+.glass-surface,
+.portal-profile-bar,
+.portal-card-metric,
+.portal-grid-stats > div,
+.card,
+.portal-stat-card,
+.metric-card,
+.dashboard-card,
+.portal-section-card,
+.portal-filter-bar,
+#portal-announcements-section > div,
+#tab-overview > div:first-child,
+#notif-dropdown,
+dialog,
+.portal-mobile-bottom-nav {
+  position: relative;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
   border-radius: 18px;
-  overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
-              border-color 0.3s ease,
-              background 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.25s ease,
+              background 0.25s ease;
   z-index: 1;
 }
 
-/* Chromatic Aberration & Refractive SVG Filter Layer */
-.glass-surface-filter-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: inherit;
-  opacity: 0.95;
-  mix-blend-mode: normal;
-  transition: opacity 0.3s ease;
-}
-
-/* Specular Edge Highlight & Inner Glow */
-.glass-surface::before {
+/* Specular Edge Highlight on all Glass Surfaces */
+.glass-surface::before,
+.portal-profile-bar::before,
+.card::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -66,10 +144,179 @@
   mask-composite: exclude;
   pointer-events: none;
   z-index: 2;
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
-/* Dynamic Interactive Glare / Light Reflection */
+/* Hover elevation for interactive glass cards */
+.card:hover,
+.portal-stat-card:hover,
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-hover) !important;
+  border-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[data-theme="dark"] .card:hover,
+[data-theme="dark"] .portal-stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ==============================================================================
+   3. PORTAL PROFILE BAR & HEADER GLASS
+   ============================================================================== */
+.portal-profile-bar {
+  margin-bottom: 30px !important;
+  border-radius: 22px !important;
+  padding: 30px 34px !important;
+}
+
+/* Pill Buttons in Glass Style */
+.portal-theme-pill {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--portal-text-main) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+.portal-theme-pill:hover {
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Primary Action Buttons with Glass Polish */
+.portal .button,
+.portal button.button {
+  border-radius: 12px !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+.portal .button:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+}
+
+.portal .button.alt {
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--portal-text-main) !important;
+}
+
+.portal .button.alt:hover {
+  background: var(--glass-bg-elevated) !important;
+}
+
+/* ==============================================================================
+   4. TABLES, CATALOGUE & LIST ROWS GLASS
+   ============================================================================== */
+.portal table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.portal table thead th {
+  background: transparent !important;
+  color: var(--portal-text-muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 12px 18px;
+  border: none !important;
+}
+
+.portal table tbody tr,
+.release-row,
+.track-row {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.portal table tbody tr:hover,
+.release-row:hover,
+.track-row:hover {
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.portal table tbody td {
+  padding: 14px 18px;
+  border: none !important;
+}
+
+.portal table tbody td:first-child {
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.portal table tbody td:last-child {
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+/* ==============================================================================
+   5. INPUTS, SELECTS & TEXTAREAS GLASS
+   ============================================================================== */
+.portal input:not([type="checkbox"]):not([type="radio"]),
+.portal select,
+.portal textarea {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--portal-text-main) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  font-family: inherit;
+  transition: all 0.2s ease !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.portal input:focus,
+.portal select:focus,
+.portal textarea:focus {
+  background: var(--glass-bg-elevated) !important;
+  border-color: #d8ff48 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(216, 255, 72, 0.25) !important;
+}
+
+/* ==============================================================================
+   6. DIALOGS & MODAL BOXES GLASS
+   ============================================================================== */
+dialog {
+  background: var(--glass-bg-elevated) !important;
+  backdrop-filter: blur(32px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ==============================================================================
+   7. INTERACTIVE GLARE & SVG CHROMATIC FILTER INJECTOR
+   ============================================================================== */
 .glass-surface-glare {
   position: absolute;
   top: 0;
@@ -88,62 +335,12 @@
   transition: opacity 0.4s ease;
 }
 
-.glass-surface:hover .glass-surface-glare {
+.glass-surface:hover .glass-surface-glare,
+.portal-profile-bar:hover .glass-surface-glare,
+.card:hover .glass-surface-glare {
   opacity: 1;
 }
 
-/* Glass Surface Content Wrapper */
-.glass-surface-content {
-  position: relative;
-  z-index: 4;
-  height: 100%;
-  width: 100%;
-}
-
-/* Preset Variations */
-.glass-surface-pill {
-  border-radius: 9999px !important;
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-}
-
-.glass-surface-card {
-  border-radius: 20px;
-  padding: 24px;
-}
-
-.glass-surface-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 28px 65px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="dark"] .glass-surface-card:hover {
-  box-shadow: 0 32px 75px rgba(0, 0, 0, 0.6), 0 0 2px rgba(255, 255, 255, 0.3);
-}
-
-.glass-surface-hero {
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-}
-
-[data-theme="dark"] .glass-surface-hero {
-  background: linear-gradient(135deg, rgba(24, 24, 30, 0.85) 0%, rgba(14, 14, 18, 0.7) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-/* Portal Specific Glass Enhancements */
-.portal-profile-bar.glass-surface {
-  margin-bottom: 30px;
-  border-radius: 20px;
-}
-
-.portal-theme-pill.glass-surface-pill {
-  background: var(--glass-bg-subtle) !important;
-  border: 1px solid var(--glass-border) !important;
-}
-
-/* Hidden SVG Filters Injector */
 .glass-svg-defs-container {
   position: absolute;
   width: 0;

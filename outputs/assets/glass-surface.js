@@ -255,12 +255,27 @@ export function initPortalGlassSurfaces() {
     displace: 0.35
   });
 
-  // Enhance stats cards
-  document.querySelectorAll('.portal-stat-card, .metric-card, .dashboard-card').forEach(card => {
+  // Enhance stats and dashboard cards
+  document.querySelectorAll('.portal-stat-card, .metric-card, .dashboard-card, .card, .panel, .form-section').forEach(card => {
     enhanceWithGlassSurface(card, {
-      borderRadius: 16,
+      borderRadius: 18,
       displace: 0.3,
-      distortionScale: -90
+      distortionScale: -90,
+      redOffset: 0,
+      greenOffset: 6,
+      blueOffset: 12
+    });
+  });
+
+  // Enhance all modal dialogs
+  document.querySelectorAll('dialog, .portal-dialog, .modal-box').forEach(dlg => {
+    enhanceWithGlassSurface(dlg, {
+      borderRadius: 24,
+      displace: 0.4,
+      distortionScale: -120,
+      redOffset: 0,
+      greenOffset: 8,
+      blueOffset: 16
     });
   });
 }
