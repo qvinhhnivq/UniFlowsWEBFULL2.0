@@ -17,62 +17,7 @@
   <div id="portal-card-nav"></div>
 
   <main class="portal">
-    <!-- Left Navigation Sidebar -->
-    <aside class="portal-side" id="portal-sidebar-drawer">
-      <div class="portal-sidebar-header-row">
-        <a class="brand" href="index">UNIFLOWs<small>UniPORTAL (by UniENGINE)</small></a>
-        <button type="button" id="portal-close-drawer-btn" class="portal-drawer-close-btn" aria-label="Đóng Menu">✕</button>
-      </div>
-      <nav id="portal-nav">
-        <a href="#overview" data-tab="tab-overview" class="active">
-          <span>Tổng quan</span>
-        </a>
-        <a href="#releases" data-tab="tab-releases">
-          <span>Phát hành & Nhạc</span>
-          <span class="portal-nav-badge" id="nav-releases-count">0</span>
-        </a>
-        <a href="#earnings" data-tab="tab-earnings">
-          <span>Doanh thu & Rút tiền</span>
-        </a>
-        <a href="#insights" data-tab="tab-insights">
-          <span>Thống kê & Playlists</span>
-        </a>
-        <a href="#calendar" data-tab="tab-calendar">
-          <span>Lịch Phát Hành</span>
-        </a>
-        <a href="#lyrics" data-tab="tab-lyrics">
-          <span>Lời Đồng Bộ (.LRC)</span>
-        </a>
-        <a href="#support" data-tab="tab-support">
-          <span>Bản quyền & A&R</span>
-        </a>
-        
-        <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 10px;">
-          <!-- Sidebar Dark Mode Toggle Button -->
-          <button id="theme-toggle-btn" type="button" class="portal-theme-pill" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); box-shadow: none;">
-            <span class="theme-mode-text">Chế độ Tối</span>
-          </button>
-          
-          <button id="open-password-dialog-btn" class="button" style="width: 100%; font-size: 0.75rem; padding: 0.7rem; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: none;">
-            ĐỔI MẬT KHẨU
-          </button>
-          <button id="artist-logout" class="button alt" style="width: 100%; font-size: 0.75rem; padding: 0.7rem; background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: none;">
-            ĐĂNG XUẤT
-          </button>
-        </div>
-      </nav>
-
-      <!-- Sidebar Artist Footer -->
-      <div class="sidebar-artist-footer">
-        <img id="sidebar-artist-avatar" src="https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=100&q=80" alt="Avatar">
-        <div class="sidebar-artist-info">
-          <strong id="sidebar-artist-name">Nghệ sĩ</strong>
-          <small>● Studio Online</small>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content Workspace -->
+    <!-- Main Content Workspace (Full Width) -->
     <section class="portal-main">
       <!-- Artist Profile Header Bar -->
       <div class="portal-profile-bar">
@@ -89,7 +34,7 @@
             <p id="portal-welcome-desc" style="margin:8px 0 0;font-size:14px;color:var(--portal-text-muted);font-weight:500;">Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP toàn cầu.</p>
           </div>
         </div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           
           <!-- Notification Center -->
           <div class="notifications-wrapper" style="position: relative;">
@@ -116,6 +61,14 @@
           <!-- Language Switcher in Header -->
           <button id="portal-lang-toggle-btn" type="button" class="portal-theme-pill lang-toggle-btn" title="Chuyển đổi ngôn ngữ (Language Switcher)" style="box-shadow:none;">
             <span class="lang-flag">🇻🇳</span> <span class="lang-text">Tiếng Việt</span>
+          </button>
+
+          <button id="open-password-dialog-btn" type="button" class="portal-theme-pill" title="Đổi mật khẩu" style="font-size:12px; font-weight:700;">
+            🔑 Đổi mật khẩu
+          </button>
+
+          <button id="artist-logout" type="button" class="portal-theme-pill" style="font-size:12px; font-weight:700; color:#ef4444; border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.06);" title="Đăng xuất">
+            Đăng xuất
           </button>
 
           <button class="button release-action-btn" id="quick-open-release-modal-btn">

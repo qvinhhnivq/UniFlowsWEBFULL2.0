@@ -492,12 +492,12 @@ renderPortalAnnouncements(data.announcements || defaultData?.announcements || []
 function switchTab(tabId) {
   if (!tabId) tabId = 'tab-overview';
   
-  // Update nav link active state
-  document.querySelectorAll('#portal-nav a[data-tab]').forEach(link => {
-    if (link.dataset.tab === tabId) {
-      link.classList.add('active');
+  // Update bottom nav active state if present
+  document.querySelectorAll('#portal-mobile-bottom-nav .portal-bottom-nav-item[data-tab]').forEach(b => {
+    if (b.dataset.tab === tabId) {
+      b.classList.add('active');
     } else {
-      link.classList.remove('active');
+      b.classList.remove('active');
     }
   });
 
@@ -3475,11 +3475,9 @@ function initPortalMobileNav() {
       const tabId = item.getAttribute('data-tab');
       if (!tabId) return;
 
-      const sideLink = document.querySelector(`#portal-nav a[data-tab="${tabId}"]`);
-      if (sideLink) sideLink.click();
-
-      bottomNavItems.forEach(b => b.classList.remove('active'));
-      item.classList.add('active');
+      const hash = item.getAttribute('href') || `#${tabId.replace('tab-', '')}`;
+      history.pushState(null, null, hash);
+      switchTab(tabId);
     });
   });
 
