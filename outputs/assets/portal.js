@@ -5464,6 +5464,227 @@ if (isSupabaseConfigured()) {
     .subscribe();
 }
 
+// Full List of Banks in Vietnam (NAPAS, Commercial, State-owned, Foreign branches & Digital Wallets) sorted A-Z
+export const VIETNAM_BANKS = [
+  { code: 'ABBANK', shortName: 'ABBANK', nameVi: 'Ngân hàng TMCP An Bình', nameEn: 'An Binh Commercial Joint Stock Bank' },
+  { code: 'ACB', shortName: 'ACB', nameVi: 'Ngân hàng TMCP Á Châu', nameEn: 'Asia Commercial Joint Stock Bank' },
+  { code: 'Agribank', shortName: 'Agribank', nameVi: 'Ngân hàng Nông nghiệp & Phát triển Nông thôn Việt Nam', nameEn: 'Vietnam Bank for Agriculture and Rural Development' },
+  { code: 'ANZ', shortName: 'ANZ Bank', nameVi: 'Ngân hàng TNHH MTV ANZ Việt Nam', nameEn: 'ANZ Bank (Vietnam) Limited' },
+  { code: 'BacABank', shortName: 'Bac A Bank', nameVi: 'Ngân hàng TMCP Bắc Á', nameEn: 'Bac A Commercial Joint Stock Bank' },
+  { code: 'BaoVietBank', shortName: 'BaoViet Bank', nameVi: 'Ngân hàng TMCP Bảo Việt', nameEn: 'BaoViet Commercial Joint Stock Bank' },
+  { code: 'BIDV', shortName: 'BIDV', nameVi: 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam', nameEn: 'Bank for Investment and Development of Vietnam' },
+  { code: 'BVBank', shortName: 'BVBank (Bản Việt)', nameVi: 'Ngân hàng TMCP Bản Việt', nameEn: 'Viet Capital Commercial Joint Stock Bank' },
+  { code: 'CAKE', shortName: 'CAKE by VPBank', nameVi: 'Ngân hàng số CAKE by VPBank', nameEn: 'CAKE Digital Bank by VPBank' },
+  { code: 'CBBank', shortName: 'CBBank', nameVi: 'Ngân hàng Xây Dựng (CB)', nameEn: 'Construction Commercial One Member Limited Liability Bank' },
+  { code: 'CIMB', shortName: 'CIMB Bank', nameVi: 'Ngân hàng TNHH MTV CIMB Việt Nam', nameEn: 'CIMB Bank Vietnam Limited' },
+  { code: 'Co-opBank', shortName: 'Co-opBank', nameVi: 'Ngân hàng Hợp tác xã Việt Nam', nameEn: 'Co-operative Bank of Vietnam' },
+  { code: 'DBS', shortName: 'DBS Bank', nameVi: 'Ngân hàng DBS - Chi nhánh TP. Hồ Chí Minh', nameEn: 'Development Bank of Singapore Vietnam' },
+  { code: 'DongABank', shortName: 'DongA Bank', nameVi: 'Ngân hàng TMCP Đông Á', nameEn: 'DongA Commercial Joint Stock Bank' },
+  { code: 'Eximbank', shortName: 'Eximbank', nameVi: 'Ngân hàng TMCP Xuất Nhập Khẩu Việt Nam', nameEn: 'Vietnam Export Import Commercial Joint Stock Bank' },
+  { code: 'GPBank', shortName: 'GPBank', nameVi: 'Ngân hàng Dầu Khí Toàn Cầu', nameEn: 'Global Petro Commercial Bank' },
+  { code: 'HDBank', shortName: 'HDBank', nameVi: 'Ngân hàng TMCP Phát triển TP. Hồ Chí Minh', nameEn: 'Ho Chi Minh City Development Commercial Joint Stock Bank' },
+  { code: 'HongLeong', shortName: 'Hong Leong Bank', nameVi: 'Ngân hàng TNHH MTV Hong Leong Việt Nam', nameEn: 'Hong Leong Bank Vietnam Limited' },
+  { code: 'HSBC', shortName: 'HSBC Vietnam', nameVi: 'Ngân hàng TNHH MTV HSBC Việt Nam', nameEn: 'HSBC Bank (Vietnam) Limited' },
+  { code: 'IBK', shortName: 'IBK Bank', nameVi: 'Ngân hàng Công nghiệp Hàn Quốc (IBK)', nameEn: 'Industrial Bank of Korea Vietnam' },
+  { code: 'IVB', shortName: 'Indovina Bank (IVB)', nameVi: 'Ngân hàng TNHH Indovina', nameEn: 'Indovina Bank Limited' },
+  { code: 'KB', shortName: 'KB Kookmin Bank', nameVi: 'Ngân hàng KB Kookmin - Chi nhánh TP.HCM / Hà Nội', nameEn: 'KB Kookmin Bank Vietnam' },
+  { code: 'KienlongBank', shortName: 'KienlongBank', nameVi: 'Ngân hàng TMCP Kiên Long', nameEn: 'Kienlong Commercial Joint Stock Bank' },
+  { code: 'KBank', shortName: 'KPlus by KBank', nameVi: 'Ngân hàng Đại chúng TNHH Kasikornbank - Chi nhánh TP.HCM', nameEn: 'Kasikornbank Vietnam (KBank)' },
+  { code: 'LPBank', shortName: 'LPBank (Lộc Phát)', nameVi: 'Ngân hàng TMCP Lộc Phát Việt Nam (LienVietPostBank cũ)', nameEn: 'Fortune Vietnam Joint Stock Commercial Bank' },
+  { code: 'MB', shortName: 'MB Bank', nameVi: 'Ngân hàng TMCP Quân Đội', nameEn: 'Military Commercial Joint Stock Bank' },
+  { code: 'MSB', shortName: 'MSB (Hàng Hải)', nameVi: 'Ngân hàng TMCP Hàng Hải Việt Nam', nameEn: 'Vietnam Maritime Commercial Joint Stock Bank' },
+  { code: 'NamABank', shortName: 'Nam A Bank', nameVi: 'Ngân hàng TMCP Nam Á', nameEn: 'Nam A Commercial Joint Stock Bank' },
+  { code: 'NCB', shortName: 'NCB (Quốc Dân)', nameVi: 'Ngân hàng TMCP Quốc Dân', nameEn: 'National Citizen Commercial Joint Stock Bank' },
+  { code: 'NongHyup', shortName: 'NongHyup Bank', nameVi: 'Ngân hàng NongHyup - Chi nhánh Hà Nội', nameEn: 'NongHyup Bank Vietnam' },
+  { code: 'OCB', shortName: 'OCB (Phương Đông)', nameVi: 'Ngân hàng TMCP Phương Đông', nameEn: 'Orient Commercial Joint Stock Bank' },
+  { code: 'OceanBank', shortName: 'OceanBank', nameVi: 'Ngân hàng Thương mại MTV Đại Dương', nameEn: 'Ocean Commercial One Member Limited Liability Bank' },
+  { code: 'PayPal', shortName: 'PayPal', nameVi: 'Tài khoản thanh toán quốc tế PayPal (USD)', nameEn: 'PayPal International Payment Gateway' },
+  { code: 'PGBank', shortName: 'PGBank', nameVi: 'Ngân hàng TMCP Thịnh vượng và Phát triển', nameEn: 'Prosperity and Development Joint Stock Commercial Bank' },
+  { code: 'PublicBank', shortName: 'Public Bank Vietnam', nameVi: 'Ngân hàng TNHH MTV Public Việt Nam', nameEn: 'Public Bank Vietnam Limited' },
+  { code: 'PVcomBank', shortName: 'PVcomBank', nameVi: 'Ngân hàng TMCP Đại Chúng Việt Nam', nameEn: 'Vietnam Public Joint Stock Commercial Bank' },
+  { code: 'Saigonbank', shortName: 'Saigonbank', nameVi: 'Ngân hàng TMCP Sài Gòn Công Thương', nameEn: 'Saigon Bank for Industry and Trade' },
+  { code: 'SCB', shortName: 'SCB', nameVi: 'Ngân hàng TMCP Sài Gòn', nameEn: 'Saigon Commercial Joint Stock Bank' },
+  { code: 'SeABank', shortName: 'SeABank', nameVi: 'Ngân hàng TMCP Đông Nam Á', nameEn: 'Southeast Asia Commercial Joint Stock Bank' },
+  { code: 'SHB', shortName: 'SHB', nameVi: 'Ngân hàng TMCP Sài Gòn - Hà Nội', nameEn: 'Saigon - Hanoi Commercial Joint Stock Bank' },
+  { code: 'ShinhanBank', shortName: 'Shinhan Bank', nameVi: 'Ngân hàng TNHH MTV Shinhan Việt Nam', nameEn: 'Shinhan Bank Vietnam Limited' },
+  { code: 'ShopeePay', shortName: 'Ví ShopeePay', nameVi: 'Ví Điện Tử ShopeePay (AirPay cũ)', nameEn: 'ShopeePay Vietnam Digital Wallet' },
+  { code: 'StandardChartered', shortName: 'Standard Chartered', nameVi: 'Ngân hàng TNHH MTV Standard Chartered Việt Nam', nameEn: 'Standard Chartered Bank (Vietnam) Limited' },
+  { code: 'TCB', shortName: 'Techcombank', nameVi: 'Ngân hàng TMCP Kỹ Thương Việt Nam', nameEn: 'Vietnam Technological and Commercial Joint Stock Bank' },
+  { code: 'Timo', shortName: 'Timo Digital Bank', nameVi: 'Ngân hàng số Timo (by BVBank)', nameEn: 'Timo Digital Bank Powered by BVBank' },
+  { code: 'TNEX', shortName: 'TNEX by MSB', nameVi: 'Ngân hàng thuần số TNEX (by MSB)', nameEn: 'TNEX Digital Bank Powered by MSB' },
+  { code: 'TPBank', shortName: 'TPBank', nameVi: 'Ngân hàng TMCP Tiên Phong', nameEn: 'Tien Phong Commercial Joint Stock Bank' },
+  { code: 'UBank', shortName: 'UBank by VPBank', nameVi: 'Ngân hàng số UBank by VPBank', nameEn: 'UBank Digital Bank Powered by VPBank' },
+  { code: 'UOB', shortName: 'United Overseas Bank (UOB)', nameVi: 'Ngân hàng TNHH MTV United Overseas Bank Việt Nam', nameEn: 'United Overseas Bank (Vietnam) Limited' },
+  { code: 'VIB', shortName: 'VIB', nameVi: 'Ngân hàng TMCP Quốc tế Việt Nam', nameEn: 'Vietnam International Commercial Joint Stock Bank' },
+  { code: 'VietABank', shortName: 'VietABank', nameVi: 'Ngân hàng TMCP Việt Á', nameEn: 'Viet A Commercial Joint Stock Bank' },
+  { code: 'VietBank', shortName: 'VietBank', nameVi: 'Ngân hàng TMCP Việt Nam Thương Tín', nameEn: 'Vietnam Thuong Tin Commercial Joint Stock Bank' },
+  { code: 'Vietcombank', shortName: 'Vietcombank (VCB)', nameVi: 'Ngân hàng TMCP Ngoại Thương Việt Nam', nameEn: 'Joint Stock Commercial Bank for Foreign Trade of Vietnam' },
+  { code: 'VietinBank', shortName: 'VietinBank (CTG)', nameVi: 'Ngân hàng TMCP Công Thương Việt Nam', nameEn: 'Vietnam Joint Stock Commercial Bank for Industry and Trade' },
+  { code: 'ViettelMoney', shortName: 'Ví Viettel Money', nameVi: 'Tiền di động / Ví điện tử Viettel Money (ViettelPay)', nameEn: 'Viettel Money Digital Payment Service' },
+  { code: 'MoMo', shortName: 'Ví MoMo', nameVi: 'Ví Điện Tử MoMo (M-Service)', nameEn: 'MoMo E-Wallet & Digital Financial Service' },
+  { code: 'VNPay', shortName: 'Ví VNPay', nameVi: 'Ví Điện Tử VNPay', nameEn: 'VNPay Digital E-Wallet' },
+  { code: 'VPBank', shortName: 'VPBank', nameVi: 'Ngân hàng TMCP Việt Nam Thịnh Vượng', nameEn: 'Vietnam Prosperity Joint Stock Commercial Bank' },
+  { code: 'VRB', shortName: 'VRB Bank', nameVi: 'Ngân hàng Liên doanh Việt - Nga', nameEn: 'Vietnam - Russia Joint Venture Bank' },
+  { code: 'WooriBank', shortName: 'Woori Bank Vietnam', nameVi: 'Ngân hàng TNHH MTV Woori Việt Nam', nameEn: 'Woori Bank Vietnam Limited' },
+  { code: 'ZaloPay', shortName: 'Ví ZaloPay', nameVi: 'Ví Điện Tử ZaloPay (ZION)', nameEn: 'ZaloPay E-Wallet & Digital Platform' }
+];
+
+function removeVietnameseTones(str) {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
+function initSearchableBankDropdown() {
+  const wrapper = document.querySelector('#payout-bank-wrapper');
+  const searchInput = document.querySelector('#payout-bank-search');
+  const hiddenInput = document.querySelector('#payout-bank');
+  const dropdown = document.querySelector('#payout-bank-dropdown');
+
+  if (!wrapper || !searchInput || !dropdown) return;
+
+  let highlightedIndex = -1;
+  let currentFilteredList = [...VIETNAM_BANKS];
+
+  function renderList(list) {
+    currentFilteredList = list;
+    highlightedIndex = -1;
+    if (list.length === 0) {
+      dropdown.innerHTML = `
+        <div style="padding:14px 16px;font-size:12.5px;color:var(--portal-text-dim);text-align:center;">
+          Không tìm thấy ngân hàng hoặc ví điện tử nào phù hợp.
+        </div>
+      `;
+      return;
+    }
+
+    const currentVal = hiddenInput?.value || '';
+    dropdown.innerHTML = list.map((b, idx) => {
+      const isSelected = currentVal === `${b.shortName} (${b.code})` || currentVal === b.shortName;
+      return `
+        <div class="bank-option-item ${isSelected ? 'selected' : ''}" data-index="${idx}">
+          <div class="bank-option-main">
+            <span class="bank-option-name">${esc(b.shortName)}</span>
+            <span class="bank-option-badge">${esc(b.code)}</span>
+          </div>
+          <div class="bank-option-sub">
+            <div style="font-weight:600;color:var(--portal-text-main);">${esc(b.nameVi)}</div>
+            <div style="font-size:10.5px;opacity:0.75;font-style:italic;">${esc(b.nameEn)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    dropdown.querySelectorAll('.bank-option-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const index = parseInt(item.dataset.index, 10);
+        const selected = currentFilteredList[index];
+        if (selected) {
+          selectBank(selected);
+        }
+      });
+    });
+  }
+
+  function selectBank(bank) {
+    searchInput.value = `${bank.shortName} (${bank.code}) — ${bank.nameVi}`;
+    if (hiddenInput) hiddenInput.value = `${bank.shortName} (${bank.code})`;
+    closeDropdown();
+  }
+
+  function openDropdown() {
+    wrapper.classList.add('open');
+    dropdown.style.display = 'flex';
+    filterBanks(searchInput.value.trim());
+  }
+
+  function closeDropdown() {
+    wrapper.classList.remove('open');
+    dropdown.style.display = 'none';
+  }
+
+  function filterBanks(query) {
+    if (!query) {
+      renderList(VIETNAM_BANKS);
+      return;
+    }
+    const cleanQ = removeVietnameseTones(query);
+    const words = cleanQ.split(/\s+/).filter(Boolean);
+
+    const filtered = VIETNAM_BANKS.filter(b => {
+      const bankSearchCorpus = removeVietnameseTones(`${b.shortName} ${b.code} ${b.nameVi} ${b.nameEn}`);
+      return words.every(w => bankSearchCorpus.includes(w));
+    });
+    renderList(filtered);
+  }
+
+  searchInput.addEventListener('focus', () => {
+    openDropdown();
+  });
+
+  searchInput.addEventListener('input', () => {
+    if (!wrapper.classList.contains('open')) {
+      wrapper.classList.add('open');
+      dropdown.style.display = 'flex';
+    }
+    filterBanks(searchInput.value.trim());
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (!wrapper.classList.contains('open')) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter') {
+        openDropdown();
+        e.preventDefault();
+      }
+      return;
+    }
+
+    const items = dropdown.querySelectorAll('.bank-option-item');
+    if (items.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      highlightedIndex = (highlightedIndex + 1) % items.length;
+      updateHighlight(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
+      updateHighlight(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < currentFilteredList.length) {
+        selectBank(currentFilteredList[highlightedIndex]);
+      } else if (currentFilteredList.length > 0) {
+        selectBank(currentFilteredList[0]);
+      }
+    } else if (e.key === 'Escape') {
+      closeDropdown();
+    }
+  });
+
+  function updateHighlight(items) {
+    items.forEach((it, idx) => {
+      if (idx === highlightedIndex) {
+        it.classList.add('highlighted');
+        it.scrollIntoView({ block: 'nearest' });
+      } else {
+        it.classList.remove('highlighted');
+      }
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target)) {
+      closeDropdown();
+    }
+  });
+}
+
 requestPayoutBtn?.addEventListener('click', () => {
   if (availableBalanceNumber < 1000000) {
     alert(`Số dư khả dụng hiện tại của bạn là ₫ ${availableBalanceNumber.toLocaleString('vi-VN')}, chưa đạt mức rút tối thiểu (₫ 1,000,000).`);
@@ -5471,17 +5692,26 @@ requestPayoutBtn?.addEventListener('click', () => {
   }
   if (payoutDialogNotice) payoutDialogNotice.style.display = 'none';
   payoutRequestForm?.reset();
+  const searchInput = document.querySelector('#payout-bank-search');
+  const hiddenBankInput = document.querySelector('#payout-bank');
+  if (searchInput) searchInput.value = '';
+  if (hiddenBankInput) hiddenBankInput.value = '';
   const amtInput = document.querySelector('#payout-amount');
   if (amtInput) {
     amtInput.max = availableBalanceNumber;
     amtInput.value = availableBalanceNumber;
   }
+  document.querySelectorAll('.percent-pill-btn').forEach(b => b.classList.remove('active'));
+  const pill100 = document.querySelector('.percent-pill-btn[data-percent="1.0"]');
+  if (pill100) pill100.classList.add('active');
   payoutDialog?.showModal();
 });
 
 // Quick percentage buttons in Payout Dialog
 document.querySelectorAll('.percent-pill-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    document.querySelectorAll('.percent-pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
     const pct = parseFloat(btn.dataset.percent || '1.0');
     if (availableBalanceNumber > 0) {
       const calculatedAmt = Math.floor((availableBalanceNumber * pct) / 10000) * 10000;
@@ -5501,12 +5731,22 @@ closePayoutDialogBtn?.addEventListener('click', () => {
   payoutDialog?.close();
 });
 
+const closePayoutDialogBtnFooter = document.querySelector('#close-payout-dialog-btn-footer');
+closePayoutDialogBtnFooter?.addEventListener('click', () => {
+  payoutDialog?.close();
+});
+
 payoutRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const amountVal = parseInt(document.querySelector('#payout-amount')?.value, 10);
-  const bank = document.querySelector('#payout-bank')?.value.trim();
+  const bank = document.querySelector('#payout-bank')?.value.trim() || document.querySelector('#payout-bank-search')?.value.trim();
   const accountNumber = document.querySelector('#payout-account-number')?.value.trim();
   const accountName = document.querySelector('#payout-account-name')?.value.trim().toUpperCase();
+
+  if (!bank) {
+    alert('Vui lòng chọn hoặc nhập Ngân hàng / Ví thụ hưởng.');
+    return;
+  }
 
   if (amountVal < 1000000) {
     alert('Số tiền rút tối thiểu là ₫ 1,000,000');
@@ -7076,3 +7316,4 @@ initSyncedLyricsStudio();
 initDspControls();
 initTerritoryControls();
 initLanguageSearchableControls();
+initSearchableBankDropdown();
