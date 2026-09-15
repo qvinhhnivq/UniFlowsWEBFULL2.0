@@ -232,7 +232,11 @@ export async function initCardNav(mountTarget, options = {}) {
         } else if (linkItem.action === 'theme') {
           document.querySelector('#theme-toggle-btn')?.click() || document.querySelector('#mobile-theme-toggle-btn')?.click();
         } else if (linkItem.action === 'logout') {
-          document.querySelector('#artist-logout')?.click();
+          if (typeof window.handleArtistLogout === 'function') {
+            window.handleArtistLogout();
+          } else {
+            document.querySelector('#profile-logout-btn')?.click() || document.querySelector('#artist-logout')?.click();
+          }
         } else if (linkItem.hash) {
           location.hash = linkItem.hash;
         } else if (linkItem.tab) {
