@@ -453,8 +453,8 @@ export function initPortalGlassSurfaces() {
     });
   });
 
-  // Stats & metric cards
-  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card').forEach(card => {
+  // Stats, charts, territories, releases & metric cards
+  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card, .portal-chart-card, .portal-territory-card, .portal-release-card, .portal-dsp-box, .financial-statement-card, .portal-announcement-card').forEach(card => {
     enhanceWithGlassSurface(card, {
       borderRadius: 20,
       distortionScale: -140,
@@ -476,7 +476,7 @@ export function initPortalGlassSurfaces() {
   });
 
   // Data tables & release items
-  document.querySelectorAll('.data-table, .release-row, .track-row, .catalog-item, .payout-history-table').forEach(item => {
+  document.querySelectorAll('.data-table, .release-row, .track-row, .catalog-item, .payout-history-table, .portal-territory-row').forEach(item => {
     if (!item.classList.contains('glass-surface')) {
       item.classList.add('glass-surface');
     }

@@ -4893,11 +4893,11 @@ async function renderReleases() {
             const barHeightPct = Math.max(12, Math.round(trendRatios[i] * 100));
             const isCurrent = i === months.length - 1;
             return `
-              <div class="portal-chart-col">
-                <div class="portal-chart-bar" style="height:${barHeightPct}%; background:${isCurrent ? '#3b82f6' : '#1e293b'};">
-                  <div class="chart-tooltip">${mStreams.toLocaleString('vi-VN')} streams (${m})</div>
+              <div class="portal-chart-col ${isCurrent ? 'current' : ''}">
+                <div class="portal-chart-bar ${isCurrent ? 'active' : ''}" style="height:${barHeightPct}%;">
+                  <div class="chart-tooltip">${mStreams.toLocaleString('vi-VN')} streams</div>
                 </div>
-                <span class="portal-chart-month" style="${isCurrent ? 'color:#2563eb;font-weight:bold;' : ''}">${m}</span>
+                <span class="portal-chart-month ${isCurrent ? 'active' : ''}">${m}</span>
               </div>
             `;
           }).join('')}
