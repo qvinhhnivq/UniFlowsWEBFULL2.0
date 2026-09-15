@@ -3,6 +3,7 @@ import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import './security.js';
 import { initFluidCanvas } from './fluid.js';
 import { initInteractions } from './interactions.js';
+import { initRippleDistortion } from './RippleDistortion.js';
 
 // Auto-redirect subdomains cleanly to main domain canonical paths
 (function autoRedirectSubdomains() {
@@ -757,6 +758,30 @@ function bootstrapMonopoExperience() {
     initFluidCanvas(canvas);
   }
   initInteractions();
+
+  const rippleMount = document.getElementById('ripple-distortion-frame');
+  if (rippleMount) {
+    initRippleDistortion(rippleMount, {
+      src: '/hero.jpg',
+      brushSize: 150,
+      strength: 0.2,
+      swirl: 1,
+      rings: 4,
+      grayscale: true,
+      spread: 5,
+      fade: 3,
+      spacing: 15,
+      dispersion: 0,
+      glint: 0,
+      tint: '#a855f7',
+      tintAmount: 0.1,
+      highlightColor: '#ffffff',
+      trigger: 'hover',
+      clickStrength: 2,
+      quality: 'low',
+      enabled: true
+    });
+  }
 }
 
 if (document.readyState === 'loading') {
