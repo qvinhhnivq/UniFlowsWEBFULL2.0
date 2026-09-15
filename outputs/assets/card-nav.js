@@ -228,11 +228,25 @@ export async function initCardNav(mountTarget, options = {}) {
         if (typeof linkItem.onClick === 'function') {
           linkItem.onClick();
         } else if (linkItem.action === 'password') {
-          document.querySelector('#open-password-dialog-btn')?.click();
+          const openBtn = document.querySelector('#open-profile-settings-btn');
+          if (openBtn) openBtn.click();
+          setTimeout(() => {
+            document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
+          }, 50);
         } else if (linkItem.action === 'theme') {
           document.querySelector('#theme-toggle-btn')?.click() || document.querySelector('#mobile-theme-toggle-btn')?.click();
         } else if (linkItem.action === 'logout') {
-          document.querySelector('#artist-logout')?.click();
+          if (typeof window.performArtistLogout === 'function') {
+            window.performArtistLogout();
+          } else {
+            const pLogoutBtn = document.querySelector('#profile-logout-btn') || document.querySelector('#artist-logout');
+            if (pLogoutBtn) pLogoutBtn.click();
+            else {
+              localStorage.removeItem('uniflows-artist');
+              sessionStorage.removeItem('uniflows-artist');
+              location.href = 'artist-login';
+            }
+          }
         } else if (linkItem.hash) {
           location.hash = linkItem.hash;
         } else if (linkItem.tab) {

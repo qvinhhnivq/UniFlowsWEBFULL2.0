@@ -317,17 +317,28 @@ function artistDetail() {
   }
   const gallery = (a.gallery?.length ? a.gallery : [a.image]).filter(Boolean);
   
-  // Social links sanitation
-  const ig = formatSocialUrl(a.instagram);
-  const yt = formatSocialUrl(a.youtube);
-  const tt = formatSocialUrl(a.tiktok);
-  const sp = formatSocialUrl(a.spotify);
+  // Social & Custom Platform links
+  const socials = (typeof a.socials === 'object' && a.socials) ? a.socials : {};
+  const ig = formatSocialUrl(a.instagram || socials.instagram);
+  const yt = formatSocialUrl(a.youtube || socials.youtube);
+  const tt = formatSocialUrl(a.tiktok || socials.tiktok);
+  const fb = formatSocialUrl(a.facebook || socials.facebook);
+  const sp = formatSocialUrl(a.spotify || socials.spotify);
+
+  const customLinksList = Array.isArray(a.customLinks) ? a.customLinks : (Array.isArray(a.custom_links) ? a.custom_links : []);
+  const customLinksHtml = customLinksList.map(item => {
+    const name = esc(item.name || item.platform || 'Link');
+    const url = formatSocialUrl(item.url || item.link);
+    return url ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${name} ↗</a>` : '';
+  }).filter(Boolean).join('');
 
   const socialLinksHtml = [
     ig ? `<a href="${ig}" target="_blank" rel="noopener noreferrer">Instagram ↗</a>` : '',
-    yt ? `<a href="${yt}" target="_blank" rel="noopener noreferrer">YouTube ↗</a>` : '',
     tt ? `<a href="${tt}" target="_blank" rel="noopener noreferrer">TikTok ↗</a>` : '',
-    sp ? `<a href="${sp}" target="_blank" rel="noopener noreferrer">Spotify ↗</a>` : ''
+    yt ? `<a href="${yt}" target="_blank" rel="noopener noreferrer">YouTube ↗</a>` : '',
+    fb ? `<a href="${fb}" target="_blank" rel="noopener noreferrer">Facebook ↗</a>` : '',
+    sp ? `<a href="${sp}" target="_blank" rel="noopener noreferrer">Spotify ↗</a>` : '',
+    customLinksHtml
   ].filter(Boolean).join('');
 
   root.innerHTML = `

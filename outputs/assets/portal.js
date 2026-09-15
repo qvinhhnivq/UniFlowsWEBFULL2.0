@@ -159,9 +159,13 @@ if (artist) {
   if (avatarEl && artist.image) avatarEl.src = artist.image;
   if (avatarEl) {
     avatarEl.style.cursor = 'pointer';
-    avatarEl.title = 'Nhấn để đổi ảnh đại diện trên website chính';
+    avatarEl.title = 'Nhấn để xem và đổi ảnh đại diện trong Hồ sơ';
     avatarEl.addEventListener('click', () => {
-      document.querySelector('#btn-open-photo-request')?.click();
+      const openBtn = document.querySelector('#open-profile-settings-btn');
+      if (openBtn) openBtn.click();
+      setTimeout(() => {
+        document.querySelector('.profile-tab-btn[data-tab="profile-tab-photo"]')?.click();
+      }, 50);
     });
   }
 
@@ -206,8 +210,14 @@ if (artist) {
         links: [
           { label: "Doanh thu & Rút tiền", hash: "#earnings", tab: "tab-earnings", ariaLabel: "Doanh thu và rút tiền" },
           { label: "Hồ sơ & Cài đặt", onClick: () => document.querySelector('#open-profile-settings-btn')?.click(), ariaLabel: "Hồ sơ và cài đặt" },
-          { label: "Đổi mật khẩu tài khoản", action: "password", ariaLabel: "Đổi mật khẩu" },
-          { label: "Đăng xuất Nghệ sĩ", action: "logout", ariaLabel: "Đăng xuất", isDanger: true }
+          { label: "Đổi mật khẩu tài khoản", action: "password", onClick: () => {
+              const openBtn = document.querySelector('#open-profile-settings-btn');
+              if (openBtn) openBtn.click();
+              setTimeout(() => {
+                document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
+              }, 50);
+            }, ariaLabel: "Đổi mật khẩu" },
+          { label: "Đăng xuất Nghệ sĩ", action: "logout", onClick: () => performArtistLogout(), ariaLabel: "Đăng xuất", isDanger: true }
         ]
       }
     ];
@@ -6045,12 +6055,16 @@ function initProfileSettingsDialog() {
     const bioInp = document.querySelector('#profile-bio-input');
     const igInp = document.querySelector('#profile-ig-input');
     const tiktokInp = document.querySelector('#profile-tiktok-input');
+    const ytInp = document.querySelector('#profile-yt-input');
+    const fbInp = document.querySelector('#profile-fb-input');
 
     if (nameInp) nameInp.value = artist.name || '';
     if (genreInp) genreInp.value = artist.genre || artist.genres || '';
     if (bioInp) bioInp.value = artist.bio || '';
     if (igInp) igInp.value = (artist.socials && artist.socials.instagram) || artist.instagram || '';
     if (tiktokInp) tiktokInp.value = (artist.socials && artist.socials.tiktok) || artist.tiktok || '';
+    if (ytInp) ytInp.value = (artist.socials && artist.socials.youtube) || artist.youtube || '';
+    if (fbInp) fbInp.value = (artist.socials && artist.socials.facebook) || artist.facebook || '';
 
     renderCustomLinks(artist.customLinks || artist.custom_links || []);
 
@@ -6154,6 +6168,8 @@ function initProfileSettingsDialog() {
     const bio = (document.querySelector('#profile-bio-input')?.value || '').trim();
     const ig = (document.querySelector('#profile-ig-input')?.value || '').trim();
     const tiktok = (document.querySelector('#profile-tiktok-input')?.value || '').trim();
+    const yt = (document.querySelector('#profile-yt-input')?.value || '').trim();
+    const fb = (document.querySelector('#profile-fb-input')?.value || '').trim();
 
     if (!newName) {
       showProfileNotice('Tên hiển thị nghệ sĩ không được để trống.', false);
@@ -6189,20 +6205,32 @@ function initProfileSettingsDialog() {
         throw new Error('Không tìm thấy hồ sơ nghệ sĩ trong hệ thống.');
       }
 
+      const socialsObj = {
+        instagram: ig,
+        tiktok: tiktok,
+        youtube: yt,
+        facebook: fb,
+        spotify: (artist.socials?.spotify || artist.spotify || '')
+      };
+
       liveData.artists[currentArtistIdx].name = newName;
       liveData.artists[currentArtistIdx].genre = genre;
       liveData.artists[currentArtistIdx].bio = bio;
-      if (!liveData.artists[currentArtistIdx].socials) liveData.artists[currentArtistIdx].socials = {};
-      liveData.artists[currentArtistIdx].socials.instagram = ig;
-      liveData.artists[currentArtistIdx].socials.tiktok = tiktok;
+      liveData.artists[currentArtistIdx].instagram = ig;
+      liveData.artists[currentArtistIdx].tiktok = tiktok;
+      liveData.artists[currentArtistIdx].youtube = yt;
+      liveData.artists[currentArtistIdx].facebook = fb;
+      liveData.artists[currentArtistIdx].socials = socialsObj;
       liveData.artists[currentArtistIdx].customLinks = customLinks;
 
       artist.name = newName;
       artist.genre = genre;
       artist.bio = bio;
-      if (!artist.socials) artist.socials = {};
-      artist.socials.instagram = ig;
-      artist.socials.tiktok = tiktok;
+      artist.instagram = ig;
+      artist.tiktok = tiktok;
+      artist.youtube = yt;
+      artist.facebook = fb;
+      artist.socials = socialsObj;
       artist.customLinks = customLinks;
 
       if (data.artists && data.artists[currentArtistIdx]) {
@@ -6210,6 +6238,33 @@ function initProfileSettingsDialog() {
       }
 
       await saveData(liveData);
+
+      // Explicit Supabase update if configured
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('artists').update({
+            name: newName,
+            genre: genre,
+            bio: bio,
+            instagram: ig,
+            tiktok: tiktok,
+            youtube: yt,
+            custom_links: customLinks,
+            stats: {
+              ...(liveData.artists[currentArtistIdx].stats || {}),
+              socials: socialsObj,
+              customLinks: customLinks,
+              facebook: fb,
+              instagram: ig,
+              tiktok: tiktok,
+              youtube: yt
+            }
+          }).eq('id', artist.id);
+        } catch (sbErr) {
+          console.warn('Supabase direct artist update warning:', sbErr);
+        }
+      }
+
       try {
         localStorage.setItem('uniflows-artist-data', JSON.stringify(artist));
         if (localStorage.getItem('uniflows-artist')) {
@@ -6225,7 +6280,22 @@ function initProfileSettingsDialog() {
         window.cardNavInstance.updateArtistInfo(newName);
       }
 
-      showProfileNotice('✓ Đã cập nhật hồ sơ nghệ sĩ và các nền tảng liên kết thành công!', true);
+      // Dispatch real-time Admin Notification
+      try {
+        await dispatchAdminNotification({
+          type: 'artist_profile_update',
+          title: `Cập nhật hồ sơ: ${newName}`,
+          message: `Nghệ sĩ "${newName}" vừa cập nhật tiểu sử, mạng xã hội và ${customLinks.length} nền tảng liên kết.`,
+          artistId: artist.id,
+          artistName: newName,
+          artistAvatar: artist.image,
+          targetTab: 'tab-03'
+        });
+      } catch (notifErr) {
+        console.warn('Dispatch admin notification warning:', notifErr);
+      }
+
+      showProfileNotice('✓ Đã cập nhật hồ sơ nghệ sĩ và đồng bộ các nền tảng liên kết thành công!', true);
     } catch (err) {
       showProfileNotice('Lỗi: ' + (err.message || 'Không thể cập nhật hồ sơ.'), false);
     } finally {
@@ -6609,8 +6679,35 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
   }
 });
 
+// Executive Success & Notice Dialog Helper
+export function showPortalSuccessModal({ title = 'Gửi yêu cầu thành công', message = '', icon = '✓', isSuccess = true }) {
+  const dlg = document.querySelector('#portal-success-dialog');
+  const titleEl = document.querySelector('#success-modal-title');
+  const descEl = document.querySelector('#success-modal-desc');
+  const iconEl = document.querySelector('#success-modal-icon');
+  const iconWrap = document.querySelector('#success-modal-icon-wrap');
+  const closeBtn = document.querySelector('#close-success-dialog-btn');
+
+  if (titleEl) titleEl.textContent = title;
+  if (descEl) descEl.textContent = message;
+  if (iconEl) iconEl.textContent = icon;
+  if (iconWrap) {
+    iconWrap.style.background = isSuccess ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)';
+    iconWrap.style.color = isSuccess ? '#10b981' : '#ef4444';
+    iconWrap.style.borderColor = isSuccess ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)';
+  }
+
+  if (dlg) {
+    if (closeBtn) {
+      closeBtn.onclick = () => dlg.close();
+    }
+    dlg.showModal();
+  }
+}
+window.showPortalSuccessModal = showPortalSuccessModal;
+
 // Logout handler
-logoutBtn?.addEventListener('click', async () => {
+export async function performArtistLogout() {
   if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi Cổng nghệ sĩ?')) {
     if (isSupabaseConfigured()) {
       try { await supabase.auth.signOut(); } catch {}
@@ -6625,7 +6722,9 @@ logoutBtn?.addEventListener('click', async () => {
     localStorage.removeItem('uniflows-artist-name');
     location.href = 'artist-login';
   }
-});
+}
+window.performArtistLogout = performArtistLogout;
+logoutBtn?.addEventListener('click', performArtistLogout);
 
 // Change Password Dialog & Submission Handlers
 const openPasswordDialogBtn = document.querySelector('#open-password-dialog-btn');
@@ -6689,7 +6788,6 @@ changePasswordForm?.addEventListener('submit', async (e) => {
   }
 
   try {
-    // 1. Fetch fresh live data to verify against stored artist credentials
     const liveData = await getData();
     const currentArtistIdx = (liveData.artists || []).findIndex(a => 
       a.id === artist.id || 
@@ -6707,12 +6805,10 @@ changePasswordForm?.addEventListener('submit', async (e) => {
       ? String(targetArtist.password).trim() 
       : (targetArtist.name ? `${targetArtist.name.trim()}@2026` : 'Uniflows@2026');
 
-    // 2. Validate old password against the artist record
     if (oldPass !== expectedCurrentPass && oldPass !== 'Uniflows@2026' && oldPass !== 'UniFLOWs2026!') {
       throw new Error('Mật khẩu hiện tại không chính xác. Vui lòng kiểm tra lại.');
     }
 
-    // 3. Update new password in data and persist
     targetArtist.password = newPass;
     artist.password = newPass;
     if (data.artists && data.artists[currentArtistIdx]) {
@@ -6721,7 +6817,6 @@ changePasswordForm?.addEventListener('submit', async (e) => {
 
     await saveData(liveData);
 
-    // 4. Also update Supabase Auth if user is currently logged in via Supabase Auth
     if (isSupabaseConfigured()) {
       try {
         const { data: authData } = await supabase.auth.getUser();
@@ -6733,7 +6828,11 @@ changePasswordForm?.addEventListener('submit', async (e) => {
       }
     }
 
-    alert(`✓ Đổi mật khẩu thành công!\nMật khẩu mới của nghệ sĩ "${artist.name}" đã được cập nhật thành công.`);
+    showPortalSuccessModal({
+      title: 'Đổi mật khẩu thành công!',
+      message: `Mật khẩu mới của nghệ sĩ "${artist.name}" đã được cập nhật thành công. Hãy sử dụng mật khẩu này cho các lần đăng nhập tiếp theo.`,
+      icon: '🔒'
+    });
     passwordDialog?.close();
     changePasswordForm.reset();
   } catch (err) {
@@ -6750,7 +6849,7 @@ changePasswordForm?.addEventListener('submit', async (e) => {
 });
 
 // ====================================================
-// COPYRIGHT & GREEN-LIST REQUESTS SYSTEM (MAJOR LABEL)
+// COPYRIGHT & RIGHTS & A&R REQUESTS SYSTEM (EXECUTIVE)
 // ====================================================
 const openCopyrightReportBtn = document.querySelector('#open-copyright-report-btn');
 const copyrightDialog = document.querySelector('#copyright-dialog');
@@ -6768,17 +6867,35 @@ const greenlistRequestForm = document.querySelector('#greenlist-request-form');
 const greenlistDialogNotice = document.querySelector('#greenlist-dialog-notice');
 const submitGreenlistBtn = document.querySelector('#submit-greenlist-btn');
 
+const openPitchingBtn = document.querySelector('#open-pitching-btn');
+const pitchingDialog = document.querySelector('#pitching-dialog');
+const closePitchingDialogBtn = document.querySelector('#close-pitching-dialog-btn');
+const closePitchingDialogBtnFooter = document.querySelector('#close-pitching-dialog-btn-footer');
+const pitchingRequestForm = document.querySelector('#pitching-request-form');
+const submitPitchingBtn = document.querySelector('#submit-pitching-btn');
+
+const openIsrcBtn = document.querySelector('#open-isrc-btn');
+const isrcDialog = document.querySelector('#isrc-dialog');
+const closeIsrcDialogBtn = document.querySelector('#close-isrc-dialog-btn');
+const closeIsrcDialogBtnFooter = document.querySelector('#close-isrc-dialog-btn-footer');
+const isrcRequestForm = document.querySelector('#isrc-request-form');
+const submitIsrcBtn = document.querySelector('#submit-isrc-btn');
+
 const serviceRequestsList = document.querySelector('#service-requests-list');
 const refreshServiceRequestsBtn = document.querySelector('#refresh-service-requests-btn');
 
 function populateReleaseOptionsInDialogs() {
   const crSelect = document.querySelector('#cr-release-select');
   const glSelect = document.querySelector('#gl-track-scope');
+  const pitchSelect = document.querySelector('#pitch-release-select');
+  const isrcSelect = document.querySelector('#isrc-release-select');
 
-  if (crSelect) {
-    crSelect.innerHTML = '<option value="">-- Chọn bài hát từ catalogue của bạn --</option>' +
-      cachedFetchedReleases.map(r => `<option value="${esc(r.title)}">${esc(r.title)} (${esc(r.type || 'Single')})</option>`).join('');
-  }
+  const releaseOptionsHtml = '<option value="">-- Chọn bài hát từ catalogue của bạn --</option>' +
+    cachedFetchedReleases.map(r => `<option value="${esc(r.title)}">${esc(r.title)} (${esc(r.type || 'Single')})</option>`).join('');
+
+  if (crSelect) crSelect.innerHTML = releaseOptionsHtml;
+  if (pitchSelect) pitchSelect.innerHTML = releaseOptionsHtml;
+  if (isrcSelect) isrcSelect.innerHTML = releaseOptionsHtml;
 
   if (glSelect) {
     glSelect.innerHTML = '<option value="Toàn bộ kho nhạc của Nghệ sĩ (All Catalogue)">🌟 Toàn bộ bài hát của bạn (All Catalogue)</option>' +
@@ -6786,6 +6903,7 @@ function populateReleaseOptionsInDialogs() {
   }
 }
 
+// 1. Copyright Report Handlers
 openCopyrightReportBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   if (copyrightDialogNotice) copyrightDialogNotice.style.display = 'none';
@@ -6850,21 +6968,37 @@ copyrightReportForm?.addEventListener('submit', async (e) => {
     const localCR = JSON.parse(localStorage.getItem('uniflows-copyright-reports') || '[]');
     localStorage.setItem('uniflows-copyright-reports', JSON.stringify([newReport, ...localCR]));
 
-    alert('✓ Đã gửi Báo cáo Vi phạm Bản quyền tới Đội ngũ Kỹ thuật & A&R UniFLOWs! Bạn có thể theo dõi tiến độ xử lý bên dưới.');
+    try {
+      await dispatchAdminNotification({
+        type: 'copyright_report',
+        title: `🚨 Báo cáo vi phạm bản quyền: ${track}`,
+        message: `Nghệ sĩ "${artist?.name || 'Nghệ sĩ'}" vừa gửi báo cáo vi phạm trên ${platform} (${violationType}). Link: ${targetUrl}`,
+        artistId: currentArtistId,
+        artistName: artist?.name || 'Nghệ sĩ',
+        artistAvatar: artist?.image,
+        targetTab: 'tab-15'
+      });
+    } catch (_) {}
+
     copyrightDialog?.close();
     copyrightReportForm.reset();
+    showPortalSuccessModal({
+      title: 'Đã gửi Báo cáo Vi phạm Bản quyền!',
+      message: `Đội ngũ Kỹ thuật & Bản quyền UniFLOWs đã tiếp nhận yêu cầu xử lý cho tác phẩm "${track}". Bạn có thể theo dõi tiến độ xử lý trực tiếp ở bảng lịch sử bên dưới.`,
+      icon: '🛡️'
+    });
     loadArtistServiceRequests();
   } catch (err) {
     alert('Lỗi: ' + (err.message || 'Không thể gửi báo cáo.'));
   } finally {
     if (submitCopyrightBtn) {
       submitCopyrightBtn.disabled = false;
-      submitCopyrightBtn.textContent = 'Gửi Báo cáo vi phạm';
+      submitCopyrightBtn.textContent = '🚨 Gửi Báo Cáo Vi Phạm';
     }
   }
 });
 
-// Greenlist Handlers
+// 2. Greenlist Handlers
 openGreenlistBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   if (greenlistDialogNotice) greenlistDialogNotice.style.display = 'none';
@@ -6926,16 +7060,212 @@ greenlistRequestForm?.addEventListener('submit', async (e) => {
     const localGL = JSON.parse(localStorage.getItem('uniflows-greenlist-requests') || '[]');
     localStorage.setItem('uniflows-greenlist-requests', JSON.stringify([newGL, ...localGL]));
 
-    alert('✓ Đã gửi yêu cầu cấp quyền Green-list tới Admin! Hệ thống Content ID sẽ cập nhật sau khi Admin phê duyệt.');
+    try {
+      await dispatchAdminNotification({
+        type: 'greenlist_request',
+        title: `🟢 Yêu cầu cấp Green-list: ${channelId}`,
+        message: `Nghệ sĩ "${artist?.name || 'Nghệ sĩ'}" yêu cầu whitelist kênh ${channelId} (${platform}) cho phạm vi: ${trackScope}.`,
+        artistId: currentArtistId,
+        artistName: artist?.name || 'Nghệ sĩ',
+        artistAvatar: artist?.image,
+        targetTab: 'tab-15'
+      });
+    } catch (_) {}
+
     greenlistDialog?.close();
     greenlistRequestForm.reset();
+    showPortalSuccessModal({
+      title: 'Đã gửi yêu cầu cấp Green-list!',
+      message: `Kênh "${channelId}" (${platform}) đã được chuyển đến Admin. Hệ thống Content ID sẽ cập nhật tự động ngay khi Admin phê duyệt.`,
+      icon: '🟢'
+    });
     loadArtistServiceRequests();
   } catch (err) {
     alert('Lỗi: ' + (err.message || 'Không thể gửi yêu cầu cấp quyền.'));
   } finally {
     if (submitGreenlistBtn) {
       submitGreenlistBtn.disabled = false;
-      submitGreenlistBtn.textContent = 'Xác nhận cấp Green-list';
+      submitGreenlistBtn.textContent = '✨ Xác Nhận Cấp Green-list';
+    }
+  }
+});
+
+// 3. A&R Editorial Pitching Handlers
+openPitchingBtn?.addEventListener('click', () => {
+  populateReleaseOptionsInDialogs();
+  pitchingRequestForm?.reset();
+  pitchingDialog?.showModal();
+});
+
+closePitchingDialogBtn?.addEventListener('click', () => pitchingDialog?.close());
+closePitchingDialogBtnFooter?.addEventListener('click', () => pitchingDialog?.close());
+
+pitchingRequestForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const track = document.querySelector('#pitch-release-select')?.value;
+  const targetGenre = document.querySelector('#pitch-target-genre')?.value.trim();
+  const targetPlaylists = document.querySelector('#pitch-target-playlists')?.value.trim();
+  const story = document.querySelector('#pitch-story')?.value.trim();
+  const demoUrl = document.querySelector('#pitch-demo-url')?.value.trim();
+
+  if (submitPitchingBtn) {
+    submitPitchingBtn.disabled = true;
+    submitPitchingBtn.textContent = 'Đang gửi hồ sơ...';
+  }
+
+  const newPitch = {
+    id: 'pitch-' + Date.now(),
+    artist_id: currentArtistId,
+    artist_name: artist?.name || 'Nghệ sĩ',
+    type: 'ar_pitching',
+    title: `Pitching Editorial: ${track}`,
+    track_title: track,
+    target_genre: targetGenre,
+    target_playlists: targetPlaylists,
+    story,
+    demo_url: demoUrl,
+    status: 'Đang tiếp nhận',
+    admin_notes: '',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const localPitch = JSON.parse(localStorage.getItem('uniflows-pitching-requests') || '[]');
+    localStorage.setItem('uniflows-pitching-requests', JSON.stringify([newPitch, ...localPitch]));
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('special_requests').insert({
+          artist_id: currentArtistId,
+          artist_name: artist?.name || 'Nghệ sĩ',
+          type: 'ar_pitching',
+          title: `Pitching Editorial: ${track}`,
+          details: { track, targetGenre, targetPlaylists, story, demoUrl },
+          status: 'Đang tiếp nhận'
+        });
+      } catch (_) {}
+    }
+
+    try {
+      await dispatchAdminNotification({
+        type: 'ar_pitching',
+        title: `🎯 Hồ sơ Pitching A&R: ${track}`,
+        message: `Nghệ sĩ "${artist?.name || 'Nghệ sĩ'}" vừa gửi hồ sơ Pitching Editorial cho bài hát "${track}". Mood: ${targetGenre}.`,
+        artistId: currentArtistId,
+        artistName: artist?.name || 'Nghệ sĩ',
+        artistAvatar: artist?.image,
+        targetTab: 'tab-15'
+      });
+    } catch (_) {}
+
+    pitchingDialog?.close();
+    pitchingRequestForm.reset();
+    showPortalSuccessModal({
+      title: 'Gửi bài Pitching A&R thành công!',
+      message: `Hồ sơ ca khúc "${track}" đã được chuyển tới Ban Biên Tập (A&R Editorial Team). Tiến độ thẩm định và danh sách Playlists xét duyệt sẽ được cập nhật liên tục bên dưới.`,
+      icon: '🎯'
+    });
+    loadArtistServiceRequests();
+  } catch (err) {
+    alert('Lỗi: ' + (err.message || 'Không thể gửi hồ sơ Pitching.'));
+  } finally {
+    if (submitPitchingBtn) {
+      submitPitchingBtn.disabled = false;
+      submitPitchingBtn.textContent = '🎯 Gửi Hồ Sơ Pitching A&R';
+    }
+  }
+});
+
+// 4. ISRC & Copyright Assignment Handlers
+openIsrcBtn?.addEventListener('click', () => {
+  populateReleaseOptionsInDialogs();
+  isrcRequestForm?.reset();
+  const relDateInp = document.querySelector('#isrc-release-date');
+  if (relDateInp && !relDateInp.value) {
+    const now = new Date();
+    now.setDate(now.getDate() + 7);
+    relDateInp.value = now.toISOString().split('T')[0];
+  }
+  isrcDialog?.showModal();
+});
+
+closeIsrcDialogBtn?.addEventListener('click', () => isrcDialog?.close());
+closeIsrcDialogBtnFooter?.addEventListener('click', () => isrcDialog?.close());
+
+isrcRequestForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const track = document.querySelector('#isrc-release-select')?.value;
+  const songwriter = document.querySelector('#isrc-songwriter')?.value.trim();
+  const producer = document.querySelector('#isrc-producer')?.value.trim();
+  const releaseDate = document.querySelector('#isrc-release-date')?.value;
+  const phonogramLine = document.querySelector('#isrc-phonogram-line')?.value.trim() || '℗ 2026 UniFLOWs Label';
+  const notes = document.querySelector('#isrc-notes')?.value.trim();
+
+  if (submitIsrcBtn) {
+    submitIsrcBtn.disabled = true;
+    submitIsrcBtn.textContent = 'Đang xử lý cấp mã...';
+  }
+
+  const newIsrcReq = {
+    id: 'isrc-' + Date.now(),
+    artist_id: currentArtistId,
+    artist_name: artist?.name || 'Nghệ sĩ',
+    type: 'isrc_assignment',
+    title: `Cấp mã ISRC: ${track}`,
+    track_title: track,
+    songwriter,
+    producer,
+    release_date: releaseDate,
+    phonogram_line: phonogramLine,
+    notes,
+    status: 'Đang tiếp nhận',
+    admin_notes: '',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const localIsrc = JSON.parse(localStorage.getItem('uniflows-isrc-requests') || '[]');
+    localStorage.setItem('uniflows-isrc-requests', JSON.stringify([newIsrcReq, ...localIsrc]));
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('special_requests').insert({
+          artist_id: currentArtistId,
+          artist_name: artist?.name || 'Nghệ sĩ',
+          type: 'isrc_assignment',
+          title: `Cấp mã ISRC: ${track}`,
+          details: { track, songwriter, producer, releaseDate, phonogramLine, notes },
+          status: 'Đang tiếp nhận'
+        });
+      } catch (_) {}
+    }
+
+    try {
+      await dispatchAdminNotification({
+        type: 'isrc_assignment',
+        title: `🏷️ Yêu cầu cấp mã ISRC: ${track}`,
+        message: `Nghệ sĩ "${artist?.name || 'Nghệ sĩ'}" yêu cầu cấp mã ISRC quốc tế cho bài hát "${track}" (Tác giả: ${songwriter}).`,
+        artistId: currentArtistId,
+        artistName: artist?.name || 'Nghệ sĩ',
+        artistAvatar: artist?.image,
+        targetTab: 'tab-15'
+      });
+    } catch (_) {}
+
+    isrcDialog?.close();
+    isrcRequestForm.reset();
+    showPortalSuccessModal({
+      title: 'Đã gửi yêu cầu cấp mã ISRC!',
+      message: `Đội ngũ Distribution của UniFLOWs đã nhận yêu cầu cấp mã IFPI ISRC và đăng ký bản quyền sản xuất ℗ cho tác phẩm "${track}". Mã ISRC sẽ hiển thị tại danh mục phát hành sau khi hoàn tất.`,
+      icon: '🏷️'
+    });
+    loadArtistServiceRequests();
+  } catch (err) {
+    alert('Lỗi: ' + (err.message || 'Không thể gửi yêu cầu cấp mã ISRC.'));
+  } finally {
+    if (submitIsrcBtn) {
+      submitIsrcBtn.disabled = false;
+      submitIsrcBtn.textContent = '🏷️ Gửi Yêu Cầu Cấp Mã ISRC';
     }
   }
 });
@@ -6949,12 +7279,20 @@ async function loadArtistServiceRequests() {
 
   let crList = [];
   let glList = [];
+  let pitchList = [];
+  let isrcList = [];
 
   try {
     crList = JSON.parse(localStorage.getItem('uniflows-copyright-reports') || '[]').filter(x => x.artist_id === currentArtistId);
   } catch {}
   try {
     glList = JSON.parse(localStorage.getItem('uniflows-greenlist-requests') || '[]').filter(x => x.artist_id === currentArtistId);
+  } catch {}
+  try {
+    pitchList = JSON.parse(localStorage.getItem('uniflows-pitching-requests') || '[]').filter(x => x.artist_id === currentArtistId);
+  } catch {}
+  try {
+    isrcList = JSON.parse(localStorage.getItem('uniflows-isrc-requests') || '[]').filter(x => x.artist_id === currentArtistId);
   } catch {}
 
   if (isSupabaseConfigured()) {
@@ -6968,13 +7306,15 @@ async function loadArtistServiceRequests() {
 
   const combined = [
     ...crList.map(x => ({ ...x, reqKind: 'copyright' })),
-    ...glList.map(x => ({ ...x, reqKind: 'greenlist' }))
+    ...glList.map(x => ({ ...x, reqKind: 'greenlist' })),
+    ...pitchList.map(x => ({ ...x, reqKind: 'pitching' })),
+    ...isrcList.map(x => ({ ...x, reqKind: 'isrc' }))
   ].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
   if (combined.length === 0) {
     serviceRequestsList.innerHTML = `
       <div style="padding:22px;background:var(--portal-card-bg);border:1px dashed var(--portal-card-border);border-radius:10px;text-align:center;">
-        <p style="font-size:13px;color:var(--portal-text-muted);margin:0;">Bạn chưa có yêu cầu Bản quyền hoặc Cấp phép Green-list nào. Khi bạn gửi báo cáo vi phạm hoặc thêm kênh whitelist, tiến độ xử lý từ Admin sẽ hiển thị tại đây.</p>
+        <p style="font-size:13px;color:var(--portal-text-muted);margin:0;">Bạn chưa có yêu cầu Bản quyền, Green-list, Pitching hay ISRC nào. Khi bạn gửi yêu cầu, tiến độ xử lý từ Admin sẽ hiển thị tại đây.</p>
       </div>
     `;
     return;
@@ -6982,40 +7322,85 @@ async function loadArtistServiceRequests() {
 
   serviceRequestsList.innerHTML = `
     <div style="border:1px solid var(--portal-card-border);border-radius:12px;overflow:hidden;background:var(--portal-card-bg);box-shadow:var(--portal-shadow);">
-      <div style="display:grid;grid-template-columns:140px 1fr 160px;background:var(--portal-hover-bg);padding:12px 16px;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--portal-text-muted);border-bottom:1px solid var(--portal-card-border);font-family:'DM Mono',monospace;">
+      <div style="display:grid;grid-template-columns:150px 1fr 160px;background:var(--portal-hover-bg);padding:12px 16px;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--portal-text-muted);border-bottom:1px solid var(--portal-card-border);font-family:'DM Mono',monospace;">
         <span>Loại yêu cầu</span>
-        <span>Chi tiết tác phẩm & Link</span>
+        <span>Chi tiết tác phẩm & Nội dung</span>
         <span>Trạng thái xử lý</span>
       </div>
       ${combined.map(item => {
-        const isCR = item.reqKind === 'copyright';
+        const k = item.reqKind;
+        let badgeText = '🚨 Báo cáo vi phạm';
+        let badgeBg = '#fee2e2';
+        let badgeColor = '#b91c1c';
+
+        if (k === 'greenlist') {
+          badgeText = '🟢 Kênh Green-list';
+          badgeBg = '#dcfce7';
+          badgeColor = '#15803d';
+        } else if (k === 'pitching') {
+          badgeText = '🎯 Pitching A&R';
+          badgeBg = '#dbeafe';
+          badgeColor = '#1d4ed8';
+        } else if (k === 'isrc') {
+          badgeText = '🏷️ Cấp mã ISRC';
+          badgeBg = '#f3e8ff';
+          badgeColor = '#7e22ce';
+        }
+
         const st = item.status || 'Đang tiếp nhận';
         let pillClass = 'status-pill-receiving';
         if (st === 'Đang xử lý') pillClass = 'status-pill-processing';
         else if (st === 'Đã gửi yêu cầu') pillClass = 'status-pill-submitted';
-        else if (st === 'Đã xử lý' || st.includes('Đã cấp') || st === 'Đã giải quyết') pillClass = 'status-pill-resolved';
+        else if (st === 'Đã xử lý' || st.includes('Đã cấp') || st === 'Đã giải quyết' || st.includes('Hoàn tất')) pillClass = 'status-pill-resolved';
         else if (st.includes('Từ chối') || st.includes('gỡ bỏ')) pillClass = 'status-pill-rejected';
 
         const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : 'Vừa xong';
 
+        let detailHtml = '';
+        if (k === 'copyright') {
+          detailHtml = `
+            <strong style="font-size:14px;display:block;margin-bottom:3px;">${esc(item.track_title || item.track || item.title)}</strong>
+            <div style="font-size:12px;color:var(--portal-text-muted);margin-bottom:4px;">
+              Nền tảng: <b>${esc(item.platform)}</b> · Vi phạm: <b style="color:#b91c1c;">${esc(item.violation_type || '')}</b>
+            </div>
+            ${item.target_url ? `<a href="${esc(item.target_url)}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:underline;word-break:break-all;font-family:'DM Mono',monospace;">${esc(item.target_url)} ↗</a>` : ''}
+          `;
+        } else if (k === 'greenlist') {
+          detailHtml = `
+            <strong style="font-size:14px;display:block;margin-bottom:3px;">${esc(item.channel_id || item.title)}</strong>
+            <div style="font-size:12px;color:var(--portal-text-muted);margin-bottom:4px;">
+              Nền tảng: <b>${esc(item.platform)}</b> · Phạm vi: <b style="color:#15803d;">${esc(item.track_scope || '')}</b>
+            </div>
+          `;
+        } else if (k === 'pitching') {
+          detailHtml = `
+            <strong style="font-size:14px;display:block;margin-bottom:3px;">${esc(item.track_title || item.title)}</strong>
+            <div style="font-size:12px;color:var(--portal-text-muted);margin-bottom:4px;">
+              Mood: <b>${esc(item.target_genre || 'Chưa rõ')}</b> ${item.target_playlists ? `· Playlists: <b>${esc(item.target_playlists)}</b>` : ''}
+            </div>
+            ${item.story ? `<p style="margin:4px 0 0;font-size:12px;color:var(--portal-text-dim);font-style:italic;">"${esc(item.story)}"</p>` : ''}
+          `;
+        } else if (k === 'isrc') {
+          detailHtml = `
+            <strong style="font-size:14px;display:block;margin-bottom:3px;">${esc(item.track_title || item.title)}</strong>
+            <div style="font-size:12px;color:var(--portal-text-muted);margin-bottom:4px;">
+              Nhạc sĩ: <b>${esc(item.songwriter || '—')}</b> · Ngày phát hành: <b>${esc(item.release_date || '—')}</b>
+            </div>
+          `;
+        }
+
         return `
           <div style="border-bottom:1px solid var(--portal-card-border);padding:14px 16px;font-size:13px;">
-            <div style="display:grid;grid-template-columns:140px 1fr 160px;align-items:start;gap:12px;">
+            <div style="display:grid;grid-template-columns:150px 1fr 160px;align-items:start;gap:12px;">
               <div>
-                <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;font-weight:700;display:inline-block;padding:2px 8px;border-radius:6px;background:${isCR ? '#fee2e2' : '#dcfce7'};color:${isCR ? '#b91c1c' : '#15803d'};">
-                  ${isCR ? '🚨 Báo cáo vi phạm' : '🟢 Kênh Green-list'}
+                <span style="font:10px 'DM Mono',monospace;text-transform:uppercase;font-weight:700;display:inline-block;padding:2px 8px;border-radius:6px;background:${badgeBg};color:${badgeColor};">
+                  ${badgeText}
                 </span>
                 <small style="display:block;margin-top:4px;color:var(--portal-text-dim);font-size:11px;font-family:'DM Mono',monospace;">${esc(dateStr)}</small>
               </div>
 
               <div>
-                <strong style="font-size:14px;display:block;margin-bottom:3px;">
-                  ${isCR ? esc(item.track_title || item.track || item.title) : esc(item.channel_id || item.title)}
-                </strong>
-                <div style="font-size:12px;color:var(--portal-text-muted);margin-bottom:4px;">
-                  Nền tảng: <b>${esc(item.platform)}</b> ${isCR ? `· Vi phạm: <b style="color:#b91c1c;">${esc(item.violation_type || '')}</b>` : `· Phạm vi: <b style="color:#15803d;">${esc(item.track_scope || '')}</b>`}
-                </div>
-                ${item.target_url ? `<a href="${esc(item.target_url)}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:underline;word-break:break-all;font-family:'DM Mono',monospace;">${esc(item.target_url)} ↗</a>` : ''}
+                ${detailHtml}
                 ${item.admin_notes ? `<div style="margin-top:6px;background:var(--portal-hover-bg);border-left:3px solid #3b82f6;padding:6px 10px;font-size:11px;border-radius:0 6px 6px 0;"><strong>Phản hồi từ Admin UniFLOWs:</strong> ${esc(item.admin_notes)}</div>` : ''}
               </div>
 
@@ -7028,6 +7413,7 @@ async function loadArtistServiceRequests() {
       }).join('')}
     </div>
   `;
+}
 }
 
 // ==========================================

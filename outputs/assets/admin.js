@@ -701,6 +701,19 @@ function renderSelectedArtistEditor() {
   attachArtistProductEvents(currentArtist, idx);
 }
 
+function renderAdminCustomLinksRows(links = []) {
+  if (!Array.isArray(links) || links.length === 0) {
+    return `<p class="empty-custom-links" style="margin:0;font-size:11.5px;color:#94a3b8;font-style:italic;">Chưa có nền tảng tùy chỉnh nào. Bấm <b>"+ Thêm Nền Tảng"</b> để bổ sung SoundCloud, Bandcamp, Beatport, Apple Music, X/Twitter, v.v.</p>`;
+  }
+  return links.map((l) => `
+    <div class="admin-custom-platform-row" style="display:flex;gap:8px;align-items:center;">
+      <input type="text" class="admin-custom-platform-name" value="${esc(l.name || '')}" placeholder="TÊN NỀN TẢNG (VD: SOUNDCLOUD, BANDCAMP)" style="width:200px;font-family:'DM Mono',monospace;font-weight:bold;font-size:11.5px;text-transform:uppercase;padding:7px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;">
+      <input type="url" class="admin-custom-platform-url" value="${esc(l.url || '')}" placeholder="https://..." style="flex:1;font-size:12px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;">
+      <button type="button" class="btn-admin-remove-custom-link button alt remove" style="padding:6px 10px;font-size:11px;cursor:pointer;flex-shrink:0;" title="Xóa nền tảng này">✕</button>
+    </div>
+  `).join('');
+}
+
 const artistEditor = (a, idx) => {
   const isPublic = a.showOnWeb !== false && a.showOnWeb !== 'false';
   if (!Array.isArray(a.products)) a.products = [];
@@ -954,14 +967,59 @@ const artistEditor = (a, idx) => {
       </div>
     </div>
 
-    <!-- Bio & Links -->
-    <div class="field"><label>Tiểu sử nghệ sĩ / Giới thiệu</label><textarea data-key="bio" rows="3">${esc(a.bio || '')}</textarea></div>
-    <div class="mini-grid">
-      <div class="field"><label>Instagram URL</label><input data-key="instagram" value="${esc(a.instagram || '')}" placeholder="https://instagram.com/..."></div>
-      <div class="field"><label>YouTube URL</label><input data-key="youtube" value="${esc(a.youtube || '')}" placeholder="https://youtube.com/..."></div>
-      <div class="field"><label>TikTok URL</label><input data-key="tiktok" value="${esc(a.tiktok || '')}" placeholder="https://tiktok.com/@..."></div>
+    <!-- 05: Artist Bio, Socials & Custom Platforms -->
+    <div style="background:#f8fafc;border:2px solid #64748b;padding:18px;margin:15px 0;border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span class="eyebrow" style="color:#475569;margin:0;font-size:10px;">Artist Profiles & Web Sync</span>
+          <h4 style="margin:2px 0 0;font-size:14px;text-transform:uppercase;color:#1e293b;">
+            🌐 Tiểu Sử, Mạng Xã Hội & Các Nền Tảng Khác
+          </h4>
+        </div>
+        <span style="font-size:11px;background:#e2e8f0;color:#334155;padding:3px 8px;border-radius:12px;font-family:'DM Mono',monospace;font-weight:bold;">
+          Hiển thị trên Website (artist.html) & Portal
+        </span>
+      </div>
+
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-weight:bold;color:#1e293b;">Tiểu sử nghệ sĩ / Giới thiệu (Bio)</label>
+        <textarea data-key="bio" rows="3" placeholder="Giới thiệu về phong cách, hành trình âm nhạc...">${esc(a.bio || '')}</textarea>
+      </div>
+
+      <!-- Standard Socials Grid -->
+      <h5 style="margin:14px 0 8px;font-size:12px;text-transform:uppercase;color:#475569;letter-spacing:0.04em;">Mạng xã hội & Kênh Streaming chính:</h5>
+      <div class="mini-grid" style="margin-bottom:14px;">
+        <div class="field"><label>Instagram URL</label><input data-key="instagram" value="${esc(a.instagram || a.socials?.instagram || '')}" placeholder="https://instagram.com/..."></div>
+        <div class="field"><label>TikTok URL</label><input data-key="tiktok" value="${esc(a.tiktok || a.socials?.tiktok || '')}" placeholder="https://tiktok.com/@..."></div>
+        <div class="field"><label>YouTube Channel URL</label><input data-key="youtube" value="${esc(a.youtube || a.socials?.youtube || '')}" placeholder="https://youtube.com/@..."></div>
+        <div class="field"><label>Facebook Page / Profile URL</label><input data-key="facebook" value="${esc(a.facebook || a.socials?.facebook || '')}" placeholder="https://facebook.com/..."></div>
+        <div class="field" style="grid-column: 1 / -1;"><label>Spotify Artist Profile URL</label><input data-key="spotify" value="${esc(a.spotify || a.socials?.spotify || '')}" placeholder="https://open.spotify.com/artist/..."></div>
+      </div>
+
+      <!-- Custom Platforms & Additional Links -->
+      <div style="background:#fff;border:1px solid #cbd5e1;padding:14px;border-radius:6px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <label style="font-weight:bold;color:#0f172a;font-size:12px;margin:0;text-transform:uppercase;">
+              ➕ Các Nền Tảng & Mạng Xã Hội Khác (SoundCloud, Bandcamp, Beatport, Apple Music, X/Twitter...)
+            </label>
+            <small style="color:#64748b;font-size:11px;display:block;">Tất cả liên kết này sẽ hiển thị thành nút truy cập trên trang cá nhân nghệ sĩ (artist.html) và đồng bộ 2 chiều với Portal.</small>
+          </div>
+          <button type="button" class="btn-admin-add-custom-link button alt" data-artist-idx="${idx}" style="font-size:11px;padding:5px 12px;background:#0284c7;color:#fff;border-color:#0284c7;font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+            <span>+</span> Thêm Nền Tảng
+          </button>
+        </div>
+
+        <div id="admin-artist-custom-links-container-${idx}" class="admin-artist-custom-links-list" style="display:flex;flex-direction:column;gap:8px;">
+          ${renderAdminCustomLinksRows(a.customLinks || a.custom_links || [])}
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:10px;">
+        <label style="font-weight:bold;color:#1e293b;">Bộ sưu tập ảnh Gallery (Mỗi dòng một URL ảnh)</label>
+        <textarea data-key="gallery" rows="3" placeholder="https://...&#10;https://...">${esc((a.gallery || []).join('\n'))}</textarea>
+      </div>
     </div>
-    <div class="field" style="margin-top:10px;"><label>Bộ sưu tập ảnh Gallery (Mỗi dòng một URL ảnh)</label><textarea data-key="gallery" rows="3">${esc((a.gallery || []).join('\n'))}</textarea></div>
   </div>
 `;
 };
@@ -1079,6 +1137,72 @@ function attachArtistLiveSync(artist, idx) {
     const val = input.type === 'checkbox' ? input.checked : input.value.trim();
     updateField(key, val);
   });
+
+  // Dynamic Custom Platforms Handler for Admin
+  const customLinksContainer = container.querySelector(`#admin-artist-custom-links-container-${idx}`);
+  const addCustomLinkBtn = container.querySelector(`.btn-admin-add-custom-link[data-artist-idx="${idx}"]`);
+
+  const syncCustomLinksFromDOM = () => {
+    if (!customLinksContainer) return;
+    const list = [];
+    customLinksContainer.querySelectorAll('.admin-custom-platform-row').forEach(row => {
+      const name = (row.querySelector('.admin-custom-platform-name')?.value || '').trim().toUpperCase();
+      const url = (row.querySelector('.admin-custom-platform-url')?.value || '').trim();
+      if (name || url) {
+        list.push({ name, url });
+      }
+    });
+    artist.customLinks = list;
+    if (data.artists && data.artists[idx]) {
+      data.artists[idx].customLinks = list;
+    }
+    try {
+      localStorage.setItem('uniflows-content', JSON.stringify(data));
+    } catch (_) {}
+  };
+
+  if (addCustomLinkBtn && customLinksContainer) {
+    addCustomLinkBtn.addEventListener('click', () => {
+      const emptyMsg = customLinksContainer.querySelector('.empty-custom-links');
+      if (emptyMsg) emptyMsg.remove();
+
+      const row = document.createElement('div');
+      row.className = 'admin-custom-platform-row';
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+      row.innerHTML = `
+        <input type="text" class="admin-custom-platform-name" value="" placeholder="TÊN NỀN TẢNG (VD: SOUNDCLOUD, BANDCAMP)" style="width:200px;font-family:'DM Mono',monospace;font-weight:bold;font-size:11.5px;text-transform:uppercase;padding:7px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;">
+        <input type="url" class="admin-custom-platform-url" value="" placeholder="https://..." style="flex:1;font-size:12px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;">
+        <button type="button" class="btn-admin-remove-custom-link button alt remove" style="padding:6px 10px;font-size:11px;cursor:pointer;flex-shrink:0;" title="Xóa nền tảng này">✕</button>
+      `;
+
+      row.querySelector('.btn-admin-remove-custom-link')?.addEventListener('click', () => {
+        row.remove();
+        syncCustomLinksFromDOM();
+      });
+
+      row.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', syncCustomLinksFromDOM);
+        inp.addEventListener('change', syncCustomLinksFromDOM);
+      });
+
+      customLinksContainer.appendChild(row);
+      row.querySelector('.admin-custom-platform-name')?.focus();
+      syncCustomLinksFromDOM();
+    });
+  }
+
+  if (customLinksContainer) {
+    customLinksContainer.querySelectorAll('.admin-custom-platform-row').forEach(row => {
+      row.querySelector('.btn-admin-remove-custom-link')?.addEventListener('click', () => {
+        row.remove();
+        syncCustomLinksFromDOM();
+      });
+      row.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', syncCustomLinksFromDOM);
+        inp.addEventListener('change', syncCustomLinksFromDOM);
+      });
+    });
+  }
 
   // Dedicated Save Current Artist Button
   const saveBtnCurrent = container.querySelector('.btn-save-current-artist');
@@ -4197,6 +4321,22 @@ function readItems(selector, kind) {
     });
     if (kind === 'artist') {
       obj.gallery = (obj.gallery || '').split('\n').map(x => x.trim()).filter(Boolean);
+      const customLinks = [];
+      el.querySelectorAll('.admin-custom-platform-row').forEach(row => {
+        const name = (row.querySelector('.admin-custom-platform-name')?.value || '').trim().toUpperCase();
+        const url = (row.querySelector('.admin-custom-platform-url')?.value || '').trim();
+        if (name && url) {
+          customLinks.push({ name, url });
+        }
+      });
+      obj.customLinks = customLinks;
+      obj.socials = {
+        instagram: obj.instagram || '',
+        tiktok: obj.tiktok || '',
+        facebook: obj.facebook || '',
+        youtube: obj.youtube || '',
+        spotify: obj.spotify || ''
+      };
     }
     return obj;
   });
