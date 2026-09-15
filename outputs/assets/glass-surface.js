@@ -453,8 +453,8 @@ export function initPortalGlassSurfaces() {
     });
   });
 
-  // Stats, charts, territories, releases & metric cards
-  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card, .portal-chart-card, .portal-territory-card, .portal-release-card, .portal-dsp-box, .financial-statement-card, .portal-announcement-card').forEach(card => {
+  // Stats, charts, territories, releases, lyrics & metric cards
+  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card, .portal-chart-card, .portal-territory-card, .portal-release-card, .portal-dsp-box, .financial-statement-card, .portal-announcement-card, .portal-filter-card, .portal-demographics-card, .portal-playlists-card, .lyrics-engine-card, .lyrics-karaoke-card, .lyrics-board-card, .lyrics-actions-bar-card').forEach(card => {
     enhanceWithGlassSurface(card, {
       borderRadius: 20,
       distortionScale: -140,
