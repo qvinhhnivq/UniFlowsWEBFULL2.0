@@ -26,23 +26,25 @@
 
 [data-theme="dark"],
 .portal-body.dark-mode {
-  --glass-bg: rgba(13, 15, 24, 0.52);
-  --glass-bg-subtle: rgba(18, 20, 32, 0.38);
-  --glass-bg-elevated: rgba(24, 26, 42, 0.74);
-  --glass-border: rgba(255, 255, 255, 0.16);
-  --glass-border-subtle: rgba(255, 255, 255, 0.08);
-  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.06) 40%, rgba(168, 85, 247, 0.6) 75%, rgba(56, 189, 248, 0.4) 100%);
-  --glass-shadow: 0 28px 70px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 1px rgba(255, 255, 255, 0.05);
-  --glass-shadow-hover: 0 38px 90px rgba(0, 0, 0, 0.85), 0 0 2px rgba(255, 255, 255, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.35);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(168, 85, 247, 0.4) 75%, rgba(56, 189, 248, 0.3) 100%);
+  --glass-bg: rgba(18, 20, 32, 0.88);
+  --glass-bg-subtle: rgba(24, 27, 44, 0.78);
+  --glass-bg-elevated: rgba(30, 34, 54, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-border-subtle: rgba(255, 255, 255, 0.12);
+  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.1) 40%, rgba(168, 85, 247, 0.6) 75%, rgba(56, 189, 248, 0.4) 100%);
+  --glass-shadow: 0 28px 70px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+  --glass-shadow-hover: 0 38px 90px rgba(0, 0, 0, 0.9), 0 0 2px rgba(255, 255, 255, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 40%, rgba(168, 85, 247, 0.5) 75%, rgba(56, 189, 248, 0.35) 100%);
   --glass-blur: 32px;
   
-  --portal-bg: #06070a;
-  --portal-card-bg: rgba(13, 15, 24, 0.52);
-  --portal-card-border: rgba(255, 255, 255, 0.16);
-  --portal-text-main: #f8fafc;
-  --portal-text-muted: #cbd5e1;
+  --portal-bg: #090b10;
+  --portal-card-bg: rgba(18, 20, 32, 0.88);
+  --portal-card-border: rgba(255, 255, 255, 0.20);
+  --portal-text-main: #ffffff;
+  --portal-text-muted: #e2e8f0;
   --portal-text-dim: #94a3b8;
+  --portal-input-bg: rgba(26, 29, 46, 0.9);
+  --portal-input-border: rgba(255, 255, 255, 0.24);
 }
 
 /* ==============================================================================
@@ -126,7 +128,7 @@ dialog:hover .glass-surface-glare {
 }
 
 .portal-body p, 
-.portal-body span, 
+.portal-body span:not(.tag):not(.badge):not(.notif-counter-pill), 
 .portal-body label {
   color: var(--portal-text-muted);
 }
@@ -135,6 +137,48 @@ dialog:hover .glass-surface-glare {
   color: var(--portal-text-main) !important;
   font-style: normal;
   font-weight: 900;
+}
+
+/* Explicit Dark Mode Contrast Enforcement */
+[data-theme="dark"] .portal-body,
+[data-theme="dark"] .portal-main,
+.portal-body.dark-mode {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .portal-body h1,
+[data-theme="dark"] .portal-body h2,
+[data-theme="dark"] .portal-body h3,
+[data-theme="dark"] .portal-body h4,
+[data-theme="dark"] .portal-body h5,
+[data-theme="dark"] .portal-body strong,
+[data-theme="dark"] .portal-body b,
+[data-theme="dark"] .portal-body th,
+[data-theme="dark"] .section-head h2,
+.portal-body.dark-mode h1,
+.portal-body.dark-mode h2,
+.portal-body.dark-mode h3,
+.portal-body.dark-mode h4,
+.portal-body.dark-mode h5,
+.portal-body.dark-mode strong,
+.portal-body.dark-mode b,
+.portal-body.dark-mode th,
+.portal-body.dark-mode .section-head h2 {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .portal-body p,
+[data-theme="dark"] .portal-body label,
+[data-theme="dark"] .section-head p,
+.portal-body.dark-mode p,
+.portal-body.dark-mode label,
+.portal-body.dark-mode .section-head p {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .portal-body .kicker,
+.portal-body.dark-mode .kicker {
+  color: #38bdf8 !important;
 }
 
 /* Multi-orb Aurora Glowing Mesh (Dark mode atmosphere) */
@@ -202,6 +246,11 @@ dialog:hover .glass-surface-glare {
 .portal-filter-bar,
 #portal-announcements-section > div,
 #tab-overview > div:first-child,
+.tab-pane > div,
+.tab-pane .section-head,
+.tab-pane [style*="--portal-card-bg"],
+.tab-pane [style*="background:var(--portal-card-bg)"],
+.tab-pane [style*="background: var(--portal-card-bg)"],
 dialog,
 .portal-mobile-bottom-nav {
   position: relative;
@@ -211,6 +260,7 @@ dialog,
   border: 1px solid var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
   border-radius: 20px;
+  color: var(--portal-text-main);
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
               box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
               border-color 0.25s ease,
