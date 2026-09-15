@@ -2200,9 +2200,10 @@ export function initDspControls() {
   const searchInput = document.querySelector('#dsp-search-input');
   if (!container) return;
 
-  // Render cards
-  container.innerHTML = DISTRIBUTION_PLATFORMS.map(p => `
-    <div class="dsp-card dsp-card-active" data-dsp-id="${p.id}" data-dsp-name="${p.name.toLowerCase()}" data-dsp-cat="${p.cat.toLowerCase()}">
+  // Render cards only if empty
+  if (container.children.length === 0) {
+    container.innerHTML = DISTRIBUTION_PLATFORMS.map(p => `
+      <div class="dsp-card dsp-card-active selected" data-dsp-id="${p.id}" data-dsp-name="${p.name.toLowerCase()}" data-dsp-cat="${p.cat.toLowerCase()}">
       <input type="checkbox" class="dsp-checkbox" name="dsp_channels" value="${p.id}" checked>
       <div class="dsp-icon-wrap">${getDspSvgIcon(p.icon)}</div>
       <div class="dsp-info">
@@ -2211,6 +2212,7 @@ export function initDspControls() {
       </div>
     </div>
   `).join('');
+  }
 
   function updateCount() {
     const checked = container.querySelectorAll('.dsp-checkbox:checked').length;
@@ -2309,9 +2311,10 @@ export function initTerritoryControls() {
 
   if (!countriesGrid) return;
 
-  // Render countries
-  countriesGrid.innerHTML = WORLD_COUNTRIES.map(c => `
-    <div class="country-card country-card-active" data-country-code="${c.code}" data-country-name="${c.name.toLowerCase()}" data-country-name-en="${c.nameEn.toLowerCase()}" data-country-region="${c.region}">
+  // Render countries only if empty
+  if (countriesGrid.children.length === 0) {
+    countriesGrid.innerHTML = WORLD_COUNTRIES.map(c => `
+      <div class="country-card country-card-active selected" data-country-code="${c.code}" data-country-name="${c.name.toLowerCase()}" data-country-name-en="${c.nameEn.toLowerCase()}" data-country-region="${c.region}">
       <input type="checkbox" class="country-checkbox" name="territory_countries" value="${c.code}" checked style="accent-color:#0f172a;width:15px;height:15px;margin:0;cursor:pointer;">
       <span class="country-flag">${c.flag}</span>
       <div class="country-info">
@@ -2321,6 +2324,7 @@ export function initTerritoryControls() {
       <span class="country-code-badge">${c.code}</span>
     </div>
   `).join('');
+  }
 
   function updateCountryCount() {
     const checked = countriesGrid.querySelectorAll('.country-checkbox:checked').length;
@@ -2503,9 +2507,21 @@ export function initLanguageSearchableControls() {
   });
 }
 
+// Immediate eager initialization of DSP & Territory controls
+try {
+  initDspControls();
+  initTerritoryControls();
+  initLanguageSearchableControls();
+} catch (e) {
+  console.warn('Eager init DSP/Territories warning:', e);
+}
+
 
 function prepareReleaseWizard() {
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
+  initDspControls();
+  initTerritoryControls();
+  initLanguageSearchableControls();
   if (wizardTracks.length === 0) {
     addTrackItem({ title: document.querySelector('#wizard-title-input')?.value.trim() || 'Track 01' });
   }

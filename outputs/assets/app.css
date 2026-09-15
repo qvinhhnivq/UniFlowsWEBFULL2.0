@@ -1055,7 +1055,8 @@ dialog[open].release-dialog-shell {
   background: #f8fafc;
   transform: translateY(-1px);
 }
-.dsp-card.selected {
+.dsp-card.selected,
+.dsp-card.dsp-card-active {
   border-color: #0f172a;
   background: #f8fafc;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
@@ -1070,7 +1071,8 @@ dialog[open].release-dialog-shell {
   border-radius: 6px;
   background: #f1f5f9;
 }
-.dsp-card.selected .dsp-icon-wrap {
+.dsp-card.selected .dsp-icon-wrap,
+.dsp-card.dsp-card-active .dsp-icon-wrap {
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
