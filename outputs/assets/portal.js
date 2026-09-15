@@ -5,6 +5,7 @@ import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimi
 import './security.js';
 import { initCardNav } from './card-nav.js';
 import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
+import { initIridescence } from './iridescence.js';
 // Kiểm tra quyền đăng nhập
 const rawAuth = sessionStorage.getItem('uniflows-artist') || localStorage.getItem('uniflows-artist');
 const isArtistAuth = rawAuth === 'true' || (rawAuth && rawAuth.startsWith('{')) || !!(sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id'));
@@ -210,7 +211,6 @@ if (artist) {
         links: [
           { label: "Doanh thu & Rút tiền", hash: "#earnings", tab: "tab-earnings", ariaLabel: "Doanh thu và rút tiền" },
           { label: "Hồ sơ & Cài đặt", onClick: () => document.querySelector('#open-profile-settings-btn')?.click(), ariaLabel: "Hồ sơ và cài đặt" },
-          { label: "Đổi mật khẩu tài khoản", action: "password", ariaLabel: "Đổi mật khẩu" },
           { label: "Đăng xuất Nghệ sĩ", action: "logout", ariaLabel: "Đăng xuất", isDanger: true }
         ]
       }
@@ -7417,8 +7417,26 @@ async function loadArtistServiceRequests() {
 }
 
 // ==========================================
-// Theme Toggle (Light / Dark Mode)
+// Theme Toggle (Light / Dark Mode) & Dynamic Iridescence Background
 // ==========================================
+let portalIridescenceInstance = null;
+
+function setupPortalIridescence() {
+  const bgEl = document.querySelector('#portal-iridescence-bg');
+  if (bgEl && !portalIridescenceInstance) {
+    try {
+      portalIridescenceInstance = initIridescence(bgEl, {
+        color: [1, 1, 1],
+        mouseReact: false,
+        amplitude: 0.1,
+        speed: 1.0
+      });
+    } catch (err) {
+      console.warn('Iridescence init warning:', err);
+    }
+  }
+}
+
 function initPortalTheme() {
   const savedTheme = localStorage.getItem('uniflows-theme') || 'light';
   applyPortalTheme(savedTheme);
@@ -7442,6 +7460,8 @@ function applyPortalTheme(theme) {
   } else {
     document.documentElement.removeAttribute('data-theme');
     document.body.classList.remove('dark-mode');
+    // Active WebGL Iridescence Shader in light mode
+    setupPortalIridescence();
   }
 
   // Update top nav theme slider

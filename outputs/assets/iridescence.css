@@ -1,0 +1,47 @@
+/* ==============================================================================
+   Iridescence — Slick iridescent shader with shifting waves
+   Vanilla JS & CSS Port of React Bits @react-bits/Iridescence-JS-CSS
+   ============================================================================== */
+
+.iridescence-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.iridescence-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ------------------------------------------------------------------------------
+   Portal Light Mode Iridescent Backdrop
+   ------------------------------------------------------------------------------ */
+.portal-iridescence-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Active in Light Mode */
+.portal-body:not(.dark-mode) .portal-iridescence-backdrop,
+html:not([data-theme="dark"]) .portal-body .portal-iridescence-backdrop,
+[data-theme="light"] .portal-iridescence-backdrop {
+  opacity: 0.95;
+}
+
+/* Hidden in Dark Mode */
+[data-theme="dark"] .portal-iridescence-backdrop,
+.portal-body.dark-mode .portal-iridescence-backdrop {
+  opacity: 0;
+  pointer-events: none;
+}
