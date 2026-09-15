@@ -20,6 +20,7 @@ import { renderDistributionTab, printRoyaltyStatement } from './distribution-rep
 import { 
   getEmailConfig, 
   saveEmailConfig, 
+  syncEmailConfigFromSupabase,
   sendAccountHandoverEmail, 
   sendReleaseRevisionEmail, 
   sendReleaseRejectedEmail, 
@@ -10136,8 +10137,21 @@ function initAppointmentsAdmin() {
             });
             if (mailRes && mailRes.success) {
               emailMsg = ` & đã tự động gửi email xác nhận kèm link tới "${targetSlot.booker.email}"!`;
-            } else if (mailRes && mailRes.error) {
-              emailMsg = ` ⚠️ (Cảnh báo email: ${mailRes.error})`;
+            } else if (mailRes && !mailRes.success) {
+              emailMsg = ` ⚠️ (Chưa gửi ngầm: ${mailRes.error || 'Cần gửi thủ công'})`;
+              openEmailFallbackModal({
+                to: targetSlot.booker.email,
+                bookerName: targetSlot.booker.name || targetSlot.booker.artistName || 'Khách',
+                dossierCode: refCode,
+                date: targetSlot.date,
+                timeSlot: targetSlot.timeSlot,
+                meetingMethod: method,
+                meetingLink: link,
+                notes: notes,
+                errorReason: mailRes.error,
+                mailtoUrl: mailRes.mailtoUrl,
+                plainText: mailRes.plainText
+              });
             }
           } catch (err) {
             console.warn('Lỗi dispatch appointment email:', err);
@@ -10161,7 +10175,92 @@ function initAppointmentsAdmin() {
   renderAppointmentsAdmin();
 }
 
+// Modal hỗ trợ gửi email thủ công 1-click khi hệ thống tự động chưa có API Key
+function openEmailFallbackModal({ to, bookerName, dossierCode, date, timeSlot, meetingMethod, meetingLink, notes, errorReason, mailtoUrl, plainText }) {
+  let modal = document.querySelector('#modal-appointment-email-fallback');
+  if (!modal) {
+    modal = document.createElement('dialog');
+    modal.id = 'modal-appointment-email-fallback';
+    modal.className = 'modal-card';
+    modal.style.maxWidth = '640px';
+    modal.style.padding = '24px 28px';
+    modal.style.borderRadius = '12px';
+    modal.style.border = '2px solid #0f172a';
+    modal.style.boxShadow = '8px 8px 0 #0f172a';
+    document.body.appendChild(modal);
+  }
+
+  const fallbackText = plainText || `[XÁC NHẬN LỊCH HẸN A&R MEETING — UNIFLOWS LABEL]
+Xin chào ${bookerName},
+UniFLOWs Label đã xác nhận lịch hẹn A&R của bạn:
+- Mã lịch hẹn: ${dossierCode}
+- Ngày gặp: ${date} (${timeSlot})
+- Phương thức: ${meetingMethod}
+${meetingLink ? `- Link meeting: ${meetingLink}\n` : ''}${notes ? `- Lời nhắn: ${notes}\n` : ''}
+Vui lòng có mặt hoặc truy cập link trước giờ hẹn 5 phút.
+
+Trân trọng,
+UniFLOWs Record Label`;
+
+  const safeMailto = mailtoUrl || `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(`[UniFLOWs] Xác nhận lịch hẹn A&R: ${date} lúc ${timeSlot}`)}&body=${encodeURIComponent(fallbackText)}`;
+
+  modal.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #e2e8f0;padding-bottom:12px;margin-bottom:16px;">
+      <div>
+        <span style="font-size:11px;font-weight:800;color:#d97706;background:#fef3c7;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;text-transform:uppercase;">CẦN GỬI MAIL CHO KHÁCH</span>
+        <h3 style="margin:4px 0 0;font-size:18px;letter-spacing:-0.03em;color:#0f172a;">Gửi Thư Xác Nhận Lịch Hẹn</h3>
+      </div>
+      <button type="button" id="close-email-fallback-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
+    </div>
+
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;font-size:12px;color:#991b1b;margin-bottom:16px;line-height:1.5;">
+      ⚠️ <b>Lưu ý:</b> Hệ thống chưa gửi ngầm qua Brevo API: <em>${errorReason || 'Chưa cài API Key'}</em>.<br>
+      👉 Bạn có thể <b>gửi ngay trong 1 giây</b> bằng ứng dụng Mail / Gmail của bạn hoặc sao chép nội dung gửi qua Zalo/Telegram bên dưới:
+    </div>
+
+    <div style="margin-bottom:14px;font-size:12.5px;">
+      <div>👤 Người nhận: <b style="color:#0f172a;">${bookerName}</b> (<code>${to}</code>)</div>
+      <div style="margin-top:4px;">📅 Lịch gặp: <b>${date}</b> lúc <b>${timeSlot}</b> (${meetingMethod})</div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:11px;font-weight:bold;color:#475569;margin-bottom:4px;">Nội dung thư đã chuẩn bị sẵn:</label>
+      <textarea id="email-fallback-content-box" readonly rows="7" style="width:100%;box-sizing:border-box;font-family:'DM Mono',monospace;font-size:11px;line-height:1.5;padding:10px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;resize:vertical;">${fallbackText}</textarea>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;border-top:1px solid #e2e8f0;padding-top:14px;">
+      <a href="#admin-tab-email-config" id="btn-fallback-to-config" style="font-size:11px;color:#2563eb;text-decoration:underline;">⚙️ Cấu hình Brevo API Key (Gửi ngầm tự động)</a>
+      <div style="display:flex;gap:8px;">
+        <button type="button" id="btn-copy-fallback-text" class="button alt" style="font-size:11.5px;padding:8px 14px;">📋 Sao Chép Nội Dung</button>
+        <a href="${safeMailto}" target="_blank" id="btn-launch-mailto" class="button" style="background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold;font-size:11.5px;padding:8px 18px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+          🚀 Mở Email Gửi Ngay ↗
+        </a>
+      </div>
+    </div>
+  `;
+
+  modal.showModal();
+
+  modal.querySelector('#close-email-fallback-btn')?.addEventListener('click', () => modal.close());
+  modal.querySelector('#btn-copy-fallback-text')?.addEventListener('click', () => {
+    const box = modal.querySelector('#email-fallback-content-box');
+    if (box) {
+      box.select();
+      navigator.clipboard?.writeText(box.value);
+      const btn = modal.querySelector('#btn-copy-fallback-text');
+      if (btn) btn.textContent = '✓ Đã sao chép!';
+      setTimeout(() => { if (btn) btn.textContent = '📋 Sao Chép Nội Dung'; }, 2500);
+    }
+  });
+
+  modal.querySelector('#btn-fallback-to-config')?.addEventListener('click', () => {
+    modal.close();
+    document.querySelector('[data-tab="admin-tab-email-config"]')?.click();
+  });
+}
+
 // Initial calls
+syncEmailConfigFromSupabase();
 initAdminNotificationCenter();
 renderSpecialRequestsAdmin();
 initBroadcastEmailAdmin();

@@ -4,6 +4,7 @@ import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimizer.js';
 import './security.js';
 import { initCardNav } from './card-nav.js';
+import { initArtistPortalRedesign } from './artist-portal.js';
 
 // Kiểm tra quyền đăng nhập
 const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
@@ -95,6 +96,13 @@ if (artist) {
   if (sidebarNameEl) sidebarNameEl.textContent = artist.name;
   const sidebarAvatarEl = document.querySelector('#sidebar-artist-avatar');
   if (sidebarAvatarEl && artist.image) sidebarAvatarEl.src = artist.image;
+
+  // Initialize Redesigned Glassmorphism Artist Portal
+  try {
+    initArtistPortalRedesign(artist);
+  } catch (err) {
+    console.warn('Lỗi khởi tạo Artist Portal Redesign:', err);
+  }
 
   // ----------------------------------------------------
   // CARD NAV INITIALIZATION (PURE TYPOGRAPHY, NO EMOJIS)
