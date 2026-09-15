@@ -144,6 +144,62 @@ export const translations = {
     btn_request_payout: 'Yêu cầu rút tiền',
     btn_new_release: '+ Nộp bản phát hành mới',
 
+    // Artist Portal & Profile & Payout System
+    btn_artist_notifs: '🔔 Thông báo',
+    btn_profile_settings: '⚙️ Hồ sơ & Cài đặt',
+    btn_submit_release: '💿 + Gửi bản phát hành mới',
+    btn_payout: '💳 Rút tiền',
+    cn_profile_btn: 'Hồ sơ',
+    cn_menu_btn: 'Menu',
+    cn_menu_close: 'Đóng',
+
+    // Profile & Settings Modal
+    profile_modal_eyebrow: 'UniPORTAL · Executive Profile',
+    profile_modal_title: 'Hồ sơ & Cài đặt Nghệ sĩ',
+    profile_tab_banking: '💳 Tài khoản Ngân hàng (Payout)',
+    profile_tab_info: '👤 Thông tin Nghệ sĩ',
+    profile_tab_photo: '📷 Ảnh Website',
+    profile_tab_security: '🔒 Mật khẩu & Bảo mật',
+    profile_banking_tip_title: 'Tài khoản ngân hàng thụ hưởng mặc định:',
+    profile_banking_tip_desc: 'Thông tin lưu tại đây sẽ tự động điền sẵn mỗi khi bạn thực hiện lệnh Rút tiền doanh thu, không cần nhập lại nhiều lần.',
+    profile_bank_label: 'Ngân hàng / Ví thụ hưởng *',
+    profile_bank_search_ph: '🔍 Tìm kiếm ngân hàng (gõ: VCB, MB, Techcombank, ACB...)...',
+    profile_acc_num_label: 'Số tài khoản ngân hàng *',
+    profile_acc_num_ph: 'Nhập số tài khoản thụ hưởng...',
+    profile_acc_name_label: 'Tên chủ tài khoản (In hoa không dấu) *',
+    profile_acc_name_ph: 'Ví dụ: NGUYEN VAN A',
+    profile_save_bank_btn: '💾 Lưu thông tin Ngân hàng Mặc định',
+    profile_artist_name_label: 'Tên hiển thị Nghệ sĩ *',
+    profile_artist_name_ph: 'Tên nghệ danh...',
+    profile_genre_label: 'Thể loại âm nhạc chính (Genres)',
+    profile_genre_ph: 'Ví dụ: Dream Pop / Indie / R&B...',
+    profile_bio_label: 'Tiểu sử & Phong cách (Bio)',
+    profile_bio_ph: 'Giới thiệu về nghệ sĩ...',
+    profile_save_info_btn: '💾 Lưu cập nhật Hồ sơ',
+    profile_photo_desc: 'Ảnh hiển thị trên website chính thức của Hãng Đĩa UniFLOWs',
+    profile_photo_upload_label: 'Tải lên ảnh mới (Tỉ lệ 1:1, tự động tối ưu WebP)',
+    profile_photo_url_label: 'Hoặc dán Link ảnh trực tiếp',
+    profile_photo_note_label: 'Ghi chú gửi Ban Quản Trị A&R',
+    profile_photo_note_ph: 'Ví dụ: Ảnh profile mới cho single ra mắt tháng này...',
+    profile_photo_btn: '📤 Gửi Yêu Cầu Duyệt Ảnh Mới',
+    profile_new_pass_label: 'Mật khẩu mới (Tối thiểu 6 ký tự) *',
+    profile_new_pass_ph: 'Nhập mật khẩu mới...',
+    profile_confirm_pass_label: 'Xác nhận lại mật khẩu mới *',
+    profile_confirm_pass_ph: 'Nhập lại mật khẩu mới...',
+    profile_update_pass_btn: '🔒 Cập nhật Mật khẩu',
+    profile_logout_label: 'Đăng xuất khỏi phiên làm việc hiện tại',
+    profile_logout_btn: 'Đăng xuất',
+
+    // Payout Modal
+    payout_modal_eyebrow: 'UniFLOWs Treasury · Payout Gateway',
+    payout_modal_title: 'Yêu cầu rút tiền doanh thu',
+    payout_avail_bal: 'SỐ DƯ KHẢ DỤNG',
+    payout_saved_bank_hint: '⚡ Đã tự động điền thông tin ngân hàng từ Hồ sơ mặc định của bạn.',
+    payout_amt_label: 'Số tiền muốn rút (₫) *',
+    payout_amt_ph: 'Tối thiểu 1,000,000 VNĐ',
+    payout_btn_submit: 'Xác nhận rút tiền →',
+    payout_btn_cancel: 'Hủy bỏ',
+
     // Artwork Inspector & Migration
     art_inspect_title: '🔍 Kết quả kiểm định Artwork (Pre-flight Quality Check):',
     art_inspect_square_pass: 'Tỷ lệ khung hình: Chuẩn vuông 1:1',
@@ -190,6 +246,7 @@ export const translations = {
     submit_success_title: 'ĐÃ TIẾP NHẬN BẢN DEMO THÀNH CÔNG!',
     submit_success_msg: 'Cảm ơn bạn đã chia sẻ âm nhạc với UniFLOWs. Đội ngũ A&R sẽ lắng nghe kỹ lưỡng từng bản demo và phản hồi qua email trong vòng 3 - 5 ngày làm việc.'
   },
+
 
   en: {
     // Navigation & Header
@@ -332,6 +389,62 @@ export const translations = {
     btn_request_payout: 'Request Payout',
     btn_new_release: '+ New Release',
 
+    // Artist Portal & Profile & Payout System
+    btn_artist_notifs: '🔔 Notifications',
+    btn_profile_settings: '⚙️ Profile & Settings',
+    btn_submit_release: '💿 + Submit New Release',
+    btn_payout: '💳 Request Payout',
+    cn_profile_btn: 'Profile',
+    cn_menu_btn: 'Menu',
+    cn_menu_close: 'Close',
+
+    // Profile & Settings Modal
+    profile_modal_eyebrow: 'UniPORTAL · Executive Profile',
+    profile_modal_title: 'Artist Profile & Settings',
+    profile_tab_banking: '💳 Default Bank Account (Payout)',
+    profile_tab_info: '👤 Artist Information',
+    profile_tab_photo: '📷 Website Photo',
+    profile_tab_security: '🔒 Password & Security',
+    profile_banking_tip_title: 'Default Beneficiary Bank Account:',
+    profile_banking_tip_desc: 'Information saved here will automatically pre-fill whenever you request payout earnings, eliminating repetitive manual typing.',
+    profile_bank_label: 'Beneficiary Bank / E-Wallet *',
+    profile_bank_search_ph: '🔍 Search bank (type: VCB, MB, Techcombank, ACB...)...',
+    profile_acc_num_label: 'Bank Account Number *',
+    profile_acc_num_ph: 'Enter beneficiary account number...',
+    profile_acc_name_label: 'Account Holder Name (UPPERCASE NO ACCENTS) *',
+    profile_acc_name_ph: 'E.g.: NGUYEN VAN A',
+    profile_save_bank_btn: '💾 Save Default Bank Account',
+    profile_artist_name_label: 'Artist Display Name *',
+    profile_artist_name_ph: 'Stage / Artist Name...',
+    profile_genre_label: 'Primary Music Genres',
+    profile_genre_ph: 'E.g.: Dream Pop / Indie / R&B...',
+    profile_bio_label: 'Biography & Artistic Style (Bio)',
+    profile_bio_ph: 'Introduce about the artist...',
+    profile_save_info_btn: '💾 Save Profile Updates',
+    profile_photo_desc: 'Photo displayed on the official UniFLOWs Label website',
+    profile_photo_upload_label: 'Upload new photo (1:1 aspect ratio, WebP auto-optimized)',
+    profile_photo_url_label: 'Or paste direct Image URL',
+    profile_photo_note_label: 'Note to A&R Management',
+    profile_photo_note_ph: 'E.g.: New profile photo for upcoming single...',
+    profile_photo_btn: '📤 Submit Photo Approval Request',
+    profile_new_pass_label: 'New Password (Min 6 chars) *',
+    profile_new_pass_ph: 'Enter new password...',
+    profile_confirm_pass_label: 'Confirm New Password *',
+    profile_confirm_pass_ph: 'Re-enter new password...',
+    profile_update_pass_btn: '🔒 Update Password',
+    profile_logout_label: 'Sign out from current session',
+    profile_logout_btn: 'Sign Out',
+
+    // Payout Modal
+    payout_modal_eyebrow: 'UniFLOWs Treasury · Payout Gateway',
+    payout_modal_title: 'Request Earnings Payout',
+    payout_avail_bal: 'AVAILABLE BALANCE',
+    payout_saved_bank_hint: '⚡ Automatically pre-filled bank details from your default saved profile.',
+    payout_amt_label: 'Withdrawal Amount (₫) *',
+    payout_amt_ph: 'Minimum 1,000,000 VND',
+    payout_btn_submit: 'Confirm Payout Request →',
+    payout_btn_cancel: 'Cancel',
+
     // Artwork Inspector & Migration
     art_inspect_title: '🔍 Artwork Pre-flight Inspection Results:',
     art_inspect_square_pass: 'Aspect Ratio: Perfect 1:1 Square',
@@ -418,9 +531,15 @@ export function applyTranslations(lang = getCurrentLang()) {
     }
   });
 
-  // Update language toggle text
+  // Update language toggle buttons in card-nav
+  if (window.cardNavInstance && typeof window.cardNavInstance.setLanguage === 'function') {
+    window.cardNavInstance.setLanguage(lang);
+  }
+
+  // Update traditional language toggle text
   document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
     btn.innerHTML = lang === 'vi' ? '🇬🇧 English' : '🇻🇳 Tiếng Việt';
   });
 }
+
 

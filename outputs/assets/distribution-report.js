@@ -1206,16 +1206,74 @@ export async function syncDistributionToPortal() {
   const matchedArtists = [];
   const updatedTracks = [];
 
+  function removeTonesUtil(str) {
+    if (!str) return '';
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+  }
+  function cleanSlugUtil(str) {
+    if (!str) return '';
+    return removeTonesUtil(str).replace(/[^a-z0-9]/g, '');
+  }
+
   for (const [artName, recs] of artistGroups.entries()) {
-    const targetArtist = data.artists.find(a => 
-      a.name.toLowerCase().trim() === artName.toLowerCase().trim() ||
-      a.id.toLowerCase().trim() === artName.toLowerCase().trim() ||
-      (a.products || []).some(p => recs.some(r => r.track.toLowerCase().trim() === p.title.toLowerCase().trim() || (r.isrc && p.isrc && r.isrc.toLowerCase() === p.isrc.toLowerCase())))
-    );
+    const normArt = (artName || '').trim().normalize('NFC').toLowerCase();
+    const toneLessArt = removeTonesUtil(artName);
+    const slugArt = cleanSlugUtil(artName);
+
+    let targetArtist = data.artists.find(a => {
+      if (!a) return false;
+      const aNorm = (a.name || '').trim().normalize('NFC').toLowerCase();
+      const aId = (a.id || '').trim().toLowerCase();
+      const aToneLess = removeTonesUtil(a.name);
+      const aSlug = cleanSlugUtil(a.name);
+      const aIdSlug = cleanSlugUtil(a.id);
+
+      // 1. Exact Name or ID Match
+      if (aNorm === normArt || aId === normArt) return true;
+      // 2. Accent-insensitive Match
+      if (toneLessArt && aToneLess === toneLessArt) return true;
+      // 3. Slug / Alphanumeric Match
+      if (slugArt && slugArt.length >= 3 && (aSlug === slugArt || aIdSlug === slugArt)) return true;
+      // 4. Fuzzy inclusion Match
+      if (toneLessArt && toneLessArt.length >= 4 && (aToneLess.includes(toneLessArt) || toneLessArt.includes(aToneLess))) return true;
+      // 5. Track or ISRC Match
+      return (a.products || []).some(p => recs.some(r => {
+        const rTrack = (r.track || '').trim().normalize('NFC').toLowerCase();
+        const pTitle = (p.title || '').trim().normalize('NFC').toLowerCase();
+        return (rTrack && pTitle && (rTrack === pTitle || removeTonesUtil(rTrack) === removeTonesUtil(pTitle))) ||
+               (r.isrc && p.isrc && r.isrc.trim().toUpperCase() === p.isrc.trim().toUpperCase());
+      }));
+    });
 
     if (!targetArtist) {
-      console.warn(`Không tìm thấy nghệ sĩ khớp với "${artName}" trong danh sách nghệ sĩ.`);
-      continue;
+      if (confirm(`Phát hiện nghệ sĩ "${artName}" (${recs.length} bản ghi phân phối) chưa có trong hệ thống.\n\nBạn có muốn TỰ ĐỘNG TẠO TÀI KHOẢN mới cho "${artName}" và đồng bộ lên Portal ngay không?`)) {
+        const newSlug = cleanSlugUtil(artName || 'artist');
+        targetArtist = {
+          id: 'artist-' + newSlug + '-' + Date.now().toString(36).slice(-4),
+          name: artName,
+          username: newSlug,
+          email: `${newSlug}@uniflowslabel.com`,
+          showOnWeb: true,
+          roleType: 'exclusive',
+          genre: 'Pop / Indie',
+          image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
+          bio: `Hồ sơ nghệ sĩ ${artName} tự động khởi tạo từ báo cáo phân phối DSP.`,
+          products: [],
+          instagram: '',
+          youtube: '',
+          tiktok: '',
+          monthlyStreams: '0',
+          estimatedRevenue: '0',
+          payableBalance: '0',
+          payoutCycle: 'Hàng tháng (Monthly)',
+          royaltyRate: '80% Master',
+          contractTerm: '2026 - 2029'
+        };
+        data.artists.push(targetArtist);
+      } else {
+        console.warn(`Bỏ qua nghệ sĩ "${artName}" do chưa có tài khoản.`);
+        continue;
+      }
     }
 
     matchedArtists.push(targetArtist.name);

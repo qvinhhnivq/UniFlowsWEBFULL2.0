@@ -36,36 +36,22 @@
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          
           <!-- Prominent Artist Notification Center Trigger -->
           <button id="btn-notif" type="button" class="portal-theme-pill notif-pill-trigger" title="Mở Trung Tâm Thông Báo Nghệ Sĩ">
             <span class="notif-pulse-dot" id="notif-pulse-indicator" style="display:none;"></span>
-            <span>🔔 Thông báo</span>
+            <span data-i18n="btn_artist_notifs">🔔 Thông báo</span>
             <span id="notif-badge" class="notif-counter-pill" style="display:none;">0</span>
           </button>
 
-          <!-- Prominent Theme Switch Button in Header Bar -->
-          <button id="theme-toggle-header-btn" type="button" class="portal-theme-pill" title="Chuyển đổi giao diện Sáng / Tối">
-            <span class="theme-mode-icon">🌙</span> <span class="theme-mode-text">Chế độ Tối</span>
-          </button>
-          
-          <!-- Language Switcher in Header -->
-          <button id="portal-lang-toggle-btn" type="button" class="portal-theme-pill lang-toggle-btn" title="Chuyển đổi ngôn ngữ (Language Switcher)" style="box-shadow:none;">
-            <span class="lang-flag">🇻🇳</span> <span class="lang-text">Tiếng Việt</span>
+          <!-- Profile & Settings Button -->
+          <button id="open-profile-settings-btn" type="button" class="portal-theme-pill" title="Hồ sơ nghệ sĩ & Cài đặt tài khoản" style="font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;">
+            <span data-i18n="btn_profile_settings">⚙️ Hồ sơ & Cài đặt</span>
           </button>
 
-          <button id="open-password-dialog-btn" type="button" class="portal-theme-pill" title="Đổi mật khẩu" style="font-size:12px; font-weight:700;">
-            🔑 Đổi mật khẩu
-          </button>
-
-          <button id="artist-logout" type="button" class="portal-theme-pill" style="font-size:12px; font-weight:700; color:#ef4444; border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.06);" title="Đăng xuất">
-            Đăng xuất
-          </button>
-
-          <button class="button release-action-btn" id="quick-open-release-modal-btn">
+          <button class="button release-action-btn" id="quick-open-release-modal-btn" data-i18n="btn_submit_release">
             💿 + Gửi bản phát hành mới
           </button>
-          <button class="button alt" id="quick-open-payout-modal-btn">
+          <button class="button alt" id="quick-open-payout-modal-btn" data-i18n="btn_payout">
             💳 Rút tiền
           </button>
         </div>
@@ -3054,13 +3040,169 @@
   </dialog>
 
   <!-- ========================================== -->
+  <!-- MODAL: HỒ SƠ & CÀI ĐẶT NGHỆ SĨ (PROFILE & SETTINGS) -->
+  <!-- ========================================== -->
+  <dialog id="profile-settings-dialog" style="padding:0;max-width:680px;width:94%;">
+    <div class="payout-modal-header" style="padding:22px 28px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:42px;height:42px;border-radius:50%;overflow:hidden;border:2px solid #0284c7;background:var(--glass-bg-subtle);">
+          <img id="profile-modal-avatar-preview" src="https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80" style="width:100%;height:100%;object-fit:cover;" alt="Avatar">
+        </div>
+        <div>
+          <span class="eyebrow" data-i18n="profile_modal_eyebrow" style="color:#0284c7;margin:0;">UniPORTAL · Executive Profile</span>
+          <h3 data-i18n="profile_modal_title" style="margin:2px 0 0;font-size:20px;letter-spacing:-0.03em;font-weight:900;">Hồ sơ & Cài đặt Nghệ sĩ</h3>
+        </div>
+      </div>
+      <button type="button" id="close-profile-dialog-btn" class="button alt" style="border-radius:999px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px;">✕</button>
+    </div>
+
+    <!-- Profile Nav Tabs -->
+    <div class="profile-tabs-header">
+      <button type="button" class="profile-tab-btn active" data-tab="profile-tab-banking" data-i18n="profile_tab_banking">💳 Tài khoản Ngân hàng (Payout)</button>
+      <button type="button" class="profile-tab-btn" data-tab="profile-tab-info" data-i18n="profile_tab_info">👤 Thông tin Nghệ sĩ</button>
+      <button type="button" class="profile-tab-btn" data-tab="profile-tab-photo" data-i18n="profile_tab_photo">📷 Ảnh Website</button>
+      <button type="button" class="profile-tab-btn" data-tab="profile-tab-security" data-i18n="profile_tab_security">🔒 Mật khẩu & Bảo mật</button>
+    </div>
+
+    <div class="payout-modal-body" style="padding:24px 28px;max-height:68vh;overflow-y:auto;">
+      <p id="profile-settings-notice" class="notice" style="display:none;margin-bottom:12px;"></p>
+
+      <!-- TAB 1: BANKING INFO -->
+      <div id="profile-tab-banking" class="profile-tab-panel active">
+        <div style="background:rgba(2,132,199,0.06);border:1px solid rgba(2,132,199,0.25);border-radius:14px;padding:14px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start;">
+          <span style="font-size:20px;">💡</span>
+          <div style="font-size:12.5px;color:var(--portal-text-main);line-height:1.45;">
+            <strong data-i18n="profile_banking_tip_title">Tài khoản ngân hàng thụ hưởng mặc định:</strong>
+            <div data-i18n="profile_banking_tip_desc" style="color:var(--portal-text-dim);margin-top:2px;">Thông tin lưu tại đây sẽ tự động điền sẵn mỗi khi bạn thực hiện lệnh Rút tiền doanh thu, không cần nhập lại nhiều lần.</div>
+          </div>
+        </div>
+
+        <form id="profile-banking-form">
+          <div class="field" style="margin-bottom:14px;">
+            <label data-i18n="profile_bank_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Ngân hàng / Ví thụ hưởng *</label>
+            <div class="searchable-bank-wrapper" id="profile-bank-wrapper">
+              <input type="text" id="profile-bank-search" class="bank-search-input" autocomplete="off" data-i18n-placeholder="profile_bank_search_ph" placeholder="🔍 Tìm kiếm ngân hàng (gõ: VCB, MB, Techcombank...)..." required>
+              <input type="hidden" name="bank" id="profile-bank" required>
+              <span class="bank-search-arrow">▼</span>
+              <div class="bank-dropdown-list" id="profile-bank-dropdown" style="display:none;"></div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:14px;">
+            <label for="profile-account-number" data-i18n="profile_acc_num_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Số tài khoản ngân hàng *</label>
+            <input id="profile-account-number" required data-i18n-placeholder="profile_acc_num_ph" placeholder="Nhập số tài khoản thụ hưởng..." style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;">
+          </div>
+
+          <div class="field" style="margin-bottom:20px;">
+            <label for="profile-account-name" data-i18n="profile_acc_name_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tên chủ tài khoản (In hoa không dấu) *</label>
+            <input id="profile-account-name" required data-i18n-placeholder="profile_acc_name_ph" placeholder="Ví dụ: NGUYEN VAN A" style="text-transform:uppercase;font-weight:800;font-size:13.5px;">
+          </div>
+
+          <button type="submit" id="save-profile-banking-btn" class="button" data-i18n="profile_save_bank_btn" style="width:100%;border-radius:9999px;font-weight:900;background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+            💾 Lưu thông tin Ngân hàng Mặc định
+          </button>
+        </form>
+      </div>
+
+      <!-- TAB 2: ARTIST INFO -->
+      <div id="profile-tab-info" class="profile-tab-panel">
+        <form id="profile-info-form">
+          <div class="field" style="margin-bottom:14px;">
+            <label for="profile-artist-name-input" data-i18n="profile_artist_name_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tên hiển thị Nghệ sĩ *</label>
+            <input id="profile-artist-name-input" required data-i18n-placeholder="profile_artist_name_ph" placeholder="Tên nghệ danh...">
+          </div>
+
+          <div class="field" style="margin-bottom:14px;">
+            <label for="profile-genre-input" data-i18n="profile_genre_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Thể loại âm nhạc chính (Genres)</label>
+            <input id="profile-genre-input" data-i18n-placeholder="profile_genre_ph" placeholder="Ví dụ: Dream Pop / Indie / R&B...">
+          </div>
+
+          <div class="field" style="margin-bottom:14px;">
+            <label for="profile-bio-input" data-i18n="profile_bio_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tiểu sử & Phong cách (Bio)</label>
+            <textarea id="profile-bio-input" rows="3" data-i18n-placeholder="profile_bio_ph" placeholder="Giới thiệu về nghệ sĩ..."></textarea>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div class="field">
+              <label for="profile-ig-input" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:4px;">Instagram</label>
+              <input id="profile-ig-input" placeholder="https://instagram.com/...">
+            </div>
+            <div class="field">
+              <label for="profile-tiktok-input" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:4px;">TikTok</label>
+              <input id="profile-tiktok-input" placeholder="https://tiktok.com/@...">
+            </div>
+          </div>
+
+          <button type="submit" id="save-profile-info-btn" class="button" data-i18n="profile_save_info_btn" style="width:100%;border-radius:9999px;font-weight:900;">
+            💾 Lưu cập nhật Hồ sơ
+          </button>
+        </form>
+      </div>
+
+      <!-- TAB 3: PHOTO CHANGE REQUEST -->
+      <div id="profile-tab-photo" class="profile-tab-panel">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto 10px;border:3px solid var(--glass-border);box-shadow:0 8px 24px rgba(0,0,0,0.15);">
+            <img id="profile-tab-photo-preview" src="" style="width:100%;height:100%;object-fit:cover;" alt="Preview">
+          </div>
+          <span data-i18n="profile_photo_desc" style="font-size:12px;color:var(--portal-text-dim);">Ảnh hiển thị trên website chính thức của Hãng Đĩa UniFLOWs</span>
+        </div>
+
+        <form id="profile-photo-form">
+          <div class="field" style="margin-bottom:14px;">
+            <label data-i18n="profile_photo_upload_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tải lên ảnh mới (Tỉ lệ 1:1, tự động tối ưu WebP)</label>
+            <input type="file" id="profile-photo-file-input" accept="image/*" style="padding:10px;">
+          </div>
+          <div class="field" style="margin-bottom:14px;">
+            <label for="profile-photo-url-input" data-i18n="profile_photo_url_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Hoặc dán Link ảnh trực tiếp</label>
+            <input type="url" id="profile-photo-url-input" placeholder="https://...">
+          </div>
+          <div class="field" style="margin-bottom:20px;">
+            <label for="profile-photo-note-input" data-i18n="profile_photo_note_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Ghi chú gửi Ban Quản Trị A&R</label>
+            <input id="profile-photo-note-input" data-i18n-placeholder="profile_photo_note_ph" placeholder="Ví dụ: Ảnh profile mới cho single ra mắt tháng này...">
+          </div>
+
+          <button type="submit" id="submit-profile-photo-btn" class="button" data-i18n="profile_photo_btn" style="width:100%;border-radius:9999px;font-weight:900;">
+            📤 Gửi Yêu Cầu Duyệt Ảnh Mới
+          </button>
+        </form>
+      </div>
+
+      <!-- TAB 4: SECURITY & PASSWORD -->
+      <div id="profile-tab-security" class="profile-tab-panel">
+        <form id="profile-security-form">
+          <div class="field" style="margin-bottom:14px;">
+            <label for="profile-new-pass" data-i18n="profile_new_pass_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Mật khẩu mới (Tối thiểu 6 ký tự) *</label>
+            <input type="password" id="profile-new-pass" required data-i18n-placeholder="profile_new_pass_ph" placeholder="Nhập mật khẩu mới...">
+          </div>
+          <div class="field" style="margin-bottom:20px;">
+            <label for="profile-confirm-pass" data-i18n="profile_confirm_pass_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Xác nhận lại mật khẩu mới *</label>
+            <input type="password" id="profile-confirm-pass" required data-i18n-placeholder="profile_confirm_pass_ph" placeholder="Nhập lại mật khẩu mới...">
+          </div>
+
+          <button type="submit" id="submit-profile-pass-btn" class="button" data-i18n="profile_update_pass_btn" style="width:100%;border-radius:9999px;font-weight:900;margin-bottom:16px;">
+            🔒 Cập nhật Mật khẩu
+          </button>
+
+          <div style="border-top:1px solid var(--glass-border-subtle);padding-top:16px;display:flex;justify-content:space-between;align-items:center;">
+            <span data-i18n="profile_logout_label" style="font-size:12px;color:var(--portal-text-dim);">Đăng xuất khỏi phiên làm việc hiện tại</span>
+            <button type="button" id="profile-logout-btn" class="button alt" data-i18n="profile_logout_btn" style="color:#ef4444;border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);border-radius:9999px;padding:8px 16px;font-size:12px;font-weight:700;">
+              Đăng xuất
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ========================================== -->
   <!-- MODAL: YÊU CẦU RÚT TIỀN (EXECUTIVE PAYOUT) -->
   <!-- ========================================== -->
   <dialog id="payout-dialog" style="padding:0;max-width:540px;width:92%;">
     <div class="payout-modal-header">
       <div>
-        <span class="eyebrow" style="color:#0284c7;margin:0;">UniFLOWs Treasury · Payout Gateway</span>
-        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;font-weight:900;">Yêu cầu rút tiền doanh thu</h3>
+        <span class="eyebrow" data-i18n="payout_modal_eyebrow" style="color:#0284c7;margin:0;">UniFLOWs Treasury · Payout Gateway</span>
+        <h3 data-i18n="payout_modal_title" style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;font-weight:900;">Yêu cầu rút tiền doanh thu</h3>
       </div>
       <button type="button" id="close-payout-dialog-btn" class="button alt" style="border-radius:999px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px;">✕</button>
     </div>
@@ -3068,7 +3210,7 @@
     <form id="payout-request-form" class="payout-modal-body">
       <div class="payout-balance-card">
         <div>
-          <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--portal-text-dim);display:block;margin-bottom:2px;font-weight:700;letter-spacing:0.04em;">SỐ DƯ KHẢ DỤNG</span>
+          <span data-i18n="payout_avail_bal" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--portal-text-dim);display:block;margin-bottom:2px;font-weight:700;letter-spacing:0.04em;">SỐ DƯ KHẢ DỤNG</span>
           <div class="payout-balance-val" id="dialog-available-balance">₫ 0</div>
         </div>
         <div style="text-align:right;">
@@ -3078,10 +3220,13 @@
       </div>
 
       <p id="payout-dialog-notice" class="notice" style="display:none;margin:0;"></p>
+      <div id="payout-saved-bank-hint" data-i18n="payout_saved_bank_hint" style="font-size:12px;color:#0284c7;display:none;padding:8px 12px;background:rgba(2,132,199,0.08);border-radius:10px;font-weight:700;">
+        ⚡ Đã tự động điền thông tin ngân hàng từ Hồ sơ mặc định của bạn.
+      </div>
 
       <div class="field" style="margin-bottom:0;">
-        <label for="payout-amount" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Số tiền muốn rút (₫) *</label>
-        <input id="payout-amount" type="number" min="1000000" step="10000" required placeholder="Tối thiểu 1,000,000 VNĐ" style="font-size:17px;font-weight:900;font-family:'DM Mono',monospace;">
+        <label for="payout-amount" data-i18n="payout_amt_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Số tiền muốn rút (₫) *</label>
+        <input id="payout-amount" type="number" min="1000000" step="10000" required data-i18n-placeholder="payout_amt_ph" placeholder="Tối thiểu 1,000,000 VNĐ" style="font-size:17px;font-weight:900;font-family:'DM Mono',monospace;">
         <div class="percentage-pills">
           <button type="button" class="percent-pill-btn" data-percent="0.25">25%</button>
           <button type="button" class="percent-pill-btn" data-percent="0.5">50%</button>
@@ -3091,9 +3236,9 @@
       </div>
 
       <div class="field" style="margin-bottom:0;">
-        <label for="payout-bank-search" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Ngân hàng / Ví thụ hưởng *</label>
+        <label for="payout-bank-search" data-i18n="profile_bank_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Ngân hàng / Ví thụ hưởng *</label>
         <div class="searchable-bank-wrapper" id="payout-bank-wrapper">
-          <input type="text" id="payout-bank-search" class="bank-search-input" autocomplete="off" placeholder="🔍 Tìm kiếm ngân hàng (gõ: VCB, MB, Techcombank, ACB...)..." required>
+          <input type="text" id="payout-bank-search" class="bank-search-input" autocomplete="off" data-i18n-placeholder="profile_bank_search_ph" placeholder="🔍 Tìm kiếm ngân hàng (gõ: VCB, MB, Techcombank, ACB...)..." required>
           <input type="hidden" name="bank" id="payout-bank" required>
           <span class="bank-search-arrow">▼</span>
           <div class="bank-dropdown-list" id="payout-bank-dropdown" style="display:none;"></div>
@@ -3101,18 +3246,18 @@
       </div>
 
       <div class="field" style="margin-bottom:0;">
-        <label for="payout-account-number" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Số tài khoản ngân hàng *</label>
-        <input id="payout-account-number" required placeholder="Nhập số tài khoản thụ hưởng..." style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;">
+        <label for="payout-account-number" data-i18n="profile_acc_num_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Số tài khoản ngân hàng *</label>
+        <input id="payout-account-number" required data-i18n-placeholder="profile_acc_num_ph" placeholder="Nhập số tài khoản thụ hưởng..." style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;">
       </div>
 
       <div class="field" style="margin-bottom:0;">
-        <label for="payout-account-name" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tên chủ tài khoản (In hoa không dấu) *</label>
-        <input id="payout-account-name" required placeholder="Ví dụ: NGUYEN VAN A" style="text-transform:uppercase;font-weight:800;font-size:13.5px;">
+        <label for="payout-account-name" data-i18n="profile_acc_name_label" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tên chủ tài khoản (In hoa không dấu) *</label>
+        <input id="payout-account-name" required data-i18n-placeholder="profile_acc_name_ph" placeholder="Ví dụ: NGUYEN VAN A" style="text-transform:uppercase;font-weight:800;font-size:13.5px;">
       </div>
 
       <div class="payout-modal-footer">
-        <button type="button" id="close-payout-dialog-btn-footer" class="button alt">Hủy bỏ</button>
-        <button type="submit" id="submit-payout-btn" class="button">Xác nhận rút tiền →</button>
+        <button type="button" id="close-payout-dialog-btn-footer" class="button alt" data-i18n="payout_btn_cancel">Hủy bỏ</button>
+        <button type="submit" id="submit-payout-btn" class="button" data-i18n="payout_btn_submit">Xác nhận rút tiền →</button>
       </div>
     </form>
   </dialog>

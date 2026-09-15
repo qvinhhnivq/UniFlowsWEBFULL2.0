@@ -1309,3 +1309,64 @@ dialog[open].release-dialog-shell {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 12px 30px rgba(16, 185, 129, 0.5) !important;
 }
+
+/* ==============================================================================
+   10. EXECUTIVE ARTIST PROFILE & SETTINGS MODAL
+   ============================================================================== */
+#profile-settings-dialog {
+  max-width: 680px !important;
+  width: 94vw !important;
+  padding: 0 !important;
+  border-radius: 26px !important;
+  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-bg-elevated) !important;
+  backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
+  -webkit-backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+  overflow: hidden !important;
+}
+
+.profile-tabs-header {
+  display: flex !important;
+  background: var(--glass-bg-subtle) !important;
+  border-bottom: 1px solid var(--glass-border-subtle) !important;
+  padding: 0 20px !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none;
+}
+
+.profile-tabs-header::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-tab-btn {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2.5px solid transparent !important;
+  padding: 13px 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: var(--portal-text-dim) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  font-family: inherit !important;
+}
+
+.profile-tab-btn:hover {
+  color: var(--portal-text-main) !important;
+}
+
+.profile-tab-btn.active {
+  color: #0284c7 !important;
+  border-bottom-color: #0284c7 !important;
+}
+
+.profile-tab-panel {
+  display: none;
+}
+
+.profile-tab-panel.active {
+  display: block;
+}

@@ -3381,66 +3381,417 @@ document.querySelector('#admin-refresh-dashboard-btn')?.addEventListener('click'
   showNotice('✓ Đã cập nhật toàn bộ số liệu thống kê Dashboard mới nhất!');
 });
 
+// ==============================================================================
+// SMART REVENUE & DISTRIBUTION CSV IMPORT ENGINE
+// ==============================================================================
+function removeVietnameseTonesClean(str) {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim();
+}
+
+function cleanAlphanumericSlug(str) {
+  if (!str) return '';
+  return removeVietnameseTonesClean(str).replace(/[^a-z0-9]/g, '');
+}
+
+function parseCSVAdvanced(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const rawLines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (rawLines.length < 2) throw new Error('File CSV không đủ dữ liệu (cần ít nhất dòng tiêu đề và 1 dòng dữ liệu).');
+
+  // Detect delimiter
+  const firstLine = rawLines[0];
+  let delim = ',';
+  if ((firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length) delim = ';';
+  else if ((firstLine.match(/\t/g) || []).length > (firstLine.match(/,/g) || []).length) delim = '\t';
+
+  function parseRow(rowStr) {
+    const cells = [];
+    let cur = '', inQuotes = false;
+    for (let i = 0; i < rowStr.length; i++) {
+      const char = rowStr[i];
+      if (char === '"') {
+        if (inQuotes && rowStr[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === delim && !inQuotes) {
+        cells.push(cur.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        cur = '';
+      } else {
+        cur += char;
+      }
+    }
+    cells.push(cur.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+    return cells;
+  }
+
+  const headers = parseRow(rawLines[0]).map(h => h.trim().toLowerCase().normalize('NFC'));
+  const rows = [];
+  for (let i = 1; i < rawLines.length; i++) {
+    const cells = parseRow(rawLines[i]);
+    if (cells.some(c => c && c.length > 0)) {
+      rows.push(cells);
+    }
+  }
+
+  return { headers, rows };
+}
+
+function findMatchingArtistSmart(dataArtists, { artistId, artistName, trackTitle, isrc, barcode, email }) {
+  if (!Array.isArray(dataArtists)) return null;
+
+  const normId = (artistId || '').trim().toLowerCase();
+  const normName = (artistName || '').trim().normalize('NFC').toLowerCase();
+  const toneLessName = removeVietnameseTonesClean(artistName);
+  const slugName = cleanAlphanumericSlug(artistName);
+  const normEmail = (email || '').trim().toLowerCase();
+  const normTrack = (trackTitle || '').trim().normalize('NFC').toLowerCase();
+  const toneLessTrack = removeVietnameseTonesClean(trackTitle);
+  const normIsrc = (isrc || '').trim().toUpperCase();
+
+  // Tier 1: Exact ID / Slug / Username Match
+  if (normId) {
+    const m = dataArtists.find(a => 
+      (a.id && a.id.toLowerCase() === normId) || 
+      (a.slug && a.slug.toLowerCase() === normId) ||
+      (a.username && a.username.toLowerCase() === normId)
+    );
+    if (m) return { artist: m, matchTier: 'Mã ID / Username' };
+  }
+
+  // Tier 2: Exact Name Match
+  if (normName) {
+    const m = dataArtists.find(a => 
+      a.name && a.name.trim().normalize('NFC').toLowerCase() === normName
+    );
+    if (m) return { artist: m, matchTier: 'Tên nghệ sĩ chính xác' };
+  }
+
+  // Tier 3: Accent-Insensitive Vietnamese Match ("Kho Band" = "Khờ Band")
+  if (toneLessName && toneLessName.length >= 2) {
+    const m = dataArtists.find(a => 
+      a.name && removeVietnameseTonesClean(a.name) === toneLessName
+    );
+    if (m) return { artist: m, matchTier: 'Tên nghệ sĩ không dấu' };
+  }
+
+  // Tier 4: Alphanumeric / Slugified Match ("kho_band", "khoband" = "Khờ Band")
+  if (slugName && slugName.length >= 3) {
+    const m = dataArtists.find(a => {
+      const aSlug = cleanAlphanumericSlug(a.name);
+      const aIdSlug = cleanAlphanumericSlug(a.id);
+      return (aSlug && aSlug === slugName) || (aIdSlug && aIdSlug === slugName);
+    });
+    if (m) return { artist: m, matchTier: 'Tên dạng slug / viết liền' };
+  }
+
+  // Tier 5: Substring / Fuzzy Inclusion Match ("Khờ Band (Official)" = "Khờ Band")
+  if (toneLessName && toneLessName.length >= 4) {
+    const m = dataArtists.find(a => {
+      const aToneLess = removeVietnameseTonesClean(a.name);
+      return aToneLess.length >= 3 && (toneLessName.includes(aToneLess) || aToneLess.includes(toneLessName));
+    });
+    if (m) return { artist: m, matchTier: 'Từ khóa tên nghệ sĩ' };
+  }
+
+  // Tier 6: Email Match
+  if (normEmail) {
+    const m = dataArtists.find(a => a.email && a.email.toLowerCase() === normEmail);
+    if (m) return { artist: m, matchTier: 'Email tài khoản' };
+  }
+
+  // Tier 7: Track Catalog, ISRC, or Barcode Match from Artist Products
+  if (normTrack || normIsrc || barcode) {
+    const m = dataArtists.find(a => {
+      if (!Array.isArray(a.products)) return false;
+      return a.products.some(p => {
+        if (normIsrc && p.isrc && p.isrc.toUpperCase() === normIsrc) return true;
+        if (barcode && p.barcode && p.barcode === barcode) return true;
+        if (normTrack && p.title) {
+          const pTitleNorm = p.title.trim().normalize('NFC').toLowerCase();
+          const pTitleToneLess = removeVietnameseTonesClean(p.title);
+          return pTitleNorm === normTrack || (pTitleToneLess.length >= 3 && pTitleToneLess === toneLessTrack);
+        }
+        return false;
+      });
+    });
+    if (m) return { artist: m, matchTier: 'Tác phẩm / ISRC / Bài hát đã phát hành' };
+  }
+
+  return null;
+}
+
 // CSV Revenue Report Import Handler
 document.querySelector('#admin-csv-upload')?.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
   try {
+    // 1. Refresh live data from database first to make sure any newly added artists are in memory
+    data = await getData();
+
     const text = await file.text();
-    const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
-    if (lines.length < 2) {
-      alert('File CSV không đúng định dạng hoặc không có dòng dữ liệu.');
-      return;
+    const { headers, rows } = parseCSVAdvanced(text);
+
+    function findCol(exactList, fuzzyList = []) {
+      for (const e of exactList) {
+        const idx = headers.indexOf(e.toLowerCase().normalize('NFC'));
+        if (idx !== -1) return idx;
+      }
+      for (const f of fuzzyList) {
+        const idx = headers.findIndex(h => h.includes(f.toLowerCase().normalize('NFC')));
+        if (idx !== -1) return idx;
+      }
+      return -1;
     }
 
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/["']/g, ''));
-    let matchedCount = 0;
+    const iArtist = findCol(
+      ['track artist', 'release artist', 'artist_name', 'artist name', 'artist', 'performer', 'display artist', 'nghệ sĩ', 'ten nghe si', 'tên nghệ sĩ', 'ca sĩ'],
+      ['artist', 'nghệ sĩ', 'performer', 'singer']
+    );
+    const iArtistId = findCol(
+      ['artist_id', 'artist id', 'id nghệ sĩ', 'id', 'slug', 'account id', 'mã nghệ sĩ'],
+      ['artist_id', 'artist id']
+    );
+    const iTrack = findCol(
+      ['track title', 'release title', 'song title', 'song_title', 'track_name', 'track', 'title', 'song', 'bài hát', 'tên bài hát', 'tựa đề'],
+      ['track', 'title', 'song', 'bài hát']
+    );
+    const iIsrc = findCol(['isrc', 'isrc code', 'mã isrc'], ['isrc']);
+    const iBarcode = findCol(['barcode', 'upc', 'ean', 'cat no', 'catalog no'], ['barcode', 'upc']);
+    const iEmail = findCol(['email', 'artist email', 'tài khoản', 'email nghệ sĩ'], ['email']);
+    const iStreams = findCol(['units', 'quantity', 'streams', 'plays', 'lượt nghe', 'số lượt nghe', 'plays count', 'views'], ['unit', 'stream', 'play', 'lượt nghe']);
+    
+    // Revenue columns
+    const iNetPay = headers.indexOf('net payable');
+    const iNetAmount = headers.indexOf('net amount');
+    const iGrossAmount = headers.indexOf('gross amount');
+    const iNetInCurr = headers.indexOf('net amount in currency');
+    const iGrossInCurr = headers.indexOf('gross amount in currency');
+    const iExRate = headers.indexOf('exchange rate');
+    const iRevenue = findCol(['revenue', 'doanh thu', 'doanh_thu', 'amount', 'earnings', 'usd', 'vnd', 'thực nhận'], ['revenue', 'doanh thu', 'amount']);
 
-    for (let i = 1; i < lines.length; i++) {
-      const row = lines[i].split(',').map(c => c.trim().replace(/["']/g, ''));
-      if (row.length === 0 || !row.some(Boolean)) continue;
+    const matchedMap = new Map(); // artistId -> { artist, revenue, streams, rowCount, tracks: Map, matchTier }
+    const unmatchedMap = new Map(); // rawName -> { name, revenue, streams, rowCount, tracks: Map }
 
-      let artistId = '';
-      let artistName = '';
-      let addRev = 0;
-      let addStreams = 0;
+    for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+      const row = rows[rIdx];
+      const rawArtist = iArtist !== -1 ? (row[iArtist] || '').trim() : '';
+      const rawArtistId = iArtistId !== -1 ? (row[iArtistId] || '').trim() : '';
+      const rawEmail = iEmail !== -1 ? (row[iEmail] || '').trim() : '';
+      const rawTrack = iTrack !== -1 ? (row[iTrack] || '').trim() : '';
+      const rawIsrc = iIsrc !== -1 ? (row[iIsrc] || '').trim() : '';
+      const rawBarcode = iBarcode !== -1 ? (row[iBarcode] || '').trim() : '';
+      
+      const streams = iStreams !== -1 ? Math.max(0, Math.round(parseFloat(String(row[iStreams] || '0').replace(/[^0-9.]/g, '')) || 0)) : 0;
+      
+      const exRate = iExRate !== -1 ? (parseFloat(String(row[iExRate] || '0').replace(/[^0-9.]/g, '')) || 25985) : 25985;
+      
+      let rev = 0;
+      const netPayVal = iNetPay !== -1 ? parseFloat(String(row[iNetPay] || '0').replace(/[^0-9.]/g, '')) : 0;
+      const netAmtVal = iNetAmount !== -1 ? parseFloat(String(row[iNetAmount] || '0').replace(/[^0-9.]/g, '')) : 0;
+      const netCurrVal = iNetInCurr !== -1 ? parseFloat(String(row[iNetInCurr] || '0').replace(/[^0-9.]/g, '')) : 0;
+      const grossAmtVal = iGrossAmount !== -1 ? parseFloat(String(row[iGrossAmount] || '0').replace(/[^0-9.]/g, '')) : 0;
+      const grossCurrVal = iGrossInCurr !== -1 ? parseFloat(String(row[iGrossInCurr] || '0').replace(/[^0-9.]/g, '')) : 0;
+      const genRevVal = iRevenue !== -1 ? parseFloat(String(row[iRevenue] || '0').replace(/[^0-9.]/g, '')) : 0;
 
-      headers.forEach((h, colIdx) => {
-        const val = row[colIdx] || '';
-        if (h === 'id' || h === 'artist_id' || h === 'artist id' || h === 'slug') artistId = val;
-        if (h === 'name' || h === 'artist' || h === 'artist_name' || h === 'artist name') artistName = val;
-        if (h.includes('revenue') || h.includes('doanh_thu') || h.includes('amount') || h.includes('earnings') || h.includes('usd') || h.includes('vnd')) {
-          addRev += parseNumber(val);
-        }
-        if (h.includes('stream') || h.includes('play') || h.includes('luot_nghe') || h.includes('quantity')) {
-          addStreams += parseNumber(val);
-        }
+      if (netPayVal > 0) rev = netPayVal;
+      else if (netAmtVal > 0) rev = netAmtVal;
+      else if (netCurrVal > 0) rev = netCurrVal * exRate;
+      else if (grossAmtVal > 0) rev = grossAmtVal;
+      else if (grossCurrVal > 0) rev = grossCurrVal * exRate;
+      else if (genRevVal > 0) rev = genRevVal;
+
+      const matchRes = findMatchingArtistSmart(data.artists, {
+        artistId: rawArtistId,
+        artistName: rawArtist,
+        trackTitle: rawTrack,
+        isrc: rawIsrc,
+        barcode: rawBarcode,
+        email: rawEmail
       });
 
-      const targetArtist = data.artists.find(a => 
-        (artistId && a.id.toLowerCase() === artistId.toLowerCase()) ||
-        (artistName && a.name.toLowerCase() === artistName.toLowerCase())
-      );
-
-      if (targetArtist) {
-        matchedCount++;
-        const currentRev = parseNumber(targetArtist.estimatedRevenue);
-        const currentPayable = parseNumber(targetArtist.payableBalance);
-        const currentStreams = parseNumber(targetArtist.monthlyStreams);
-
-        targetArtist.estimatedRevenue = (currentRev + addRev).toLocaleString('vi-VN');
-        targetArtist.payableBalance = (currentPayable + addRev).toLocaleString('vi-VN');
-        targetArtist.monthlyStreams = (currentStreams + addStreams).toLocaleString('vi-VN');
+      if (matchRes) {
+        const aObj = matchRes.artist;
+        if (!matchedMap.has(aObj.id)) {
+          matchedMap.set(aObj.id, {
+            artist: aObj,
+            revenue: 0,
+            streams: 0,
+            rowCount: 0,
+            tracks: new Map(),
+            matchTier: matchRes.matchTier
+          });
+        }
+        const mItem = matchedMap.get(aObj.id);
+        mItem.revenue += rev;
+        mItem.streams += streams;
+        mItem.rowCount += 1;
+        if (rawTrack) {
+          if (!mItem.tracks.has(rawTrack)) mItem.tracks.set(rawTrack, { streams: 0, revenue: 0, isrc: rawIsrc });
+          const trk = mItem.tracks.get(rawTrack);
+          trk.streams += streams;
+          trk.revenue += rev;
+        }
+      } else {
+        const fallbackKey = rawArtist || rawTrack || 'Chưa rõ nghệ sĩ';
+        if (!unmatchedMap.has(fallbackKey)) {
+          unmatchedMap.set(fallbackKey, {
+            name: fallbackKey,
+            revenue: 0,
+            streams: 0,
+            rowCount: 0,
+            tracks: new Map()
+          });
+        }
+        const uItem = unmatchedMap.get(fallbackKey);
+        uItem.revenue += rev;
+        uItem.streams += streams;
+        uItem.rowCount += 1;
+        if (rawTrack) {
+          if (!uItem.tracks.has(rawTrack)) uItem.tracks.set(rawTrack, { streams: 0, revenue: 0, isrc: rawIsrc });
+          const trk = uItem.tracks.get(rawTrack);
+          trk.streams += streams;
+          trk.revenue += rev;
+        }
       }
     }
 
-    if (matchedCount > 0) {
+    // Process Updates
+    let totalUpdatedRev = 0;
+    let totalUpdatedStreams = 0;
+    const summaryLines = [];
+
+    matchedMap.forEach((mItem) => {
+      const targetArtist = mItem.artist;
+      const curRev = parseNumber(targetArtist.estimatedRevenue);
+      const curPayable = parseNumber(targetArtist.payableBalance);
+      const curStreams = parseNumber(targetArtist.monthlyStreams);
+
+      const addRev = Math.round(mItem.revenue);
+      const addStr = Math.round(mItem.streams);
+
+      targetArtist.estimatedRevenue = (curRev + addRev).toLocaleString('vi-VN');
+      targetArtist.payableBalance = (curPayable + addRev).toLocaleString('vi-VN');
+      targetArtist.monthlyStreams = (curStreams + addStr).toLocaleString('vi-VN');
+
+      totalUpdatedRev += addRev;
+      totalUpdatedStreams += addStr;
+
+      // Also update or add products in artist.products
+      if (!Array.isArray(targetArtist.products)) targetArtist.products = [];
+      mItem.tracks.forEach((tData, tTitle) => {
+        const prod = targetArtist.products.find(p => 
+          p.title.toLowerCase().trim() === tTitle.toLowerCase().trim() ||
+          (tData.isrc && p.isrc && p.isrc.toUpperCase() === tData.isrc.toUpperCase())
+        );
+        if (prod) {
+          const pStr = parseNumber(prod.streams) + Math.round(tData.streams);
+          const pRev = parseNumber(prod.revenue) + Math.round(tData.revenue);
+          prod.streams = pStr.toLocaleString('vi-VN');
+          prod.revenue = pRev.toLocaleString('vi-VN');
+        } else {
+          targetArtist.products.push({
+            id: `prod-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            title: tTitle,
+            type: 'Single',
+            slug: cleanAlphanumericSlug(tTitle),
+            submissionStatus: 'Đã phát hành',
+            streams: Math.round(tData.streams).toLocaleString('vi-VN'),
+            revenue: Math.round(tData.revenue).toLocaleString('vi-VN'),
+            isrc: tData.isrc || '',
+            artworkUrl: targetArtist.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+            playlists: ['Phân Phối Quốc Tế'],
+            splits: [],
+            userRole: 'Main',
+            isSplit: false,
+            percentage: 100
+          });
+        }
+      });
+
+      summaryLines.push(`• ${targetArtist.name} (${mItem.rowCount} dòng): +₫ ${addRev.toLocaleString('vi-VN')} | +${addStr.toLocaleString('vi-VN')} streams [Khớp: ${mItem.matchTier}]`);
+    });
+
+    // Check if there are unmatched artists
+    if (unmatchedMap.size > 0) {
+      const unmatchedList = Array.from(unmatchedMap.values());
+      const promptText = `Hệ thống đã nhận diện thành công ${matchedMap.size} nghệ sĩ.\n\nTuy nhiên còn ${unmatchedList.length} nghệ sĩ trong CSV chưa có tài khoản trong hệ thống:\n${unmatchedList.map(u => `  · "${u.name}" (${u.rowCount} dòng, +₫ ${Math.round(u.revenue).toLocaleString('vi-VN')})`).join('\n')}\n\nBạn có muốn TỰ ĐỘNG TẠO TÀI KHOẢN mới cho các nghệ sĩ này và nạp toàn bộ doanh thu ngay không?`;
+
+      if (confirm(promptText)) {
+        unmatchedList.forEach(u => {
+          const newSlug = cleanAlphanumericSlug(u.name || 'artist');
+          const newId = 'artist-' + newSlug + '-' + Date.now().toString(36).slice(-4);
+          const addRev = Math.round(u.revenue);
+          const addStr = Math.round(u.streams);
+
+          const newProducts = [];
+          u.tracks.forEach((tData, tTitle) => {
+            newProducts.push({
+              id: `prod-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              title: tTitle,
+              type: 'Single',
+              slug: cleanAlphanumericSlug(tTitle),
+              submissionStatus: 'Đã phát hành',
+              streams: Math.round(tData.streams).toLocaleString('vi-VN'),
+              revenue: Math.round(tData.revenue).toLocaleString('vi-VN'),
+              isrc: tData.isrc || '',
+              artworkUrl: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80',
+              playlists: ['Phân Phối Quốc Tế'],
+              splits: [],
+              userRole: 'Main',
+              isSplit: false,
+              percentage: 100
+            });
+          });
+
+          const newArtistObj = {
+            id: newId,
+            name: u.name,
+            username: newSlug,
+            email: `${newSlug}@uniflowslabel.com`,
+            showOnWeb: true,
+            roleType: 'exclusive',
+            genre: 'Pop / Indie',
+            image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=85',
+            bio: `Hồ sơ nghệ sĩ ${u.name} tự động khởi tạo từ dữ liệu báo cáo phân phối CSV.`,
+            products: newProducts,
+            instagram: '',
+            youtube: '',
+            tiktok: '',
+            monthlyStreams: addStr.toLocaleString('vi-VN'),
+            estimatedRevenue: addRev.toLocaleString('vi-VN'),
+            payableBalance: addRev.toLocaleString('vi-VN'),
+            payoutCycle: 'Hàng tháng (Monthly)',
+            royaltyRate: '80% Master',
+            contractTerm: '2026 - 2029'
+          };
+
+          data.artists.push(newArtistObj);
+          totalUpdatedRev += addRev;
+          totalUpdatedStreams += addStr;
+          summaryLines.push(`• ${u.name} (Tự động tạo mới): +₫ ${addRev.toLocaleString('vi-VN')} | +${addStr.toLocaleString('vi-VN')} streams`);
+        });
+      }
+    }
+
+    if (summaryLines.length > 0) {
       await saveData(data);
-      showNotice(`✓ Đã import thành công dữ liệu doanh thu cho ${matchedCount} nghệ sĩ!`);
       render();
+      renderDashboard();
+      alert(`🎉 IMPORT CSV DOANH THU THÀNH CÔNG!\n\n📄 File: ${file.name}\n📊 Tổng xử lý: ${rows.length} dòng dữ liệu\n💰 Tổng doanh thu nạp thêm: ₫ ${totalUpdatedRev.toLocaleString('vi-VN')}\n🎧 Tổng lượt nghe cộng thêm: ${totalUpdatedStreams.toLocaleString('vi-VN')} streams\n\nChi tiết nghệ sĩ:\n${summaryLines.join('\n')}`);
+      showNotice(`✓ Đã tự động nạp ₫ ${totalUpdatedRev.toLocaleString('vi-VN')} cho ${summaryLines.length} nghệ sĩ!`);
     } else {
-      alert('Không tìm thấy nghệ sĩ nào khớp trong hệ thống từ file CSV. Vui lòng kiểm tra cột "artist_id" hoặc "artist_name".');
+      alert('Không thể nhận diện nghệ sĩ hoặc số liệu từ file CSV. Vui lòng kiểm tra lại định dạng tệp.');
     }
   } catch (err) {
     console.error('Lỗi khi đọc file CSV:', err);

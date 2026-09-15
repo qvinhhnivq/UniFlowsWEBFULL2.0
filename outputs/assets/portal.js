@@ -131,14 +131,14 @@ if (artist) {
         textColor: "#ffffff",
         links: [
           { label: "Doanh thu & Rút tiền", hash: "#earnings", tab: "tab-earnings", ariaLabel: "Doanh thu và rút tiền" },
+          { label: "Hồ sơ & Cài đặt", onClick: () => document.querySelector('#open-profile-settings-btn')?.click(), ariaLabel: "Hồ sơ và cài đặt" },
           { label: "Đổi mật khẩu tài khoản", action: "password", ariaLabel: "Đổi mật khẩu" },
-          { label: "Chuyển giao diện Sáng / Tối", action: "theme", ariaLabel: "Chuyển giao diện" },
           { label: "Đăng xuất Nghệ sĩ", action: "logout", ariaLabel: "Đăng xuất", isDanger: true }
         ]
       }
     ];
 
-    initCardNav(cardNavMount, {
+    window.cardNavInstance = await initCardNav(cardNavMount, {
       items: portalNavItems,
       baseColor: '#ffffff',
       menuColor: '#000000',
@@ -147,7 +147,20 @@ if (artist) {
       ease: 'power3.out',
       theme: 'dark',
       artistName: artist.name || 'Nghệ sĩ',
-      artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist'
+      artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist',
+      onLangChange: (targetLang) => {
+        setLang(targetLang);
+      },
+      onThemeToggle: () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const nextTheme = isDark ? 'light' : 'dark';
+        applyPortalTheme(nextTheme);
+        localStorage.setItem('uniflows-theme', nextTheme);
+        return nextTheme === 'dark';
+      },
+      onProfileClick: () => {
+        document.querySelector('#open-profile-settings-btn')?.click();
+      }
     });
   }
 
@@ -5539,13 +5552,22 @@ function removeVietnameseTones(str) {
     .toLowerCase();
 }
 
-function initSearchableBankDropdown() {
-  const wrapper = document.querySelector('#payout-bank-wrapper');
-  const searchInput = document.querySelector('#payout-bank-search');
-  const hiddenInput = document.querySelector('#payout-bank');
-  const dropdown = document.querySelector('#payout-bank-dropdown');
+let payoutBankDropdownHelper = null;
+let profileBankDropdownHelper = null;
 
-  if (!wrapper || !searchInput || !dropdown) return;
+function setupSearchableBankDropdown({
+  wrapperSelector,
+  searchInputSelector,
+  hiddenInputSelector,
+  dropdownSelector,
+  onSelect
+}) {
+  const wrapper = document.querySelector(wrapperSelector);
+  const searchInput = document.querySelector(searchInputSelector);
+  const hiddenInput = document.querySelector(hiddenInputSelector);
+  const dropdown = document.querySelector(dropdownSelector);
+
+  if (!wrapper || !searchInput || !dropdown) return null;
 
   let highlightedIndex = -1;
   let currentFilteredList = [...VIETNAM_BANKS];
@@ -5564,7 +5586,7 @@ function initSearchableBankDropdown() {
 
     const currentVal = hiddenInput?.value || '';
     dropdown.innerHTML = list.map((b, idx) => {
-      const isSelected = currentVal === `${b.shortName} (${b.code})` || currentVal === b.shortName;
+      const isSelected = currentVal === `${b.shortName} (${b.code})` || currentVal === b.shortName || currentVal === b.code;
       return `
         <div class="bank-option-item ${isSelected ? 'selected' : ''}" data-index="${idx}">
           <div class="bank-option-main">
@@ -5580,44 +5602,68 @@ function initSearchableBankDropdown() {
     }).join('');
 
     dropdown.querySelectorAll('.bank-option-item').forEach(item => {
-      item.addEventListener('click', (e) => {
+      const handleSelect = (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const index = parseInt(item.dataset.index, 10);
         const selected = currentFilteredList[index];
         if (selected) {
           selectBank(selected);
         }
-      });
+      };
+      item.addEventListener('mousedown', handleSelect);
+      item.addEventListener('touchstart', handleSelect, { passive: false });
+      item.addEventListener('click', handleSelect);
     });
   }
 
   function selectBank(bank) {
-    searchInput.value = `${bank.shortName} (${bank.code}) — ${bank.nameVi}`;
-    if (hiddenInput) hiddenInput.value = `${bank.shortName} (${bank.code})`;
+    const displayVal = `${bank.shortName} (${bank.code}) — ${bank.nameVi}`;
+    const valueVal = `${bank.shortName} (${bank.code})`;
+    searchInput.value = displayVal;
+    if (hiddenInput) {
+      hiddenInput.value = valueVal;
+      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     closeDropdown();
+    searchInput.blur();
+    if (typeof onSelect === 'function') {
+      onSelect(bank);
+    }
   }
 
   function openDropdown() {
     wrapper.classList.add('open');
     dropdown.style.display = 'flex';
-    filterBanks(searchInput.value.trim());
+    if (searchInput.value.includes('—') || (hiddenInput && hiddenInput.value)) {
+      renderList(VIETNAM_BANKS);
+    } else {
+      filterBanks(searchInput.value.trim());
+    }
   }
 
   function closeDropdown() {
     wrapper.classList.remove('open');
     dropdown.style.display = 'none';
+    highlightedIndex = -1;
   }
 
   function filterBanks(query) {
-    if (!query) {
+    if (!query || query.includes('—')) {
       renderList(VIETNAM_BANKS);
       return;
     }
-    const cleanQ = removeVietnameseTones(query);
+    const cleanQ = removeVietnameseTones(query).replace(/[^a-z0-9\s]/gi, ' ');
     const words = cleanQ.split(/\s+/).filter(Boolean);
 
+    if (words.length === 0) {
+      renderList(VIETNAM_BANKS);
+      return;
+    }
+
     const filtered = VIETNAM_BANKS.filter(b => {
-      const bankSearchCorpus = removeVietnameseTones(`${b.shortName} ${b.code} ${b.nameVi} ${b.nameEn}`);
+      const bankSearchCorpus = removeVietnameseTones(`${b.shortName} ${b.code} ${b.nameVi} ${b.nameEn}`).replace(/[^a-z0-9\s]/gi, ' ');
       return words.every(w => bankSearchCorpus.includes(w));
     });
     renderList(filtered);
@@ -5625,6 +5671,11 @@ function initSearchableBankDropdown() {
 
   searchInput.addEventListener('focus', () => {
     openDropdown();
+    if (searchInput.value) {
+      setTimeout(() => {
+        try { searchInput.select(); } catch {}
+      }, 50);
+    }
   });
 
   searchInput.addEventListener('input', () => {
@@ -5678,24 +5729,446 @@ function initSearchableBankDropdown() {
     });
   }
 
-  document.addEventListener('click', (e) => {
+  const handleOutsideClick = (e) => {
     if (!wrapper.contains(e.target)) {
       closeDropdown();
     }
+  };
+
+  document.addEventListener('click', handleOutsideClick);
+  document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+
+  return {
+    setBank: (bankCodeOrShortName) => {
+      if (!bankCodeOrShortName) {
+        searchInput.value = '';
+        if (hiddenInput) hiddenInput.value = '';
+        return;
+      }
+      const b = VIETNAM_BANKS.find(x => 
+        x.code.toLowerCase() === bankCodeOrShortName.toLowerCase() || 
+        x.shortName.toLowerCase() === bankCodeOrShortName.toLowerCase() ||
+        `${x.shortName} (${x.code})`.toLowerCase() === bankCodeOrShortName.toLowerCase()
+      );
+      if (b) {
+        searchInput.value = `${b.shortName} (${b.code}) — ${b.nameVi}`;
+        if (hiddenInput) hiddenInput.value = `${b.shortName} (${b.code})`;
+      } else {
+        searchInput.value = bankCodeOrShortName;
+        if (hiddenInput) hiddenInput.value = bankCodeOrShortName;
+      }
+    },
+    close: closeDropdown,
+    open: openDropdown
+  };
+}
+
+function initSearchableBankDropdown() {
+  payoutBankDropdownHelper = setupSearchableBankDropdown({
+    wrapperSelector: '#payout-bank-wrapper',
+    searchInputSelector: '#payout-bank-search',
+    hiddenInputSelector: '#payout-bank',
+    dropdownSelector: '#payout-bank-dropdown'
   });
 }
 
-requestPayoutBtn?.addEventListener('click', () => {
+function initProfileSettingsDialog() {
+  const profileDialog = document.querySelector('#profile-settings-dialog');
+  const openProfileBtns = document.querySelectorAll('#open-profile-settings-btn, #top-nav-profile-pill');
+  const closeProfileBtn = document.querySelector('#close-profile-dialog-btn');
+  const noticeEl = document.querySelector('#profile-settings-notice');
+  const tabs = document.querySelectorAll('.profile-tab-btn');
+  const panels = document.querySelectorAll('.profile-tab-panel');
+
+  if (!profileDialog) return;
+
+  // 1. Tab Switching
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetTabId = btn.dataset.tab;
+      tabs.forEach(b => b.classList.toggle('active', b === btn));
+      panels.forEach(p => p.classList.toggle('active', p.id === targetTabId));
+      if (noticeEl) noticeEl.style.display = 'none';
+    });
+  });
+
+  // 2. Initialize Bank Dropdown inside Profile Dialog
+  profileBankDropdownHelper = setupSearchableBankDropdown({
+    wrapperSelector: '#profile-bank-wrapper',
+    searchInputSelector: '#profile-bank-search',
+    hiddenInputSelector: '#profile-bank',
+    dropdownSelector: '#profile-bank-dropdown'
+  });
+
+  function showProfileNotice(msg, isSuccess = true) {
+    if (!noticeEl) return;
+    noticeEl.textContent = msg;
+    noticeEl.style.display = 'block';
+    noticeEl.style.background = isSuccess ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)';
+    noticeEl.style.color = isSuccess ? '#10b981' : '#ef4444';
+    noticeEl.style.border = `1px solid ${isSuccess ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`;
+  }
+
+  function populateProfileData() {
+    if (noticeEl) noticeEl.style.display = 'none';
+
+    // Avatar previews
+    const avatarSrc = artist.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80';
+    const modalAvatar = document.querySelector('#profile-modal-avatar-preview');
+    const tabPhotoPreview = document.querySelector('#profile-tab-photo-preview');
+    if (modalAvatar) modalAvatar.src = avatarSrc;
+    if (tabPhotoPreview) tabPhotoPreview.src = avatarSrc;
+
+    // Tab 1: Banking
+    const banking = artist.banking || {};
+    if (profileBankDropdownHelper && banking.bank) {
+      profileBankDropdownHelper.setBank(banking.bank);
+    } else {
+      const sInp = document.querySelector('#profile-bank-search');
+      const hInp = document.querySelector('#profile-bank');
+      if (sInp) sInp.value = banking.bank || '';
+      if (hInp) hInp.value = banking.bank || '';
+    }
+    const accNum = document.querySelector('#profile-account-number');
+    const accName = document.querySelector('#profile-account-name');
+    if (accNum) accNum.value = banking.accountNumber || '';
+    if (accName) accName.value = banking.accountName || '';
+
+    // Tab 2: Info
+    const nameInp = document.querySelector('#profile-artist-name-input');
+    const genreInp = document.querySelector('#profile-genre-input');
+    const bioInp = document.querySelector('#profile-bio-input');
+    const igInp = document.querySelector('#profile-ig-input');
+    const tiktokInp = document.querySelector('#profile-tiktok-input');
+
+    if (nameInp) nameInp.value = artist.name || '';
+    if (genreInp) genreInp.value = artist.genre || artist.genres || '';
+    if (bioInp) bioInp.value = artist.bio || '';
+    if (igInp) igInp.value = (artist.socials && artist.socials.instagram) || artist.instagram || '';
+    if (tiktokInp) tiktokInp.value = (artist.socials && artist.socials.tiktok) || artist.tiktok || '';
+
+    // Tab 3: Photo
+    const photoFile = document.querySelector('#profile-photo-file-input');
+    const photoUrl = document.querySelector('#profile-photo-url-input');
+    const photoNote = document.querySelector('#profile-photo-note-input');
+    if (photoFile) photoFile.value = '';
+    if (photoUrl) photoUrl.value = '';
+    if (photoNote) photoNote.value = '';
+
+    // Tab 4: Security
+    const newPass = document.querySelector('#profile-new-pass');
+    const confirmPass = document.querySelector('#profile-confirm-pass');
+    if (newPass) newPass.value = '';
+    if (confirmPass) confirmPass.value = '';
+  }
+
+  // Open & Close Handlers
+  openProfileBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      populateProfileData();
+      profileDialog.showModal();
+    });
+  });
+
+  closeProfileBtn?.addEventListener('click', () => {
+    profileDialog.close();
+  });
+
+  // Form 1: Default Banking Submit
+  const bankingForm = document.querySelector('#profile-banking-form');
+  bankingForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const bank = (document.querySelector('#profile-bank')?.value || document.querySelector('#profile-bank-search')?.value || '').trim();
+    const accountNumber = (document.querySelector('#profile-account-number')?.value || '').trim();
+    const accountName = (document.querySelector('#profile-account-name')?.value || '').trim().toUpperCase();
+
+    if (!bank || !accountNumber || !accountName) {
+      showProfileNotice('Vui lòng điền đầy đủ thông tin ngân hàng thụ hưởng.', false);
+      return;
+    }
+
+    const saveBtn = document.querySelector('#save-profile-banking-btn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Đang lưu...';
+    }
+
+    try {
+      const liveData = await getData();
+      const currentArtistIdx = (liveData.artists || []).findIndex(a => 
+        a.id === artist.id || 
+        (a.username && a.username.toLowerCase() === (artist.username || '').toLowerCase()) ||
+        (a.email && a.email.toLowerCase() === (artist.email || '').toLowerCase()) ||
+        (a.name && a.name.toLowerCase() === (artist.name || '').toLowerCase())
+      );
+
+      if (currentArtistIdx === -1) {
+        throw new Error('Không tìm thấy hồ sơ nghệ sĩ trong hệ thống.');
+      }
+
+      const bankingData = {
+        bank,
+        accountNumber,
+        accountName,
+        updatedAt: new Date().toISOString()
+      };
+
+      liveData.artists[currentArtistIdx].banking = bankingData;
+      artist.banking = bankingData;
+      if (data.artists && data.artists[currentArtistIdx]) {
+        data.artists[currentArtistIdx].banking = bankingData;
+      }
+
+      await saveData(liveData);
+      try {
+        localStorage.setItem('uniflows-artist', JSON.stringify(artist));
+      } catch {}
+
+      showProfileNotice('✓ Đã lưu thông tin tài khoản ngân hàng mặc định thành công! Mỗi khi rút tiền, hệ thống sẽ tự động điền sẵn.', true);
+    } catch (err) {
+      showProfileNotice('Lỗi: ' + (err.message || 'Không thể lưu thông tin ngân hàng.'), false);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Lưu thông tin Ngân hàng Mặc định';
+      }
+    }
+  });
+
+  // Form 2: Artist Info Submit
+  const infoForm = document.querySelector('#profile-info-form');
+  infoForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newName = (document.querySelector('#profile-artist-name-input')?.value || '').trim();
+    const genre = (document.querySelector('#profile-genre-input')?.value || '').trim();
+    const bio = (document.querySelector('#profile-bio-input')?.value || '').trim();
+    const ig = (document.querySelector('#profile-ig-input')?.value || '').trim();
+    const tiktok = (document.querySelector('#profile-tiktok-input')?.value || '').trim();
+
+    if (!newName) {
+      showProfileNotice('Tên hiển thị nghệ sĩ không được để trống.', false);
+      return;
+    }
+
+    const saveBtn = document.querySelector('#save-profile-info-btn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Đang lưu...';
+    }
+
+    try {
+      const liveData = await getData();
+      const currentArtistIdx = (liveData.artists || []).findIndex(a => 
+        a.id === artist.id || 
+        (a.username && a.username.toLowerCase() === (artist.username || '').toLowerCase()) ||
+        (a.email && a.email.toLowerCase() === (artist.email || '').toLowerCase()) ||
+        (a.name && a.name.toLowerCase() === (artist.name || '').toLowerCase())
+      );
+
+      if (currentArtistIdx === -1) {
+        throw new Error('Không tìm thấy hồ sơ nghệ sĩ trong hệ thống.');
+      }
+
+      liveData.artists[currentArtistIdx].name = newName;
+      liveData.artists[currentArtistIdx].genre = genre;
+      liveData.artists[currentArtistIdx].bio = bio;
+      if (!liveData.artists[currentArtistIdx].socials) liveData.artists[currentArtistIdx].socials = {};
+      liveData.artists[currentArtistIdx].socials.instagram = ig;
+      liveData.artists[currentArtistIdx].socials.tiktok = tiktok;
+
+      artist.name = newName;
+      artist.genre = genre;
+      artist.bio = bio;
+      if (!artist.socials) artist.socials = {};
+      artist.socials.instagram = ig;
+      artist.socials.tiktok = tiktok;
+
+      if (data.artists && data.artists[currentArtistIdx]) {
+        data.artists[currentArtistIdx] = { ...liveData.artists[currentArtistIdx] };
+      }
+
+      await saveData(liveData);
+      try {
+        localStorage.setItem('uniflows-artist', JSON.stringify(artist));
+        sessionStorage.setItem('uniflows-artist-name', newName);
+      } catch {}
+
+      // Update header DOM
+      const artistDisplay = document.querySelector('#artist-display-name');
+      if (artistDisplay) artistDisplay.textContent = newName;
+      if (window.cardNavInstance && typeof window.cardNavInstance.updateArtistInfo === 'function') {
+        window.cardNavInstance.updateArtistInfo(newName);
+      }
+
+      showProfileNotice('✓ Đã cập nhật hồ sơ nghệ sĩ thành công!', true);
+    } catch (err) {
+      showProfileNotice('Lỗi: ' + (err.message || 'Không thể cập nhật hồ sơ.'), false);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Lưu cập nhật Hồ sơ';
+      }
+    }
+  });
+
+  // Form 3: Photo Request Submit
+  const photoForm = document.querySelector('#profile-photo-form');
+  photoForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInp = document.querySelector('#profile-photo-file-input');
+    const urlInp = document.querySelector('#profile-photo-url-input');
+    const noteInp = document.querySelector('#profile-photo-note-input');
+
+    const file = fileInp?.files?.[0];
+    const url = (urlInp?.value || '').trim();
+    const note = (noteInp?.value || '').trim();
+
+    if (!file && !url) {
+      showProfileNotice('Vui lòng chọn file ảnh tải lên hoặc dán link ảnh trực tiếp.', false);
+      return;
+    }
+
+    const submitBtn = document.querySelector('#submit-profile-photo-btn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang xử lý & nén ảnh WebP...';
+    }
+
+    try {
+      let finalPhotoUrl = url;
+      if (file) {
+        const res = await compressImageFile(file, {
+          maxWidth: 800,
+          maxHeight: 800,
+          square: true,
+          quality: 0.88,
+          format: 'image/webp'
+        });
+        finalPhotoUrl = res.dataUrl;
+      }
+
+      const newPhotoRequest = {
+        id: 'photo-req-' + Date.now(),
+        artist_id: currentArtistId,
+        artist_name: artist.name,
+        current_image: artist.image || '',
+        new_image: finalPhotoUrl,
+        notes: note,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+
+      let requests = [];
+      try {
+        requests = JSON.parse(localStorage.getItem('uniflows-artist-photo-requests') || '[]');
+      } catch {}
+      requests.unshift(newPhotoRequest);
+      localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(requests));
+
+      await dispatchAdminNotification({
+        type: 'artist_photo_request',
+        title: `Yêu cầu đổi ảnh Website: ${artist.name}`,
+        message: `Nghệ sĩ "${artist.name}" vừa gửi ảnh profile mới để duyệt hiển thị trên Website UniFLOWs.`,
+        artistId: artist.id,
+        artistName: artist.name,
+        targetTab: 'admin-tab-artists',
+        details: newPhotoRequest
+      });
+
+      const reqBadge = document.querySelector('#portal-photo-req-badge');
+      if (reqBadge) reqBadge.style.display = 'inline-block';
+
+      showProfileNotice('✓ Đã gửi yêu cầu đổi ảnh profile tới Ban Quản Trị A&R thành công!', true);
+    } catch (err) {
+      showProfileNotice('Lỗi: ' + (err.message || 'Không thể gửi yêu cầu đổi ảnh.'), false);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📤 Gửi Yêu Cầu Duyệt Ảnh Mới';
+      }
+    }
+  });
+
+  // Form 4: Security & Password Update
+  const secForm = document.querySelector('#profile-security-form');
+  secForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newPass = (document.querySelector('#profile-new-pass')?.value || '').trim();
+    const confirmPass = (document.querySelector('#profile-confirm-pass')?.value || '').trim();
+
+    if (newPass.length < 6) {
+      showProfileNotice('Mật khẩu mới phải có ít nhất 6 ký tự.', false);
+      return;
+    }
+
+    if (newPass !== confirmPass) {
+      showProfileNotice('Mật khẩu xác nhận không khớp. Vui lòng nhập lại.', false);
+      return;
+    }
+
+    const saveBtn = document.querySelector('#submit-profile-pass-btn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Đang lưu...';
+    }
+
+    try {
+      const liveData = await getData();
+      const currentArtistIdx = (liveData.artists || []).findIndex(a => 
+        a.id === artist.id || 
+        (a.username && a.username.toLowerCase() === (artist.username || '').toLowerCase()) ||
+        (a.email && a.email.toLowerCase() === (artist.email || '').toLowerCase()) ||
+        (a.name && a.name.toLowerCase() === (artist.name || '').toLowerCase())
+      );
+
+      if (currentArtistIdx === -1) {
+        throw new Error('Không tìm thấy hồ sơ nghệ sĩ trong hệ thống.');
+      }
+
+      liveData.artists[currentArtistIdx].password = newPass;
+      artist.password = newPass;
+      if (data.artists && data.artists[currentArtistIdx]) {
+        data.artists[currentArtistIdx].password = newPass;
+      }
+
+      await saveData(liveData);
+
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          if (authData?.user) {
+            await supabase.auth.updateUser({ password: newPass });
+          }
+        } catch {}
+      }
+
+      showProfileNotice('✓ Đổi mật khẩu thành công!', true);
+    } catch (err) {
+      showProfileNotice('Lỗi: ' + (err.message || 'Không thể đổi mật khẩu.'), false);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '🔒 Cập nhật Mật khẩu';
+      }
+    }
+  });
+
+  // Logout button inside Profile Dialog
+  const profileLogoutBtn = document.querySelector('#profile-logout-btn');
+  profileLogoutBtn?.addEventListener('click', () => {
+    profileDialog.close();
+    logoutBtn?.click();
+  });
+}
+
+function openPayoutModalWithPrefill() {
   if (availableBalanceNumber < 1000000) {
     alert(`Số dư khả dụng hiện tại của bạn là ₫ ${availableBalanceNumber.toLocaleString('vi-VN')}, chưa đạt mức rút tối thiểu (₫ 1,000,000).`);
     return;
   }
   if (payoutDialogNotice) payoutDialogNotice.style.display = 'none';
   payoutRequestForm?.reset();
-  const searchInput = document.querySelector('#payout-bank-search');
-  const hiddenBankInput = document.querySelector('#payout-bank');
-  if (searchInput) searchInput.value = '';
-  if (hiddenBankInput) hiddenBankInput.value = '';
+
   const amtInput = document.querySelector('#payout-amount');
   if (amtInput) {
     amtInput.max = availableBalanceNumber;
@@ -5704,7 +6177,38 @@ requestPayoutBtn?.addEventListener('click', () => {
   document.querySelectorAll('.percent-pill-btn').forEach(b => b.classList.remove('active'));
   const pill100 = document.querySelector('.percent-pill-btn[data-percent="1.0"]');
   if (pill100) pill100.classList.add('active');
+
+  // Pre-fill Default Saved Bank Details if available
+  const banking = artist.banking || {};
+  const hasSavedBank = !!(banking.bank && banking.accountNumber);
+  const savedHint = document.querySelector('#payout-saved-bank-hint');
+
+  if (hasSavedBank) {
+    if (payoutBankDropdownHelper) {
+      payoutBankDropdownHelper.setBank(banking.bank);
+    } else {
+      const sInp = document.querySelector('#payout-bank-search');
+      const hInp = document.querySelector('#payout-bank');
+      if (sInp) sInp.value = banking.bank;
+      if (hInp) hInp.value = banking.bank;
+    }
+    const accNumInp = document.querySelector('#payout-account-number');
+    const accNameInp = document.querySelector('#payout-account-name');
+    if (accNumInp) accNumInp.value = banking.accountNumber || '';
+    if (accNameInp) accNameInp.value = banking.accountName || '';
+    if (savedHint) savedHint.style.display = 'block';
+  } else {
+    if (payoutBankDropdownHelper) {
+      payoutBankDropdownHelper.setBank('');
+    }
+    if (savedHint) savedHint.style.display = 'none';
+  }
+
   payoutDialog?.showModal();
+}
+
+requestPayoutBtn?.addEventListener('click', () => {
+  openPayoutModalWithPrefill();
 });
 
 // Quick percentage buttons in Payout Dialog
@@ -5724,7 +6228,8 @@ document.querySelectorAll('.percent-pill-btn').forEach(btn => {
 });
 
 quickPayoutBtn?.addEventListener('click', () => {
-  requestPayoutBtn?.click();
+  openPayoutModalWithPrefill();
+});
 });
 
 closePayoutDialogBtn?.addEventListener('click', () => {
@@ -6281,6 +6786,11 @@ function applyPortalTheme(theme) {
     document.body.classList.remove('dark-mode');
   }
 
+  // Update top nav theme slider
+  if (window.cardNavInstance && typeof window.cardNavInstance.setTheme === 'function') {
+    window.cardNavInstance.setTheme(isDark);
+  }
+
   // Update all icons and text labels across header & sidebar
   document.querySelectorAll('.theme-mode-icon').forEach(el => {
     el.textContent = isDark ? '☀️' : '🌙';
@@ -6823,6 +7333,9 @@ exportMetaBtn?.addEventListener('click', () => {
 // PORTAL LANGUAGE TOGGLE & TRANSLATION SYSTEM
 // ====================================================
 function initPortalLanguage() {
+  const currentLang = getCurrentLang();
+  applyTranslations(currentLang);
+
   const langBtn = document.querySelector('#portal-lang-toggle-btn');
   if (!langBtn) return;
 
@@ -6836,7 +7349,7 @@ function initPortalLanguage() {
     applyTranslations(lang);
   }
 
-  updatePortalLanguageUI(getCurrentLang());
+  updatePortalLanguageUI(currentLang);
 
   langBtn.addEventListener('click', () => {
     const current = getCurrentLang();
@@ -7317,3 +7830,4 @@ initDspControls();
 initTerritoryControls();
 initLanguageSearchableControls();
 initSearchableBankDropdown();
+initProfileSettingsDialog();

@@ -90,6 +90,93 @@ export async function initCardNav(mountTarget, options = {}) {
   barLeft.appendChild(artistBadge);
 
   const barRight = el('div', { class: 'card-nav-right' });
+
+  // 1. Language Segmented Switch (VIE / ENG)
+  const currentLang = localStorage.getItem('uniflows-lang') || 'vi';
+  const langSwitch = el('div', { class: 'card-nav-lang-switch', role: 'group', 'aria-label': 'Ngôn ngữ' }, [
+    el('button', {
+      type: 'button',
+      class: 'card-nav-lang-btn' + (currentLang === 'vi' ? ' active' : ''),
+      'data-lang': 'vi',
+      title: 'Tiếng Việt'
+    }, ['VIE']),
+    el('button', {
+      type: 'button',
+      class: 'card-nav-lang-btn' + (currentLang === 'en' ? ' active' : ''),
+      'data-lang': 'en',
+      title: 'English'
+    }, ['ENG'])
+  ]);
+
+  langSwitch.querySelectorAll('.card-nav-lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetLang = btn.dataset.lang;
+      langSwitch.querySelectorAll('.card-nav-lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (typeof opts.onLangChange === 'function') {
+        opts.onLangChange(targetLang);
+      } else {
+        localStorage.setItem('uniflows-lang', targetLang);
+        if (window.setLang) window.setLang(targetLang);
+      }
+    });
+  });
+
+  // 2. Theme Switcher Slider (Cần gạt sáng/tối)
+  const isDarkInitial = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark' || localStorage.getItem('uniflows-portal-theme') === 'dark';
+  const themeSwitch = el('button', {
+    type: 'button',
+    class: 'card-nav-theme-slider' + (isDarkInitial ? ' is-dark' : ' is-light'),
+    id: 'top-nav-theme-slider',
+    'aria-label': 'Chuyển đổi giao diện sáng tối',
+    title: isDarkInitial ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'
+  }, [
+    el('span', { class: 'slider-track' }, [
+      el('span', { class: 'slider-thumb' }, [
+        el('span', { class: 'slider-icon sun' }, ['☀️']),
+        el('span', { class: 'slider-icon moon' }, ['🌙'])
+      ])
+    ])
+  ]);
+
+  themeSwitch.addEventListener('click', () => {
+    if (typeof opts.onThemeToggle === 'function') {
+      const isNowDark = opts.onThemeToggle();
+      themeSwitch.classList.toggle('is-dark', isNowDark);
+      themeSwitch.classList.toggle('is-light', !isNowDark);
+    } else {
+      const isDark = document.body.classList.contains('dark-mode');
+      const nextDark = !isDark;
+      document.body.classList.toggle('dark-mode', nextDark);
+      document.documentElement.setAttribute('data-theme', nextDark ? 'dark' : 'light');
+      localStorage.setItem('uniflows-portal-theme', nextDark ? 'dark' : 'light');
+      themeSwitch.classList.toggle('is-dark', nextDark);
+      themeSwitch.classList.toggle('is-light', !nextDark);
+    }
+  });
+
+  // 3. Profile & Settings Trigger
+  const profileBtn = el('button', {
+    type: 'button',
+    class: 'card-nav-profile-pill',
+    id: 'top-nav-profile-pill',
+    'aria-label': 'Hồ sơ & Cài đặt',
+    title: 'Hồ sơ cá nhân & Cài đặt ngân hàng'
+  }, [
+    el('span', { style: 'font-size:13px;' }, ['⚙️']),
+    el('span', { class: 'profile-pill-text' }, ['Hồ sơ'])
+  ]);
+
+  profileBtn.addEventListener('click', () => {
+    if (typeof opts.onProfileClick === 'function') {
+      opts.onProfileClick();
+    } else {
+      const pDialog = document.querySelector('#profile-settings-dialog');
+      if (pDialog) pDialog.showModal();
+    }
+  });
+
+  // 4. Drawer Menu Toggle Button
   const toggleBtn = el('button', {
     class: 'card-nav-btn',
     type: 'button',
@@ -100,6 +187,9 @@ export async function initCardNav(mountTarget, options = {}) {
   if (opts.buttonBgColor) toggleBtn.style.backgroundColor = opts.buttonBgColor;
   if (opts.buttonTextColor) toggleBtn.style.color = opts.buttonTextColor;
 
+  barRight.appendChild(langSwitch);
+  barRight.appendChild(themeSwitch);
+  barRight.appendChild(profileBtn);
   barRight.appendChild(toggleBtn);
   bar.appendChild(barLeft);
   bar.appendChild(barRight);
@@ -228,7 +318,7 @@ export async function initCardNav(mountTarget, options = {}) {
   }
   document.addEventListener('keydown', handleKeydown);
 
-  return {
+  const instance = {
     open: doOpen,
     close: doClose,
     toggle,
@@ -238,6 +328,16 @@ export async function initCardNav(mountTarget, options = {}) {
       if (nameEl && name) nameEl.textContent = name;
       if (statusEl && role) statusEl.textContent = role;
     },
+    setTheme(isDark) {
+      themeSwitch.classList.toggle('is-dark', isDark);
+      themeSwitch.classList.toggle('is-light', !isDark);
+      themeSwitch.title = isDark ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối';
+    },
+    setLanguage(lang) {
+      langSwitch.querySelectorAll('.card-nav-lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+    },
     destroy() {
       toggleBtn.removeEventListener('click', toggle);
       backdrop.removeEventListener('click', doClose);
@@ -246,4 +346,8 @@ export async function initCardNav(mountTarget, options = {}) {
       wrapper.remove();
     }
   };
+
+  window.cardNavInstance = instance;
+  return instance;
 }
+
