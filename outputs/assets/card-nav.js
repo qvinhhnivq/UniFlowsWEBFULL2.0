@@ -5,29 +5,19 @@
  */
 
 export async function ensureGSAP() {
-  if (typeof window !== 'undefined' && window.gsap) return window.gsap;
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && window.gsap) {
-      resolve(window.gsap);
-      return;
-    }
+  if (window.gsap) return window.gsap;
+  return new Promise((resolve, reject) => {
     const existing = document.querySelector('script[src*="gsap"]');
     if (existing) {
-      if (existing.complete || window.gsap) {
-        resolve(window.gsap || null);
-        return;
-      }
-      existing.addEventListener('load', () => resolve(window.gsap || null));
-      existing.addEventListener('error', () => resolve(null));
-      setTimeout(() => resolve(window.gsap || null), 1000);
+      existing.addEventListener('load', () => resolve(window.gsap));
+      existing.addEventListener('error', reject);
       return;
     }
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js';
-    script.onload = () => resolve(window.gsap || null);
-    script.onerror = () => resolve(null);
+    script.onload = () => resolve(window.gsap);
+    script.onerror = () => reject(new Error('Failed to load GSAP CDN'));
     document.head.appendChild(script);
-    setTimeout(() => resolve(window.gsap || null), 1500);
   });
 }
 
@@ -58,12 +48,7 @@ const DEFAULTS = {
 };
 
 export async function initCardNav(mountTarget, options = {}) {
-  let gsap = null;
-  try {
-    gsap = await ensureGSAP();
-  } catch (err) {
-    console.warn('GSAP load skipped in CardNav:', err);
-  }
+  const gsap = await ensureGSAP();
   const opts = { ...DEFAULTS, ...options };
 
   const mountEl = typeof mountTarget === 'string' ? document.querySelector(mountTarget) : mountTarget;
@@ -243,25 +228,11 @@ export async function initCardNav(mountTarget, options = {}) {
         if (typeof linkItem.onClick === 'function') {
           linkItem.onClick();
         } else if (linkItem.action === 'password') {
-          const openBtn = document.querySelector('#open-profile-settings-btn');
-          if (openBtn) openBtn.click();
-          setTimeout(() => {
-            document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
-          }, 50);
+          document.querySelector('#open-password-dialog-btn')?.click();
         } else if (linkItem.action === 'theme') {
           document.querySelector('#theme-toggle-btn')?.click() || document.querySelector('#mobile-theme-toggle-btn')?.click();
         } else if (linkItem.action === 'logout') {
-          if (typeof window.performArtistLogout === 'function') {
-            window.performArtistLogout();
-          } else {
-            const pLogoutBtn = document.querySelector('#profile-logout-btn') || document.querySelector('#artist-logout');
-            if (pLogoutBtn) pLogoutBtn.click();
-            else {
-              localStorage.removeItem('uniflows-artist');
-              sessionStorage.removeItem('uniflows-artist');
-              location.href = 'artist-login.html';
-            }
-          }
+          document.querySelector('#artist-logout')?.click();
         } else if (linkItem.hash) {
           location.hash = linkItem.hash;
         } else if (linkItem.tab) {
@@ -299,27 +270,20 @@ export async function initCardNav(mountTarget, options = {}) {
     const naturalHeight = dropdown.offsetHeight;
     dropdown.style.height = '0px';
 
-    if (gsap) {
-      gsap.to(dropdown, {
-        height: naturalHeight,
-        duration: 0.45,
-        ease: opts.ease || 'power3.out',
-        onComplete: () => {
-          dropdown.style.height = 'auto';
-          busy = false;
-        }
-      });
+    gsap.to(dropdown, {
+      height: naturalHeight,
+      duration: 0.45,
+      ease: opts.ease || 'power3.out',
+      onComplete: () => {
+        dropdown.style.height = 'auto';
+        busy = false;
+      }
+    });
 
-      gsap.fromTo(cardElements, 
-        { y: 18, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', stagger: 0.08, delay: 0.1 }
-      );
-    } else {
-      dropdown.style.height = 'auto';
-      dropdown.style.opacity = '1';
-      cardElements.forEach(c => { c.style.opacity = '1'; c.style.transform = 'none'; });
-      busy = false;
-    }
+    gsap.fromTo(cardElements, 
+      { y: 18, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', stagger: 0.08, delay: 0.1 }
+    );
   }
 
   function doClose() {
@@ -331,21 +295,15 @@ export async function initCardNav(mountTarget, options = {}) {
     toggleBtn.textContent = 'Menu';
     backdrop.classList.remove('active');
 
-    if (gsap) {
-      gsap.to(dropdown, {
-        height: 0,
-        duration: 0.3,
-        ease: 'power3.in',
-        onComplete: () => {
-          dropdown.style.opacity = '0';
-          busy = false;
-        }
-      });
-    } else {
-      dropdown.style.height = '0px';
-      dropdown.style.opacity = '0';
-      busy = false;
-    }
+    gsap.to(dropdown, {
+      height: 0,
+      duration: 0.3,
+      ease: 'power3.in',
+      onComplete: () => {
+        dropdown.style.opacity = '0';
+        busy = false;
+      }
+    });
   }
 
   function toggle() {

@@ -7,9 +7,10 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
-  <link rel="stylesheet" href="./assets/app.css?v=20260915_r5">
-  <link rel="stylesheet" href="./assets/card-nav.css?v=20260915_r5">
-  <link rel="stylesheet" href="./assets/glass-surface.css?v=20260915_r5">
+  <meta name="theme-color" content="#000000">
+  <link rel="stylesheet" href="/assets/app.css?v=20260915_r5">
+  <link rel="stylesheet" href="/assets/card-nav.css?v=20260915_r5">
+  <link rel="stylesheet" href="/assets/glass-surface.css?v=20260915_r5">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
 </head>
 <body class="portal-body">
@@ -458,9 +459,7 @@
               <h3 data-i18n="service_pitch_title">A&R Editorial Pitching</h3>
               <p data-i18n="service_pitch_desc">Pitching trực tiếp tới Tổng biên tập Spotify & Apple Music để đưa ca khúc mới vào các playlist chính thức.</p>
             </div>
-            <button type="button" id="open-pitching-btn" class="button" data-i18n="service_pitch_btn" style="text-align:center;padding:12px;background:#2563eb;color:#fff;border-color:#2563eb;font-size:11px;font-weight:bold;cursor:pointer;">
-              🎯 + Gửi bài Pitching A&R
-            </button>
+            <a href="mailto:demos@uniflowslabel.com?subject=Pitching%20Playlist%20Request" class="button" data-i18n="service_pitch_btn" style="text-align:center;padding:12px;font-size:11px;">Gửi bài Pitching A&R</a>
           </div>
 
           <div class="service-card" style="border-top:3px solid #8b5cf6;">
@@ -469,9 +468,7 @@
               <h3 data-i18n="service_isrc_title">Cấp mã ISRC & Bản quyền ℗</h3>
               <p data-i18n="service_isrc_desc">Đăng ký định danh ISRC chuẩn quốc tế và chứng nhận bản quyền ghi âm độc quyền cho bài hát.</p>
             </div>
-            <button type="button" id="open-isrc-btn" class="button" data-i18n="service_isrc_btn" style="text-align:center;padding:12px;background:#7c3aed;color:#fff;border-color:#7c3aed;font-size:11px;font-weight:bold;cursor:pointer;">
-              🏷️ + Yêu cầu cấp mã ISRC
-            </button>
+            <a href="mailto:distribution@uniflowslabel.com?subject=ISRC%20Assignment%20Request" class="button alt" data-i18n="service_isrc_btn" style="text-align:center;padding:12px;font-size:11px;">Yêu cầu cấp mã ISRC</a>
           </div>
 
           <div class="service-card" style="border-top:3px solid #f97316;">
@@ -3308,36 +3305,30 @@
   <!-- ========================================== -->
   <!-- MODAL: BÁO CÁO VI PHẠM BẢN QUYỀN (DMCA) -->
   <!-- ========================================== -->
-  <dialog id="copyright-dialog" style="padding:0;max-width:560px;width:92%;">
-    <div class="payout-modal-header">
+  <dialog id="copyright-dialog" style="border:1px solid rgba(0,0,0,0.1);padding:28px;max-width:540px;width:90%;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,0.25);border-radius:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:12px;">
       <div>
-        <span class="eyebrow" style="color:#dc2626;margin:0;">UniFLOWs Anti-Piracy · Content ID Shield</span>
-        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;font-weight:900;">Báo cáo vi phạm bản quyền</h3>
+        <span class="eyebrow" style="color:#dc2626;margin:0;">Bảo vệ Tác quyền & Content ID</span>
+        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;">Báo cáo vi phạm bản quyền âm nhạc</h3>
       </div>
-      <button type="button" id="close-copyright-dialog-btn" class="button alt" style="border-radius:999px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px;">✕</button>
+      <button type="button" id="close-copyright-dialog-btn" class="button alt" style="padding:4px 10px;font-size:12px;border-radius:6px;">✕</button>
     </div>
 
-    <form id="copyright-report-form" class="payout-modal-body">
-      <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">🛡️</span>
-        <div style="font-size:12px;color:var(--portal-text-dim);line-height:1.45;">
-          Đội ngũ Kỹ thuật & Bản quyền UniFLOWs sẽ xác minh âm thanh, quét Content ID và gửi khiếu nại (Claim) hoặc Strike gỡ bài trên YouTube, TikTok, Facebook.
-        </div>
-      </div>
+    <p style="font-size:12px;color:#64748b;margin-bottom:15px;line-height:1.4;">Cung cấp đường link và thông tin tác phẩm bị vi phạm. Đội ngũ Bản quyền UniFLOWs sẽ xử lý quét Content ID, gửi khiếu nại (Claim) hoặc Strike gỡ bài trên YouTube, TikTok, Facebook.</p>
+    <p id="copyright-dialog-notice" class="notice" style="display:none;margin-bottom:12px;"></p>
 
-      <p id="copyright-dialog-notice" class="notice" style="display:none;margin:0;"></p>
-
-      <div class="field" style="margin-bottom:0;">
-        <label for="cr-release-select" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tác phẩm / Bài hát của bạn bị vi phạm *</label>
-        <select id="cr-release-select" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13.5px;font-weight:700;">
+    <form id="copyright-report-form">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="cr-release-select" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Tác phẩm / Bài hát của bạn bị vi phạm *</label>
+        <select id="cr-release-select" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
           <option value="">-- Chọn bài hát từ catalogue của bạn --</option>
         </select>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="field" style="margin-bottom:0;">
-          <label for="cr-platform" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Nền tảng vi phạm *</label>
-          <select id="cr-platform" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13px;font-weight:600;">
+      <div class="mini-grid" style="margin-bottom:12px;">
+        <div class="field">
+          <label for="cr-platform" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Nền tảng vi phạm *</label>
+          <select id="cr-platform" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
             <option value="YouTube">YouTube / Shorts</option>
             <option value="TikTok">TikTok</option>
             <option value="Facebook">Facebook / Reels</option>
@@ -3345,9 +3336,9 @@
             <option value="Khác">Nền tảng khác</option>
           </select>
         </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="cr-violation-type" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Hình thức vi phạm *</label>
-          <select id="cr-violation-type" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13px;font-weight:600;">
+        <div class="field">
+          <label for="cr-violation-type" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Hình thức vi phạm *</label>
+          <select id="cr-violation-type" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
             <option value="Reup toàn bộ audio / MV">Reup toàn bộ audio / MV</option>
             <option value="Sử dụng beat / sample không xin phép">Sử dụng beat không xin phép</option>
             <option value="Lồng ghép âm thanh trái phép">Lồng ghép âm thanh trái phép</option>
@@ -3356,28 +3347,28 @@
         </div>
       </div>
 
-      <div class="field" style="margin-bottom:0;">
-        <label for="cr-target-url" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Link URL Video / Bài đăng vi phạm *</label>
-        <input id="cr-target-url" type="url" required placeholder="https://www.youtube.com/watch?v=... hoặc https://www.tiktok.com/@..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;font-family:'DM Mono',monospace;">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="cr-target-url" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Link URL Video / Bài đăng vi phạm *</label>
+        <input id="cr-target-url" type="url" required placeholder="https://www.youtube.com/watch?v=... hoặc https://www.tiktok.com/@..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
       </div>
 
-      <div class="field" style="margin-bottom:0;">
-        <label for="cr-action-preference" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Yêu cầu hướng xử lý *</label>
-        <select id="cr-action-preference" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13px;font-weight:600;">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="cr-action-preference" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Yêu cầu hướng xử lý *</label>
+        <select id="cr-action-preference" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
           <option value="Gỡ bỏ hoàn toàn (Takedown / Copyright Strike)">🔴 Gỡ bỏ hoàn toàn (Takedown / Copyright Strike)</option>
           <option value="Thu hồi doanh thu quảng cáo (Claim Revenue Content ID)">💰 Thu hồi doanh thu quảng cáo (Claim Revenue qua Content ID)</option>
           <option value="Theo dõi và tư vấn">💬 Nhờ đội ngũ Bản quyền kiểm tra và tư vấn</option>
         </select>
       </div>
 
-      <div class="field" style="margin-bottom:0;">
-        <label for="cr-notes" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Mô tả chi tiết & Mốc thời gian (Timestamp)</label>
-        <textarea id="cr-notes" rows="2" placeholder="Ví dụ: Đoạn nhạc bị cắt ghép từ 0:45 đến 2:10..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;"></textarea>
+      <div class="field" style="margin-bottom:18px;">
+        <label for="cr-notes" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mô tả chi tiết & Mốc thời gian (Timestamp)</label>
+        <textarea id="cr-notes" rows="2" placeholder="Ví dụ: Đoạn nhạc bị cắt ghép từ 0:45 đến 2:10..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;"></textarea>
       </div>
 
-      <div class="payout-modal-footer" style="padding-top:10px;">
-        <button type="button" id="close-copyright-dialog-btn-2" class="button alt" style="border-radius:9999px;">Hủy bỏ</button>
-        <button type="submit" id="submit-copyright-btn" class="button" style="border-radius:9999px;background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);color:#fff;font-weight:900;">🚨 Gửi Báo Cáo Vi Phạm</button>
+      <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:15px;">
+        <button type="button" id="close-copyright-dialog-btn-2" class="button alt" style="padding:10px 18px;font-size:12px;border-radius:6px;">Hủy bỏ</button>
+        <button type="submit" id="submit-copyright-btn" class="button" style="padding:10px 22px;font-size:12px;background:#dc2626;color:#fff;border-color:#dc2626;font-weight:bold;border-radius:6px;">Gửi Báo cáo vi phạm</button>
       </div>
     </form>
   </dialog>
@@ -3385,51 +3376,45 @@
   <!-- ========================================== -->
   <!-- MODAL: CẤP QUYỀN GREEN-LIST (WHITELIST) -->
   <!-- ========================================== -->
-  <dialog id="greenlist-dialog" style="padding:0;max-width:560px;width:92%;">
-    <div class="payout-modal-header">
+  <dialog id="greenlist-dialog" style="border:1px solid rgba(0,0,0,0.1);padding:28px;max-width:540px;width:90%;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,0.25);border-radius:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:12px;">
       <div>
-        <span class="eyebrow" style="color:#16a34a;margin:0;">UniFLOWs Whitelist Engine · Content Protection</span>
-        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;font-weight:900;">Cấp quyền Kênh (Green-list)</h3>
+        <span class="eyebrow" style="color:#16a34a;margin:0;">UniFLOWs Whitelist Engine</span>
+        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;">Cấp quyền Kênh sử dụng nhạc (Green-list)</h3>
       </div>
-      <button type="button" id="close-greenlist-dialog-btn" class="button alt" style="border-radius:999px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px;">✕</button>
+      <button type="button" id="close-greenlist-dialog-btn" class="button alt" style="padding:4px 10px;font-size:12px;border-radius:6px;">✕</button>
     </div>
 
-    <form id="greenlist-request-form" class="payout-modal-body">
-      <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">🟢</span>
-        <div style="font-size:12px;color:var(--portal-text-dim);line-height:1.45;">
-          Kênh được thêm vào Green-list sẽ được hệ thống Content ID tự động bỏ qua (không gắn claim, không đánh gậy bản quyền) khi sử dụng âm nhạc của bạn.
-        </div>
-      </div>
+    <p style="font-size:12px;color:#64748b;margin-bottom:15px;line-height:1.4;">Kênh được đưa vào Green-list sẽ được hệ thống Content ID tự động bỏ qua (không gắn claim, không đánh bản quyền) khi sử dụng âm nhạc của bạn.</p>
+    <p id="greenlist-dialog-notice" class="notice" style="display:none;margin-bottom:12px;"></p>
 
-      <p id="greenlist-dialog-notice" class="notice" style="display:none;margin:0;"></p>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="field" style="margin-bottom:0;">
-          <label for="gl-platform" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Nền tảng *</label>
-          <select id="gl-platform" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13px;font-weight:600;">
+    <form id="greenlist-request-form">
+      <div class="mini-grid" style="margin-bottom:12px;">
+        <div class="field">
+          <label for="gl-platform" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Nền tảng *</label>
+          <select id="gl-platform" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
             <option value="YouTube">YouTube Channel</option>
             <option value="TikTok">TikTok Handle</option>
             <option value="Facebook">Facebook Page</option>
             <option value="Twitch">Twitch Streamer</option>
           </select>
         </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="gl-channel-id" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Link Kênh / Handle (@id) *</label>
-          <input id="gl-channel-id" required placeholder="@channel_name hoặc https://..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;font-family:'DM Mono',monospace;">
+        <div class="field">
+          <label for="gl-channel-id" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Link Kênh / Handle (@id) *</label>
+          <input id="gl-channel-id" required placeholder="@channel_name hoặc https://youtube.com/@..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
         </div>
       </div>
 
-      <div class="field" style="margin-bottom:0;">
-        <label for="gl-track-scope" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Phạm vi cấp quyền *</label>
-        <select id="gl-track-scope" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13.5px;font-weight:700;">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="gl-track-scope" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Phạm vi cấp quyền *</label>
+        <select id="gl-track-scope" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
           <option value="Toàn bộ kho nhạc của Nghệ sĩ (All Catalogue)">🌟 Toàn bộ bài hát của bạn (All Catalogue)</option>
         </select>
       </div>
 
-      <div class="field" style="margin-bottom:0;">
-        <label for="gl-purpose" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Mục đích cấp quyền *</label>
-        <select id="gl-purpose" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13px;font-weight:600;">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="gl-purpose" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mục đích cấp quyền *</label>
+        <select id="gl-purpose" required style="width:100%;padding:10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;">
           <option value="Kênh phụ / Kênh cá nhân của Nghệ sĩ">Kênh phụ / Kênh cá nhân của Nghệ sĩ</option>
           <option value="Đối tác Reaction / Review / Cover được phép">Đối tác Reaction / Review / Cover</option>
           <option value="Nhà sáng tạo nội dung / KOC hợp tác">Nhà sáng tạo nội dung / KOC hợp tác</option>
@@ -3437,152 +3422,16 @@
         </select>
       </div>
 
-      <div class="field" style="margin-bottom:0;">
-        <label for="gl-notes" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Ghi chú bổ sung cho Admin (Tùy chọn)</label>
-        <textarea id="gl-notes" rows="2" placeholder="Ví dụ: Kênh đối tác truyền thông chiến dịch MV..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;"></textarea>
+      <div class="field" style="margin-bottom:18px;">
+        <label for="gl-notes" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Ghi chú bổ sung cho Admin (Tùy chọn)</label>
+        <textarea id="gl-notes" rows="2" placeholder="Ví dụ: Kênh đối tác truyền thông chiến dịch MV..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;"></textarea>
       </div>
 
-      <div class="payout-modal-footer" style="padding-top:10px;">
-        <button type="button" id="close-greenlist-dialog-btn-2" class="button alt" style="border-radius:9999px;">Hủy bỏ</button>
-        <button type="submit" id="submit-greenlist-btn" class="button" style="border-radius:9999px;background:linear-gradient(135deg, #16a34a 0%, #15803d 100%);color:#fff;font-weight:900;">✨ Xác Nhận Cấp Green-list</button>
-      </div>
-    </form>
-  </dialog>
-
-  <!-- ========================================== -->
-  <!-- MODAL: A&R EDITORIAL PITCHING -->
-  <!-- ========================================== -->
-  <dialog id="pitching-dialog" style="padding:0;max-width:560px;width:92%;">
-    <div class="payout-modal-header">
-      <div>
-        <span class="eyebrow" style="color:#2563eb;margin:0;">UniFLOWs A&R · Editorial Playlist Pitching</span>
-        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;font-weight:900;">Gửi bài A&R Editorial Pitching</h3>
-      </div>
-      <button type="button" id="close-pitching-dialog-btn" class="button alt" style="border-radius:999px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px;">✕</button>
-    </div>
-
-    <form id="pitching-request-form" class="payout-modal-body">
-      <div style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">🎯</span>
-        <div style="font-size:12px;color:var(--portal-text-dim);line-height:1.45;">
-          Hồ sơ bài hát sẽ được gửi trực tiếp tới Ban biên tập (Editors) của Spotify, Apple Music và Zing MP3 để tăng cơ hội vào các Editorial Playlists lớn (New Music Friday, Indie Việt, v.v.).
-        </div>
-      </div>
-
-      <p id="pitching-dialog-notice" class="notice" style="display:none;margin:0;"></p>
-
-      <div class="field" style="margin-bottom:0;">
-        <label for="pitch-release-select" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tác phẩm / Bản phát hành dự kiến Pitching *</label>
-        <select id="pitch-release-select" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13.5px;font-weight:700;">
-          <option value="">-- Chọn bài hát từ catalogue của bạn --</option>
-        </select>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="field" style="margin-bottom:0;">
-          <label for="pitch-target-genre" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Thể loại / Mood chủ đạo *</label>
-          <input id="pitch-target-genre" required placeholder="Ví dụ: Chill R&B / Indie Pop / Late Night" style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;">
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="pitch-target-playlists" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Playlist mục tiêu mong muốn</label>
-          <input id="pitch-target-playlists" placeholder="Ví dụ: New Music Friday, V-Pop Fresh..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;">
-        </div>
-      </div>
-
-      <div class="field" style="margin-bottom:0;">
-        <label for="pitch-story" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Câu chuyện bài hát & Thông điệp gửi Editorial Editors *</label>
-        <textarea id="pitch-story" rows="3" required placeholder="Giới thiệu câu chuyện bài hát, nguồn cảm hứng sáng tác và điểm nhấn nổi bật..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;"></textarea>
-      </div>
-
-      <div class="field" style="margin-bottom:0;">
-        <label for="pitch-demo-url" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Link nghe thử trước (Private Soundcloud / Google Drive Demo)</label>
-        <input id="pitch-demo-url" type="url" placeholder="https://..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;font-family:'DM Mono',monospace;">
-      </div>
-
-      <div class="payout-modal-footer" style="padding-top:10px;">
-        <button type="button" id="close-pitching-dialog-btn-footer" class="button alt" style="border-radius:9999px;">Hủy bỏ</button>
-        <button type="submit" id="submit-pitching-btn" class="button" style="border-radius:9999px;background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);color:#fff;font-weight:900;">🎯 Gửi Hồ Sơ Pitching A&R</button>
+      <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:15px;">
+        <button type="button" id="close-greenlist-dialog-btn-2" class="button alt" style="padding:10px 18px;font-size:12px;border-radius:6px;">Hủy bỏ</button>
+        <button type="submit" id="submit-greenlist-btn" class="button" style="padding:10px 22px;font-size:12px;background:#16a34a;color:#fff;border-color:#16a34a;font-weight:bold;border-radius:6px;">Xác nhận cấp Green-list</button>
       </div>
     </form>
-  </dialog>
-
-  <!-- ========================================== -->
-  <!-- MODAL: CẤP MÃ ISRC & BẢN QUYỀN ℗ -->
-  <!-- ========================================== -->
-  <dialog id="isrc-dialog" style="padding:0;max-width:560px;width:92%;">
-    <div class="payout-modal-header">
-      <div>
-        <span class="eyebrow" style="color:#7c3aed;margin:0;">UniFLOWs Distribution · IFPI Standard ISRC</span>
-        <h3 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.03em;font-weight:900;">Yêu cầu cấp mã ISRC & Bản quyền ℗</h3>
-      </div>
-      <button type="button" id="close-isrc-dialog-btn" class="button alt" style="border-radius:999px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px;">✕</button>
-    </div>
-
-    <form id="isrc-request-form" class="payout-modal-body">
-      <div style="background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">🏷️</span>
-        <div style="font-size:12px;color:var(--portal-text-dim);line-height:1.45;">
-          UniFLOWs là thành viên quản lý mã định danh quốc tế chuẩn IFPI. Mã ISRC được cấp độc quyền cho từng bản ghi âm Master và bảo hộ quyền khai thác thương mại toàn cầu.
-        </div>
-      </div>
-
-      <p id="isrc-dialog-notice" class="notice" style="display:none;margin:0;"></p>
-
-      <div class="field" style="margin-bottom:0;">
-        <label for="isrc-release-select" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Tác phẩm / Bài hát cần cấp mã ISRC *</label>
-        <select id="isrc-release-select" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);background:var(--portal-card-bg);color:var(--portal-text-main);border-radius:10px;font-size:13.5px;font-weight:700;">
-          <option value="">-- Chọn bài hát từ catalogue của bạn --</option>
-        </select>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="field" style="margin-bottom:0;">
-          <label for="isrc-songwriter" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Nhạc sĩ sáng tác (Songwriter) *</label>
-          <input id="isrc-songwriter" required placeholder="Tên nhạc sĩ..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;">
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="isrc-producer" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Nhà sản xuất (Music Producer)</label>
-          <input id="isrc-producer" placeholder="Tên Producer..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;">
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="field" style="margin-bottom:0;">
-          <label for="isrc-release-date" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Ngày phát hành dự kiến *</label>
-          <input id="isrc-release-date" type="date" required style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;font-family:'DM Mono',monospace;">
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="isrc-phonogram-line" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Dòng bản quyền ℗ Phonogram</label>
-          <input id="isrc-phonogram-line" placeholder="℗ 2026 UniFLOWs Label" style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;">
-        </div>
-      </div>
-
-      <div class="field" style="margin-bottom:0;">
-        <label for="isrc-notes" style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--portal-text-dim);display:block;margin-bottom:6px;">Ghi chú đính kèm</label>
-        <textarea id="isrc-notes" rows="2" placeholder="Ví dụ: Bản phối Acoustic version cần mã ISRC riêng..." style="width:100%;padding:11px 14px;border:1px solid var(--portal-card-border);border-radius:10px;font-size:13px;"></textarea>
-      </div>
-
-      <div class="payout-modal-footer" style="padding-top:10px;">
-        <button type="button" id="close-isrc-dialog-btn-footer" class="button alt" style="border-radius:9999px;">Hủy bỏ</button>
-        <button type="submit" id="submit-isrc-btn" class="button" style="border-radius:9999px;background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);color:#fff;font-weight:900;">🏷️ Gửi Yêu Cầu Cấp Mã ISRC</button>
-      </div>
-    </form>
-  </dialog>
-
-  <!-- ========================================== -->
-  <!-- MODAL: EXECUTIVE SUCCESS / NOTICE POPUP -->
-  <!-- ========================================== -->
-  <dialog id="portal-success-dialog" style="padding:0;max-width:480px;width:90%;border-radius:20px;overflow:hidden;border:1px solid var(--glass-border);box-shadow:0 30px 80px rgba(0,0,0,0.35);">
-    <div style="padding:32px 24px;text-align:center;background:var(--portal-card-bg);">
-      <div id="success-modal-icon-wrap" style="width:68px;height:68px;border-radius:50%;background:rgba(16,185,129,0.12);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px;border:2px solid rgba(16,185,129,0.25);">
-        <span id="success-modal-icon">✓</span>
-      </div>
-      <h3 id="success-modal-title" style="margin:0 0 8px;font-size:20px;font-weight:900;letter-spacing:-0.03em;">Gửi yêu cầu thành công</h3>
-      <p id="success-modal-desc" style="margin:0 0 22px;font-size:13.5px;color:var(--portal-text-muted);line-height:1.5;">Yêu cầu của bạn đã được tiếp nhận và chuyển đến Đội ngũ Kỹ thuật & A&R UniFLOWs xử lý.</p>
-      <button type="button" id="close-success-dialog-btn" class="button" style="width:100%;border-radius:9999px;padding:12px;font-weight:900;background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
-        Đã hiểu & Hoàn tất
-      </button>
-    </div>
   </dialog>
 
   <!-- ========================================== -->
@@ -3826,7 +3675,7 @@
   </aside>
   <div id="portal-notif-backdrop" class="portal-notif-backdrop"></div>
 
-  <script type="module" src="./assets/portal.js?v=20260915_r5"></script>
+  <script type="module" src="/assets/portal.js?v=20260915_r5"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
