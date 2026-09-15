@@ -623,6 +623,18 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,Arial
   box-shadow: 4px 4px 0 var(--portal-card-border);
 }
 
+.portal-release-card-draft {
+  border-left: 4px solid #0f172a !important;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.portal-release-card-draft:hover {
+  transform: translateY(-2px);
+  box-shadow: 4px 6px 0 var(--portal-card-border);
+  background: #f8fafc;
+}
+
 .portal-release-thumb {
   width: 80px;
   height: 80px;

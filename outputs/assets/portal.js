@@ -679,43 +679,49 @@ function prepareReleaseWizard() {
   updateWizardStep(1);
 }
 
-openReleaseModalBtn?.addEventListener('click', () => {
+function handleOpenReleaseModal() {
   if (artist.roleType === 'collab') {
     alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
     return;
   }
-  const savedDraftRaw = localStorage.getItem('uniflows_release_draft_' + (artist?.id || 'artist'));
-  if (savedDraftRaw && !currentDraftId) {
-    try {
-      const d = JSON.parse(savedDraftRaw);
-      if (confirm(`Bạn đang có 1 bản nháp phát hành: "${d.title || 'Chưa đặt tên'}".\nBạn có muốn tiếp tục chỉnh sửa bản nháp này không?`)) {
-        restoreReleaseDraft(d);
-        return;
-      }
-    } catch (e) {}
-  }
-  prepareReleaseWizard();
-  releaseDialog?.showModal();
-});
 
-quickOpenReleaseModalBtn?.addEventListener('click', () => {
-  if (artist.roleType === 'collab') {
-    alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
-    return;
-  }
+  // Check if there is an active draft (local or cached from database)
+  let activeDraft = null;
   const savedDraftRaw = localStorage.getItem('uniflows_release_draft_' + (artist?.id || 'artist'));
-  if (savedDraftRaw && !currentDraftId) {
+  if (savedDraftRaw) {
     try {
-      const d = JSON.parse(savedDraftRaw);
-      if (confirm(`Bạn đang có 1 bản nháp phát hành: "${d.title || 'Chưa đặt tên'}".\nBạn có muốn tiếp tục chỉnh sửa bản nháp này không?`)) {
-        restoreReleaseDraft(d);
-        return;
-      }
+      activeDraft = JSON.parse(savedDraftRaw);
     } catch (e) {}
   }
+  if (!activeDraft && Array.isArray(cachedFetchedReleases)) {
+    const dbDraft = cachedFetchedReleases.find(r => r.submissionStatus === 'Bản nháp' || r.isDraft);
+    if (dbDraft) activeDraft = dbDraft.metadata?.draftData || dbDraft;
+  }
+
+  if (activeDraft) {
+    const draftTitle = activeDraft.title || 'Bản phát hành chưa đặt tên';
+    if (confirm(`Bạn đang có 1 bản nháp phát hành: "${draftTitle}".\n\n- Nhấn "OK" để tiếp tục chỉnh sửa bản nháp này.\n- Nhấn "Hủy" (Cancel) để tạo bản phát hành mới từ đầu.`)) {
+      restoreReleaseDraft(activeDraft);
+      return;
+    }
+  }
+
+  currentDraftId = null;
   prepareReleaseWizard();
-  releaseDialog?.showModal();
-});
+  const dlg = releaseDialog || document.querySelector('#release-dialog');
+  if (dlg) {
+    if (!dlg.open) {
+      try {
+        dlg.showModal();
+      } catch (e) {
+        dlg.setAttribute('open', '');
+      }
+    }
+  }
+}
+
+openReleaseModalBtn?.addEventListener('click', handleOpenReleaseModal);
+quickOpenReleaseModalBtn?.addEventListener('click', handleOpenReleaseModal);
 
 closeReleaseDialogBtn?.addEventListener('click', () => {
   releaseDialog?.close();
@@ -901,178 +907,269 @@ export async function saveReleaseDraft(isSilent = false) {
   }
 }
 
-export function restoreReleaseDraft(draftData) {
+export function normalizeDraftData(raw) {
+  if (!raw) return null;
+  const meta = (typeof raw.metadata === 'object' && raw.metadata) ? raw.metadata : {};
+  const innerDraft = (typeof meta.draftData === 'object' && meta.draftData) ? meta.draftData : {};
+
+  const tracks = innerDraft.wizardTracks || meta.wizardTracks || raw.tracks || raw.wizardTracks || [];
+  const normalizedTracks = Array.isArray(tracks) && tracks.length > 0 
+    ? tracks.map((t, idx) => ({
+        trackNum: t.trackNum || (idx + 1),
+        title: t.title || `Track ${String(idx + 1).padStart(2, '0')}`,
+        featuredArtist: t.featuredArtist || t.featured_artist || '',
+        version: t.version || 'Original Mix',
+        audioUrl: t.audioUrl || t.audio_url || '',
+        dolbyAtmosUrl: t.dolbyAtmosUrl || t.dolby_atmos_url || '',
+        lyricsText: t.lyricsText || t.lyrics_text || '',
+        lyricsLrc: t.lyricsLrc || t.lyrics_lrc || '',
+        credits: Array.isArray(t.credits) ? t.credits : (typeof createDefaultCredits === 'function' ? createDefaultCredits() : []),
+        explicit: t.explicit === true || t.explicit === 'true',
+        isrc: t.isrc || '',
+        duration: t.duration || ''
+      }))
+    : [{
+        trackNum: 1,
+        title: innerDraft.title || raw.title || 'Track 01',
+        featuredArtist: innerDraft.featuredArtist || raw.featured_artist || '',
+        version: 'Original Mix',
+        audioUrl: innerDraft.audioUrl || raw.audio_url || '',
+        dolbyAtmosUrl: '',
+        lyricsText: '',
+        lyricsLrc: '',
+        credits: typeof createDefaultCredits === 'function' ? createDefaultCredits() : [],
+        explicit: false,
+        isrc: ''
+      }];
+
+  const splits = innerDraft.splits || meta.splits || raw.splits || [];
+
+  return {
+    id: raw.id || innerDraft.id || currentDraftId || ('draft_' + (artist?.id || 'artist') + '_' + Date.now()),
+    artistId: raw.artistId || raw.artist_id || innerDraft.artistId || (artist?.id || 'artist'),
+    title: innerDraft.title || raw.title || '',
+    type: innerDraft.type || raw.type || 'Single',
+    featuredArtist: innerDraft.featuredArtist || raw.featured_artist || raw.featuredArtist || '',
+    genre: innerDraft.genre || raw.genre || '',
+    secondaryGenre: innerDraft.secondaryGenre || raw.secondary_genre || raw.secondaryGenre || '',
+    language: innerDraft.language || raw.language || 'Tiếng Việt',
+    explicit: (innerDraft.explicit === true || innerDraft.explicit === 'true' || raw.explicit === true || raw.explicit === 'true'),
+    artworkExternalUrl: innerDraft.artworkExternalUrl || innerDraft.artworkUrl || raw.artwork_url || raw.artworkUrl || '',
+    artworkUrl: innerDraft.artworkUrl || innerDraft.artworkExternalUrl || raw.artwork_url || raw.artworkUrl || '',
+    upc_choice: innerDraft.upc_choice || (raw.upc ? 'custom' : 'auto'),
+    upc: innerDraft.upc || raw.upc || '',
+    territories: innerDraft.territories || raw.territories || 'Toàn cầu (Worldwide - 150+ Lãnh thổ)',
+    pricing: innerDraft.pricing || raw.pricing || 'Standard',
+    songwriters: innerDraft.songwriters || raw.songwriters || (artist?.name || ''),
+    producers: innerDraft.producers || raw.producers || 'UniFLOWs Label',
+    phonogram: innerDraft.phonogram || raw.phonogram || '℗ 2026 UniFLOWs Label',
+    copyright: innerDraft.copyright || raw.copyright || '© 2026 UniFLOWs Label',
+    lyricsText: innerDraft.lyricsText || raw.lyricsText || raw.lyrics_text || '',
+    lyricsLrc: innerDraft.lyricsLrc || raw.lyricsLrc || raw.lyrics_lrc || '',
+    syncLicensingConsent: (innerDraft.syncLicensingConsent !== false && raw.syncLicensingConsent !== false),
+    releaseDate: innerDraft.releaseDate || raw.release_date || raw.releaseDate || '',
+    preSaveDate: innerDraft.preSaveDate || raw.pre_save_date || raw.preSaveDate || '',
+    notes: innerDraft.notes || raw.notes || '',
+    wizardTracks: normalizedTracks,
+    splits: splits,
+    updatedAt: innerDraft.updatedAt || raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
+export function restoreReleaseDraft(rawDraft) {
+  if (!rawDraft) return;
+  const draftData = normalizeDraftData(rawDraft);
   if (!draftData) return;
-  currentDraftId = draftData.id || null;
 
-  // Title
-  const titleInput = document.querySelector('#wizard-title-input');
-  if (titleInput) titleInput.value = draftData.title || '';
+  try {
+    currentDraftId = draftData.id || null;
 
-  // Type
-  const typeSelect = document.querySelector('#wizard-type-select');
-  if (typeSelect && draftData.type) typeSelect.value = draftData.type;
+    // Title
+    const titleInput = document.querySelector('#wizard-title-input');
+    if (titleInput) titleInput.value = draftData.title || '';
 
-  // Featured Artist
-  const featInput = document.querySelector('#wizard-feat-input');
-  if (featInput) featInput.value = draftData.featuredArtist || '';
+    // Type
+    const typeSelect = document.querySelector('#wizard-type-select');
+    if (typeSelect && draftData.type) typeSelect.value = draftData.type;
 
-  // Primary Artist
-  if (primaryArtistInput) primaryArtistInput.value = artist.name;
+    // Featured Artist
+    const featInput = document.querySelector('#wizard-feat-input');
+    if (featInput) featInput.value = draftData.featuredArtist || '';
 
-  // Genre
-  const genreSelect = document.querySelector('#wizard-genre-select');
-  if (genreSelect && draftData.genre) genreSelect.value = draftData.genre;
+    // Primary Artist
+    if (primaryArtistInput) primaryArtistInput.value = artist?.name || '';
 
-  // Secondary Genre
-  const secGenreSelect = document.querySelector('#wizard-secondary-genre-select');
-  if (secGenreSelect) secGenreSelect.value = draftData.secondaryGenre || '';
+    // Genre
+    const genreSelect = document.querySelector('#wizard-genre-select');
+    if (genreSelect && draftData.genre) genreSelect.value = draftData.genre;
 
-  // Language
-  const langSelect = document.querySelector('#release-form [name="language"]');
-  if (langSelect && draftData.language) langSelect.value = draftData.language;
+    // Secondary Genre
+    const secGenreSelect = document.querySelector('#wizard-secondary-genre-select');
+    if (secGenreSelect) secGenreSelect.value = draftData.secondaryGenre || '';
 
-  // Explicit
-  const isExp = draftData.explicit === 'true' || draftData.explicit === true;
-  const cleanRadio = document.querySelector('#explicit-radio-clean');
-  const expRadio = document.querySelector('#explicit-radio-explicit');
-  if (cleanRadio && expRadio) {
-    cleanRadio.checked = !isExp;
-    expRadio.checked = isExp;
-    updateExplicitDisplay();
+    // Language
+    const langSelect = document.querySelector('#release-form [name="language"]');
+    if (langSelect && draftData.language) langSelect.value = draftData.language;
+
+    // Explicit
+    const isExp = draftData.explicit === true || draftData.explicit === 'true';
+    const cleanRadio = document.querySelector('#explicit-radio-clean');
+    const expRadio = document.querySelector('#explicit-radio-explicit');
+    if (cleanRadio && expRadio) {
+      cleanRadio.checked = !isExp;
+      expRadio.checked = isExp;
+    }
+    if (typeof updateExplicitDisplay === 'function') {
+      updateExplicitDisplay();
+    }
+
+    // Artwork
+    const artworkExtUrlInput = document.querySelector('#artwork-external-url');
+    if (artworkExtUrlInput) artworkExtUrlInput.value = draftData.artworkExternalUrl || '';
+    const artPreview = document.querySelector('#wizard-art-preview');
+    const artContent = document.querySelector('#art-drop-content');
+    const artUrl = draftData.artworkUrl || draftData.artworkExternalUrl;
+    if (artUrl && artPreview) {
+      artPreview.src = artUrl;
+      artPreview.style.display = 'block';
+      if (artContent) artContent.style.display = 'none';
+    } else if (artPreview && artContent) {
+      artPreview.src = '';
+      artPreview.style.display = 'none';
+      artContent.style.display = 'block';
+    }
+
+    // Tracks
+    if (Array.isArray(draftData.wizardTracks) && draftData.wizardTracks.length > 0) {
+      wizardTracks = JSON.parse(JSON.stringify(draftData.wizardTracks));
+    }
+    if (typeof renderWizardTracklist === 'function') {
+      renderWizardTracklist();
+    }
+
+    // Mode pill
+    if (typeof setTrackMode === 'function') {
+      if (wizardTracks.length > 1) {
+        setTrackMode('multi');
+      } else {
+        setTrackMode('single');
+      }
+    }
+
+    // UPC
+    const upcCustomRadio = document.querySelector('#upc-radio-custom');
+    const upcAutoRadio = document.querySelector('#upc-radio-auto');
+    const upcInput = document.querySelector('#wizard-upc-input');
+    if (draftData.upc_choice === 'custom' && upcCustomRadio) {
+      upcCustomRadio.checked = true;
+      if (upcInput) upcInput.value = draftData.upc || '';
+    } else if (upcAutoRadio) {
+      upcAutoRadio.checked = true;
+    }
+    if (typeof updateUpcDisplay === 'function') {
+      updateUpcDisplay();
+    }
+
+    // Songwriters & Producers
+    const sw = document.querySelector('#wizard-global-songwriters') || document.querySelector('[name="songwriters"]');
+    if (sw) sw.value = draftData.songwriters || '';
+    const prod = document.querySelector('#wizard-global-producers') || document.querySelector('[name="producers"]');
+    if (prod) prod.value = draftData.producers || '';
+    const ph = document.querySelector('[name="phonogram"]');
+    if (ph) ph.value = draftData.phonogram || '℗ 2026 UniFLOWs Label';
+    const cp = document.querySelector('[name="copyright"]');
+    if (cp) cp.value = draftData.copyright || '© 2026 UniFLOWs Label';
+
+    // Splits
+    if (Array.isArray(draftData.splits) && draftData.splits.length > 0) {
+      const splitsContainer = document.querySelector('#royalty-splits-container');
+      if (splitsContainer) {
+        splitsContainer.innerHTML = '';
+        draftData.splits.forEach((sp, idx) => {
+          const row = document.createElement('div');
+          row.className = 'royalty-split-row';
+          row.style = 'display:flex;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;';
+          const isPrimary = idx === 0;
+          row.innerHTML = `
+            <input class="split-name" value="${esc(sp.artistName || '')}" ${isPrimary ? 'readonly style="flex:2;padding:8px;font-size:12px;background:#f1f5f9;font-weight:bold;"' : 'placeholder="Tên Nghệ sĩ / Producer" style="flex:2;padding:8px;font-size:12px;"'}>
+            <select class="split-role" style="flex:1.5;padding:8px;font-size:12px;background:#fff;">
+              <option value="Primary Artist" ${sp.role === 'Primary Artist' ? 'selected' : ''}>Primary Artist</option>
+              <option value="Producer" ${sp.role === 'Producer' ? 'selected' : ''}>Producer</option>
+              <option value="Songwriter" ${sp.role === 'Songwriter' ? 'selected' : ''}>Songwriter</option>
+              <option value="Featured Artist" ${sp.role === 'Featured Artist' ? 'selected' : ''}>Featured Artist</option>
+              <option value="Composer" ${sp.role === 'Composer' ? 'selected' : ''}>Composer</option>
+              <option value="Mixing Engineer" ${sp.role === 'Mixing Engineer' ? 'selected' : ''}>Mixing Engineer</option>
+            </select>
+            <div style="display:flex;align-items:center;gap:4px;flex:1;">
+              <input class="split-pct" type="number" min="1" max="100" value="${sp.percentage || 100}" style="padding:8px;font-size:12px;text-align:right;font-weight:bold;width:100%;">
+              <span style="font-size:12px;font-weight:bold;">%</span>
+            </div>
+            ${isPrimary ? '<span style="width:24px;text-align:center;color:#94a3b8;font-size:12px;">🔒</span>' : '<button type="button" class="remove-split-btn button alt" style="padding:4px 8px;font-size:11px;color:#dc2626;border-color:#fecaca;">✕</button>'}
+          `;
+          row.querySelector('.split-pct')?.addEventListener('input', updateSplitsTotal);
+          row.querySelector('.remove-split-btn')?.addEventListener('click', () => {
+            row.remove();
+            updateSplitsTotal();
+          });
+          splitsContainer.appendChild(row);
+        });
+        if (typeof updateSplitsTotal === 'function') {
+          updateSplitsTotal();
+        }
+      }
+    }
+
+    // Lyrics & Sync
+    const lyricsTextEl = document.querySelector('#release-form [name="lyricsText"]');
+    if (lyricsTextEl) lyricsTextEl.value = draftData.lyricsText || '';
+    const lyricsLrcEl = document.querySelector('#release-form [name="lyricsLrc"]');
+    if (lyricsLrcEl) lyricsLrcEl.value = draftData.lyricsLrc || '';
+    const syncConsentEl = document.querySelector('#release-form [name="syncLicensingConsent"]');
+    if (syncConsentEl) syncConsentEl.checked = draftData.syncLicensingConsent !== false;
+
+    // Step 4 Dates & Notes
+    const dateInput = document.querySelector('#wizard-date-input');
+    if (dateInput) dateInput.value = draftData.releaseDate || '';
+    const preSaveInput = document.querySelector('#release-form [name="preSaveDate"]');
+    if (preSaveInput) preSaveInput.value = draftData.preSaveDate || '';
+    const notesInput = document.querySelector('#release-form [name="notes"]');
+    if (notesInput) notesInput.value = draftData.notes || '';
+
+    // Update step and mockup
+    if (typeof updateWizardStep === 'function') {
+      updateWizardStep(1);
+    }
+    if (typeof updateLiveMockup === 'function') {
+      updateLiveMockup();
+    }
+  } catch (err) {
+    console.warn('Lỗi khi khôi phục chi tiết bản nháp:', err);
   }
 
-  // Artwork
-  const artworkExtUrlInput = document.querySelector('#artwork-external-url');
-  if (artworkExtUrlInput) artworkExtUrlInput.value = draftData.artworkExternalUrl || '';
-  const artPreview = document.querySelector('#wizard-art-preview');
-  const artContent = document.querySelector('#art-drop-content');
-  const artUrl = draftData.artworkUrl || draftData.artworkExternalUrl;
-  if (artUrl && artPreview) {
-    artPreview.src = artUrl;
-    artPreview.style.display = 'block';
-    if (artContent) artContent.style.display = 'none';
-  }
-
-  // Tracks
-  if (Array.isArray(draftData.wizardTracks) && draftData.wizardTracks.length > 0) {
-    wizardTracks = JSON.parse(JSON.stringify(draftData.wizardTracks));
-  } else {
-    wizardTracks = [{
-      trackNum: 1,
-      title: draftData.title || 'Track 01',
-      featuredArtist: draftData.featuredArtist || '',
-      version: 'Original Mix',
-      audioUrl: '',
-      dolbyAtmosUrl: '',
-      lyricsText: '',
-      lyricsLrc: '',
-      credits: createDefaultCredits(),
-      explicit: false,
-      isrc: ''
-    }];
-  }
-  renderWizardTracklist();
-
-  // Mode pill
-  if (wizardTracks.length > 1) {
-    setTrackMode('multi');
-  } else {
-    setTrackMode('single');
-  }
-
-  // UPC
-  const upcCustomRadio = document.querySelector('#upc-radio-custom');
-  const upcAutoRadio = document.querySelector('#upc-radio-auto');
-  const upcInput = document.querySelector('#wizard-upc-input');
-  if (draftData.upc_choice === 'custom' && upcCustomRadio) {
-    upcCustomRadio.checked = true;
-    if (upcInput) upcInput.value = draftData.upc || '';
-  } else if (upcAutoRadio) {
-    upcAutoRadio.checked = true;
-  }
-  updateUpcDisplay();
-
-  // Songwriters & Producers
-  const sw = document.querySelector('#wizard-global-songwriters') || document.querySelector('[name="songwriters"]');
-  if (sw && draftData.songwriters) sw.value = draftData.songwriters;
-  const prod = document.querySelector('#wizard-global-producers') || document.querySelector('[name="producers"]');
-  if (prod && draftData.producers) prod.value = draftData.producers;
-  const ph = document.querySelector('[name="phonogram"]');
-  if (ph && draftData.phonogram) ph.value = draftData.phonogram;
-  const cp = document.querySelector('[name="copyright"]');
-  if (cp && draftData.copyright) cp.value = draftData.copyright;
-
-  // Splits
-  if (Array.isArray(draftData.splits) && draftData.splits.length > 0) {
-    const splitsContainer = document.querySelector('#royalty-splits-container');
-    if (splitsContainer) {
-      splitsContainer.innerHTML = '';
-      draftData.splits.forEach((sp, idx) => {
-        const row = document.createElement('div');
-        row.className = 'royalty-split-row';
-        row.style = 'display:flex;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;';
-        const isPrimary = idx === 0;
-        row.innerHTML = `
-          <input class="split-name" value="${esc(sp.artistName || '')}" ${isPrimary ? 'readonly style="flex:2;padding:8px;font-size:12px;background:#f1f5f9;font-weight:bold;"' : 'placeholder="Tên Nghệ sĩ / Producer" style="flex:2;padding:8px;font-size:12px;"'}>
-          <select class="split-role" style="flex:1.5;padding:8px;font-size:12px;background:#fff;">
-            <option value="Primary Artist" ${sp.role === 'Primary Artist' ? 'selected' : ''}>Primary Artist</option>
-            <option value="Producer" ${sp.role === 'Producer' ? 'selected' : ''}>Producer</option>
-            <option value="Songwriter" ${sp.role === 'Songwriter' ? 'selected' : ''}>Songwriter</option>
-            <option value="Featured Artist" ${sp.role === 'Featured Artist' ? 'selected' : ''}>Featured Artist</option>
-            <option value="Composer" ${sp.role === 'Composer' ? 'selected' : ''}>Composer</option>
-            <option value="Mixing Engineer" ${sp.role === 'Mixing Engineer' ? 'selected' : ''}>Mixing Engineer</option>
-          </select>
-          <div style="display:flex;align-items:center;gap:4px;flex:1;">
-            <input class="split-pct" type="number" min="1" max="100" value="${sp.percentage || 100}" style="padding:8px;font-size:12px;text-align:right;font-weight:bold;width:100%;">
-            <span style="font-size:12px;font-weight:bold;">%</span>
-          </div>
-          ${isPrimary ? '<span style="width:24px;text-align:center;color:#94a3b8;font-size:12px;">🔒</span>' : '<button type="button" class="remove-split-btn button alt" style="padding:4px 8px;font-size:11px;color:#dc2626;border-color:#fecaca;">✕</button>'}
-        `;
-        splitsContainer.appendChild(row);
-      });
-      updateSplitsTotal();
+  // Open modal always
+  const dlg = releaseDialog || document.querySelector('#release-dialog');
+  if (dlg) {
+    if (!dlg.open) {
+      try {
+        dlg.showModal();
+      } catch (e) {
+        dlg.setAttribute('open', '');
+      }
     }
   }
-
-  // Lyrics & Sync
-  const lyricsTextEl = document.querySelector('#release-form [name="lyricsText"]');
-  if (lyricsTextEl && draftData.lyricsText) lyricsTextEl.value = draftData.lyricsText;
-  const lyricsLrcEl = document.querySelector('#release-form [name="lyricsLrc"]');
-  if (lyricsLrcEl && draftData.lyricsLrc) lyricsLrcEl.value = draftData.lyricsLrc;
-  const syncConsentEl = document.querySelector('#release-form [name="syncLicensingConsent"]');
-  if (syncConsentEl) syncConsentEl.checked = draftData.syncLicensingConsent !== false;
-
-  // Step 4 Dates & Notes
-  const dateInput = document.querySelector('#wizard-date-input');
-  if (dateInput) dateInput.value = draftData.releaseDate || '';
-  const preSaveInput = document.querySelector('#release-form [name="preSaveDate"]');
-  if (preSaveInput) preSaveInput.value = draftData.preSaveDate || '';
-  const notesInput = document.querySelector('#release-form [name="notes"]');
-  if (notesInput) notesInput.value = draftData.notes || '';
-
-  // Update step and mockup
-  updateWizardStep(1);
-  updateLiveMockup();
-
-  if (releaseDialog && !releaseDialog.open) {
-    releaseDialog.showModal();
-  }
-  showNotice(`✓ Đã khôi phục bản nháp "${draftData.title || 'Chưa đặt tên'}"`);
+  showNotice(`✓ Đã mở bản nháp "${draftData.title || 'Chưa đặt tên'}" để bạn tiếp tục chỉnh sửa.`);
 }
 
 export async function discardReleaseDraft(draftId) {
   localStorage.removeItem('uniflows_release_draft_' + (artist?.id || 'artist'));
-  if (draftId && isSupabaseConfigured()) {
+  if (draftId && draftId !== 'undefined' && isSupabaseConfigured()) {
     try {
       await supabase.from('releases').delete().eq('id', draftId);
     } catch (e) {
       console.warn('Lỗi xóa draft trên Supabase:', e);
     }
   }
-  if (currentDraftId === draftId) {
-    currentDraftId = null;
-  }
+  currentDraftId = null;
   updateActiveDraftBanner();
   await renderReleases();
   showNotice('✓ Đã xóa bản nháp thành công.');
@@ -1105,9 +1202,10 @@ export function updateActiveDraftBanner() {
     return;
   }
 
-  const draftTitle = activeDraft.title || 'Bản phát hành chưa đặt tên';
-  const trackCount = (activeDraft.wizardTracks || []).length || 1;
-  const updateTime = activeDraft.updatedAt ? new Date(activeDraft.updatedAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Vừa xong';
+  const normalized = normalizeDraftData(activeDraft);
+  const draftTitle = normalized.title || 'Bản phát hành chưa đặt tên';
+  const trackCount = (normalized.wizardTracks || []).length || 1;
+  const updateTime = normalized.updatedAt ? new Date(normalized.updatedAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Vừa xong';
 
   banner.style.display = 'block';
   banner.innerHTML = `
@@ -1117,7 +1215,7 @@ export function updateActiveDraftBanner() {
         <div>
           <div style="font-size:14px;font-weight:700;color:#0f172a;letter-spacing:-0.01em;">
             Bản nháp phát hành: <span style="color:#0284c7;">"${esc(draftTitle)}"</span>
-            <span style="font-size:11px;font-family:'DM Mono',monospace;background:#e2e8f0;color:#334155;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600;">${esc(activeDraft.type || 'Single')} · ${trackCount} track</span>
+            <span style="font-size:11px;font-family:'DM Mono',monospace;background:#e2e8f0;color:#334155;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600;">${esc(normalized.type || 'Single')} · ${trackCount} track</span>
           </div>
           <div style="font-size:12px;color:#64748b;margin-top:2px;">
             Đã lưu lúc: <b>${updateTime}</b> · Tiến trình được bảo toàn an toàn để bạn hoàn thiện trước khi gửi duyệt.
@@ -1136,12 +1234,12 @@ export function updateActiveDraftBanner() {
   `;
 
   document.querySelector('#btn-banner-resume-draft')?.addEventListener('click', () => {
-    restoreReleaseDraft(activeDraft);
+    restoreReleaseDraft(normalized);
   });
 
   document.querySelector('#btn-banner-discard-draft')?.addEventListener('click', async () => {
     if (confirm(`Bạn có chắc chắn muốn xóa bản nháp "${draftTitle}" không? Dữ liệu nháp chưa nộp sẽ bị hủy.`)) {
-      await discardReleaseDraft(activeDraft.id);
+      await discardReleaseDraft(normalized.id);
     }
   });
 }
@@ -1830,71 +1928,77 @@ document.querySelector('#batch-audio-input')?.addEventListener('change', (e) => 
 });
 
 // Initialize UPC choice controls & Explicit choice controls
-function initUpcControls() {
-  const upcRadioAuto = document.querySelector('#upc-radio-auto');
+export function updateUpcDisplay() {
   const upcRadioCustom = document.querySelector('#upc-radio-custom');
   const upcCustomBox = document.querySelector('#upc-custom-input-box');
   const upcCardAuto = document.querySelector('#upc-card-auto');
   const upcCardCustom = document.querySelector('#upc-card-custom');
-  const wizardUpcInput = document.querySelector('#wizard-upc-input');
 
-  function updateUpcDisplay() {
-    if (upcRadioCustom?.checked) {
-      if (upcCustomBox) upcCustomBox.style.display = 'block';
-      if (upcCardCustom) {
-        upcCardCustom.style.borderColor = '#0f172a';
-        upcCardCustom.style.background = '#f8fafc';
-      }
-      if (upcCardAuto) {
-        upcCardAuto.style.borderColor = '#e2e8f0';
-        upcCardAuto.style.background = '#fff';
-      }
-      wizardUpcInput?.focus();
-    } else {
-      if (upcCustomBox) upcCustomBox.style.display = 'none';
-      if (upcCardAuto) {
-        upcCardAuto.style.borderColor = '#0f172a';
-        upcCardAuto.style.background = '#f8fafc';
-      }
-      if (upcCardCustom) {
-        upcCardCustom.style.borderColor = '#e2e8f0';
-        upcCardCustom.style.background = '#fff';
-      }
+  if (upcRadioCustom?.checked) {
+    if (upcCustomBox) upcCustomBox.style.display = 'block';
+    if (upcCardCustom) {
+      upcCardCustom.style.borderColor = '#0f172a';
+      upcCardCustom.style.background = '#f8fafc';
+    }
+    if (upcCardAuto) {
+      upcCardAuto.style.borderColor = '#e2e8f0';
+      upcCardAuto.style.background = '#fff';
+    }
+  } else {
+    if (upcCustomBox) upcCustomBox.style.display = 'none';
+    if (upcCardAuto) {
+      upcCardAuto.style.borderColor = '#0f172a';
+      upcCardAuto.style.background = '#f8fafc';
+    }
+    if (upcCardCustom) {
+      upcCardCustom.style.borderColor = '#e2e8f0';
+      upcCardCustom.style.background = '#fff';
     }
   }
+}
+
+export function updateExplicitDisplay() {
+  const explicitRadioExplicit = document.querySelector('#explicit-radio-explicit');
+  const explicitCardClean = document.querySelector('#explicit-card-clean');
+  const explicitCardExplicit = document.querySelector('#explicit-card-explicit');
+
+  if (explicitRadioExplicit?.checked) {
+    if (explicitCardExplicit) {
+      explicitCardExplicit.style.borderColor = '#0f172a';
+      explicitCardExplicit.style.background = '#f8fafc';
+    }
+    if (explicitCardClean) {
+      explicitCardClean.style.borderColor = '#e2e8f0';
+      explicitCardClean.style.background = '#fff';
+    }
+  } else {
+    if (explicitCardClean) {
+      explicitCardClean.style.borderColor = '#0f172a';
+      explicitCardClean.style.background = '#f8fafc';
+    }
+    if (explicitCardExplicit) {
+      explicitCardExplicit.style.borderColor = '#e2e8f0';
+      explicitCardExplicit.style.background = '#fff';
+    }
+  }
+}
+
+function initUpcControls() {
+  const upcRadioAuto = document.querySelector('#upc-radio-auto');
+  const upcRadioCustom = document.querySelector('#upc-radio-custom');
+  const wizardUpcInput = document.querySelector('#wizard-upc-input');
 
   upcRadioAuto?.addEventListener('change', updateUpcDisplay);
-  upcRadioCustom?.addEventListener('change', updateUpcDisplay);
+  upcRadioCustom?.addEventListener('change', () => {
+    updateUpcDisplay();
+    wizardUpcInput?.focus();
+  });
   updateUpcDisplay();
 }
 
 function initExplicitControls() {
   const explicitRadioClean = document.querySelector('#explicit-radio-clean');
   const explicitRadioExplicit = document.querySelector('#explicit-radio-explicit');
-  const explicitCardClean = document.querySelector('#explicit-card-clean');
-  const explicitCardExplicit = document.querySelector('#explicit-card-explicit');
-
-  function updateExplicitDisplay() {
-    if (explicitRadioExplicit?.checked) {
-      if (explicitCardExplicit) {
-        explicitCardExplicit.style.borderColor = '#0f172a';
-        explicitCardExplicit.style.background = '#f8fafc';
-      }
-      if (explicitCardClean) {
-        explicitCardClean.style.borderColor = '#e2e8f0';
-        explicitCardClean.style.background = '#fff';
-      }
-    } else {
-      if (explicitCardClean) {
-        explicitCardClean.style.borderColor = '#0f172a';
-        explicitCardClean.style.background = '#f8fafc';
-      }
-      if (explicitCardExplicit) {
-        explicitCardExplicit.style.borderColor = '#e2e8f0';
-        explicitCardExplicit.style.background = '#fff';
-      }
-    }
-  }
 
   explicitRadioClean?.addEventListener('change', updateExplicitDisplay);
   explicitRadioExplicit?.addEventListener('change', updateExplicitDisplay);
@@ -2159,7 +2263,7 @@ function renderReleaseListItems() {
     `;
 
     return `
-      <div class="portal-release-card" style="${isRevision ? 'border:2px solid #f87171;' : ''}">
+      <div class="portal-release-card ${isDraft ? 'portal-release-card-draft' : ''}" data-draft-id="${esc(p.id || '')}" style="${isRevision ? 'border:2px solid #f87171;' : ''}${isDraft ? 'cursor:pointer;border-left:4px solid #0f172a;' : ''}" ${isDraft ? 'title="Nhấn để tiếp tục chỉnh sửa bản nháp này"' : ''}>
         <img class="portal-release-thumb" src="${esc(artworkSrc)}" alt="${esc(p.title)}">
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
@@ -2210,10 +2314,34 @@ function renderReleaseListItems() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const draftId = btn.dataset.draftId;
-      const targetDraft = cachedFetchedReleases.find(r => r.id === draftId);
-      if (targetDraft) {
-        const draftData = targetDraft.metadata?.draftData || targetDraft;
-        restoreReleaseDraft(draftData);
+      let draftData = null;
+      if (draftId && draftId !== 'undefined' && Array.isArray(cachedFetchedReleases)) {
+        const targetDraft = cachedFetchedReleases.find(r => String(r.id) === String(draftId));
+        if (targetDraft) {
+          draftData = targetDraft.metadata?.draftData || targetDraft;
+        }
+      }
+      if (!draftData) {
+        try {
+          const raw = localStorage.getItem('uniflows_release_draft_' + (artist?.id || 'artist'));
+          if (raw) draftData = JSON.parse(raw);
+        } catch (e) {}
+      }
+      if (!draftData && Array.isArray(cachedFetchedReleases)) {
+        const anyDraft = cachedFetchedReleases.find(r => r.submissionStatus === 'Bản nháp' || r.isDraft);
+        if (anyDraft) draftData = anyDraft.metadata?.draftData || anyDraft;
+      }
+      restoreReleaseDraft(draftData || { id: draftId });
+    });
+  });
+
+  // Clicking anywhere on draft card triggers edit
+  list.querySelectorAll('.portal-release-card-draft').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('a')) return;
+      const resumeBtn = card.querySelector('.btn-resume-draft-card');
+      if (resumeBtn) {
+        resumeBtn.click();
       }
     });
   });
@@ -2222,7 +2350,7 @@ function renderReleaseListItems() {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const draftId = btn.dataset.draftId;
-      if (confirm('Bạn có chắc chắn muốn xóa bản nháp này không?')) {
+      if (confirm('Bạn có chắc chắn muốn xóa bản nháp này không? Dữ liệu nháp chưa nộp sẽ bị hủy.')) {
         await discardReleaseDraft(draftId);
       }
     });
@@ -2365,9 +2493,10 @@ async function renderReleases() {
   if (localDraftRaw) {
     try {
       const localDraft = JSON.parse(localDraftRaw);
-      if (localDraft && !participatingReleases.some(r => r.id === localDraft.id)) {
+      const draftId = localDraft.id || ('draft_' + (artist?.id || 'artist'));
+      if (localDraft && !participatingReleases.some(r => String(r.id) === String(draftId))) {
         participatingReleases.unshift({
-          id: localDraft.id,
+          id: draftId,
           title: localDraft.title || 'Bản nháp chưa đặt tên',
           type: localDraft.type || 'Single',
           slug: slug(localDraft.title || 'draft'),
