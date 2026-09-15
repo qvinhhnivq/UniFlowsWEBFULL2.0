@@ -89,23 +89,31 @@ const navLinks = getNavLinks();
 if (!$('.nav')) {
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="nav">
-      <a href="${navLinks.home}" class="brand">UNIFLOWs<small>label / est. 2024</small></a>
+      <a href="${navLinks.home}" class="brand">UNIFLOWS<small>SAIGON / EST. 2024</small></a>
       <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
       <nav class="nav-links">
         <a href="${navLinks.artists}" data-i18n="nav_artists">Nghệ sĩ</a>
         <a href="${navLinks.unihube}" data-i18n="nav_unihube">Uni-HUBE</a>
         <a href="${navLinks.collective48k}" data-i18n="nav_48k">48K Collective</a>
         <a href="${navLinks.publishing}" data-i18n="nav_publishing">UniPUBLISHING</a>
-        <a href="${navLinks.submitMusic}" data-i18n="nav_submit_music" style="color:#0284c7;font-weight:700;">Gửi Demo</a>
+        <a href="${navLinks.submitMusic}" data-i18n="nav_submit_music">Gửi Demo</a>
         <a href="${navLinks.about}" data-i18n="nav_about">Về chúng tôi</a>
         <a href="${navLinks.news}" data-i18n="nav_news">Tạp chí</a>
         <a href="${navLinks.contact}" data-i18n="nav_contact">Liên hệ</a>
-        <button type="button" class="lang-toggle-btn button alt" style="padding:4px 10px;font-size:11px;border-radius:20px;cursor:pointer;margin-left:4px;box-shadow:none;">🇬🇧 English</button>
+        <button type="button" class="lang-toggle-btn">EN / VN</button>
         <a class="artist-login-link" href="${navLinks.artistLogin}" data-i18n="nav_artist_login">Artist login ↗</a>
       </nav>
     </header>
   `);
 }
+
+// Handle header transparency and scroll state
+window.addEventListener('scroll', () => {
+  const nav = $('.nav');
+  if (nav) {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }
+}, { passive: true });
 
 // Insert Footer & Smart Modal
 if (!$('#smart-modal')) {
@@ -113,16 +121,18 @@ if (!$('#smart-modal')) {
     <div class="smart-modal" id="smart-modal" aria-hidden="true">
       <div class="smart-dialog">
         <button class="close-modal" aria-label="Đóng">×</button>
-        <span class="eyebrow">UniFLOWs / Smart link</span>
+        <span class="eyebrow" style="color:var(--color-felt-gray);">UniFLOWs / Smart link</span>
         <h2 id="smart-title">Nghe ngay</h2>
-        <p>Chọn nền tảng yêu thích của bạn.</p>
+        <p style="color:var(--color-felt-gray);">Chọn nền tảng yêu thích của bạn.</p>
         <div id="platform-links" class="platform-links"></div>
       </div>
     </div>
     <footer>
-      <span>© 2024 UniFLOWs Label</span>
-      <span id="footer-city">${esc(data.city)}</span>
-      <span>Independent music company</span>
+      <div class="footer-inner">
+        <span>© 2024 UNIFLOWS LABEL</span>
+        <span id="footer-city">SAIGON · VIETNAM</span>
+        <span>INDEPENDENT ENTERTAINMENT</span>
+      </div>
     </footer>
   `);
 }
@@ -215,8 +225,8 @@ function artists() {
       : t('view_all_artists', { count: publicArtists.length });
     
     toggleBtnHtml = `
-      <div class="artists-toggle-bar" style="grid-column: 1 / -1; margin-top: 24px; text-align: center; width: 100%;">
-        <button type="button" id="btn-toggle-artists-roster" class="button alt" style="padding: 12px 32px; font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; border-radius: 4px; box-shadow: 2px 2px 0 var(--ink); transition: all 0.2s ease;">
+      <div class="artists-toggle-bar" style="grid-column: 1 / -1; margin-top: 32px; text-align: center; width: 100%;">
+        <button type="button" id="btn-toggle-artists-roster" class="btn-ghost-light">
           ${esc(btnLabel)}
         </button>
       </div>
