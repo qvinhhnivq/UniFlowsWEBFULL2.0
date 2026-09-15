@@ -231,11 +231,21 @@ export async function initCardNav(mountTarget, options = {}) {
         if (typeof linkItem.onClick === 'function') {
           linkItem.onClick();
         } else if (linkItem.action === 'password') {
-          const openBtn = document.querySelector('#open-profile-settings-btn');
-          if (openBtn) openBtn.click();
-          setTimeout(() => {
-            document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
-          }, 50);
+          if (typeof window.openArtistProfileModal === 'function') {
+            window.openArtistProfileModal('profile-tab-security');
+          } else {
+            const openBtn = document.querySelector('#open-profile-settings-btn');
+            if (openBtn) openBtn.click();
+            setTimeout(() => {
+              document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
+            }, 50);
+          }
+        } else if (linkItem.action === 'profile') {
+          if (typeof window.openArtistProfileModal === 'function') {
+            window.openArtistProfileModal('profile-tab-banking');
+          } else {
+            document.querySelector('#open-profile-settings-btn')?.click();
+          }
         } else if (linkItem.action === 'theme') {
           document.querySelector('#theme-toggle-btn')?.click() || document.querySelector('#mobile-theme-toggle-btn')?.click();
         } else if (linkItem.action === 'logout') {
@@ -251,9 +261,19 @@ export async function initCardNav(mountTarget, options = {}) {
             }
           }
         } else if (linkItem.hash) {
-          location.hash = linkItem.hash;
+          const targetHash = linkItem.hash.startsWith('#') ? linkItem.hash : '#' + linkItem.hash;
+          if (location.hash === targetHash) {
+            window.dispatchEvent(new Event('hashchange'));
+          } else {
+            location.hash = targetHash;
+          }
         } else if (linkItem.tab) {
-          location.hash = linkItem.tab.replace('tab-', '');
+          const targetHash = '#' + linkItem.tab.replace('tab-', '');
+          if (location.hash === targetHash) {
+            window.dispatchEvent(new Event('hashchange'));
+          } else {
+            location.hash = targetHash;
+          }
         }
       });
 

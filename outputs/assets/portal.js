@@ -50,6 +50,24 @@ if (Array.isArray(data.artists)) {
   });
 }
 
+export function openDialogSafely(dlg) {
+  if (!dlg) return;
+  try {
+    if (!dlg.open) dlg.showModal();
+  } catch (_) {
+    dlg.setAttribute('open', '');
+  }
+}
+
+export function closeDialogSafely(dlg) {
+  if (!dlg) return;
+  try {
+    dlg.close();
+  } catch (_) {
+    dlg.removeAttribute('open');
+  }
+}
+
 function removeVietnameseTonesHelper(str) {
   if (!str) return '';
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
@@ -157,17 +175,18 @@ if (artist) {
   const ovPayableEl = document.querySelector('#overview-payable-balance');
   if (ovPayableEl) ovPayableEl.textContent = `₫ ${artist.payableBalance || '0'}`;
 
+  // Avatar click triggers Photo tab
   const avatarEl = document.querySelector('#portal-artist-avatar');
   if (avatarEl && artist.image) avatarEl.src = artist.image;
   if (avatarEl) {
     avatarEl.style.cursor = 'pointer';
     avatarEl.title = 'Nhấn để xem và đổi ảnh đại diện trong Hồ sơ';
     avatarEl.addEventListener('click', () => {
-      const openBtn = document.querySelector('#open-profile-settings-btn');
-      if (openBtn) openBtn.click();
-      setTimeout(() => {
-        document.querySelector('.profile-tab-btn[data-tab="profile-tab-photo"]')?.click();
-      }, 50);
+      if (typeof window.openArtistProfileModal === 'function') {
+        window.openArtistProfileModal('profile-tab-photo');
+      } else {
+        document.querySelector('#open-profile-settings-btn')?.click();
+      }
     });
   }
 
@@ -175,6 +194,9 @@ if (artist) {
   if (sidebarNameEl) sidebarNameEl.textContent = artist.name;
   const sidebarAvatarEl = document.querySelector('#sidebar-artist-avatar');
   if (sidebarAvatarEl && artist.image) sidebarAvatarEl.src = artist.image;
+
+  // Initialize Profile dialog early
+  try { initProfileSettingsDialog(); } catch (e) { console.warn('Early profile init:', e); }
 
   // ----------------------------------------------------
   // CARD NAV INITIALIZATION (PURE TYPOGRAPHY, NO EMOJIS)
@@ -211,13 +233,23 @@ if (artist) {
         textColor: "#ffffff",
         links: [
           { label: "Doanh thu & Rút tiền", hash: "#earnings", tab: "tab-earnings", ariaLabel: "Doanh thu và rút tiền" },
-          { label: "Hồ sơ & Cài đặt", onClick: () => document.querySelector('#open-profile-settings-btn')?.click(), ariaLabel: "Hồ sơ và cài đặt" },
+          { label: "Hồ sơ & Cài đặt", action: "profile", onClick: () => {
+              if (typeof window.openArtistProfileModal === 'function') {
+                window.openArtistProfileModal('profile-tab-banking');
+              } else {
+                document.querySelector('#open-profile-settings-btn')?.click();
+              }
+            }, ariaLabel: "Hồ sơ và cài đặt" },
           { label: "Đổi mật khẩu tài khoản", action: "password", onClick: () => {
-              const openBtn = document.querySelector('#open-profile-settings-btn');
-              if (openBtn) openBtn.click();
-              setTimeout(() => {
-                document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
-              }, 50);
+              if (typeof window.openArtistProfileModal === 'function') {
+                window.openArtistProfileModal('profile-tab-security');
+              } else {
+                const openBtn = document.querySelector('#open-profile-settings-btn');
+                if (openBtn) openBtn.click();
+                setTimeout(() => {
+                  document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
+                }, 50);
+              }
             }, ariaLabel: "Đổi mật khẩu" },
           { label: "Đăng xuất Nghệ sĩ", action: "logout", onClick: () => performArtistLogout(), ariaLabel: "Đăng xuất", isDanger: true }
         ]
@@ -6089,16 +6121,30 @@ function initProfileSettingsDialog() {
     if (confirmPass) confirmPass.value = '';
   }
 
+  window.openArtistProfileModal = function(targetTabId = 'profile-tab-banking') {
+    populateProfileData();
+    if (targetTabId) {
+      tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === targetTabId));
+      panels.forEach(p => p.classList.toggle('active', p.id === targetTabId));
+    }
+    if (!profileDialog.open) {
+      try {
+        profileDialog.showModal();
+      } catch (_) {
+        profileDialog.setAttribute('open', '');
+      }
+    }
+  };
+
   // Open & Close Handlers
   openProfileBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      populateProfileData();
-      profileDialog.showModal();
+      window.openArtistProfileModal('profile-tab-banking');
     });
   });
 
   closeProfileBtn?.addEventListener('click', () => {
-    profileDialog.close();
+    try { profileDialog.close(); } catch (_) { profileDialog.removeAttribute('open'); }
   });
 
   // Form 1: Default Banking Submit
@@ -6705,9 +6751,9 @@ export function showPortalSuccessModal({ title = 'Gửi yêu cầu thành công'
 
   if (dlg) {
     if (closeBtn) {
-      closeBtn.onclick = () => dlg.close();
+      closeBtn.onclick = () => closeDialogSafely(dlg);
     }
-    dlg.showModal();
+    openDialogSafely(dlg);
   }
 }
 window.showPortalSuccessModal = showPortalSuccessModal;
@@ -6896,8 +6942,12 @@ function populateReleaseOptionsInDialogs() {
   const pitchSelect = document.querySelector('#pitch-release-select');
   const isrcSelect = document.querySelector('#isrc-release-select');
 
+  const releasePool = (Array.isArray(cachedFetchedReleases) && cachedFetchedReleases.length > 0)
+    ? cachedFetchedReleases
+    : (artist?.products || []);
+
   const releaseOptionsHtml = '<option value="">-- Chọn bài hát từ catalogue của bạn --</option>' +
-    cachedFetchedReleases.map(r => `<option value="${esc(r.title)}">${esc(r.title)} (${esc(r.type || 'Single')})</option>`).join('');
+    releasePool.map(r => `<option value="${esc(r.title)}">${esc(r.title)} (${esc(r.type || 'Single')})</option>`).join('');
 
   if (crSelect) crSelect.innerHTML = releaseOptionsHtml;
   if (pitchSelect) pitchSelect.innerHTML = releaseOptionsHtml;
@@ -6905,7 +6955,7 @@ function populateReleaseOptionsInDialogs() {
 
   if (glSelect) {
     glSelect.innerHTML = '<option value="Toàn bộ kho nhạc của Nghệ sĩ (All Catalogue)">🌟 Toàn bộ bài hát của bạn (All Catalogue)</option>' +
-      cachedFetchedReleases.map(r => `<option value="Chỉ bài hát: ${esc(r.title)}">Chỉ bài hát: ${esc(r.title)}</option>`).join('');
+      releasePool.map(r => `<option value="Chỉ bài hát: ${esc(r.title)}">Chỉ bài hát: ${esc(r.title)}</option>`).join('');
   }
 }
 
@@ -6914,11 +6964,11 @@ openCopyrightReportBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   if (copyrightDialogNotice) copyrightDialogNotice.style.display = 'none';
   copyrightReportForm?.reset();
-  copyrightDialog?.showModal();
+  openDialogSafely(copyrightDialog);
 });
 
-closeCopyrightDialogBtn?.addEventListener('click', () => copyrightDialog?.close());
-closeCopyrightDialogBtn2?.addEventListener('click', () => copyrightDialog?.close());
+closeCopyrightDialogBtn?.addEventListener('click', () => closeDialogSafely(copyrightDialog));
+closeCopyrightDialogBtn2?.addEventListener('click', () => closeDialogSafely(copyrightDialog));
 
 copyrightReportForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7009,11 +7059,11 @@ openGreenlistBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   if (greenlistDialogNotice) greenlistDialogNotice.style.display = 'none';
   greenlistRequestForm?.reset();
-  greenlistDialog?.showModal();
+  openDialogSafely(greenlistDialog);
 });
 
-closeGreenlistDialogBtn?.addEventListener('click', () => greenlistDialog?.close());
-closeGreenlistDialogBtn2?.addEventListener('click', () => greenlistDialog?.close());
+closeGreenlistDialogBtn?.addEventListener('click', () => closeDialogSafely(greenlistDialog));
+closeGreenlistDialogBtn2?.addEventListener('click', () => closeDialogSafely(greenlistDialog));
 
 greenlistRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7078,7 +7128,7 @@ greenlistRequestForm?.addEventListener('submit', async (e) => {
       });
     } catch (_) {}
 
-    greenlistDialog?.close();
+    closeDialogSafely(greenlistDialog);
     greenlistRequestForm.reset();
     showPortalSuccessModal({
       title: 'Đã gửi yêu cầu cấp Green-list!',
@@ -7100,11 +7150,11 @@ greenlistRequestForm?.addEventListener('submit', async (e) => {
 openPitchingBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   pitchingRequestForm?.reset();
-  pitchingDialog?.showModal();
+  openDialogSafely(pitchingDialog);
 });
 
-closePitchingDialogBtn?.addEventListener('click', () => pitchingDialog?.close());
-closePitchingDialogBtnFooter?.addEventListener('click', () => pitchingDialog?.close());
+closePitchingDialogBtn?.addEventListener('click', () => closeDialogSafely(pitchingDialog));
+closePitchingDialogBtnFooter?.addEventListener('click', () => closeDialogSafely(pitchingDialog));
 
 pitchingRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7164,7 +7214,7 @@ pitchingRequestForm?.addEventListener('submit', async (e) => {
       });
     } catch (_) {}
 
-    pitchingDialog?.close();
+    closeDialogSafely(pitchingDialog);
     pitchingRequestForm.reset();
     showPortalSuccessModal({
       title: 'Gửi bài Pitching A&R thành công!',
@@ -7192,11 +7242,11 @@ openIsrcBtn?.addEventListener('click', () => {
     now.setDate(now.getDate() + 7);
     relDateInp.value = now.toISOString().split('T')[0];
   }
-  isrcDialog?.showModal();
+  openDialogSafely(isrcDialog);
 });
 
-closeIsrcDialogBtn?.addEventListener('click', () => isrcDialog?.close());
-closeIsrcDialogBtnFooter?.addEventListener('click', () => isrcDialog?.close());
+closeIsrcDialogBtn?.addEventListener('click', () => closeDialogSafely(isrcDialog));
+closeIsrcDialogBtnFooter?.addEventListener('click', () => closeDialogSafely(isrcDialog));
 
 isrcRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7258,7 +7308,7 @@ isrcRequestForm?.addEventListener('submit', async (e) => {
       });
     } catch (_) {}
 
-    isrcDialog?.close();
+    closeDialogSafely(isrcDialog);
     isrcRequestForm.reset();
     showPortalSuccessModal({
       title: 'Đã gửi yêu cầu cấp mã ISRC!',
