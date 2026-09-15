@@ -1,10 +1,32 @@
 /* ==============================================================================
    CARD NAV — REACT BITS PORT (VANILLA JS + CSS + GSAP)
    Artist Portal Navigation System (UniPORTAL)
+   Seamless Light / Dark Mode & Glassmorphism Support
    ============================================================================== */
 
 :root {
+  --cn-accent: #0284c7;
+  --cn-bar-bg: rgba(255, 255, 255, 0.88);
+  --cn-text-main: #09090b;
+  --cn-text-muted: #334155;
+  --cn-border: rgba(0, 0, 0, 0.08);
+  --cn-card-bg: rgba(255, 255, 255, 0.94);
+  --cn-btn-bg: #0f172a;
+  --cn-btn-text: #ffffff;
+  --cn-dropdown-bg: rgba(255, 255, 255, 0.98);
+}
+
+[data-theme="dark"],
+.portal-body.dark-mode {
   --cn-accent: #00d2ff;
+  --cn-bar-bg: rgba(13, 14, 20, 0.82);
+  --cn-text-main: #f8fafc;
+  --cn-text-muted: #94a3b8;
+  --cn-border: rgba(255, 255, 255, 0.12);
+  --cn-card-bg: rgba(25, 26, 38, 0.9);
+  --cn-btn-bg: #1e1e2d;
+  --cn-btn-text: #ffffff;
+  --cn-dropdown-bg: rgba(13, 14, 20, 0.98);
 }
 
 .card-nav-wrapper {
@@ -22,14 +44,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 3vw;
-  background: rgba(14, 14, 19, 0.75);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  color: #ffffff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  background: var(--cn-bar-bg) !important;
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  color: var(--cn-text-main) !important;
+  border-bottom: 1px solid var(--cn-border) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   position: relative;
   z-index: 2;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .card-nav-left {
@@ -40,9 +63,9 @@
 
 .card-nav-brand {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: -0.5px;
-  color: #ffffff;
+  color: var(--cn-text-main) !important;
   text-decoration: none;
   line-height: 1;
 }
@@ -51,22 +74,24 @@
   display: block;
   font: 10px 'DM Mono', monospace;
   letter-spacing: 2px;
-  color: var(--cn-accent, #00d2ff);
+  color: var(--cn-accent);
   margin-top: 4px;
+  font-weight: 700;
 }
 
 .card-nav-artist-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 14px;
+  background: var(--glass-bg-subtle, rgba(0, 0, 0, 0.05));
+  border: 1px solid var(--cn-border);
   border-radius: 20px;
   font: 11px 'DM Mono', monospace;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--cn-text-main) !important;
+  font-weight: 700;
 }
 
 .card-nav-right {
@@ -77,30 +102,32 @@
 
 /* Menu Toggle Button */
 .card-nav-btn {
-  background: #111111;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: var(--cn-btn-bg) !important;
+  color: var(--cn-btn-text) !important;
+  border: 1px solid var(--cn-border);
   border-radius: 999px;
   padding: 8px 18px;
   cursor: pointer;
   font-family: 'DM Mono', monospace;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   transition: all 0.25s ease;
   line-height: 1;
   outline: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
 .card-nav-btn:hover {
-  background: #222222;
-  border-color: var(--cn-accent, #00d2ff);
-  color: var(--cn-accent, #00d2ff);
+  background: var(--cn-accent) !important;
+  border-color: var(--cn-accent);
+  color: #ffffff !important;
+  transform: translateY(-1px);
 }
 
 .card-nav-btn:focus-visible {
-  outline: 2px solid var(--cn-accent, #00d2ff);
+  outline: 2px solid var(--cn-accent);
   outline-offset: 2px;
 }
 
@@ -110,9 +137,11 @@
   top: 100%;
   left: 0;
   width: 100%;
-  background: #0a0a0e;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+  background: var(--cn-dropdown-bg) !important;
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-bottom: 1px solid var(--cn-border);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
   overflow: hidden;
   height: 0;
   opacity: 0;
@@ -128,9 +157,9 @@
 .card-nav-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
   z-index: 9975;
@@ -154,9 +183,11 @@
 
 /* Individual Card */
 .card-nav-card {
-  border-radius: 12px;
+  background: var(--cn-card-bg) !important;
+  border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--cn-border) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   transition: transform 0.25s ease, border-color 0.25s ease;
@@ -165,20 +196,19 @@
 
 .card-nav-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--cn-accent) !important;
 }
 
 .card-nav-card-label {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--cn-accent, #00d2ff);
+  color: var(--cn-accent) !important;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  opacity: 0.9;
+  border-bottom: 1px solid var(--cn-border);
 }
 
 .card-nav-card-links {
@@ -191,10 +221,10 @@
 }
 
 .card-nav-link {
-  color: #ffffff;
+  color: var(--cn-text-main) !important;
   text-decoration: none;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.2px;
   padding: 6px 0;
   display: block;
@@ -208,19 +238,19 @@
 }
 
 .card-nav-link:hover {
-  color: var(--cn-accent, #00d2ff);
+  color: var(--cn-accent) !important;
   transform: translateX(4px);
 }
 
 .card-nav-link.is-danger {
-  color: #f87171;
+  color: #ef4444 !important;
   margin-top: 4px;
-  border-top: 1px dashed rgba(248, 113, 113, 0.3);
+  border-top: 1px dashed rgba(239, 68, 68, 0.3);
   padding-top: 10px;
 }
 
 .card-nav-link.is-danger:hover {
-  color: #ef4444;
+  color: #dc2626 !important;
 }
 
 /* Responsive adjustments */

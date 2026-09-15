@@ -5,8 +5,6 @@ import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimi
 import './security.js';
 import { initCardNav } from './card-nav.js';
 import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
-import { initRippleDistortion, RippleDistortion } from './ripple-distortion.js';
-
 // Kiểm tra quyền đăng nhập
 const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
 if (!isArtistAuth) {
@@ -157,29 +155,6 @@ if (artist) {
   // GLASS SURFACE INITIALIZATION (LIQUID GLASS EFFECT)
   // ----------------------------------------------------
   initPortalGlassSurfaces();
-
-  // ----------------------------------------------------
-  // RIPPLE DISTORTION INTERACTIVE LIQUID POINTER EFFECT
-  // ----------------------------------------------------
-  initRippleDistortion(document.body, {
-    brushSize: 150,
-    strength: 0.2,
-    swirl: 1,
-    rings: 4,
-    grayscale: false,
-    spread: 5,
-    fade: 3,
-    spacing: 15,
-    dispersion: 0,
-    glint: 0,
-    tint: '#a855f7',
-    tintAmount: 0.1,
-    highlightColor: '#ffffff',
-    trigger: 'hover',
-    clickStrength: 2,
-    quality: 'low',
-    enabled: true
-  });
 
   // ----------------------------------------------------
   // ARTIST WEBSITE PROFILE PHOTO CHANGE REQUEST FLOW
@@ -458,29 +433,27 @@ function renderPortalAnnouncements(announcements = []) {
     const isImportant = ann.type === 'important';
     const isUpdate = ann.type === 'update';
     
-    let badgeStyle = 'background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;';
+    let badgeClass = 'notif-badge-system';
     let badgeText = '📢 Thông báo';
     
     if (isImportant) {
-      badgeStyle = 'background:#fee2e2;color:#cf1322;border:1px solid #fca5a5;';
+      badgeClass = 'notif-badge-release';
       badgeText = '🔥 Quan trọng';
     } else if (isUpdate) {
-      badgeStyle = 'background:#dcfce7;color:#15803d;border:1px solid #86efac;';
+      badgeClass = 'notif-badge-payout';
       badgeText = '⚡ Cập nhật';
     }
 
     return `
-      <div style="background:#fcfcfc;border:1px solid var(--ink);padding:16px;position:relative;">
+      <div class="portal-announcement-card" style="background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:14px;padding:18px;position:relative;margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
           <div style="display:flex;align-items:center;gap:8px;">
-            <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;${badgeStyle}">
-              ${badgeText}
-            </span>
-            <strong style="font-size:15px;color:#111;">${esc(ann.title)}</strong>
+            <span class="notif-badge-tag ${badgeClass}">${badgeText}</span>
+            <strong style="font-size:15px;color:var(--portal-text-main);font-weight:800;">${esc(ann.title)}</strong>
           </div>
-          <span style="font-size:11px;color:#666;font-family:monospace;">${esc(ann.date || '')}</span>
+          <span style="font-size:11px;color:var(--portal-text-dim);font-family:'DM Mono',monospace;">${esc(ann.date || '')}</span>
         </div>
-        <p style="margin:0;font-size:13px;line-height:1.6;color:#333;white-space:pre-wrap;">${esc(ann.content)}</p>
+        <p style="margin:0;font-size:13.5px;line-height:1.65;color:var(--portal-text-muted);white-space:pre-wrap;font-weight:500;">${esc(ann.content)}</p>
       </div>
     `;
   }).join('');
