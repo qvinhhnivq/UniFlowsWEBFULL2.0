@@ -23,6 +23,13 @@ export const defaultData = {
     }
   ],
   city: 'Hồ Chí Minh · Việt Nam',
+  socials: [
+    { label: 'Instagram', link: 'https://instagram.com/uniflowslabel' },
+    { label: 'YouTube', link: 'https://youtube.com' },
+    { label: 'TikTok', link: 'https://tiktok.com' },
+    { label: 'Facebook', link: 'https://facebook.com' },
+    { label: 'Spotify', link: 'https://open.spotify.com' }
+  ],
   adminAccounts: [
     {
       id: 'admin-super',
@@ -566,6 +573,14 @@ export async function getData() {
         merged.shortlinks = defaultData.shortlinks || [];
       }
 
+      if (Array.isArray(settings?.socials)) {
+        merged.socials = settings.socials;
+      } else if (cached.socials && Array.isArray(cached.socials)) {
+        merged.socials = cached.socials;
+      } else {
+        merged.socials = defaultData.socials;
+      }
+
       merged.city = settings.city || merged.city;
     }
 
@@ -740,6 +755,7 @@ export async function saveData(data) {
         admin_accounts: data.adminAccounts || defaultData.adminAccounts,
         music_submissions: data.musicSubmissions || defaultData.musicSubmissions,
         shortlinks: data.shortlinks || data.shortlinks || [],
+        socials: data.socials || defaultData.socials,
         artist_order: data.artist_order || (data.artists || []).map(a => a.id),
         city: data.city,
         updated_at: new Date().toISOString()

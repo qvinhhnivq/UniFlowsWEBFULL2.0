@@ -9,22 +9,12 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="/assets/app.css">
+  <link rel="stylesheet" href="/assets/card-nav.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
 </head>
 <body class="portal-body">
-  <!-- Mobile Header Bar -->
-  <header class="portal-mobile-bar" id="portal-mobile-header">
-    <button type="button" id="portal-mobile-menu-btn" class="portal-mobile-toggle" aria-label="Mở Menu">
-      <span>☰</span>
-    </button>
-    <a class="brand" href="index">UNIFLOWs<small>UniPORTAL</small></a>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="mobile-theme-toggle-btn" type="button" class="portal-mobile-action-btn" title="Đổi giao diện Sáng/Tối">🌙</button>
-      <button id="mobile-notif-btn" type="button" class="portal-mobile-action-btn" title="Thông báo" style="position:relative;">
-        🔔<span id="mobile-notif-badge" class="portal-mobile-badge" style="display:none;">0</span>
-      </button>
-    </div>
-  </header>
-  <div id="portal-drawer-backdrop" class="portal-drawer-backdrop"></div>
+  <!-- CardNav Navigation Component -->
+  <div id="portal-card-nav"></div>
 
   <main class="portal">
     <!-- Left Navigation Sidebar -->
@@ -35,39 +25,39 @@
       </div>
       <nav id="portal-nav">
         <a href="#overview" data-tab="tab-overview" class="active">
-          <span>📊 Tổng quan</span>
+          <span>Tổng quan</span>
         </a>
         <a href="#releases" data-tab="tab-releases">
-          <span>💿 Phát hành & Nhạc</span>
+          <span>Phát hành & Nhạc</span>
           <span class="portal-nav-badge" id="nav-releases-count">0</span>
         </a>
         <a href="#earnings" data-tab="tab-earnings">
-          <span>💰 Doanh thu & Rút tiền</span>
+          <span>Doanh thu & Rút tiền</span>
         </a>
         <a href="#insights" data-tab="tab-insights">
-          <span>📈 Thống kê & Playlists</span>
+          <span>Thống kê & Playlists</span>
         </a>
         <a href="#calendar" data-tab="tab-calendar">
-          <span>📅 Lịch Phát Hành</span>
+          <span>Lịch Phát Hành</span>
         </a>
         <a href="#lyrics" data-tab="tab-lyrics">
-          <span>🎤 Lời Đồng Bộ (.LRC)</span>
+          <span>Lời Đồng Bộ (.LRC)</span>
         </a>
         <a href="#support" data-tab="tab-support">
-          <span>🛡️ Bản quyền & A&R</span>
+          <span>Bản quyền & A&R</span>
         </a>
         
         <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 10px;">
           <!-- Sidebar Dark Mode Toggle Button -->
           <button id="theme-toggle-btn" type="button" class="portal-theme-pill" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); box-shadow: none;">
-            <span class="theme-mode-icon">🌙</span> <span class="theme-mode-text">Chế độ Tối</span>
+            <span class="theme-mode-text">Chế độ Tối</span>
           </button>
           
           <button id="open-password-dialog-btn" class="button" style="width: 100%; font-size: 0.75rem; padding: 0.7rem; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: none;">
-            <span>🔒</span> ĐỔI MẬT KHẨU
+            ĐỔI MẬT KHẨU
           </button>
           <button id="artist-logout" class="button alt" style="width: 100%; font-size: 0.75rem; padding: 0.7rem; background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: none;">
-            <span>⏻</span> ĐĂNG XUẤT
+            ĐĂNG XUẤT
           </button>
         </div>
       </nav>
@@ -3508,23 +3498,18 @@
   <!-- Mobile Bottom Navigation Bar -->
   <nav class="portal-mobile-bottom-nav" id="portal-mobile-bottom-nav">
     <a href="#overview" data-tab="tab-overview" class="portal-bottom-nav-item active">
-      <span class="portal-bnav-icon">📊</span>
       <span class="portal-bnav-label">Tổng quan</span>
     </a>
     <a href="#releases" data-tab="tab-releases" class="portal-bottom-nav-item">
-      <span class="portal-bnav-icon">💿</span>
       <span class="portal-bnav-label">Phát hành</span>
     </a>
     <button type="button" id="mobile-bottom-create-release-btn" class="portal-bottom-nav-item portal-bnav-highlight" title="Nộp phát hành mới">
-      <span class="portal-bnav-icon">⚡</span>
       <span class="portal-bnav-label">+ Tạo Mới</span>
     </button>
     <a href="#earnings" data-tab="tab-earnings" class="portal-bottom-nav-item">
-      <span class="portal-bnav-icon">💰</span>
       <span class="portal-bnav-label">Doanh thu</span>
     </a>
     <a href="#support" data-tab="tab-support" class="portal-bottom-nav-item">
-      <span class="portal-bnav-icon">🛡️</span>
       <span class="portal-bnav-label">Yêu cầu</span>
     </a>
   </nav>

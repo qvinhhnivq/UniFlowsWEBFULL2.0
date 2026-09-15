@@ -48,6 +48,9 @@ const articlesBox = document.querySelector('#articles-editor');
 const releasesBox = document.querySelector('#releases-reviewer');
 const emailsContainer = document.querySelector('#emails-editor-container');
 const addEmailBtn = document.querySelector('#add-email-row-btn');
+const socialsContainer = document.querySelector('#socials-editor-container');
+const addSocialBtn = document.querySelector('#add-social-row-btn');
+const saveSocialsBtn = document.querySelector('#save-socials-btn');
 const announcementsContainer = document.querySelector('#announcements-editor-container');
 const addAnnouncementBtn = document.querySelector('#add-announcement-btn');
 const notice = document.querySelector('#notice');
@@ -207,6 +210,63 @@ addEmailBtn?.addEventListener('click', () => {
   `;
   row.querySelector('.remove-email-btn').onclick = () => row.remove();
   emailsContainer.appendChild(row);
+});
+
+// ----------------------------------------------------
+// SOCIALS MANAGER (NAVIGATION SOCIALS)
+// ----------------------------------------------------
+function renderSocialsEditor(socialsList = []) {
+  if (!socialsContainer) return;
+  const list = Array.isArray(socialsList) && socialsList.length > 0 ? socialsList : (defaultData.socials || []);
+  socialsContainer.innerHTML = list.map((item) => `
+    <div class="custom-social-row" style="display:flex;gap:10px;align-items:center;">
+      <input class="social-row-label" value="${esc(item.label || '')}" placeholder="Tên nền tảng (VD: Instagram, TikTok, Threads...)" style="width:240px;padding:10px;border:1px solid var(--ink);font-weight:600;">
+      <input class="social-row-link" value="${esc(item.link || '')}" placeholder="https://..." style="flex:1;padding:10px;border:1px solid var(--ink);">
+      <button type="button" class="remove-social-btn button alt" style="padding:10px 14px;" title="Xoá nền tảng">✕</button>
+    </div>
+  `).join('');
+
+  socialsContainer.querySelectorAll('.remove-social-btn').forEach(btn => {
+    btn.onclick = () => btn.closest('.custom-social-row')?.remove();
+  });
+}
+
+addSocialBtn?.addEventListener('click', () => {
+  if (!socialsContainer) return;
+  const row = document.createElement('div');
+  row.className = 'custom-social-row';
+  row.style.cssText = 'display:flex;gap:10px;align-items:center;';
+  row.innerHTML = `
+    <input class="social-row-label" placeholder="Tên nền tảng mới" style="width:240px;padding:10px;border:1px solid var(--ink);font-weight:600;">
+    <input class="social-row-link" placeholder="https://..." style="flex:1;padding:10px;border:1px solid var(--ink);">
+    <button type="button" class="remove-social-btn button alt" style="padding:10px 14px;" title="Xoá nền tảng">✕</button>
+  `;
+  row.querySelector('.remove-social-btn').onclick = () => row.remove();
+  socialsContainer.appendChild(row);
+});
+
+saveSocialsBtn?.addEventListener('click', async () => {
+  if (!socialsContainer) return;
+  const newSocials = [];
+  socialsContainer.querySelectorAll('.custom-social-row').forEach(row => {
+    const label = row.querySelector('.social-row-label')?.value.trim();
+    const link = row.querySelector('.social-row-link')?.value.trim();
+    if (label && link) {
+      newSocials.push({ label, link });
+    }
+  });
+  data.socials = newSocials;
+  try {
+    saveSocialsBtn.disabled = true;
+    saveSocialsBtn.textContent = 'Đang lưu...';
+    await saveData(data);
+    showNotice('Đã lưu danh sách mạng xã hội thành công.');
+  } catch (err) {
+    showNotice('Lỗi khi lưu mạng xã hội: ' + err.message, true);
+  } finally {
+    saveSocialsBtn.disabled = false;
+    saveSocialsBtn.textContent = 'Lưu Mạng Xã Hội';
+  }
 });
 
 // ----------------------------------------------------
@@ -3082,6 +3142,7 @@ function render() {
     if (form.elements[k]) form.elements[k].value = data[k] || '';
   });
   renderEmailsEditor(data.emails || defaultData.emails);
+  renderSocialsEditor(data.socials || defaultData.socials);
   renderAnnouncementsEditor(data.announcements || defaultData.announcements);
   populateArtistFilters();
   renderArtistSelector();
@@ -3664,6 +3725,15 @@ async function executeFullSiteSave() {
       if (label && email) customEmails.push({ label, email });
     });
     data.emails = customEmails;
+
+    // 2.1 Read Socials
+    const customSocials = [];
+    document.querySelectorAll('.custom-social-row').forEach(row => {
+      const label = row.querySelector('.social-row-label')?.value.trim();
+      const link = row.querySelector('.social-row-link')?.value.trim();
+      if (label && link) customSocials.push({ label, link });
+    });
+    data.socials = customSocials;
 
     // 3. Read Announcements
     const customAnnouncements = [];

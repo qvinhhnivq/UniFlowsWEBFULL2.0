@@ -114,13 +114,15 @@ const menuItems = [
   { label: 'Artist login ↗', enLabel: 'Artist login ↗', ariaLabel: 'Artist login portal', link: navLinks.artistLogin, isSpecial: true, i18nKey: 'nav_artist_login' }
 ];
 
-const socialItems = [
-  { label: 'Instagram', link: 'https://instagram.com/uniflowslabel' },
-  { label: 'YouTube', link: 'https://youtube.com' },
-  { label: 'TikTok', link: 'https://tiktok.com' },
-  { label: 'Facebook', link: 'https://facebook.com' },
-  { label: 'Spotify', link: 'https://open.spotify.com' }
-];
+const socialItems = (Array.isArray(data.socials) && data.socials.length > 0)
+  ? data.socials
+  : [
+      { label: 'Instagram', link: 'https://instagram.com/uniflowslabel' },
+      { label: 'YouTube', link: 'https://youtube.com' },
+      { label: 'TikTok', link: 'https://tiktok.com' },
+      { label: 'Facebook', link: 'https://facebook.com' },
+      { label: 'Spotify', link: 'https://open.spotify.com' }
+    ];
 
 const menuMount = $('#staggered-menu-mount');
 if (menuMount) {
@@ -705,6 +707,9 @@ function renderAll() {
   applyTranslations();
   if (staggeredMenuInstance) {
     staggeredMenuInstance.updateLabels(getCurrentLang() === 'en');
+    if (Array.isArray(data.socials)) {
+      staggeredMenuInstance.updateSocials(data.socials);
+    }
   }
 }
 

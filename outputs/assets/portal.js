@@ -3,6 +3,7 @@ import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } fr
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimizer.js';
 import './security.js';
+import { initCardNav } from './card-nav.js';
 
 // Kiểm tra quyền đăng nhập
 const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
@@ -94,6 +95,61 @@ if (artist) {
   if (sidebarNameEl) sidebarNameEl.textContent = artist.name;
   const sidebarAvatarEl = document.querySelector('#sidebar-artist-avatar');
   if (sidebarAvatarEl && artist.image) sidebarAvatarEl.src = artist.image;
+
+  // ----------------------------------------------------
+  // CARD NAV INITIALIZATION (PURE TYPOGRAPHY, NO EMOJIS)
+  // ----------------------------------------------------
+  const cardNavMount = document.querySelector('#portal-card-nav');
+  if (cardNavMount) {
+    const portalNavItems = [
+      {
+        label: "Tổng quan",
+        title: "TỔNG QUAN & PHÂN TÍCH",
+        bgColor: "#1B1722",
+        textColor: "#ffffff",
+        links: [
+          { label: "Tổng quan Dashboard", hash: "#overview", tab: "tab-overview", ariaLabel: "Tổng quan Dashboard" },
+          { label: "Thống kê Streams & Playlists", hash: "#insights", tab: "tab-insights", ariaLabel: "Thống kê Streams và Playlists" }
+        ]
+      },
+      {
+        label: "Phát hành",
+        title: "PHÁT HÀNH & BẢN QUYỀN",
+        bgColor: "#241e30",
+        textColor: "#ffffff",
+        links: [
+          { label: "Danh mục Phát hành & Bài hát", hash: "#releases", tab: "tab-releases", ariaLabel: "Danh mục phát hành" },
+          { label: "Lịch phát hành dự kiến", hash: "#calendar", tab: "tab-calendar", ariaLabel: "Lịch phát hành" },
+          { label: "Soạn lời bài hát (.LRC)", hash: "#lyrics", tab: "tab-lyrics", ariaLabel: "Soạn lời bài hát" },
+          { label: "Bảo vệ Bản quyền & A&R", hash: "#support", tab: "tab-support", ariaLabel: "Hỗ trợ bản quyền" }
+        ]
+      },
+      {
+        label: "Tài chính",
+        title: "TÀI CHÍNH & TÀI KHOẢN",
+        bgColor: "#2F293A",
+        textColor: "#ffffff",
+        links: [
+          { label: "Doanh thu & Rút tiền", hash: "#earnings", tab: "tab-earnings", ariaLabel: "Doanh thu và rút tiền" },
+          { label: "Đổi mật khẩu tài khoản", action: "password", ariaLabel: "Đổi mật khẩu" },
+          { label: "Chuyển giao diện Sáng / Tối", action: "theme", ariaLabel: "Chuyển giao diện" },
+          { label: "Đăng xuất Nghệ sĩ", action: "logout", ariaLabel: "Đăng xuất", isDanger: true }
+        ]
+      }
+    ];
+
+    initCardNav(cardNavMount, {
+      items: portalNavItems,
+      baseColor: '#ffffff',
+      menuColor: '#000000',
+      buttonBgColor: '#111111',
+      buttonTextColor: '#ffffff',
+      ease: 'power3.out',
+      theme: 'dark',
+      artistName: artist.name || 'Nghệ sĩ',
+      artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist'
+    });
+  }
 
   // ----------------------------------------------------
   // ARTIST WEBSITE PROFILE PHOTO CHANGE REQUEST FLOW

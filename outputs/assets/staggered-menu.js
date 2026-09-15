@@ -443,6 +443,36 @@ export async function initStaggeredMenu(mountTarget, options = {}) {
         }
       });
     },
+    updateSocials(newSocials) {
+      if (!Array.isArray(newSocials)) return;
+      opts.socialItems = newSocials;
+      let socials = panelInner.querySelector('.sm-socials');
+      if (!socials && opts.displaySocials && newSocials.length > 0) {
+        socials = el('div', { class: 'sm-socials', 'aria-label': 'Social links' });
+        socials.appendChild(el('h3', { class: 'sm-socials-title' }, ['Connect / Socials']));
+        const list = el('ul', { class: 'sm-socials-list', role: 'list' });
+        socials.appendChild(list);
+        panelInner.appendChild(socials);
+      }
+      if (socials) {
+        const list = socials.querySelector('.sm-socials-list');
+        if (list) {
+          list.innerHTML = '';
+          newSocials.forEach(s => {
+            if (!s || !s.label) return;
+            const li = el('li', { class: 'sm-socials-item' });
+            const a = el('a', {
+              href: s.link || '#',
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              class: 'sm-socials-link',
+            }, [s.label]);
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+        }
+      }
+    },
     destroy() {
       toggleBtn.removeEventListener('click', toggleMenu);
       backdrop.removeEventListener('click', doClose);
