@@ -556,6 +556,18 @@ nextStepBtn?.addEventListener('click', () => {
       document.querySelector('#wizard-title-input')?.focus();
       return;
     }
+    const genreVal = document.querySelector('#wizard-genre-select')?.value;
+    if (!genreVal) {
+      alert('Vui lòng chọn Thể loại âm nhạc chính (Primary Genre).');
+      document.querySelector('#wizard-genre-select')?.focus();
+      return;
+    }
+    if (wizardTracks.length === 0) {
+      addTrackItem({ title: titleVal });
+    } else if (wizardTracks.length === 1 && (!wizardTracks[0].title || wizardTracks[0].title === 'Track 01')) {
+      wizardTracks[0].title = titleVal;
+      renderWizardTracklist();
+    }
   }
 
   // Step 2 Validation
@@ -566,37 +578,59 @@ nextStepBtn?.addEventListener('click', () => {
       return;
     }
 
-    if (wizardTrackMode === 'multi') {
-      if (wizardTracks.length === 0) {
-        alert('Vui lòng thêm ít nhất 1 bài hát vào Album / EP bằng nút "+ Thêm Bài Hát" hoặc "Tải Hàng Loạt Audio".');
+    if (wizardTracks.length === 0) {
+      alert('Vui lòng thêm ít nhất 1 bài hát và tải file Master Audio.');
+      return;
+    }
+
+    for (let i = 0; i < wizardTracks.length; i++) {
+      const tr = wizardTracks[i];
+      if (!tr.title || !tr.title.trim()) {
+        alert(`Vui lòng nhập Tên bài hát cho Track #${i + 1}.`);
         return;
       }
-      for (let i = 0; i < wizardTracks.length; i++) {
-        if (!wizardTracks[i].title) {
-          alert(`Vui lòng nhập Tên bài hát cho Track #${i + 1}.`);
-          return;
-        }
-        if (!wizardTracks[i].audioFile && !wizardTracks[i].audioUrl) {
-          alert(`Vui lòng tải file Audio cho Track #${i + 1}: "${wizardTracks[i].title}".`);
-          return;
-        }
-      }
-    } else {
-      const hasAudio = audioFileInput?.files[0] || document.querySelector('#audio-external-url')?.value.trim();
-      if (!hasAudio) {
-        alert('Vui lòng tải lên File Master Audio hoặc dán Link Google Drive/Dropbox chứa Audio.');
+      if (!tr.audioFile && !tr.audioUrl) {
+        alert(`Vui lòng chọn file Master Audio hoặc dán Link Audio cho Track #${i + 1}: "${tr.title}".`);
         return;
       }
+    }
+
+    // Auto-derive global songwriters and producers from track credits if empty
+    const globalSongwriters = document.querySelector('#wizard-global-songwriters');
+    const globalProducers = document.querySelector('#wizard-global-producers');
+
+    const derivedProducers = [...new Set(wizardTracks.flatMap(t => 
+      (t.credits || []).filter(c => c.role && (c.role.includes('Producer') || c.role.includes('Beatmaker'))).map(c => c.name.trim()).filter(Boolean)
+    ))];
+    const derivedSongwriters = [...new Set(wizardTracks.flatMap(t => 
+      (t.credits || []).filter(c => c.role && (c.role.includes('Songwriter') || c.role.includes('Composer') || c.role.includes('Lyricist'))).map(c => c.name.trim()).filter(Boolean)
+    ))];
+
+    if (globalSongwriters && !globalSongwriters.value.trim() && derivedSongwriters.length > 0) {
+      globalSongwriters.value = derivedSongwriters.join(', ');
+    }
+    if (globalProducers && !globalProducers.value.trim() && derivedProducers.length > 0) {
+      globalProducers.value = derivedProducers.join(', ');
     }
   }
 
   // Step 3 Validation
   if (wizardCurrentStep === 3) {
-    const songwriters = document.querySelector('[name="songwriters"]')?.value.trim();
-    const producers = document.querySelector('[name="producers"]')?.value.trim();
+    const songwriters = document.querySelector('#wizard-global-songwriters')?.value.trim() || document.querySelector('[name="songwriters"]')?.value.trim();
+    const producers = document.querySelector('#wizard-global-producers')?.value.trim() || document.querySelector('[name="producers"]')?.value.trim();
     if (!songwriters || !producers) {
       alert('Vui lòng điền đầy đủ thông tin Nhạc sĩ sáng tác và Nhà sản xuất âm nhạc.');
       return;
+    }
+
+    const upcChoice = document.querySelector('input[name="upc_choice"]:checked')?.value;
+    if (upcChoice === 'custom') {
+      const customUpc = document.querySelector('#wizard-upc-input')?.value.trim();
+      if (!customUpc) {
+        alert('Vui lòng nhập mã UPC cũ hoặc chọn "UniFLOWs Label cấp mã mới tự động".');
+        document.querySelector('#wizard-upc-input')?.focus();
+        return;
+      }
     }
   }
 
@@ -634,13 +668,22 @@ function updateLiveMockup() {
   if (mockDateEl) mockDateEl.textContent = date || 'Chưa chọn ngày';
 }
 
+function prepareReleaseWizard() {
+  if (primaryArtistInput) primaryArtistInput.value = artist.name;
+  if (wizardTracks.length === 0) {
+    addTrackItem({ title: document.querySelector('#wizard-title-input')?.value.trim() || 'Track 01' });
+  }
+  initExplicitControls();
+  initUpcControls();
+  updateWizardStep(1);
+}
+
 openReleaseModalBtn?.addEventListener('click', () => {
   if (artist.roleType === 'collab') {
     alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
     return;
   }
-  if (primaryArtistInput) primaryArtistInput.value = artist.name;
-  updateWizardStep(1);
+  prepareReleaseWizard();
   releaseDialog?.showModal();
 });
 
@@ -649,8 +692,7 @@ quickOpenReleaseModalBtn?.addEventListener('click', () => {
     alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
     return;
   }
-  if (primaryArtistInput) primaryArtistInput.value = artist.name;
-  updateWizardStep(1);
+  prepareReleaseWizard();
   releaseDialog?.showModal();
 });
 
@@ -852,39 +894,68 @@ function initPortalMobileNav() {
 initPortalMobileNav();
 
 // ====================================================
-// TRACKLIST STUDIO: MULTI-TRACK FOR EP & ALBUM
+// TRACKLIST STUDIO: SPACIOUS TRACK MANAGEMENT & PRODUCTION CREDITS
 // ====================================================
+export const INDUSTRY_PRODUCTION_ROLES = [
+  'Music Producer (Nhà sản xuất âm nhạc)',
+  'Songwriter / Composer (Nhạc sĩ sáng tác giai điệu)',
+  'Lyricist (Tác giả viết lời bài hát)',
+  'Beatmaker / Beat Arranger (Người phối Beat)',
+  'Arranger / Orchestrator (Hòa âm phối khí)',
+  'Mixing Engineer (Kỹ sư hòa âm / Mix âm thanh)',
+  'Mastering Engineer (Kỹ sư hoàn chỉnh Master)',
+  'Dolby Atmos Engineer (Kỹ sư phối âm Dolby Atmos)',
+  'Main Vocalist (Giọng hát chính)',
+  'Featured Vocalist (Ca sĩ hát kết hợp)',
+  'Backing Vocalist (Vocal bè / Hát đệm)',
+  'Recording Engineer (Kỹ sư thu âm phòng thu)',
+  'Instrumentalist / Musician (Nhạc công nhạc cụ)',
+  'Sound Designer / FX (Thiết kế hiệu ứng âm thanh)'
+];
+
 let wizardTrackMode = 'single'; // 'single' | 'multi'
-let wizardTracks = []; // [{ id, trackNum, title, featuredArtist, audioFile, audioUrl, explicit, isrc, duration }]
+let wizardTracks = [];
+
+function createDefaultCredits() {
+  return [
+    { role: 'Music Producer (Nhà sản xuất âm nhạc)', name: '' },
+    { role: 'Songwriter / Composer (Nhạc sĩ sáng tác giai điệu)', name: '' }
+  ];
+}
 
 function setTrackMode(mode) {
   wizardTrackMode = mode;
   const singleBtn = document.querySelector('#track-mode-single-btn');
   const multiBtn = document.querySelector('#track-mode-multi-btn');
-  const singleUploader = document.querySelector('#single-audio-uploader');
-  const multiStudio = document.querySelector('#multi-tracklist-studio');
+  const addBtn = document.querySelector('#btn-add-tracklist-item');
 
   if (mode === 'multi') {
     singleBtn?.classList.remove('active');
-    if (singleBtn) { singleBtn.style.background = 'transparent'; singleBtn.style.color = '#64748b'; }
+    if (singleBtn) { singleBtn.style.background = 'transparent'; singleBtn.style.color = '#64748b'; singleBtn.style.boxShadow = 'none'; }
     multiBtn?.classList.add('active');
-    if (multiBtn) { multiBtn.style.background = '#fff'; multiBtn.style.color = '#0f172a'; }
-    if (singleUploader) singleUploader.style.display = 'none';
-    if (multiStudio) multiStudio.style.display = 'block';
+    if (multiBtn) { multiBtn.style.background = '#fff'; multiBtn.style.color = '#0f172a'; multiBtn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.06)'; }
+    if (addBtn) addBtn.style.display = 'inline-flex';
 
     if (wizardTracks.length === 0) {
-      addTrackItem({ title: 'Bài hát 01' });
-      addTrackItem({ title: 'Bài hát 02' });
+      addTrackItem({ title: document.querySelector('#wizard-title-input')?.value.trim() || 'Track 01' });
+      addTrackItem({ title: 'Track 02' });
+    } else if (wizardTracks.length === 1) {
+      addTrackItem({ title: 'Track 02' });
     }
-    renderWizardTracklist();
   } else {
     singleBtn?.classList.add('active');
-    if (singleBtn) { singleBtn.style.background = '#fff'; singleBtn.style.color = '#0f172a'; }
+    if (singleBtn) { singleBtn.style.background = '#fff'; singleBtn.style.color = '#0f172a'; singleBtn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.06)'; }
     multiBtn?.classList.remove('active');
-    if (multiBtn) { multiBtn.style.background = 'transparent'; multiBtn.style.color = '#64748b'; }
-    if (singleUploader) singleUploader.style.display = 'block';
-    if (multiStudio) multiStudio.style.display = 'none';
+    if (multiBtn) { multiBtn.style.background = 'transparent'; multiBtn.style.color = '#64748b'; multiBtn.style.boxShadow = 'none'; }
+    if (addBtn) addBtn.style.display = 'none';
+
+    if (wizardTracks.length === 0) {
+      addTrackItem({ title: document.querySelector('#wizard-title-input')?.value.trim() || 'Track 01' });
+    } else if (wizardTracks.length > 1) {
+      wizardTracks.length = 1;
+    }
   }
+  renderWizardTracklist();
 }
 
 document.querySelector('#track-mode-single-btn')?.addEventListener('click', () => setTrackMode('single'));
@@ -895,23 +966,30 @@ document.querySelector('#wizard-type-select')?.addEventListener('change', (e) =>
   if (val === 'EP' || val === 'Album' || val === 'Remix') {
     setTrackMode('multi');
   } else if (val === 'Single') {
-    if (wizardTracks.length <= 1) {
-      setTrackMode('single');
-    }
+    setTrackMode('single');
   }
 });
 
 function addTrackItem(data = {}) {
+  const defaultTitle = data.title || (wizardTracks.length === 0 ? (document.querySelector('#wizard-title-input')?.value.trim() || 'Track 01') : `Track ${String(wizardTracks.length + 1).padStart(2, '0')}`);
   const item = {
     id: 'tr-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
     trackNum: wizardTracks.length + 1,
-    title: data.title || '',
+    title: defaultTitle,
     featuredArtist: data.featuredArtist || '',
     audioFile: data.audioFile || null,
     audioUrl: data.audioUrl || '',
-    explicit: data.explicit || false,
+    dolbyAtmosFile: data.dolbyAtmosFile || null,
+    dolbyAtmosUrl: data.dolbyAtmosUrl || '',
+    lyricsText: data.lyricsText || '',
+    lyricsLrc: data.lyricsLrc || '',
+    showLrc: Boolean(data.lyricsLrc),
+    explicit: data.explicit === true,
     isrc: data.isrc || '',
-    duration: data.duration || ''
+    duration: data.duration || '',
+    credits: (Array.isArray(data.credits) && data.credits.length > 0)
+      ? data.credits
+      : createDefaultCredits()
   };
   wizardTracks.push(item);
   renderWizardTracklist();
@@ -919,17 +997,17 @@ function addTrackItem(data = {}) {
 }
 
 function renderWizardTracklist() {
-  const container = document.querySelector('#tracklist-items-container');
+  const container = document.querySelector('#tracklist-studio-container') || document.querySelector('#tracklist-items-container');
   const badge = document.querySelector('#tracklist-summary-badge');
   if (badge) {
-    badge.textContent = `${wizardTracks.length} bài hát trong album`;
+    badge.textContent = `${wizardTracks.length} bài hát trong danh sách phát hành`;
   }
   if (!container) return;
 
   if (wizardTracks.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center;padding:20px;background:#fff;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;font-size:12px;">
-        Chưa có bài hát nào trong album. Bấm <b>"+ Thêm bài hát"</b> hoặc <b>"Tải hàng loạt Audio"</b> để thêm!
+      <div style="text-align:center;padding:24px;background:#fff;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;font-size:12px;">
+        Chưa có bài hát nào trong danh sách. Bấm <b>"+ Thêm bài hát"</b> hoặc <b>"Tải hàng loạt Audio"</b> để bắt đầu!
       </div>
     `;
     return;
@@ -938,74 +1016,167 @@ function renderWizardTracklist() {
   container.innerHTML = wizardTracks.map((tr, idx) => {
     const audioStateText = tr.audioFile 
       ? `✓ ${tr.audioFile.name} (${(tr.audioFile.size / (1024 * 1024)).toFixed(1)} MB)` 
-      : (tr.audioUrl ? `✓ Link: ${tr.audioUrl.substring(0, 26)}...` : 'Chưa chọn file Audio');
+      : (tr.audioUrl ? `✓ URL: ${tr.audioUrl.substring(0, 28)}...` : 'Chưa chọn file Audio');
     const audioStateColor = (tr.audioFile || tr.audioUrl) ? '#16a34a' : '#dc2626';
 
+    const atmosStateText = tr.dolbyAtmosFile
+      ? `✓ ${tr.dolbyAtmosFile.name} (${(tr.dolbyAtmosFile.size / (1024 * 1024)).toFixed(1)} MB)`
+      : (tr.dolbyAtmosUrl ? `✓ URL: ${tr.dolbyAtmosUrl.substring(0, 28)}...` : 'Chưa có file Dolby Atmos (Tùy chọn)');
+    const atmosStateColor = (tr.dolbyAtmosFile || tr.dolbyAtmosUrl) ? '#0284c7' : '#64748b';
+
     return `
-      <div class="tracklist-card-row" data-track-idx="${idx}" style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:12px;display:grid;gap:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:240px;">
-            <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:bold;background:#0f172a;color:#fff;padding:3px 8px;border-radius:4px;white-space:nowrap;">
-              #${String(idx + 1).padStart(2, '0')}
+      <div class="tracklist-studio-card" data-track-idx="${idx}" style="background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px;padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:grid;gap:14px;">
+        
+        <!-- Header of Track Card -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:260px;">
+            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:800;background:#0f172a;color:#fff;padding:4px 10px;border-radius:6px;white-space:nowrap;">
+              TRACK #${String(idx + 1).padStart(2, '0')}
             </span>
-            <input type="text" class="track-input-title" placeholder="Tên bài hát *" value="${esc(tr.title)}" style="font-size:13px;font-weight:700;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;flex:1;min-width:140px;" required>
-            <input type="text" class="track-input-feat" placeholder="Nghệ sĩ feat (nếu có)" value="${esc(tr.featuredArtist)}" style="font-size:12px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;flex:1;min-width:120px;">
+            <input type="text" class="track-input-title" placeholder="Tên bài hát *" value="${esc(tr.title)}" style="font-size:14px;font-weight:700;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;flex:1;min-width:160px;background:#fff;" required>
+            <input type="text" class="track-input-feat" placeholder="Nghệ sĩ feat (nếu có)" value="${esc(tr.featuredArtist)}" style="font-size:12px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;flex:1;min-width:130px;background:#fff;">
           </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <button type="button" class="btn-track-up button alt" style="padding:4px 8px;font-size:10px;margin:0;" ${idx === 0 ? 'disabled' : ''} title="Đưa lên">▲</button>
-            <button type="button" class="btn-track-down button alt" style="padding:4px 8px;font-size:10px;margin:0;" ${idx === wizardTracks.length - 1 ? 'disabled' : ''} title="Đưa xuống">▼</button>
-            <button type="button" class="btn-track-remove button alt" style="padding:4px 8px;font-size:10px;margin:0;color:#dc2626;border-color:#fca5a5;" title="Xoá track này">✕</button>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" class="btn-track-up button alt" style="padding:5px 10px;font-size:11px;margin:0;" ${idx === 0 ? 'disabled' : ''} title="Đưa lên">▲</button>
+            <button type="button" class="btn-track-down button alt" style="padding:5px 10px;font-size:11px;margin:0;" ${idx === wizardTracks.length - 1 ? 'disabled' : ''} title="Đưa xuống">▼</button>
+            ${wizardTracks.length > 1 ? `
+              <button type="button" class="btn-track-remove button alt remove" style="padding:5px 10px;font-size:11px;margin:0;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xoá bài này khỏi danh sách">✕ Xóa bài</button>
+            ` : ''}
           </div>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px dashed #e2e8f0;padding-top:8px;font-size:11px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <label class="button alt" style="padding:4px 10px;font-size:10px;margin:0;cursor:pointer;background:#f8fafc;border:1px solid #cbd5e1;">
-              🎵 Chọn Audio
-              <input type="file" class="track-audio-input" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
-            </label>
-            <span class="track-audio-status" style="font-size:11px;color:${audioStateColor};font-family:'DM Mono',monospace;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-              ${audioStateText}
-            </span>
+        <!-- Audio Files Grid: Master Audio + Optional Dolby Atmos -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;background:#f8fafc;padding:14px;border-radius:8px;border:1px solid #e2e8f0;">
+          <!-- 1. Master Audio -->
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label style="font-size:11.5px;font-weight:700;color:#0f172a;text-transform:uppercase;">
+                🎵 File Master Audio (Stereo) *
+              </label>
+              <span style="font-size:10px;color:#16a34a;font-family:'DM Mono',monospace;font-weight:700;">WAV / FLAC / MP3</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label class="button" style="padding:6px 12px;font-size:11px;margin:0;cursor:pointer;background:#0f172a;color:#fff;border-color:#0f172a;font-weight:700;white-space:nowrap;">
+                📁 Chọn Master File
+                <input type="file" class="track-audio-input" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
+              </label>
+              <span class="track-audio-status" style="font-size:11px;color:${audioStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+                ${audioStateText}
+              </span>
+            </div>
+            <input type="url" class="track-input-audio-url" placeholder="Hoặc dán Link Google Drive/Dropbox Master (https://...)" value="${esc(tr.audioUrl || '')}" style="font-size:11px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;margin-top:2px;">
           </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <select class="track-select-explicit" style="font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;">
-              <option value="false" ${!tr.explicit ? 'selected' : ''}>Clean</option>
-              <option value="true" ${tr.explicit ? 'selected' : ''}>[E] Explicit</option>
+
+          <!-- 2. Dolby Atmos Spatial Audio (Optional) -->
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label style="font-size:11.5px;font-weight:700;color:#0284c7;text-transform:uppercase;">
+                🎧 Dolby Atmos Spatial Audio (Tùy chọn)
+              </label>
+              <span style="font-size:10px;color:#0284c7;background:#e0f2fe;padding:2px 6px;border-radius:4px;font-weight:700;">ADM BWF / WAV</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label class="button alt" style="padding:6px 12px;font-size:11px;margin:0;cursor:pointer;background:#fff;color:#0284c7;border-color:#7dd3fc;font-weight:700;white-space:nowrap;">
+                🎧 Chọn File Atmos
+                <input type="file" class="track-atmos-input" accept="audio/wav,audio/x-wav,.wav" style="display:none;">
+              </label>
+              <span class="track-atmos-status" style="font-size:11px;color:${atmosStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+                ${atmosStateText}
+              </span>
+            </div>
+            <input type="url" class="track-input-atmos-url" placeholder="Hoặc dán Link Drive/Dropbox Dolby Atmos Master (https://...)" value="${esc(tr.dolbyAtmosUrl || '')}" style="font-size:11px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;margin-top:2px;">
+          </div>
+        </div>
+
+        <!-- Lyrics Section -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+            <label style="font-size:11.5px;font-weight:800;color:#334155;text-transform:uppercase;margin:0;">
+              📝 Lời Bài Hát (Lyrics Studio)
+            </label>
+            <button type="button" class="btn-toggle-lrc button alt" style="padding:3px 10px;font-size:10.5px;color:#2563eb;border-color:#93c5fd;cursor:pointer;">
+              ${tr.showLrc ? 'Ẩn Lời Đồng Bộ LRC' : '+ Thêm Lời Đồng Bộ LRC (Tùy chọn)'}
+            </button>
+          </div>
+          <textarea class="track-textarea-lyrics" rows="3" placeholder="Dán toàn bộ lời bài hát (Plain text) tại đây để hiển thị trên Apple Music, Spotify, Zing MP3..." style="font-size:12px;padding:8px 10px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;font-family:inherit;">${esc(tr.lyricsText || '')}</textarea>
+
+          <div class="track-lrc-wrapper" style="display:${tr.showLrc ? 'block' : 'none'};margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">
+            <label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:4px;">
+              Định dạng lời đồng bộ thời gian (.LRC):
+            </label>
+            <textarea class="track-textarea-lrc" rows="3" placeholder="[00:12.30] Dòng lời bài hát thứ nhất...&#10;[00:15.80] Dòng lời bài hát thứ hai..." style="font-size:11.5px;font-family:'DM Mono',monospace;padding:8px 10px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;">${esc(tr.lyricsLrc || '')}</textarea>
+          </div>
+        </div>
+
+        <!-- Music Production Credits & Roles Section -->
+        <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:12px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <label style="font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;display:block;margin:0;">
+                👥 Đội Ngũ Sản Xuất &amp; Tác Quyền Bài Hát (Production Credits)
+              </label>
+              <span style="font-size:11px;color:#64748b;">Chọn vai trò trong danh sách chuẩn ngành và nhập tên tương ứng:</span>
+            </div>
+            <button type="button" class="btn-add-track-credit button alt" style="padding:4px 10px;font-size:11px;font-weight:700;background:#fff;border-color:#0284c7;color:#0284c7;cursor:pointer;">
+              + Thêm Vai Trò / Người Tham Gia
+            </button>
+          </div>
+
+          <!-- Credit rows -->
+          <div class="track-credits-container" style="display:grid;gap:6px;">
+            ${(tr.credits || []).map((cr, cIdx) => `
+              <div class="track-credit-row" data-credit-idx="${cIdx}" style="display:flex;gap:8px;align-items:center;background:#fff;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;">
+                <select class="credit-input-role" style="font-size:11.5px;padding:5px 8px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;flex:1;max-width:260px;font-weight:600;">
+                  ${INDUSTRY_PRODUCTION_ROLES.map(role => `
+                    <option value="${esc(role)}" ${cr.role === role ? 'selected' : ''}>${esc(role)}</option>
+                  `).join('')}
+                </select>
+                <input type="text" class="credit-input-name" placeholder="Họ và tên / Nghệ danh..." value="${esc(cr.name || '')}" style="font-size:12px;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;flex:1;" required>
+                <button type="button" class="btn-del-credit button alt remove" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xóa vai trò này">✕</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Footer Track Settings: Explicit & ISRC -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:4px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:11px;font-weight:700;color:#334155;">Nội dung bài hát này:</label>
+            <select class="track-select-explicit" style="font-size:11.5px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;font-weight:600;">
+              <option value="false" ${!tr.explicit ? 'selected' : ''}>🟢 Clean (Không nhạy cảm)</option>
+              <option value="true" ${tr.explicit ? 'selected' : ''}>🔞 [E] Explicit (Có từ ngữ nhạy cảm)</option>
             </select>
-            <input type="text" class="track-input-isrc" placeholder="Mã ISRC" value="${esc(tr.isrc)}" style="font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;width:110px;font-family:'DM Mono',monospace;">
+          </div>
+
+          <div style="display:flex;align-items:center;gap:6px;">
+            <label style="font-size:11px;font-weight:700;color:#334155;">Mã ISRC (nếu có):</label>
+            <input type="text" class="track-input-isrc" placeholder="VN-UF0-26-XXXXX" value="${esc(tr.isrc)}" style="font-size:11.5px;font-family:'DM Mono',monospace;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;width:150px;background:#fff;">
           </div>
         </div>
       </div>
     `;
   }).join('');
 
-  container.querySelectorAll('.tracklist-card-row').forEach(row => {
-    const idx = parseInt(row.dataset.trackIdx, 10);
+  container.querySelectorAll('.tracklist-studio-card').forEach(card => {
+    const idx = parseInt(card.dataset.trackIdx, 10);
     const item = wizardTracks[idx];
     if (!item) return;
 
-    row.querySelector('.track-input-title')?.addEventListener('input', (e) => {
+    // Title & Feat
+    card.querySelector('.track-input-title')?.addEventListener('input', (e) => {
       item.title = e.target.value;
     });
 
-    row.querySelector('.track-input-feat')?.addEventListener('input', (e) => {
+    card.querySelector('.track-input-feat')?.addEventListener('input', (e) => {
       item.featuredArtist = e.target.value;
     });
 
-    row.querySelector('.track-select-explicit')?.addEventListener('change', (e) => {
-      item.explicit = e.target.value === 'true';
-    });
-
-    row.querySelector('.track-input-isrc')?.addEventListener('input', (e) => {
-      item.isrc = e.target.value.trim();
-    });
-
-    row.querySelector('.track-audio-input')?.addEventListener('change', (e) => {
+    // Master Audio
+    card.querySelector('.track-audio-input')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         item.audioFile = file;
-        const statusEl = row.querySelector('.track-audio-status');
+        const statusEl = card.querySelector('.track-audio-status');
         if (statusEl) {
           statusEl.textContent = `✓ ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
           statusEl.style.color = '#16a34a';
@@ -1013,7 +1184,88 @@ function renderWizardTracklist() {
       }
     });
 
-    row.querySelector('.btn-track-up')?.addEventListener('click', () => {
+    card.querySelector('.track-input-audio-url')?.addEventListener('input', (e) => {
+      item.audioUrl = e.target.value.trim();
+      const statusEl = card.querySelector('.track-audio-status');
+      if (statusEl && !item.audioFile) {
+        statusEl.textContent = item.audioUrl ? `✓ URL: ${item.audioUrl.substring(0, 28)}...` : 'Chưa chọn file Audio';
+        statusEl.style.color = item.audioUrl ? '#16a34a' : '#dc2626';
+      }
+    });
+
+    // Dolby Atmos Audio
+    card.querySelector('.track-atmos-input')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        item.dolbyAtmosFile = file;
+        const statusEl = card.querySelector('.track-atmos-status');
+        if (statusEl) {
+          statusEl.textContent = `✓ ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+          statusEl.style.color = '#0284c7';
+        }
+      }
+    });
+
+    card.querySelector('.track-input-atmos-url')?.addEventListener('input', (e) => {
+      item.dolbyAtmosUrl = e.target.value.trim();
+      const statusEl = card.querySelector('.track-atmos-status');
+      if (statusEl && !item.dolbyAtmosFile) {
+        statusEl.textContent = item.dolbyAtmosUrl ? `✓ URL: ${item.dolbyAtmosUrl.substring(0, 28)}...` : 'Chưa có file Dolby Atmos (Tùy chọn)';
+        statusEl.style.color = item.dolbyAtmosUrl ? '#0284c7' : '#64748b';
+      }
+    });
+
+    // Lyrics
+    card.querySelector('.track-textarea-lyrics')?.addEventListener('input', (e) => {
+      item.lyricsText = e.target.value;
+    });
+
+    card.querySelector('.btn-toggle-lrc')?.addEventListener('click', () => {
+      item.showLrc = !item.showLrc;
+      const lrcWrapper = card.querySelector('.track-lrc-wrapper');
+      const toggleBtn = card.querySelector('.btn-toggle-lrc');
+      if (lrcWrapper) lrcWrapper.style.display = item.showLrc ? 'block' : 'none';
+      if (toggleBtn) toggleBtn.textContent = item.showLrc ? 'Ẩn Lời Đồng Bộ LRC' : '+ Thêm Lời Đồng Bộ LRC (Tùy chọn)';
+    });
+
+    card.querySelector('.track-textarea-lrc')?.addEventListener('input', (e) => {
+      item.lyricsLrc = e.target.value;
+    });
+
+    // Credits builder
+    card.querySelector('.btn-add-track-credit')?.addEventListener('click', () => {
+      if (!Array.isArray(item.credits)) item.credits = [];
+      item.credits.push({ role: 'Music Producer (Nhà sản xuất âm nhạc)', name: '' });
+      renderWizardTracklist();
+    });
+
+    card.querySelectorAll('.track-credit-row').forEach(row => {
+      const cIdx = parseInt(row.dataset.creditIdx, 10);
+      row.querySelector('.credit-input-role')?.addEventListener('change', (e) => {
+        if (item.credits && item.credits[cIdx]) item.credits[cIdx].role = e.target.value;
+      });
+      row.querySelector('.credit-input-name')?.addEventListener('input', (e) => {
+        if (item.credits && item.credits[cIdx]) item.credits[cIdx].name = e.target.value;
+      });
+      row.querySelector('.btn-del-credit')?.addEventListener('click', () => {
+        if (item.credits) {
+          item.credits.splice(cIdx, 1);
+          renderWizardTracklist();
+        }
+      });
+    });
+
+    // Explicit & ISRC
+    card.querySelector('.track-select-explicit')?.addEventListener('change', (e) => {
+      item.explicit = e.target.value === 'true';
+    });
+
+    card.querySelector('.track-input-isrc')?.addEventListener('input', (e) => {
+      item.isrc = e.target.value.trim();
+    });
+
+    // Order buttons
+    card.querySelector('.btn-track-up')?.addEventListener('click', () => {
       if (idx > 0) {
         const temp = wizardTracks[idx];
         wizardTracks[idx] = wizardTracks[idx - 1];
@@ -1023,7 +1275,7 @@ function renderWizardTracklist() {
       }
     });
 
-    row.querySelector('.btn-track-down')?.addEventListener('click', () => {
+    card.querySelector('.btn-track-down')?.addEventListener('click', () => {
       if (idx < wizardTracks.length - 1) {
         const temp = wizardTracks[idx];
         wizardTracks[idx] = wizardTracks[idx + 1];
@@ -1033,7 +1285,7 @@ function renderWizardTracklist() {
       }
     });
 
-    row.querySelector('.btn-track-remove')?.addEventListener('click', () => {
+    card.querySelector('.btn-track-remove')?.addEventListener('click', () => {
       wizardTracks.splice(idx, 1);
       wizardTracks.forEach((t, i) => t.trackNum = i + 1);
       renderWizardTracklist();
@@ -1062,6 +1314,81 @@ document.querySelector('#batch-audio-input')?.addEventListener('change', (e) => 
   });
   e.target.value = '';
 });
+
+// Initialize UPC choice controls & Explicit choice controls
+function initUpcControls() {
+  const upcRadioAuto = document.querySelector('#upc-radio-auto');
+  const upcRadioCustom = document.querySelector('#upc-radio-custom');
+  const upcCustomBox = document.querySelector('#upc-custom-input-box');
+  const upcCardAuto = document.querySelector('#upc-card-auto');
+  const upcCardCustom = document.querySelector('#upc-card-custom');
+  const wizardUpcInput = document.querySelector('#wizard-upc-input');
+
+  function updateUpcDisplay() {
+    if (upcRadioCustom?.checked) {
+      if (upcCustomBox) upcCustomBox.style.display = 'block';
+      if (upcCardCustom) {
+        upcCardCustom.style.borderColor = '#2563eb';
+        upcCardCustom.style.background = '#eff6ff';
+      }
+      if (upcCardAuto) {
+        upcCardAuto.style.borderColor = '#cbd5e1';
+        upcCardAuto.style.background = '#fff';
+      }
+      wizardUpcInput?.focus();
+    } else {
+      if (upcCustomBox) upcCustomBox.style.display = 'none';
+      if (upcCardAuto) {
+        upcCardAuto.style.borderColor = '#2563eb';
+        upcCardAuto.style.background = '#eff6ff';
+      }
+      if (upcCardCustom) {
+        upcCardCustom.style.borderColor = '#cbd5e1';
+        upcCardCustom.style.background = '#fff';
+      }
+    }
+  }
+
+  upcRadioAuto?.addEventListener('change', updateUpcDisplay);
+  upcRadioCustom?.addEventListener('change', updateUpcDisplay);
+  updateUpcDisplay();
+}
+
+function initExplicitControls() {
+  const explicitRadioClean = document.querySelector('#explicit-radio-clean');
+  const explicitRadioExplicit = document.querySelector('#explicit-radio-explicit');
+  const explicitCardClean = document.querySelector('#explicit-card-clean');
+  const explicitCardExplicit = document.querySelector('#explicit-card-explicit');
+
+  function updateExplicitDisplay() {
+    if (explicitRadioExplicit?.checked) {
+      if (explicitCardExplicit) {
+        explicitCardExplicit.style.borderColor = '#dc2626';
+        explicitCardExplicit.style.background = '#fef2f2';
+      }
+      if (explicitCardClean) {
+        explicitCardClean.style.borderColor = '#cbd5e1';
+        explicitCardClean.style.background = '#fff';
+      }
+    } else {
+      if (explicitCardClean) {
+        explicitCardClean.style.borderColor = '#16a34a';
+        explicitCardClean.style.background = '#f0fdf4';
+      }
+      if (explicitCardExplicit) {
+        explicitCardExplicit.style.borderColor = '#cbd5e1';
+        explicitCardExplicit.style.background = '#fff';
+      }
+    }
+  }
+
+  explicitRadioClean?.addEventListener('change', updateExplicitDisplay);
+  explicitRadioExplicit?.addEventListener('change', updateExplicitDisplay);
+  updateExplicitDisplay();
+}
+
+initUpcControls();
+initExplicitControls();
 
 // File name change indicators & live visual feedback
 audioFileInput?.addEventListener('change', (e) => {
@@ -1975,9 +2302,9 @@ form?.addEventListener('submit', async (e) => {
     let audioUrl = '';
     let artworkUrl = '';
 
-    // 1. Upload Master Audio hoặc Multi-track EP/Album
+    // 1. Upload Master Audio & Dolby Atmos for all tracks in wizardTracks
     let finalTracklist = [];
-    if (wizardTrackMode === 'multi' && wizardTracks.length > 0) {
+    if (wizardTracks.length > 0) {
       submitBtn.textContent = `Đang chuẩn bị ${wizardTracks.length} tracks...`;
       for (let i = 0; i < wizardTracks.length; i++) {
         const tr = wizardTracks[i];
@@ -1986,11 +2313,22 @@ form?.addEventListener('submit', async (e) => {
           submitBtn.textContent = `Đang tải Audio (${i + 1}/${wizardTracks.length}): ${tr.title || 'Track ' + (i + 1)}...`;
           tAudioUrl = await uploadAudioFile(tr.audioFile, `${artist.id}_${slug(v.title)}_tr${i + 1}`);
         }
+
+        let tDolbyUrl = tr.dolbyAtmosUrl || '';
+        if (tr.dolbyAtmosFile) {
+          submitBtn.textContent = `Đang tải Dolby Atmos (${i + 1}/${wizardTracks.length}): ${tr.title || 'Track ' + (i + 1)}...`;
+          tDolbyUrl = await uploadAudioFile(tr.dolbyAtmosFile, `${artist.id}_${slug(v.title)}_dolby_tr${i + 1}`);
+        }
+
         finalTracklist.push({
           trackNum: i + 1,
           title: tr.title || `Track ${i + 1}`,
           featuredArtist: tr.featuredArtist || '',
           audioUrl: tAudioUrl,
+          dolbyAtmosUrl: tDolbyUrl,
+          lyricsText: tr.lyricsText || '',
+          lyricsLrc: tr.lyricsLrc || '',
+          credits: tr.credits || [],
           explicit: tr.explicit === true,
           isrc: tr.isrc || '',
           duration: tr.duration || ''
@@ -2011,8 +2349,12 @@ form?.addEventListener('submit', async (e) => {
         title: v.title,
         featuredArtist: v.featuredArtist || '',
         audioUrl,
+        dolbyAtmosUrl: '',
+        lyricsText: '',
+        lyricsLrc: '',
+        credits: createDefaultCredits(),
         explicit: v.explicit === 'true',
-        isrc: (parsedTracks[0] && parsedTracks[0].isrc) || ''
+        isrc: ''
       }];
     }
 
@@ -2027,11 +2369,18 @@ form?.addEventListener('submit', async (e) => {
     const releaseSlug = slug(v.title);
     const releaseTypeFormatted = `${v.type} · ${v.releaseDate}`;
 
-    // 3. Parse tracklist
-    const parsedTracks = (v.tracks || '').split('\n').filter(Boolean).map(line => {
-      const [trackTitle, isrc, version] = line.split('|').map(s => s.trim());
-      return { trackTitle, isrc: isrc || '', version: version || 'Original' };
-    });
+    // 3. Resolve UPC code & Credits
+    let finalUpc = '';
+    if (v.upc_choice === 'custom' && v.upc && v.upc.trim()) {
+      finalUpc = v.upc.trim();
+    } else {
+      finalUpc = 'Auto-assigned by UniFLOWs GS1';
+    }
+
+    const isExplicit = v.explicit === 'true' || finalTracklist.some(t => t.explicit === true);
+
+    const finalSongwriters = v.songwriters?.trim() || [...new Set(finalTracklist.flatMap(t => (t.credits || []).filter(c => c.role && (c.role.includes('Songwriter') || c.role.includes('Composer') || c.role.includes('Lyricist'))).map(c => c.name.trim()).filter(Boolean)))].join(', ') || artist.name;
+    const finalProducers = v.producers?.trim() || [...new Set(finalTracklist.flatMap(t => (t.credits || []).filter(c => c.role && (c.role.includes('Producer') || c.role.includes('Beatmaker'))).map(c => c.name.trim()).filter(Boolean)))].join(', ') || 'UniFLOWs Label';
 
     const links = {};
     if (v.linkSpotify) links.spotify = v.linkSpotify.trim();
@@ -2042,8 +2391,9 @@ form?.addEventListener('submit', async (e) => {
     const metadataPayload = {
       ...v,
       splits,
-      lyricsText: v.lyricsText || '',
-      lyricsLrc: v.lyricsLrc || '',
+      upc: finalUpc,
+      genre: v.genre || 'V-Pop',
+      secondaryGenre: v.secondaryGenre || '',
       syncLicensingConsent: v.syncLicensingConsent === 'on' || v.syncLicensingConsent === true
     };
 
@@ -2051,15 +2401,17 @@ form?.addEventListener('submit', async (e) => {
       title: v.title,
       type: releaseTypeFormatted,
       slug: releaseSlug,
+      genre: v.genre || 'V-Pop',
+      secondaryGenre: v.secondaryGenre || '',
       links,
       submissionStatus: 'Đang chờ UniFLOWs duyệt',
       credits: {
-        primaryArtist: v.primaryArtist,
-        featuredArtist: v.featuredArtist,
-        songwriters: v.songwriters,
-        producers: v.producers,
-        phonogram: v.phonogram,
-        copyright: v.copyright
+        primaryArtist: v.primaryArtist || artist.name,
+        featuredArtist: v.featuredArtist || '',
+        songwriters: finalSongwriters,
+        producers: finalProducers,
+        phonogram: v.phonogram || '℗ 2026 UniFLOWs Label',
+        copyright: v.copyright || '© 2026 UniFLOWs Label'
       },
       metadata: metadataPayload,
       audioUrl,
@@ -2077,17 +2429,17 @@ form?.addEventListener('submit', async (e) => {
         release_date: v.releaseDate,
         pre_save_date: v.preSaveDate || null,
         slug: releaseSlug,
-        genre: v.genre,
-        language: v.language,
-        explicit: v.explicit === 'true',
-        upc: v.upc,
-        tracks: finalTracklist.length > 0 ? finalTracklist : parsedTracks,
-        primary_artist: v.primaryArtist,
-        featured_artist: v.featuredArtist,
-        songwriters: v.songwriters,
-        producers: v.producers,
-        phonogram: v.phonogram,
-        copyright: v.copyright,
+        genre: v.genre || 'V-Pop',
+        language: v.language || 'Tiếng Việt',
+        explicit: isExplicit,
+        upc: finalUpc,
+        tracks: finalTracklist,
+        primary_artist: v.primaryArtist || artist.name,
+        featured_artist: v.featuredArtist || '',
+        songwriters: finalSongwriters,
+        producers: finalProducers,
+        phonogram: v.phonogram || '℗ 2026 UniFLOWs Label',
+        copyright: v.copyright || '© 2026 UniFLOWs Label',
         territories: v.territories,
         pricing: v.pricing,
         notes: v.notes,

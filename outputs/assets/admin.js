@@ -1018,6 +1018,14 @@ function renderArtistProductCard(p, pIdx, a, aIdx) {
             <input class="prod-input-tiktok" value="${esc(links.tiktok || '')}" placeholder="https://tiktok.com/music/..." style="font-size:11px;padding:5px 8px;background:#fff;">
           </div>
           <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#ea580c;">SoundCloud URL</label>
+            <input class="prod-input-soundcloud" value="${esc(links.soundcloud || '')}" placeholder="https://soundcloud.com/..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#0284c7;">Amazon Music URL</label>
+            <input class="prod-input-amazon" value="${esc(links.amazon || '')}" placeholder="https://music.amazon.com/..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
             <label style="font-size:10px;font-weight:600;color:#0284c7;">Audio Master / Preview URL</label>
             <input class="prod-input-audio" value="${esc(p.audioUrl || '')}" placeholder="https://..." style="font-size:11px;padding:5px 8px;background:#fff;">
           </div>
@@ -1086,6 +1094,8 @@ function attachArtistProductEvents(artist, idx) {
         const youtube = card.querySelector('.prod-input-youtube')?.value.trim() || '';
         const zing = card.querySelector('.prod-input-zing')?.value.trim() || '';
         const tiktok = card.querySelector('.prod-input-tiktok')?.value.trim() || '';
+        const soundcloud = card.querySelector('.prod-input-soundcloud')?.value.trim() || '';
+        const amazon = card.querySelector('.prod-input-amazon')?.value.trim() || '';
 
         const existingProd = artist.products[pIdx];
         const updatedProd = {
@@ -1104,7 +1114,9 @@ function attachArtistProductEvents(artist, idx) {
             apple,
             youtube,
             zing,
-            tiktok
+            tiktok,
+            soundcloud,
+            amazon
           },
           metadata: {
             ...(existingProd.metadata || {}),
@@ -6373,12 +6385,166 @@ function updateSupabaseStatusBanner() {
 }
 
 const QUICKFIX_SQL_CONTENT = `-- ==============================================================================
--- UNIFLOWS LABEL — SỬA NHANH LỖI THIẾU BẢNG & STORAGE BUCKETS (SAFE QUICK-FIX)
--- Chạy script này trong Supabase Dashboard -> SQL Editor -> New Query -> Run
--- (100% AN TOÀN - KHÔNG XÓA HAY LÀM MẤT DỮ LIỆU CÁC BẢNG HIỆN CÓ)
+-- UNIFLOWS LABEL — SUPABASE COMPLETE SAFE UPGRADE & QUICK-FIX (2026)
+-- Hướng dẫn: Mở Supabase Dashboard -> SQL Editor -> New Query -> Dán mã này -> Run
+-- (100% AN TOÀN — SỬ DỤNG 'IF NOT EXISTS', KHÔNG XÓA DỮ LIỆU ĐANG CÓ TRÊN DATABASE)
 -- ==============================================================================
 
--- 1. TẠO BẢNG COPYRIGHT_REPORTS (NẾU CHƯA CÓ)
+-- 1. BẢNG CẤU HÌNH TỔNG QUAN WEBSITE (SITE SETTINGS)
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  id text PRIMARY KEY DEFAULT 'main',
+  tagline text DEFAULT 'MAKE THE WORLD MOVE.',
+  hero_text text DEFAULT 'UniFLOWs Label phát triển âm nhạc, nghệ sĩ và những chuyển động văn hoá dành cho thế hệ mới.',
+  about_title text DEFAULT 'Không chỉ phát hành âm nhạc. Chúng tôi tạo ra dòng chảy.',
+  about_text text DEFAULT 'Từ phòng thu đến sân khấu, từ những bản demo đầu tiên đến cộng đồng người hâm mộ — UniFLOWs là ngôi nhà cho những tiếng nói táo bạo và chân thật.',
+  email text DEFAULT 'hello@uniflowslabel.com',
+  emails jsonb DEFAULT '[]'::jsonb,
+  city text DEFAULT 'Hồ Chí Minh · Việt Nam',
+  announcements jsonb DEFAULT '[]'::jsonb,
+  publishing jsonb DEFAULT '{}'::jsonb,
+  unihube jsonb DEFAULT '{}'::jsonb,
+  collective48k jsonb DEFAULT '{}'::jsonb,
+  admin_accounts jsonb DEFAULT '[]'::jsonb,
+  music_submissions jsonb DEFAULT '[]'::jsonb,
+  shortlinks jsonb DEFAULT '[]'::jsonb,
+  artist_order jsonb DEFAULT '[]'::jsonb,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- 2. BẢNG NGHỆ SĨ & HỒ SƠ TÀI KHOẢN (ARTISTS)
+CREATE TABLE IF NOT EXISTS public.artists (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  username text,
+  email text,
+  password text,
+  role_type text DEFAULT 'exclusive',
+  show_on_web boolean DEFAULT true,
+  genre text,
+  image text,
+  bio text,
+  gallery jsonb DEFAULT '[]'::jsonb,
+  instagram text DEFAULT '',
+  youtube text DEFAULT '',
+  tiktok text DEFAULT '',
+  spotify text DEFAULT '',
+  monthly_streams text DEFAULT '0',
+  estimated_revenue text DEFAULT '0',
+  pending_balance text DEFAULT '0',
+  payable_balance text DEFAULT '0',
+  payout_cycle text DEFAULT 'Hàng tháng (Monthly)',
+  royalty_rate text DEFAULT '80% Master',
+  contract_term text DEFAULT '2024 - 2027',
+  stats jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- 3. BẢNG BẢN PHÁT HÀNH ÂM NHẠC (RELEASES)
+CREATE TABLE IF NOT EXISTS public.releases (
+  id text PRIMARY KEY,
+  artist_id text,
+  title text NOT NULL,
+  type text DEFAULT 'Single',
+  release_date text,
+  pre_save_date text,
+  slug text,
+  genre text,
+  submission_status text DEFAULT 'Đã phát hành',
+  artwork_url text,
+  audio_url text,
+  links jsonb DEFAULT '{}'::jsonb,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  tracklist jsonb DEFAULT '[]'::jsonb,
+  tracks jsonb DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- 4. BẢNG BÀI VIẾT & TẠP CHÍ (ARTICLES)
+CREATE TABLE IF NOT EXISTS public.articles (
+  id text PRIMARY KEY,
+  title text NOT NULL,
+  category text DEFAULT 'Tin Tức',
+  date text,
+  author text DEFAULT 'UniFLOWs Editorial',
+  read_time text DEFAULT '3 phút đọc',
+  cover text,
+  excerpt text,
+  content text,
+  images jsonb DEFAULT '[]'::jsonb,
+  published boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- 5. BẢNG YÊU CẦU RÚT TIỀN (PAYOUT REQUESTS)
+CREATE TABLE IF NOT EXISTS public.payout_requests (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  artist_id text,
+  amount text NOT NULL,
+  bank_info jsonb DEFAULT '{}'::jsonb,
+  status text DEFAULT 'Đang chờ xem xét',
+  rejection_reason text DEFAULT '',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6. BẢNG THÔNG BÁO NGHỆ SĨ & HỆ THỐNG (NOTIFICATIONS)
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  recipient_id text,
+  title text NOT NULL,
+  message text NOT NULL,
+  action_url text,
+  is_read boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 7. BẢNG THÔNG BÁO DÀNH CHO ADMIN (ADMIN NOTIFICATIONS)
+CREATE TABLE IF NOT EXISTS public.admin_notifications (
+  id text PRIMARY KEY,
+  type text DEFAULT 'general',
+  title text NOT NULL,
+  message text NOT NULL,
+  artist_id text,
+  artist_name text,
+  artist_avatar text DEFAULT '',
+  target_tab text DEFAULT 'admin-tab-overview',
+  details jsonb DEFAULT '{}'::jsonb,
+  is_read boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 8. BẢNG TIẾP NHẬN YÊU CẦU ĐẶC BIỆT (SPECIAL REQUESTS: Takedown, Catalog, Tranh chấp)
+CREATE TABLE IF NOT EXISTS public.special_requests (
+  id text PRIMARY KEY,
+  type text NOT NULL,
+  title text NOT NULL,
+  artist_id text,
+  artist_name text,
+  artist_email text,
+  artist_avatar text DEFAULT '',
+  details jsonb DEFAULT '{}'::jsonb,
+  status text DEFAULT 'pending',
+  admin_note text DEFAULT '',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 9. BẢNG DUYỆT ĐỔI ẢNH HỒ SƠ NGHỆ SĨ (ARTIST PHOTO REQUESTS)
+CREATE TABLE IF NOT EXISTS public.artist_photo_requests (
+  id text PRIMARY KEY,
+  artist_id text,
+  artist_name text,
+  current_image text,
+  requested_image text NOT NULL,
+  status text DEFAULT 'pending',
+  reject_reason text DEFAULT '',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  approved_at timestamp with time zone
+);
+
+-- 10. BẢNG BÁO CÁO VI PHẠM BẢN QUYỀN (COPYRIGHT REPORTS)
 CREATE TABLE IF NOT EXISTS public.copyright_reports (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   artist_id text,
@@ -6394,7 +6560,7 @@ CREATE TABLE IF NOT EXISTS public.copyright_reports (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2. TẠO BẢNG GREENLIST_REQUESTS (NẾU CHƯA CÓ)
+-- 11. BẢNG MIỄN TRỪ BẢN QUYỀN / GREEN-LIST (GREENLIST REQUESTS)
 CREATE TABLE IF NOT EXISTS public.greenlist_requests (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   artist_id text,
@@ -6409,22 +6575,95 @@ CREATE TABLE IF NOT EXISTS public.greenlist_requests (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. KÍCH HOẠT ROW LEVEL SECURITY (RLS) & CHÍNH SÁCH QUYỀN
-ALTER TABLE public.copyright_reports ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.greenlist_requests ENABLE ROW LEVEL SECURITY;
+-- 12. BẢNG ĐẶT LỊCH HẸN & BOOKING A&R (APPOINTMENTS)
+CREATE TABLE IF NOT EXISTS public.appointments (
+  id text PRIMARY KEY,
+  date text NOT NULL,
+  time_slot text NOT NULL,
+  duration_minutes integer DEFAULT 45,
+  host text DEFAULT 'UniFLOWs A&R Team',
+  topic_category text DEFAULT 'Thẩm định Demo',
+  status text DEFAULT 'open',
+  slot_notes text DEFAULT '',
+  booker jsonb,
+  meeting_method text DEFAULT '',
+  meeting_link text DEFAULT '',
+  admin_notes text DEFAULT '',
+  confirmed_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
-DROP POLICY IF EXISTS "Cho phép đọc công khai copyright_reports" ON public.copyright_reports;
-DROP POLICY IF EXISTS "Toàn quyền quản trị copyright_reports" ON public.copyright_reports;
-DROP POLICY IF EXISTS "Cho phép đọc công khai greenlist_requests" ON public.greenlist_requests;
-DROP POLICY IF EXISTS "Toàn quyền quản trị greenlist_requests" ON public.greenlist_requests;
+-- 13. BẢNG ĐĂNG KÝ NHẬN TIN NEWSLETTER (SUBSCRIBERS)
+CREATE TABLE IF NOT EXISTS public.subscribers (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  email text UNIQUE NOT NULL,
+  name text DEFAULT '',
+  source text DEFAULT 'website_newsletter',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
-CREATE POLICY "Cho phép đọc công khai copyright_reports" ON public.copyright_reports FOR SELECT USING (true);
-CREATE POLICY "Toàn quyền quản trị copyright_reports" ON public.copyright_reports FOR ALL USING (true) WITH CHECK (true);
+-- 14. BẢNG NHẬT KÝ KIỂM TOÁN / BẢO MẬT (AUDIT LOGS)
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_email text DEFAULT 'admin@uniflowslabel.com',
+  action text NOT NULL,
+  details text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
-CREATE POLICY "Cho phép đọc công khai greenlist_requests" ON public.greenlist_requests FOR SELECT USING (true);
-CREATE POLICY "Toàn quyền quản trị greenlist_requests" ON public.greenlist_requests FOR ALL USING (true) WITH CHECK (true);
+-- ==============================================================================
+-- 15. BỔ SUNG CỘT BẢO ĐẢM KHÔNG THIẾU Ở CÁC BẢNG HIỆN HỮU (ADD COLUMN IF NOT EXISTS)
+-- ==============================================================================
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS username text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS email text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS password text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS role_type text DEFAULT 'exclusive';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS show_on_web boolean DEFAULT true;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS monthly_streams text DEFAULT '0';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS estimated_revenue text DEFAULT '0';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS payable_balance text DEFAULT '0';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS payout_cycle text DEFAULT 'Hàng tháng (Monthly)';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS royalty_rate text DEFAULT '80% Master';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS contract_term text DEFAULT '2024 - 2027';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS stats jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
 
--- 4. TẠO & CẤU HÌNH STORAGE BUCKETS (artworks & audio-masters)
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS slug text;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS submission_status text DEFAULT 'Đã phát hành';
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS artwork_url text;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS audio_url text;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS links jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS tracklist jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS author text DEFAULT 'UniFLOWs Editorial';
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS read_time text DEFAULT '3 phút đọc';
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS action_url text;
+
+-- ==============================================================================
+-- 16. KÍCH HOẠT ROW LEVEL SECURITY (RLS) & PHÂN QUYỀN TRUY CẬP CHO TOÀN BỘ BẢNG
+-- ==============================================================================
+DO $$
+DECLARE
+  tbl text;
+BEGIN
+  FOR tbl IN 
+    SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "Allow public read on %I" ON public.%I;', tbl, tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "Allow full admin on %I" ON public.%I;', tbl, tbl);
+    EXECUTE format('CREATE POLICY "Allow public read on %I" ON public.%I FOR SELECT USING (true);', tbl, tbl);
+    EXECUTE format('CREATE POLICY "Allow full admin on %I" ON public.%I FOR ALL USING (true) WITH CHECK (true);', tbl, tbl);
+  END LOOP;
+END $$;
+
+-- 17. TẠO & CẤU HÌNH STORAGE BUCKETS (artworks & audio-masters)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES 
   ('artworks', 'artworks', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/*']),
@@ -6434,7 +6673,7 @@ ON CONFLICT (id) DO UPDATE SET
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- 5. PHÂN QUYỀN TRUY CẬP STORAGE OBJECTS
+-- Phân quyền Storage Objects
 DROP POLICY IF EXISTS "Mọi người đều có thể xem Artworks" ON storage.objects;
 DROP POLICY IF EXISTS "Người dùng có thể upload Artworks" ON storage.objects;
 DROP POLICY IF EXISTS "Toàn quyền xóa sửa Artworks" ON storage.objects;
@@ -6442,42 +6681,21 @@ DROP POLICY IF EXISTS "Mọi người đều có thể tải/nghe Audio Masters"
 DROP POLICY IF EXISTS "Người dùng có thể upload Audio Masters" ON storage.objects;
 DROP POLICY IF EXISTS "Toàn quyền xóa sửa Audio Masters" ON storage.objects;
 
-CREATE POLICY "Mọi người đều có thể xem Artworks"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'artworks');
+CREATE POLICY "Mọi người đều có thể xem Artworks" ON storage.objects FOR SELECT USING (bucket_id = 'artworks');
+CREATE POLICY "Người dùng có thể upload Artworks" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'artworks');
+CREATE POLICY "Toàn quyền xóa sửa Artworks" ON storage.objects FOR ALL USING (bucket_id = 'artworks');
 
-CREATE POLICY "Người dùng có thể upload Artworks"
-ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'artworks');
+CREATE POLICY "Mọi người đều có thể tải/nghe Audio Masters" ON storage.objects FOR SELECT USING (bucket_id = 'audio-masters');
+CREATE POLICY "Người dùng có thể upload Audio Masters" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'audio-masters');
+CREATE POLICY "Toàn quyền xóa sửa Audio Masters" ON storage.objects FOR ALL USING (bucket_id = 'audio-masters');
 
-CREATE POLICY "Toàn quyền xóa sửa Artworks"
-ON storage.objects FOR ALL
-USING (bucket_id = 'artworks');
-
-CREATE POLICY "Mọi người đều có thể tải/nghe Audio Masters"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'audio-masters');
-
-CREATE POLICY "Người dùng có thể upload Audio Masters"
-ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'audio-masters');
-
-CREATE POLICY "Toàn quyền xóa sửa Audio Masters"
-ON storage.objects FOR ALL
-USING (bucket_id = 'audio-masters');
-
--- 6. PHÂN QUYỀN SCHEMA STORAGE VÀ BUCKETS CHO CLIENT (ANON / AUTHENTICATED)
+-- 18. CẤP QUYỀN SCHEMA CHO CLIENT (ANON / AUTHENTICATED)
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 GRANT USAGE ON SCHEMA storage TO anon, authenticated;
 GRANT ALL ON TABLE storage.objects TO anon, authenticated;
 GRANT ALL ON TABLE storage.buckets TO anon, authenticated;
-
--- 7. BỔ SUNG CỘT BẢO ĐẢM KHÔNG THIẾU Ở CÁC BẢNG KHÁC
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
-ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS author text DEFAULT 'UniFLOWs Editorial';
-ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS read_time text DEFAULT '3 phút đọc';
-ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
-ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
-ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS action_url text;
 `;
 
 let fullSchemaCached = '';
@@ -7579,6 +7797,17 @@ function initQuickReleaseAdmin() {
   const testPlayBtn = document.querySelector('#quick-rel-test-play-btn');
   const submitStatus = document.querySelector('#quick-rel-submit-status');
 
+  // Platform Links & Custom Platforms
+  const linkSpotifyInput = document.querySelector('#quick-rel-link-spotify');
+  const linkAppleInput = document.querySelector('#quick-rel-link-apple');
+  const linkYoutubeInput = document.querySelector('#quick-rel-link-youtube');
+  const linkZingInput = document.querySelector('#quick-rel-link-zing');
+  const linkTiktokInput = document.querySelector('#quick-rel-link-tiktok');
+  const linkSoundcloudInput = document.querySelector('#quick-rel-link-soundcloud');
+  const linkAmazonInput = document.querySelector('#quick-rel-link-amazon');
+  const addCustomPlatBtn = document.querySelector('#btn-add-quick-rel-custom-platform');
+  const customPlatList = document.querySelector('#quick-rel-custom-platforms-list');
+
   let activeSnippetDuration = 30;
   let audioDuration = 180;
   let testPlayTimer = null;
@@ -7608,6 +7837,22 @@ function initQuickReleaseAdmin() {
     artistSelect.innerHTML = artists.map(a => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.id)})</option>`).join('');
   }
 
+  function addCustomPlatformRow(nameVal = '', urlVal = '') {
+    if (!customPlatList) return;
+    const row = document.createElement('div');
+    row.className = 'quick-rel-custom-plat-row';
+    row.style.cssText = 'display:flex; gap:8px; align-items:center; background:#fff; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px;';
+    row.innerHTML = `
+      <input type="text" class="custom-plat-name" placeholder="Tên nền tảng (Deezer, Tidal, NCT...)" value="${esc(nameVal)}" style="font-size:11.5px; padding:6px 8px; flex:1; border:1px solid #cbd5e1; border-radius:4px;" required>
+      <input type="url" class="custom-plat-url" placeholder="https://..." value="${esc(urlVal)}" style="font-size:11.5px; padding:6px 8px; flex:2; border:1px solid #cbd5e1; border-radius:4px;" required>
+      <button type="button" class="btn-del-custom-plat button alt remove" style="padding:4px 8px; font-size:11px; color:#dc2626; border-color:#fca5a5; cursor:pointer;" title="Xóa nền tảng này">✕</button>
+    `;
+    row.querySelector('.btn-del-custom-plat')?.addEventListener('click', () => row.remove());
+    customPlatList.appendChild(row);
+  }
+
+  addCustomPlatBtn?.addEventListener('click', () => addCustomPlatformRow());
+
   if (openBtn && modal) {
     openBtn.addEventListener('click', () => {
       populateArtists();
@@ -7619,6 +7864,16 @@ function initQuickReleaseAdmin() {
       if (audioUrlInput) audioUrlInput.value = '';
       if (audioStatusEl) audioStatusEl.textContent = '';
       if (submitStatus) submitStatus.textContent = '';
+
+      if (linkSpotifyInput) linkSpotifyInput.value = '';
+      if (linkAppleInput) linkAppleInput.value = '';
+      if (linkYoutubeInput) linkYoutubeInput.value = '';
+      if (linkZingInput) linkZingInput.value = '';
+      if (linkTiktokInput) linkTiktokInput.value = '';
+      if (linkSoundcloudInput) linkSoundcloudInput.value = '';
+      if (linkAmazonInput) linkAmazonInput.value = '';
+      if (customPlatList) customPlatList.innerHTML = '';
+
       selectedCompressedArtworkFile = null;
       selectedAudioFile = null;
       if (audioPlayer) audioPlayer.pause();
@@ -7840,11 +8095,29 @@ function initQuickReleaseAdmin() {
           previewEnabled: true,
           streams: '0',
           revenue: '0',
-          links: {
-            spotify: `https://open.spotify.com/search/${encodeURIComponent(title + ' ' + targetArtist.name)}`,
-            apple: `https://music.apple.com/us/search?term=${encodeURIComponent(title + ' ' + targetArtist.name)}`,
-            youtube: `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' ' + targetArtist.name)}`
-          },
+          links: (() => {
+            const lk = {
+              spotify: linkSpotifyInput?.value.trim() || `https://open.spotify.com/search/${encodeURIComponent(title + ' ' + targetArtist.name)}`,
+              apple: linkAppleInput?.value.trim() || `https://music.apple.com/us/search?term=${encodeURIComponent(title + ' ' + targetArtist.name)}`,
+              youtube: linkYoutubeInput?.value.trim() || `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' ' + targetArtist.name)}`,
+              zing: linkZingInput?.value.trim() || '',
+              tiktok: linkTiktokInput?.value.trim() || '',
+              soundcloud: linkSoundcloudInput?.value.trim() || '',
+              amazon: linkAmazonInput?.value.trim() || ''
+            };
+            const customPlatforms = [];
+            document.querySelectorAll('#quick-rel-custom-platforms-list .quick-rel-custom-plat-row').forEach(row => {
+              const pName = row.querySelector('.custom-plat-name')?.value.trim();
+              const pUrl = row.querySelector('.custom-plat-url')?.value.trim();
+              if (pName && pUrl) {
+                customPlatforms.push({ name: pName, url: pUrl, action: 'PLAY' });
+              }
+            });
+            if (customPlatforms.length > 0) {
+              lk.customPlatforms = customPlatforms;
+            }
+            return lk;
+          })(),
           metadata: {
             previewStart: startSec,
             previewDuration: activeSnippetDuration,

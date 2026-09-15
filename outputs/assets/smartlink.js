@@ -88,21 +88,37 @@ export async function initSmartLinkEngine() {
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
     };
 
+    const fetchWithTimeout = (url, ms = 2500) => {
+      if (typeof AbortController === 'undefined') {
+        return fetch(url, { headers }).then(r => r.ok ? r.json() : []).catch(() => []);
+      }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      return fetch(url, { headers, signal: controller.signal })
+        .then(r => { clearTimeout(timer); return r.ok ? r.json() : []; })
+        .catch(() => { clearTimeout(timer); return []; });
+    };
+
     const [relRes, artRes, setRes] = await Promise.allSettled([
-      fetch(`${SUPABASE_URL}/rest/v1/releases?select=*&order=created_at.desc`, { headers }).then(r => r.ok ? r.json() : []),
-      fetch(`${SUPABASE_URL}/rest/v1/artists?select=*`, { headers }).then(r => r.ok ? r.json() : []),
-      fetch(`${SUPABASE_URL}/rest/v1/site_settings?id=eq.main&select=*`, { headers }).then(r => r.ok ? r.json() : [])
+      fetchWithTimeout(`${SUPABASE_URL}/rest/v1/releases?select=*&order=created_at.desc`),
+      fetchWithTimeout(`${SUPABASE_URL}/rest/v1/artists?select=*`),
+      fetchWithTimeout(`${SUPABASE_URL}/rest/v1/site_settings?id=eq.main&select=*`)
     ]);
 
-    const dbReleases = relRes.status === 'fulfilled' ? relRes.value : [];
-    const dbArtists = artRes.status === 'fulfilled' ? artRes.value : [];
+    const dbReleases = (relRes.status === 'fulfilled' && Array.isArray(relRes.value)) ? relRes.value : [];
+    const dbArtists = (artRes.status === 'fulfilled' && Array.isArray(artRes.value)) ? artRes.value : [];
     const settings = (setRes.status === 'fulfilled' && Array.isArray(setRes.value) && setRes.value[0]) ? setRes.value[0] : {};
-    const customTracks = settings.publishing?.customTracks || cached.publishing?.customTracks || [];
+    const customTracks = (settings.publishing?.customTracks && settings.publishing.customTracks.length > 0)
+      ? settings.publishing.customTracks
+      : (customTracksList.length > 0 ? customTracksList : (cached.publishing?.customTracks || []));
 
-    const fullPool = buildReleasePool(dbArtists, dbReleases, customTracks);
+    const poolArtists = (dbArtists.length > 0) ? dbArtists : artistsList;
+    const poolReleases = (dbReleases.length > 0) ? dbReleases : (cached.releases || []);
+
+    const fullPool = buildReleasePool(poolArtists, poolReleases, customTracks);
     tryRenderMatch(root, fullPool, releaseQuery, true);
   } catch (err) {
-    console.error('SmartLink REST fetch error:', err);
+    console.warn('SmartLink REST fetch error (fallback to local pool):', err);
     if (!rendered) {
       tryRenderMatch(root, initialPool, releaseQuery, true);
     }

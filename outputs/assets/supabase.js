@@ -22,6 +22,9 @@ export const getSupabaseAnonKey = () => {
   return window.__SUPABASE_ANON_KEY__ || DEFAULT_SUPABASE_ANON_KEY;
 };
 
+export const SUPABASE_URL = getSupabaseUrl();
+export const SUPABASE_ANON_KEY = getSupabaseAnonKey();
+
 export const isOfflineModeActive = () => {
   try {
     return localStorage.getItem('uniflows-offline-mode') === 'true';
