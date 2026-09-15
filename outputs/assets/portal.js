@@ -4713,7 +4713,13 @@ async function renderReleases() {
   const trackEarningsList = document.querySelector('#track-earnings-list');
   if (trackEarningsList) {
     if (participatingReleases.length === 0) {
-      trackEarningsList.innerHTML = '<p class="empty" style="font-size:13px;padding:16px;background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:10px;color:var(--portal-text-muted);">Chưa có dữ liệu doanh thu chi tiết từ các tác phẩm.</p>';
+      trackEarningsList.innerHTML = `
+        <div style="background:var(--portal-card-bg);border:1px dashed var(--portal-card-border);border-radius:12px;padding:24px;text-align:center;color:var(--portal-text-muted);">
+          <div style="font-size:24px;margin-bottom:6px;">🎵</div>
+          <p style="margin:0;font-size:13px;font-weight:600;">Chưa có dữ liệu doanh thu chi tiết từ các tác phẩm.</p>
+          <span style="font-size:11px;opacity:0.8;">Số liệu phân bổ bản quyền (Royalty Splits) sẽ tự động hiển thị khi có phát sinh doanh thu.</span>
+        </div>
+      `;
     } else {
       trackEarningsList.innerHTML = `
         <div style="border:1px solid var(--portal-card-border);background:var(--portal-card-bg);border-radius:12px;overflow:hidden;box-shadow:var(--portal-shadow);">
@@ -5517,7 +5523,13 @@ async function loadArtistPayouts() {
   // Render Payout History Table
   if (payoutHistoryList) {
     if (artistPayoutRequests.length === 0) {
-      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;padding:20px;border-radius:14px;background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);color:var(--portal-text-muted);text-align:center;">Chưa có yêu cầu rút tiền nào được tạo.</p>';
+      payoutHistoryList.innerHTML = `
+        <div style="background:var(--portal-card-bg);border:1px dashed var(--portal-card-border);border-radius:12px;padding:24px;text-align:center;color:var(--portal-text-muted);">
+          <div style="font-size:24px;margin-bottom:6px;">💳</div>
+          <p style="margin:0;font-size:13px;font-weight:600;">Chưa có yêu cầu rút tiền nào được tạo.</p>
+          <span style="font-size:11px;opacity:0.8;">Lịch sử và tiến độ giải ngân các lệnh rút tiền sẽ được lưu vết chi tiết tại đây.</span>
+        </div>
+      `;
     } else {
       payoutHistoryList.innerHTML = `
         <div style="border:1px solid var(--glass-border);background:var(--glass-bg);border-radius:16px;overflow:hidden;box-shadow:var(--glass-shadow);margin-top:10px;">
