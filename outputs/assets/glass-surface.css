@@ -2202,72 +2202,230 @@ dialog[open].release-dialog-shell {
 }
 
 /* ==============================================================================
-   11. DEMO SUBMISSION (SUBMIT-MUSIC) LIQUID GLASS THEME
+/* ==============================================================================
+   11. DEMO SUBMISSION (SUBMIT-MUSIC) LIQUID GLASS THEME & HEADER CONTRAST
    ============================================================================== */
+.portal-body .nav.staggered-nav,
+.portal-body .nav,
+[data-theme="dark"] .nav.staggered-nav,
+[data-theme="dark"] .nav {
+  background: rgba(10, 14, 26, 0.75) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.portal-body .nav .brand,
+[data-theme="dark"] .nav .brand {
+  color: #ffffff !important;
+}
+
+.portal-body .nav .brand small,
+[data-theme="dark"] .nav .brand small {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.portal-body .lang-toggle-btn,
+[data-theme="dark"] .lang-toggle-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease !important;
+}
+
+.portal-body .lang-toggle-btn:hover,
+[data-theme="dark"] .lang-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
 .submit-hero {
   position: relative !important;
-  background: var(--glass-bg-elevated) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  border-bottom: 1px solid var(--glass-border) !important;
-  padding: 70px 4vw 48px !important;
+  width: 100% !important;
+  background: linear-gradient(180deg, rgba(13, 17, 28, 0.85) 0%, rgba(13, 17, 28, 0.45) 100%) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 60px 4vw 45px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
   overflow: hidden !important;
 }
 
+.submit-hero .eyebrow {
+  color: var(--lime) !important;
+  font-family: 'DM Mono', monospace !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  display: inline-block !important;
+  margin-bottom: 12px !important;
+  text-shadow: 0 0 12px rgba(216, 255, 72, 0.3) !important;
+}
+
+.submit-hero h1 {
+  color: #ffffff !important;
+  font-size: clamp(34px, 5.5vw, 68px) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.06em !important;
+  margin: 0 0 18px !important;
+  font-weight: 900 !important;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+}
+
+.submit-hero p {
+  font-size: clamp(15px, 1.8vw, 18px) !important;
+  line-height: 1.6 !important;
+  max-width: 760px !important;
+  color: #cbd5e1 !important;
+  margin: 0 0 25px !important;
+}
+
 .submit-form-shell {
-  max-width: 980px !important;
+  max-width: 960px !important;
   margin: 0 auto !important;
-  padding: 40px 4vw 90px !important;
+  padding: 45px 4vw 90px !important;
   position: relative !important;
   z-index: 2 !important;
 }
 
 .form-section-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  padding: 32px !important;
+  background: rgba(13, 17, 28, 0.76) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+  padding: 34px !important;
   margin-bottom: 28px !important;
-  border-radius: 20px !important;
-  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.25s ease !important;
+  border-radius: 18px !important;
+  color: #ffffff !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
 }
 
 .form-section-card:hover {
-  border-color: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55), 0 0 20px rgba(56, 189, 248, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
 }
 
 .form-section-card h3 {
   font-size: 20px !important;
   font-weight: 800 !important;
   margin: 0 0 6px !important;
-  letter-spacing: -0.04em !important;
-  color: var(--portal-text-main) !important;
+  letter-spacing: -0.03em !important;
+  color: #ffffff !important;
 }
 
 .form-section-card p.subhead {
   font-size: 13px !important;
-  color: var(--portal-text-muted) !important;
+  color: #94a3b8 !important;
   margin: 0 0 22px !important;
+}
+
+.form-section-card .field label {
+  color: #f1f5f9 !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 7px !important;
+  display: block !important;
+  font-family: 'DM Mono', monospace !important;
+  text-transform: uppercase !important;
+}
+
+.form-section-card input[type="text"],
+.form-section-card input[type="email"],
+.form-section-card input[type="tel"],
+.form-section-card input[type="url"],
+.form-section-card textarea {
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.form-section-card input::placeholder,
+.form-section-card textarea::placeholder {
+  color: #64748b !important;
+}
+
+.form-section-card input:focus,
+.form-section-card textarea:focus {
+  outline: none !important;
+  border-color: #38bdf8 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* Demo Highlight Box */
+.demo-highlight-box {
+  margin-top: 18px !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.06) !important;
+}
+
+.demo-box-label {
+  color: #34d399 !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+  font-family: 'DM Mono', monospace !important;
+  text-transform: uppercase !important;
+}
+
+.demo-box-input {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(52, 211, 153, 0.45) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 14px !important;
+}
+
+.demo-box-input:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important;
+}
+
+.demo-box-hint {
+  display: block !important;
+  margin-top: 8px !important;
+  color: #a7f3d0 !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
 }
 
 .genre-chip {
   padding: 7px 16px !important;
   font-size: 12px !important;
   font-weight: 700 !important;
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
   border-radius: 9999px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  color: var(--portal-text-main) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #e2e8f0 !important;
   cursor: pointer !important;
   user-select: none !important;
   transition: all 0.22s ease !important;
 }
 
 .genre-chip:hover {
-  background: rgba(255, 255, 255, 0.09) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
   border-color: #38bdf8 !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
 }
 
@@ -2275,7 +2433,7 @@ dialog[open].release-dialog-shell {
   background: linear-gradient(135deg, #0284c7, #38bdf8) !important;
   color: #ffffff !important;
   border-color: transparent !important;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45) !important;
 }
 
 .goal-option-card {
@@ -2283,257 +2441,74 @@ dialog[open].release-dialog-shell {
   align-items: flex-start !important;
   gap: 12px !important;
   padding: 14px 18px !important;
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 12px !important;
   background: rgba(255, 255, 255, 0.03) !important;
   cursor: pointer !important;
   margin-bottom: 10px !important;
   transition: all 0.22s ease !important;
-  color: var(--portal-text-main) !important;
+  color: #ffffff !important;
 }
 
 .goal-option-card:hover, .goal-option-card.selected {
   border-color: #38bdf8 !important;
   background: rgba(56, 189, 248, 0.08) !important;
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.15) !important;
 }
 
 .goal-option-card strong {
-  color: var(--portal-text-main) !important;
+  color: #ffffff !important;
 }
 
-.goal-option-card small {
-  color: var(--portal-text-muted) !important;
+.goal-option-card span {
+  color: #94a3b8 !important;
+}
+
+/* Modernized Submit Button */
+.submit-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 18px 48px !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 10px 30px -5px rgba(2, 132, 199, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.submit-action-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 16px 40px -5px rgba(2, 132, 199, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+  filter: brightness(1.08) !important;
+}
+
+.submit-action-btn:active {
+  transform: translateY(0) scale(0.99) !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4) !important;
 }
 
 .submit-dialog-box {
-  background: var(--glass-bg-elevated) !important;
+  background: rgba(13, 17, 28, 0.88) !important;
   backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
   -webkit-backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6) !important;
   max-width: 580px !important;
   width: 92vw !important;
   padding: 42px !important;
   border-radius: 24px !important;
   text-align: center !important;
-  color: var(--portal-text-main) !important;
-}
-
-/* ==============================================================================
-   12. UNI-HUBE CREATIVE STUDIO & PRODUCER ROSTER THEME
-   ============================================================================== */
-.home-hero {
-  position: relative !important;
-  background: transparent !important;
-}
-
-.hube-filter-group {
-  display: flex !important;
-  gap: 10px !important;
-  flex-wrap: wrap !important;
-  padding: 24px 3vw !important;
-  border-bottom: 1px solid var(--glass-border-subtle) !important;
-  background: transparent !important;
-}
-
-.hube-filter-btn {
-  padding: 8px 18px !important;
-  border: 1px solid var(--glass-border) !important;
-  background: var(--glass-bg-subtle) !important;
-  font: 11px 'DM Mono', monospace !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  font-weight: 700 !important;
-  border-radius: 9999px !important;
-  color: var(--portal-text-main) !important;
-  transition: all 0.22s ease !important;
-}
-
-.hube-filter-btn.active, .hube-filter-btn:hover {
-  background: var(--portal-text-main) !important;
-  color: var(--portal-bg) !important;
-  border-color: var(--portal-text-main) !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
-}
-
-[data-theme="dark"] .hube-filter-btn.active,
-.portal-body.dark-mode .hube-filter-btn.active {
-  background: #ffffff !important;
-  color: #0b0b0b !important;
-  border-color: #ffffff !important;
-}
-
-.hube-badge {
-  font: 10px 'DM Mono', monospace !important;
-  letter-spacing: 1.2px !important;
-  text-transform: uppercase !important;
-  padding: 3px 8px !important;
-  border-radius: 6px !important;
-  font-weight: 800 !important;
-  display: inline-block !important;
-  background: rgba(245, 158, 11, 0.18) !important;
-  color: #fbbf24 !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
-}
-
-.producer-card, .studio-booking-card, .service-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  border-radius: 20px !important;
-  padding: 24px !important;
-  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.25s ease !important;
-}
-
-.producer-card:hover, .studio-booking-card:hover, .service-card:hover {
-  transform: translateY(-4px) scale(1.01) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
-}
-
-/* ==============================================================================
-   13. UNIPUBLISHING SYNC & CATALOGUE LICENSING THEME
-   ============================================================================== */
-.pub-hero {
-  position: relative !important;
-  background: var(--glass-bg-elevated) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  border-bottom: 2px solid #38bdf8 !important;
-  padding: 70px 4vw 50px !important;
-  color: #ffffff !important;
-  overflow: hidden !important;
-}
-
-.kpi-strip {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
-  background: var(--glass-bg-subtle) !important;
-  backdrop-filter: blur(var(--glass-blur)) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
-  color: var(--portal-text-main) !important;
-  border-bottom: 1px solid var(--glass-border) !important;
-}
-
-.kpi-item {
-  padding: 18px 24px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  border-right: 1px solid var(--glass-border-subtle) !important;
-}
-
-.kpi-badge {
-  font-family: 'DM Mono', monospace !important;
-  font-weight: 800 !important;
-  font-size: 13px !important;
-  color: #0b0b0b !important;
-  background: var(--lime) !important;
-  padding: 6px 10px !important;
-  border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(216, 255, 72, 0.3) !important;
-}
-
-.catalogue-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  border-radius: 20px !important;
-  padding: 24px !important;
-  margin-bottom: 18px !important;
-  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.25s ease !important;
-  color: var(--portal-text-main) !important;
-}
-
-.catalogue-card:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35) !important;
-  border-color: #38bdf8 !important;
-}
-
-.rights-badge.precleared {
-  background: rgba(16, 185, 129, 0.18) !important;
-  color: #34d399 !important;
-  border: 1px solid rgba(52, 211, 153, 0.4) !important;
-}
-
-.rights-badge.publishing-only {
-  background: rgba(245, 158, 11, 0.18) !important;
-  color: #fbbf24 !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
-}
-
-.platform-pill {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid var(--glass-border-subtle) !important;
-  color: var(--portal-text-main) !important;
-  border-radius: 6px !important;
-}
-
-/* ==============================================================================
-   14. COMPREHENSIVE OVERRIDES FOR DATA-PAGES (UNIPUBLISHING, UNIHUBE, SUBMIT-MUSIC)
-   ============================================================================== */
-[data-page="unipublishing"] #catalogue-section > div,
-[data-page="unipublishing"] #panel-track-order,
-[data-page="unipublishing"] #panel-verify-cert,
-[data-page="unipublishing"] .notice-box,
-[data-page="unipublishing"] .faq-item,
-[data-page="unipublishing"] .kpi-strip,
-[data-page="unipublishing"] .catalogue-card,
-[data-page="unipublishing"] #order-section > div,
-[data-page="unipublishing"] .dialog-glass,
-[data-page="unihube"] .hube-booking-box,
-[data-page="unihube"] .hube-service-card,
-[data-page="unihube"] .producer-card,
-[data-page="unihube"] .service-card,
-[data-page="submit-music"] .form-section-card,
-[data-page="submit-music"] .submit-dialog-box {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  color: var(--portal-text-main) !important;
-}
-
-[data-page="unipublishing"] .notice-box {
-  background: rgba(2, 132, 199, 0.12) !important;
-  border: 1px solid rgba(56, 189, 248, 0.35) !important;
-  border-left: 4px solid #38bdf8 !important;
-  color: var(--portal-text-main) !important;
-}
-
-[data-page="unipublishing"] input,
-[data-page="unipublishing"] select,
-[data-page="unipublishing"] textarea,
-[data-page="submit-music"] input,
-[data-page="submit-music"] select,
-[data-page="submit-music"] textarea,
-[data-page="unihube"] input,
-[data-page="unihube"] select,
-[data-page="unihube"] textarea {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid var(--glass-border-subtle) !important;
-  color: var(--portal-text-main) !important;
-  border-radius: 8px !important;
-}
-
-[data-theme="dark"] [data-page="unipublishing"] h2,
-[data-theme="dark"] [data-page="unipublishing"] h3,
-[data-theme="dark"] [data-page="unipublishing"] h4,
-[data-theme="dark"] [data-page="unipublishing"] strong,
-[data-theme="dark"] [data-page="unihube"] h2,
-[data-theme="dark"] [data-page="unihube"] h3,
-[data-theme="dark"] [data-page="unihube"] strong,
-[data-theme="dark"] [data-page="submit-music"] h2,
-[data-theme="dark"] [data-page="submit-music"] h3,
-[data-theme="dark"] [data-page="submit-music"] strong {
   color: #ffffff !important;
 }
+
+
 
 
