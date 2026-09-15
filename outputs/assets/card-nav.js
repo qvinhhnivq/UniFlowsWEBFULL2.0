@@ -7,11 +7,18 @@
 export async function ensureGSAP() {
   if (typeof window !== 'undefined' && window.gsap) return window.gsap;
   return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.gsap) {
+      resolve(window.gsap);
+      return;
+    }
     const existing = document.querySelector('script[src*="gsap"]');
     if (existing) {
-      if (window.gsap) return resolve(window.gsap);
-      existing.addEventListener('load', () => resolve(window.gsap || null), { once: true });
-      existing.addEventListener('error', () => resolve(null), { once: true });
+      if (existing.complete || window.gsap) {
+        resolve(window.gsap || null);
+        return;
+      }
+      existing.addEventListener('load', () => resolve(window.gsap || null));
+      existing.addEventListener('error', () => resolve(null));
       setTimeout(() => resolve(window.gsap || null), 1000);
       return;
     }
@@ -19,8 +26,8 @@ export async function ensureGSAP() {
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js';
     script.onload = () => resolve(window.gsap || null);
     script.onerror = () => resolve(null);
-    setTimeout(() => resolve(window.gsap || null), 1500);
     document.head.appendChild(script);
+    setTimeout(() => resolve(window.gsap || null), 1500);
   });
 }
 
@@ -51,7 +58,12 @@ const DEFAULTS = {
 };
 
 export async function initCardNav(mountTarget, options = {}) {
-  const gsap = await ensureGSAP();
+  let gsap = null;
+  try {
+    gsap = await ensureGSAP();
+  } catch (err) {
+    console.warn('GSAP load skipped in CardNav:', err);
+  }
   const opts = { ...DEFAULTS, ...options };
 
   const mountEl = typeof mountTarget === 'string' ? document.querySelector(mountTarget) : mountTarget;
@@ -231,21 +243,11 @@ export async function initCardNav(mountTarget, options = {}) {
         if (typeof linkItem.onClick === 'function') {
           linkItem.onClick();
         } else if (linkItem.action === 'password') {
-          if (typeof window.openArtistProfileModal === 'function') {
-            window.openArtistProfileModal('profile-tab-security');
-          } else {
-            const openBtn = document.querySelector('#open-profile-settings-btn');
-            if (openBtn) openBtn.click();
-            setTimeout(() => {
-              document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
-            }, 50);
-          }
-        } else if (linkItem.action === 'profile') {
-          if (typeof window.openArtistProfileModal === 'function') {
-            window.openArtistProfileModal('profile-tab-banking');
-          } else {
-            document.querySelector('#open-profile-settings-btn')?.click();
-          }
+          const openBtn = document.querySelector('#open-profile-settings-btn');
+          if (openBtn) openBtn.click();
+          setTimeout(() => {
+            document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
+          }, 50);
         } else if (linkItem.action === 'theme') {
           document.querySelector('#theme-toggle-btn')?.click() || document.querySelector('#mobile-theme-toggle-btn')?.click();
         } else if (linkItem.action === 'logout') {
@@ -261,19 +263,9 @@ export async function initCardNav(mountTarget, options = {}) {
             }
           }
         } else if (linkItem.hash) {
-          const targetHash = linkItem.hash.startsWith('#') ? linkItem.hash : '#' + linkItem.hash;
-          if (location.hash === targetHash) {
-            window.dispatchEvent(new Event('hashchange'));
-          } else {
-            location.hash = targetHash;
-          }
+          location.hash = linkItem.hash;
         } else if (linkItem.tab) {
-          const targetHash = '#' + linkItem.tab.replace('tab-', '');
-          if (location.hash === targetHash) {
-            window.dispatchEvent(new Event('hashchange'));
-          } else {
-            location.hash = targetHash;
-          }
+          location.hash = linkItem.tab.replace('tab-', '');
         }
       });
 
@@ -324,6 +316,7 @@ export async function initCardNav(mountTarget, options = {}) {
       );
     } else {
       dropdown.style.height = 'auto';
+      dropdown.style.opacity = '1';
       cardElements.forEach(c => { c.style.opacity = '1'; c.style.transform = 'none'; });
       busy = false;
     }

@@ -18,7 +18,7 @@
     <form id="artist-login-form">
       <div class="field">
         <label for="artist-email">Tên đăng nhập hoặc Email</label>
-        <input id="artist-email" required type="text" autocomplete="username" placeholder="lumi hoặc lumi@uniflowslabel.com">
+        <input id="artist-email" required type="text" autocomplete="username" placeholder="Tên đăng nhập hoặc email nghệ sĩ">
       </div>
       <div class="field">
         <label for="artist-password">Mật khẩu</label>
@@ -39,7 +39,7 @@
   </main>
 
   <script type="module">
-    import { getData, getLocalCachedData } from '/assets/data.js';
+    import { getData, getLocalCachedData, defaultData } from '/assets/data.js';
     import { supabase, isSupabaseConfigured, getCurrentUserProfile } from '/assets/supabase.js';
 
     // Auto-login if previously remembered
@@ -93,10 +93,11 @@
         const liveData = await getData();
         const cachedData = getLocalCachedData();
         
-        // Merge artists from both live and local cache
+        // Merge artists from live, local cache, and default roster
         const allArtists = [
           ...(liveData.artists || []),
-          ...(cachedData.artists || [])
+          ...(cachedData.artists || []),
+          ...(defaultData?.artists || [])
         ];
 
         // 1. Match artist by username, email, ID, or display name

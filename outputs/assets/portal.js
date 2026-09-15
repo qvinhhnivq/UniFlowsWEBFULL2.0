@@ -1,4 +1,4 @@
-import { getData, saveData } from './data.js';
+import { getData, saveData, defaultData, getLocalCachedData } from './data.js';
 import { supabase, isSupabaseConfigured, uploadArtworkFile, uploadAudioFile } from './supabase.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimizer.js';
@@ -34,10 +34,8 @@ const releaseDialog = document.querySelector('#release-dialog');
 const openReleaseModalBtn = document.querySelector('#open-release-modal-btn');
 const quickOpenReleaseModalBtn = document.querySelector('#quick-open-release-modal-btn');
 const closeReleaseDialogBtn = document.querySelector('#close-release-dialog-btn');
+const cancelReleaseBtn = document.querySelector('#cancel-release-btn');
 let currentDraftId = null;
-export let cachedFetchedReleases = [];
-let currentReleaseFilter = 'all';
-let currentSearchQuery = '';
 
 let data = await getData();
 
@@ -48,24 +46,6 @@ if (Array.isArray(data.artists)) {
     const id = (a.id || '').toLowerCase();
     return !n.includes('tổng cộng') && !n.includes('tong cong') && !n.includes('★') && !id.includes('tong-cong') && !id.includes('tongcong');
   });
-}
-
-export function openDialogSafely(dlg) {
-  if (!dlg) return;
-  try {
-    if (!dlg.open) dlg.showModal();
-  } catch (_) {
-    dlg.setAttribute('open', '');
-  }
-}
-
-export function closeDialogSafely(dlg) {
-  if (!dlg) return;
-  try {
-    dlg.close();
-  } catch (_) {
-    dlg.removeAttribute('open');
-  }
 }
 
 function removeVietnameseTonesHelper(str) {
@@ -89,8 +69,13 @@ const targetName = sessionArtistName.toLowerCase().trim();
 const targetToneLess = removeVietnameseTonesHelper(sessionArtistName || sessionArtistId || emailPrefix);
 const targetSlug = cleanAlphanumericHelper(sessionArtistName || sessionArtistId || emailPrefix);
 
+const artistRoster = [
+  ...(Array.isArray(data.artists) && data.artists.length > 0 ? data.artists : []),
+  ...(Array.isArray(defaultData?.artists) ? defaultData.artists : [])
+];
+
 // Tự động tìm nghệ sĩ thông minh (Khớp chính xác, không dấu, slug, username, email)
-let artist = (data.artists || []).find(a => {
+let artist = artistRoster.find(a => {
   if (!a) return false;
   const aId = (a.id || '').toLowerCase().trim();
   const aUser = (a.username || '').toLowerCase().trim();
@@ -107,9 +92,9 @@ let artist = (data.artists || []).find(a => {
   return false;
 });
 
-// Fallback to sole artist in roster if only 1 exists
-if (!artist && Array.isArray(data.artists) && data.artists.length === 1) {
-  artist = data.artists[0];
+// Fallback to first artist in roster if only 1 exists or if target matched none
+if (!artist && artistRoster.length > 0) {
+  artist = artistRoster[0];
 }
 
 if (!artist) {
@@ -175,18 +160,17 @@ if (artist) {
   const ovPayableEl = document.querySelector('#overview-payable-balance');
   if (ovPayableEl) ovPayableEl.textContent = `₫ ${artist.payableBalance || '0'}`;
 
-  // Avatar click triggers Photo tab
   const avatarEl = document.querySelector('#portal-artist-avatar');
   if (avatarEl && artist.image) avatarEl.src = artist.image;
   if (avatarEl) {
     avatarEl.style.cursor = 'pointer';
     avatarEl.title = 'Nhấn để xem và đổi ảnh đại diện trong Hồ sơ';
     avatarEl.addEventListener('click', () => {
-      if (typeof window.openArtistProfileModal === 'function') {
-        window.openArtistProfileModal('profile-tab-photo');
-      } else {
-        document.querySelector('#open-profile-settings-btn')?.click();
-      }
+      const openBtn = document.querySelector('#open-profile-settings-btn');
+      if (openBtn) openBtn.click();
+      setTimeout(() => {
+        document.querySelector('.profile-tab-btn[data-tab="profile-tab-photo"]')?.click();
+      }, 50);
     });
   }
 
@@ -194,9 +178,6 @@ if (artist) {
   if (sidebarNameEl) sidebarNameEl.textContent = artist.name;
   const sidebarAvatarEl = document.querySelector('#sidebar-artist-avatar');
   if (sidebarAvatarEl && artist.image) sidebarAvatarEl.src = artist.image;
-
-  // Initialize Profile dialog early
-  try { initProfileSettingsDialog(); } catch (e) { console.warn('Early profile init:', e); }
 
   // ----------------------------------------------------
   // CARD NAV INITIALIZATION (PURE TYPOGRAPHY, NO EMOJIS)
@@ -233,67 +214,49 @@ if (artist) {
         textColor: "#ffffff",
         links: [
           { label: "Doanh thu & Rút tiền", hash: "#earnings", tab: "tab-earnings", ariaLabel: "Doanh thu và rút tiền" },
-          { label: "Hồ sơ & Cài đặt", action: "profile", onClick: () => {
-              if (typeof window.openArtistProfileModal === 'function') {
-                window.openArtistProfileModal('profile-tab-banking');
-              } else {
-                document.querySelector('#open-profile-settings-btn')?.click();
-              }
-            }, ariaLabel: "Hồ sơ và cài đặt" },
+          { label: "Hồ sơ & Cài đặt", onClick: () => document.querySelector('#open-profile-settings-btn')?.click(), ariaLabel: "Hồ sơ và cài đặt" },
           { label: "Đổi mật khẩu tài khoản", action: "password", onClick: () => {
-              if (typeof window.openArtistProfileModal === 'function') {
-                window.openArtistProfileModal('profile-tab-security');
-              } else {
-                const openBtn = document.querySelector('#open-profile-settings-btn');
-                if (openBtn) openBtn.click();
-                setTimeout(() => {
-                  document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
-                }, 50);
-              }
+              const openBtn = document.querySelector('#open-profile-settings-btn');
+              if (openBtn) openBtn.click();
+              setTimeout(() => {
+                document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
+              }, 50);
             }, ariaLabel: "Đổi mật khẩu" },
           { label: "Đăng xuất Nghệ sĩ", action: "logout", onClick: () => performArtistLogout(), ariaLabel: "Đăng xuất", isDanger: true }
         ]
       }
     ];
 
-    try {
-      window.cardNavInstance = await initCardNav(cardNavMount, {
-        items: portalNavItems,
-        baseColor: '#ffffff',
-        menuColor: '#000000',
-        buttonBgColor: '#111111',
-        buttonTextColor: '#ffffff',
-        ease: 'power3.out',
-        theme: 'dark',
-        artistName: artist.name || 'Nghệ sĩ',
-        artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist',
-        onLangChange: (targetLang) => {
-          setLang(targetLang);
-        },
-        onThemeToggle: () => {
-          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-          const nextTheme = isDark ? 'light' : 'dark';
-          applyPortalTheme(nextTheme);
-          localStorage.setItem('uniflows-theme', nextTheme);
-          return nextTheme === 'dark';
-        },
-        onProfileClick: () => {
-          document.querySelector('#open-profile-settings-btn')?.click();
-        }
-      });
-    } catch (navErr) {
-      console.warn('CardNav initialization warning:', navErr);
-    }
+    window.cardNavInstance = await initCardNav(cardNavMount, {
+      items: portalNavItems,
+      baseColor: '#ffffff',
+      menuColor: '#000000',
+      buttonBgColor: '#111111',
+      buttonTextColor: '#ffffff',
+      ease: 'power3.out',
+      theme: 'dark',
+      artistName: artist.name || 'Nghệ sĩ',
+      artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist',
+      onLangChange: (targetLang) => {
+        setLang(targetLang);
+      },
+      onThemeToggle: () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const nextTheme = isDark ? 'light' : 'dark';
+        applyPortalTheme(nextTheme);
+        localStorage.setItem('uniflows-theme', nextTheme);
+        return nextTheme === 'dark';
+      },
+      onProfileClick: () => {
+        document.querySelector('#open-profile-settings-btn')?.click();
+      }
+    });
   }
 
   // ----------------------------------------------------
   // GLASS SURFACE INITIALIZATION (LIQUID GLASS EFFECT)
   // ----------------------------------------------------
-  try {
-    initPortalGlassSurfaces();
-  } catch (glassErr) {
-    console.warn('Glass surface warning:', glassErr);
-  }
+  initPortalGlassSurfaces();
 
   // ----------------------------------------------------
   // ARTIST WEBSITE PROFILE PHOTO CHANGE REQUEST FLOW
@@ -4360,7 +4323,11 @@ function showNotice(msg, isError = false) {
   scrollTo({ top: notice.offsetTop - 80, behavior: 'smooth' });
 }
 
-// Release Search & Filter Controls
+let currentReleaseFilter = 'all';
+let currentSearchQuery = '';
+let cachedFetchedReleases = [];
+
+// Search bar
 const releaseSearchInput = document.querySelector('#release-search-input');
 releaseSearchInput?.addEventListener('input', (e) => {
   currentSearchQuery = e.target.value.trim().toLowerCase();
@@ -4605,28 +4572,34 @@ async function renderReleases() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data: dbReleases, error } = await supabase
+      let res = await supabase
         .from('releases')
-        .select('*, artists(name)')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && dbReleases) {
-        allRawReleases = dbReleases;
+      if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
+        allRawReleases = res.data;
       }
     } catch (e) {
       console.warn('Lỗi tải releases từ Supabase:', e);
     }
   }
 
-  // Fallback to cached local releases across artists if empty
+  // Fallback to cached/default releases across artists if empty
   if (allRawReleases.length === 0) {
-    (data.artists || []).forEach(art => {
+    const allRoster = [
+      ...(Array.isArray(data.artists) && data.artists.length > 0 ? data.artists : []),
+      ...(Array.isArray(defaultData?.artists) ? defaultData.artists : [])
+    ];
+    allRoster.forEach(art => {
       (art.products || []).forEach(p => {
-        allRawReleases.push({
-          ...p,
-          artist_id: art.id,
-          artists: { name: art.name }
-        });
+        if (!allRawReleases.some(existing => existing.id === p.id)) {
+          allRawReleases.push({
+            ...p,
+            artist_id: art.id,
+            artists: { name: art.name }
+          });
+        }
       });
     });
   }
@@ -6121,30 +6094,16 @@ function initProfileSettingsDialog() {
     if (confirmPass) confirmPass.value = '';
   }
 
-  window.openArtistProfileModal = function(targetTabId = 'profile-tab-banking') {
-    populateProfileData();
-    if (targetTabId) {
-      tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === targetTabId));
-      panels.forEach(p => p.classList.toggle('active', p.id === targetTabId));
-    }
-    if (!profileDialog.open) {
-      try {
-        profileDialog.showModal();
-      } catch (_) {
-        profileDialog.setAttribute('open', '');
-      }
-    }
-  };
-
   // Open & Close Handlers
   openProfileBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      window.openArtistProfileModal('profile-tab-banking');
+      populateProfileData();
+      profileDialog.showModal();
     });
   });
 
   closeProfileBtn?.addEventListener('click', () => {
-    try { profileDialog.close(); } catch (_) { profileDialog.removeAttribute('open'); }
+    profileDialog.close();
   });
 
   // Form 1: Default Banking Submit
@@ -6751,9 +6710,9 @@ export function showPortalSuccessModal({ title = 'Gửi yêu cầu thành công'
 
   if (dlg) {
     if (closeBtn) {
-      closeBtn.onclick = () => closeDialogSafely(dlg);
+      closeBtn.onclick = () => dlg.close();
     }
-    openDialogSafely(dlg);
+    dlg.showModal();
   }
 }
 window.showPortalSuccessModal = showPortalSuccessModal;
@@ -6942,12 +6901,8 @@ function populateReleaseOptionsInDialogs() {
   const pitchSelect = document.querySelector('#pitch-release-select');
   const isrcSelect = document.querySelector('#isrc-release-select');
 
-  const releasePool = (Array.isArray(cachedFetchedReleases) && cachedFetchedReleases.length > 0)
-    ? cachedFetchedReleases
-    : (artist?.products || []);
-
   const releaseOptionsHtml = '<option value="">-- Chọn bài hát từ catalogue của bạn --</option>' +
-    releasePool.map(r => `<option value="${esc(r.title)}">${esc(r.title)} (${esc(r.type || 'Single')})</option>`).join('');
+    cachedFetchedReleases.map(r => `<option value="${esc(r.title)}">${esc(r.title)} (${esc(r.type || 'Single')})</option>`).join('');
 
   if (crSelect) crSelect.innerHTML = releaseOptionsHtml;
   if (pitchSelect) pitchSelect.innerHTML = releaseOptionsHtml;
@@ -6955,7 +6910,7 @@ function populateReleaseOptionsInDialogs() {
 
   if (glSelect) {
     glSelect.innerHTML = '<option value="Toàn bộ kho nhạc của Nghệ sĩ (All Catalogue)">🌟 Toàn bộ bài hát của bạn (All Catalogue)</option>' +
-      releasePool.map(r => `<option value="Chỉ bài hát: ${esc(r.title)}">Chỉ bài hát: ${esc(r.title)}</option>`).join('');
+      cachedFetchedReleases.map(r => `<option value="Chỉ bài hát: ${esc(r.title)}">Chỉ bài hát: ${esc(r.title)}</option>`).join('');
   }
 }
 
@@ -6964,11 +6919,11 @@ openCopyrightReportBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   if (copyrightDialogNotice) copyrightDialogNotice.style.display = 'none';
   copyrightReportForm?.reset();
-  openDialogSafely(copyrightDialog);
+  copyrightDialog?.showModal();
 });
 
-closeCopyrightDialogBtn?.addEventListener('click', () => closeDialogSafely(copyrightDialog));
-closeCopyrightDialogBtn2?.addEventListener('click', () => closeDialogSafely(copyrightDialog));
+closeCopyrightDialogBtn?.addEventListener('click', () => copyrightDialog?.close());
+closeCopyrightDialogBtn2?.addEventListener('click', () => copyrightDialog?.close());
 
 copyrightReportForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7059,11 +7014,11 @@ openGreenlistBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   if (greenlistDialogNotice) greenlistDialogNotice.style.display = 'none';
   greenlistRequestForm?.reset();
-  openDialogSafely(greenlistDialog);
+  greenlistDialog?.showModal();
 });
 
-closeGreenlistDialogBtn?.addEventListener('click', () => closeDialogSafely(greenlistDialog));
-closeGreenlistDialogBtn2?.addEventListener('click', () => closeDialogSafely(greenlistDialog));
+closeGreenlistDialogBtn?.addEventListener('click', () => greenlistDialog?.close());
+closeGreenlistDialogBtn2?.addEventListener('click', () => greenlistDialog?.close());
 
 greenlistRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7128,7 +7083,7 @@ greenlistRequestForm?.addEventListener('submit', async (e) => {
       });
     } catch (_) {}
 
-    closeDialogSafely(greenlistDialog);
+    greenlistDialog?.close();
     greenlistRequestForm.reset();
     showPortalSuccessModal({
       title: 'Đã gửi yêu cầu cấp Green-list!',
@@ -7150,11 +7105,11 @@ greenlistRequestForm?.addEventListener('submit', async (e) => {
 openPitchingBtn?.addEventListener('click', () => {
   populateReleaseOptionsInDialogs();
   pitchingRequestForm?.reset();
-  openDialogSafely(pitchingDialog);
+  pitchingDialog?.showModal();
 });
 
-closePitchingDialogBtn?.addEventListener('click', () => closeDialogSafely(pitchingDialog));
-closePitchingDialogBtnFooter?.addEventListener('click', () => closeDialogSafely(pitchingDialog));
+closePitchingDialogBtn?.addEventListener('click', () => pitchingDialog?.close());
+closePitchingDialogBtnFooter?.addEventListener('click', () => pitchingDialog?.close());
 
 pitchingRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7214,7 +7169,7 @@ pitchingRequestForm?.addEventListener('submit', async (e) => {
       });
     } catch (_) {}
 
-    closeDialogSafely(pitchingDialog);
+    pitchingDialog?.close();
     pitchingRequestForm.reset();
     showPortalSuccessModal({
       title: 'Gửi bài Pitching A&R thành công!',
@@ -7242,11 +7197,11 @@ openIsrcBtn?.addEventListener('click', () => {
     now.setDate(now.getDate() + 7);
     relDateInp.value = now.toISOString().split('T')[0];
   }
-  openDialogSafely(isrcDialog);
+  isrcDialog?.showModal();
 });
 
-closeIsrcDialogBtn?.addEventListener('click', () => closeDialogSafely(isrcDialog));
-closeIsrcDialogBtnFooter?.addEventListener('click', () => closeDialogSafely(isrcDialog));
+closeIsrcDialogBtn?.addEventListener('click', () => isrcDialog?.close());
+closeIsrcDialogBtnFooter?.addEventListener('click', () => isrcDialog?.close());
 
 isrcRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -7308,7 +7263,7 @@ isrcRequestForm?.addEventListener('submit', async (e) => {
       });
     } catch (_) {}
 
-    closeDialogSafely(isrcDialog);
+    isrcDialog?.close();
     isrcRequestForm.reset();
     showPortalSuccessModal({
       title: 'Đã gửi yêu cầu cấp mã ISRC!',
@@ -8540,17 +8495,32 @@ function simulateDemoAudioPlayback() {
   }, 200);
 }
 
-try { initPortalTheme(); } catch (e) { console.warn('initPortalTheme err:', e); }
-try { initPortalLanguage(); } catch (e) { console.warn('initPortalLanguage err:', e); }
-try { renderReleases(); } catch (e) { console.warn('renderReleases err:', e); }
-try { loadArtistPayouts(); } catch (e) { console.warn('loadArtistPayouts err:', e); }
-try { renderArtistPublishingEarnings(); } catch (e) { console.warn('renderArtistPublishingEarnings err:', e); }
-try { loadArtistServiceRequests(); } catch (e) { console.warn('loadArtistServiceRequests err:', e); }
-try { initNotifications(); } catch (e) { console.warn('initNotifications err:', e); }
-try { renderReleaseCalendar(); } catch (e) { console.warn('renderReleaseCalendar err:', e); }
-try { initSyncedLyricsStudio(); } catch (e) { console.warn('initSyncedLyricsStudio err:', e); }
-try { initDspControls(); } catch (e) { console.warn('initDspControls err:', e); }
-try { initTerritoryControls(); } catch (e) { console.warn('initTerritoryControls err:', e); }
-try { initLanguageSearchableControls(); } catch (e) { console.warn('initLanguageSearchableControls err:', e); }
-try { initSearchableBankDropdown(); } catch (e) { console.warn('initSearchableBankDropdown err:', e); }
-try { initProfileSettingsDialog(); } catch (e) { console.warn('initProfileSettingsDialog err:', e); }
+try { initPortalTheme(); } catch (e) { console.warn('initPortalTheme:', e); }
+try { initPortalLanguage(); } catch (e) { console.warn('initPortalLanguage:', e); }
+try { renderReleases(); } catch (e) { console.warn('renderReleases:', e); }
+try { loadArtistPayouts(); } catch (e) { console.warn('loadArtistPayouts:', e); }
+try { renderArtistPublishingEarnings(); } catch (e) { console.warn('renderArtistPublishingEarnings:', e); }
+try { loadArtistServiceRequests(); } catch (e) { console.warn('loadArtistServiceRequests:', e); }
+try { initNotifications(); } catch (e) { console.warn('initNotifications:', e); }
+try { renderReleaseCalendar(); } catch (e) { console.warn('renderReleaseCalendar:', e); }
+try { initSyncedLyricsStudio(); } catch (e) { console.warn('initSyncedLyricsStudio:', e); }
+try { initDspControls(); } catch (e) { console.warn('initDspControls:', e); }
+try { initTerritoryControls(); } catch (e) { console.warn('initTerritoryControls:', e); }
+try { initLanguageSearchableControls(); } catch (e) { console.warn('initLanguageSearchableControls:', e); }
+try { initSearchableBankDropdown(); } catch (e) { console.warn('initSearchableBankDropdown:', e); }
+try { initProfileSettingsDialog(); } catch (e) { console.warn('initProfileSettingsDialog:', e); }
+
+// Global click handlers fallback for Quick Action Buttons
+document.querySelector('#quick-open-release-modal-btn')?.addEventListener('click', () => {
+  if (typeof handleOpenReleaseModal === 'function') handleOpenReleaseModal();
+  else document.querySelector('#release-dialog')?.showModal();
+});
+
+document.querySelector('#quick-open-payout-modal-btn')?.addEventListener('click', () => {
+  document.querySelector('#payout-dialog')?.showModal();
+});
+
+document.querySelector('#open-profile-settings-btn')?.addEventListener('click', () => {
+  document.querySelector('#profile-settings-dialog')?.showModal();
+});
+
