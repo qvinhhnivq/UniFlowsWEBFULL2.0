@@ -36,7 +36,7 @@
 /* Active in Dark Mode */
 [data-theme="dark"] .portal-dither-backdrop,
 .portal-body.dark-mode .portal-dither-backdrop {
-  opacity: 0.55;
+  opacity: 0.95;
   visibility: visible;
 }
 
