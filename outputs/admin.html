@@ -77,7 +77,10 @@
       <button type="button" class="admin-tab-btn active" data-tab="admin-tab-overview">📊 00 / Dashboard Tổng quan</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-releases">💿 01 / Duyệt phát hành & Waveform A&R</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-pitching">🎯 02 / Pitching & Playlist Tracker</button>
-      <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">👥 03 / Quản lý Nghệ sĩ & Portal</button>
+      <button type="button" class="admin-tab-btn" data-tab="admin-tab-artists">
+        👥 03 / Quản lý Nghệ sĩ & Portal
+        <span class="tab-badge" id="badge-tab-artist-photos" style="display:none;margin-left:6px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;">0 ảnh</span>
+      </button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-payouts">💳 04 / Quản lý Rút tiền</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-copyright">🛡️ 05 / Bản quyền & Green-list</button>
       <button type="button" class="admin-tab-btn" data-tab="admin-tab-articles">📰 06 / Bài viết & Tạp chí</button>
@@ -1434,6 +1437,7 @@
         <!-- Filter Pills -->
         <div class="requests-filter-bar" style="display:flex; gap:8px; margin: 18px 0; flex-wrap:wrap; align-items:center;">
           <button type="button" class="req-filter-btn active button" data-req-filter="all" style="padding:6px 14px; font-size:11px;">Tất cả yêu cầu (<span id="req-count-all">0</span>)</button>
+          <button type="button" class="req-filter-btn button alt" data-req-filter="photo" style="padding:6px 14px; font-size:11px; background:#f0f9ff; color:#0369a1; border-color:#bae6fd; font-weight:bold;">📸 Đổi ảnh đại diện (<span id="req-count-photo">0</span>)</button>
           <button type="button" class="req-filter-btn button alt" data-req-filter="takedown" style="padding:6px 14px; font-size:11px;">🗑️ Gỡ bài hát (<span id="req-count-takedown">0</span>)</button>
           <button type="button" class="req-filter-btn button alt" data-req-filter="catalog_transfer" style="padding:6px 14px; font-size:11px;">📦 Chuyển Catalog (<span id="req-count-catalog">0</span>)</button>
           <button type="button" class="req-filter-btn button alt" data-req-filter="copyright_claim" style="padding:6px 14px; font-size:11px;">🛡️ Bản quyền & Claims (<span id="req-count-copyright">0</span>)</button>

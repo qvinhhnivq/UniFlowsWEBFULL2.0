@@ -5664,6 +5664,43 @@ function setupSearchableBankDropdown({
 
   let highlightedIndex = -1;
   let currentFilteredList = [...VIETNAM_BANKS];
+  let isSelectingOrClosing = false;
+
+  function closeDropdown() {
+    wrapper.classList.remove('open');
+    dropdown.style.setProperty('display', 'none', 'important');
+    highlightedIndex = -1;
+    isSelectingOrClosing = true;
+    setTimeout(() => { isSelectingOrClosing = false; }, 350);
+  }
+
+  function openDropdown() {
+    if (isSelectingOrClosing) return;
+    wrapper.classList.add('open');
+    dropdown.style.setProperty('display', 'flex', 'important');
+    if (searchInput.value.includes('—') || (hiddenInput && hiddenInput.value)) {
+      renderList(VIETNAM_BANKS);
+    } else {
+      filterBanks(searchInput.value.trim());
+    }
+  }
+
+  function selectBank(bank) {
+    if (!bank) return;
+    const displayVal = `${bank.shortName} (${bank.code}) — ${bank.nameVi}`;
+    const valueVal = `${bank.shortName} (${bank.code})`;
+    searchInput.value = displayVal;
+    if (hiddenInput) {
+      hiddenInput.value = valueVal;
+      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    closeDropdown();
+    try { searchInput.blur(); } catch {}
+    if (typeof onSelect === 'function') {
+      onSelect(bank);
+    }
+  }
 
   function renderList(list) {
     currentFilteredList = list;
@@ -5674,11 +5711,17 @@ function setupSearchableBankDropdown({
           Không tìm thấy ngân hàng hoặc ví điện tử nào phù hợp.
         </div>
         <div class="bank-dropdown-footer-close" style="padding:8px 10px;text-align:center;border-top:1px solid var(--glass-border-subtle);background:var(--glass-bg-subtle);border-radius:0 0 14px 14px;">
-          <button type="button" class="button alt bank-close-explicit-btn" style="width:100%;font-size:11.5px;padding:6px 12px;border-radius:8px;font-weight:700;">✕ Đóng danh sách / Close</button>
+          <button type="button" class="button alt bank-close-explicit-btn" style="width:100%;font-size:12px;padding:8px 12px;border-radius:8px;font-weight:800;cursor:pointer;background:#ef4444;color:#fff;border-color:#ef4444;">✕ Đóng danh sách (Close)</button>
         </div>
       `;
       const cBtn = dropdown.querySelector('.bank-close-explicit-btn');
-      cBtn?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); closeDropdown(); });
+      const handleClose = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeDropdown();
+      };
+      cBtn?.addEventListener('click', handleClose);
+      cBtn?.addEventListener('touchend', handleClose);
       return;
     }
 
@@ -5700,11 +5743,11 @@ function setupSearchableBankDropdown({
     }).join('');
 
     dropdown.innerHTML = `
-      <div class="bank-options-scroll" style="display:flex;flex-direction:column;gap:3px;max-height:240px;overflow-y:auto;">
+      <div class="bank-options-scroll" style="display:flex;flex-direction:column;gap:3px;max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
         ${itemsHtml}
       </div>
       <div class="bank-dropdown-footer-close" style="padding:8px 10px;text-align:center;border-top:1px solid var(--glass-border-subtle);background:var(--glass-bg-subtle);border-radius:0 0 14px 14px;margin-top:4px;">
-        <button type="button" class="button alt bank-close-explicit-btn" style="width:100%;font-size:11.5px;padding:6px 12px;border-radius:8px;font-weight:700;">✕ Đóng danh sách (Close)</button>
+        <button type="button" class="button alt bank-close-explicit-btn" style="width:100%;font-size:12px;padding:8px 12px;border-radius:8px;font-weight:800;cursor:pointer;background:#ef4444;color:#fff;border-color:#ef4444;">✕ Đóng danh sách (Close)</button>
       </div>
     `;
 
@@ -5719,46 +5762,22 @@ function setupSearchableBankDropdown({
         }
       };
       item.addEventListener('click', handleSelect);
+      item.addEventListener('touchend', handleSelect);
+      item.addEventListener('mousedown', (e) => {
+        // Prevent stealing focus and closing prematurely before click
+        e.preventDefault();
+      });
     });
 
     const closeBtn = dropdown.querySelector('.bank-close-explicit-btn');
-    closeBtn?.addEventListener('click', (e) => {
+    const handleClose = (e) => {
       e.preventDefault();
       e.stopPropagation();
       closeDropdown();
-    });
-  }
-
-  function selectBank(bank) {
-    const displayVal = `${bank.shortName} (${bank.code}) — ${bank.nameVi}`;
-    const valueVal = `${bank.shortName} (${bank.code})`;
-    searchInput.value = displayVal;
-    if (hiddenInput) {
-      hiddenInput.value = valueVal;
-      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
-      hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    closeDropdown();
-    searchInput.blur();
-    if (typeof onSelect === 'function') {
-      onSelect(bank);
-    }
-  }
-
-  function openDropdown() {
-    wrapper.classList.add('open');
-    dropdown.style.display = 'flex';
-    if (searchInput.value.includes('—') || (hiddenInput && hiddenInput.value)) {
-      renderList(VIETNAM_BANKS);
-    } else {
-      filterBanks(searchInput.value.trim());
-    }
-  }
-
-  function closeDropdown() {
-    wrapper.classList.remove('open');
-    dropdown.style.display = 'none';
-    highlightedIndex = -1;
+    };
+    closeBtn?.addEventListener('click', handleClose);
+    closeBtn?.addEventListener('touchend', handleClose);
+    closeBtn?.addEventListener('mousedown', (e) => e.preventDefault());
   }
 
   function filterBanks(query) {
@@ -5782,18 +5801,27 @@ function setupSearchableBankDropdown({
   }
 
   searchInput.addEventListener('focus', () => {
-    openDropdown();
-    if (searchInput.value) {
-      setTimeout(() => {
-        try { searchInput.select(); } catch {}
-      }, 50);
+    if (!isSelectingOrClosing) {
+      openDropdown();
+      if (searchInput.value) {
+        setTimeout(() => {
+          try { searchInput.select(); } catch {}
+        }, 50);
+      }
+    }
+  });
+
+  searchInput.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!wrapper.classList.contains('open')) {
+      openDropdown();
     }
   });
 
   const arrow = wrapper.querySelector('.bank-search-arrow');
   if (arrow) {
     arrow.style.cursor = 'pointer';
-    arrow.addEventListener('click', (e) => {
+    const handleArrowClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (wrapper.classList.contains('open')) {
@@ -5802,13 +5830,15 @@ function setupSearchableBankDropdown({
         openDropdown();
         searchInput.focus();
       }
-    });
+    };
+    arrow.addEventListener('click', handleArrowClick);
+    arrow.addEventListener('touchend', handleArrowClick);
   }
 
   searchInput.addEventListener('input', () => {
     if (!wrapper.classList.contains('open')) {
       wrapper.classList.add('open');
-      dropdown.style.display = 'flex';
+      dropdown.style.setProperty('display', 'flex', 'important');
     }
     filterBanks(searchInput.value.trim());
   });
@@ -6246,8 +6276,11 @@ function initProfileSettingsDialog() {
         id: 'photo-req-' + Date.now(),
         artist_id: currentArtistId,
         artist_name: artist.name,
+        artist_email: sessionEmail || artist.email || '',
         current_image: artist.image || '',
         new_image: finalPhotoUrl,
+        requested_image: finalPhotoUrl,
+        note: note,
         notes: note,
         status: 'pending',
         created_at: new Date().toISOString()

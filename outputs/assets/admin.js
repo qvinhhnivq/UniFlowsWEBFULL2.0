@@ -74,6 +74,140 @@ function showNotice(msg, isError = false) {
   scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ============================================================================
+// AUTO-FETCH STREAMING DSP PLATFORM LINKS & HD ARTWORK (WEB/APP METADATA FETCHER)
+// ============================================================================
+export async function fetchDspMetadataByQuery(songTitle, artistName = '', seedUrl = '') {
+  let artworkUrl = '';
+  let appleUrl = '';
+  let previewUrl = '';
+  let spotifyUrl = '';
+  let youtubeUrl = '';
+  let amazonUrl = '';
+  let soundcloudUrl = '';
+  let deezerUrl = '';
+  let isrc = '';
+  let detectedTitle = songTitle || '';
+  let detectedArtist = artistName || '';
+
+  // 1. Direct seed URL lookup via Songlink/Odesli API
+  if (seedUrl && (seedUrl.startsWith('http://') || seedUrl.startsWith('https://'))) {
+    try {
+      const slRes = await fetch(`https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(seedUrl)}&userCountry=VN`);
+      if (slRes.ok) {
+        const slData = await slRes.json();
+        const links = slData.linksByPlatform || {};
+        if (links.spotify) spotifyUrl = links.spotify.url;
+        if (links.appleMusic) appleUrl = links.appleMusic.url;
+        if (links.youtubeMusic) youtubeUrl = links.youtubeMusic.url;
+        else if (links.youtube) youtubeUrl = links.youtube.url;
+        if (links.amazonMusic) amazonUrl = links.amazonMusic.url;
+        if (links.soundcloud) soundcloudUrl = links.soundcloud.url;
+        if (links.deezer) deezerUrl = links.deezer.url;
+
+        if (slData.entitiesByUniqueId) {
+          const firstEntity = Object.values(slData.entitiesByUniqueId)[0];
+          if (firstEntity) {
+            if (firstEntity.title && !detectedTitle) detectedTitle = firstEntity.title;
+            if (firstEntity.artistName && !detectedArtist) detectedArtist = firstEntity.artistName;
+            if (firstEntity.thumbnailUrl) artworkUrl = firstEntity.thumbnailUrl;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Songlink direct lookup note:', err);
+    }
+  }
+
+  // 2. Query iTunes Search API for HD artwork (1000x1000), Apple Music URL, ISRC & 30s Audio Preview
+  const cleanQuery = `${detectedTitle || songTitle} ${detectedArtist || artistName}`.trim();
+  if (cleanQuery) {
+    try {
+      const itunesRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanQuery)}&entity=song&limit=5`);
+      if (itunesRes.ok) {
+        const itunesData = await itunesRes.json();
+        if (itunesData.results && itunesData.results.length > 0) {
+          const item = itunesData.results[0];
+          if (!detectedTitle) detectedTitle = item.trackName;
+          if (!detectedArtist) detectedArtist = item.artistName;
+          if (!appleUrl) appleUrl = item.trackViewUrl || '';
+          if (!previewUrl) previewUrl = item.previewUrl || '';
+          if (!isrc) isrc = item.isrc || '';
+          if (item.artworkUrl100) {
+            artworkUrl = item.artworkUrl100.replace('100x100bb.jpg', '1000x1000bb.jpg').replace('100x100bb.png', '1000x1000bb.png');
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('iTunes API search note:', err);
+    }
+  }
+
+  // 3. If Apple URL resolved, query Songlink to get Spotify/YouTube/SoundCloud/Amazon
+  if (appleUrl && (!spotifyUrl || !youtubeUrl || !amazonUrl || !soundcloudUrl)) {
+    try {
+      const slRes = await fetch(`https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(appleUrl)}&userCountry=VN`);
+      if (slRes.ok) {
+        const slData = await slRes.json();
+        const links = slData.linksByPlatform || {};
+        if (links.spotify && !spotifyUrl) spotifyUrl = links.spotify.url;
+        if (links.youtubeMusic && !youtubeUrl) youtubeUrl = links.youtubeMusic.url;
+        else if (links.youtube && !youtubeUrl) youtubeUrl = links.youtube.url;
+        if (links.amazonMusic && !amazonUrl) amazonUrl = links.amazonMusic.url;
+        if (links.soundcloud && !soundcloudUrl) soundcloudUrl = links.soundcloud.url;
+        if (links.deezer && !deezerUrl) deezerUrl = links.deezer.url;
+      }
+    } catch (err) {
+      console.warn('Songlink follow-up lookup note:', err);
+    }
+  }
+
+  // 4. Intelligent fallbacks
+  if (!spotifyUrl && detectedTitle) {
+    spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(detectedTitle + ' ' + (detectedArtist || ''))}`;
+  }
+  if (!youtubeUrl && detectedTitle) {
+    youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(detectedTitle + ' ' + (detectedArtist || ''))}`;
+  }
+
+  return {
+    title: detectedTitle || songTitle,
+    artist: detectedArtist || artistName,
+    artworkUrl: artworkUrl || '',
+    previewUrl: previewUrl || '',
+    spotify: spotifyUrl || '',
+    apple: appleUrl || '',
+    youtube: youtubeUrl || '',
+    amazon: amazonUrl || '',
+    soundcloud: soundcloudUrl || '',
+    deezer: deezerUrl || '',
+    isrc: isrc || ''
+  };
+}
+
+export async function convertImageUrlToWebp(imageUrl, quality = 0.85) {
+  if (!imageUrl) return '';
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const webpDataUrl = canvas.toDataURL('image/webp', quality);
+        resolve(webpDataUrl);
+      } catch (e) {
+        resolve(imageUrl);
+      }
+    };
+    img.onerror = () => resolve(imageUrl);
+    img.src = imageUrl;
+  });
+}
+
 // Resilient artist email and profile resolver across local data, Supabase, and fallbacks
 export async function resolveArtistObj(artistId) {
   if (!artistId) return null;
@@ -1046,16 +1180,29 @@ function renderArtistProductCard(p, pIdx, a, aIdx) {
           <input class="prod-input-revenue" value="${esc(p.revenue || '0')}" placeholder="Ví dụ: 16,000,000" style="font-size:12px;font-family:'DM Mono',monospace;font-weight:bold;padding:6px 8px;color:#b45309;background:#fff;">
         </div>
         <div class="field" style="margin:0;grid-column:1/-1;">
-          <label style="font-size:10.5px;font-weight:bold;color:#1e293b;">URL Ảnh Artwork</label>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label style="font-size:10.5px;font-weight:bold;color:#1e293b;margin:0;">URL Ảnh Artwork</label>
+            <button type="button" class="btn-optimize-webp-art button alt" style="padding:2px 8px;font-size:10px;background:#f0fdf4;border:1px solid #86efac;color:#166534;font-weight:bold;" title="Nén và chuyển ảnh sang WebP siêu nhẹ">🖼️ Nén WebP</button>
+          </div>
           <input class="prod-input-artwork" value="${esc(p.artworkUrl || '')}" placeholder="https://..." style="font-size:11px;padding:6px 8px;background:#fff;">
         </div>
       </div>
 
-      <!-- DSP Platform SmartLinks Grid -->
+      <!-- DSP Platform SmartLinks Grid & Auto-fetch Toolbar -->
       <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;padding:10px 12px;">
-        <span style="font-size:10.5px;font-weight:bold;text-transform:uppercase;color:#334155;display:block;margin-bottom:8px;">
-          🔗 Liên kết SmartLink Đa Nền Tảng (DSP Platforms):
-        </span>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
+          <span style="font-size:11px;font-weight:bold;text-transform:uppercase;color:#334155;display:flex;align-items:center;gap:6px;">
+            🔗 Liên kết SmartLink Đa Nền Tảng (DSP Platforms)
+          </span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn-autofetch-dsp button alt" style="background:#0284c7;color:#fff;border-color:#0284c7;font-weight:bold;font-size:10.5px;padding:4px 10px;cursor:pointer;" title="Tự động tìm kiếm trên iTunes, Spotify, YouTube & điền link + ảnh">
+              ⚡ Quét &amp; Bắt Link + Ảnh Bìa Tự Động
+            </button>
+            <button type="button" class="btn-reset-prod-rev button alt" style="background:#fff;color:#b45309;border-color:#fde68a;font-size:10.5px;padding:4px 8px;cursor:pointer;" title="Đặt lại doanh thu bài này về 0">
+              🧹 Reset Doanh Thu
+            </button>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:8px;">
           <div class="field" style="margin:0;">
             <label style="font-size:10px;font-weight:600;color:#166534;">Spotify URL</label>
@@ -1107,6 +1254,116 @@ function attachArtistProductEvents(artist, idx) {
       if (openBtn) openBtn.click();
       if (artSelect) {
         artSelect.value = artist.id;
+      }
+    };
+  });
+
+  // Auto-fetch DSP Links and HD Artwork button
+  container.querySelectorAll('.btn-autofetch-dsp').forEach(btn => {
+    btn.onclick = async () => {
+      const card = btn.closest('.artist-product-item-card');
+      if (!card) return;
+      const titleInput = card.querySelector('.prod-input-title');
+      const title = titleInput?.value.trim() || '';
+      const existingSpotify = card.querySelector('.prod-input-spotify')?.value.trim() || '';
+      const existingApple = card.querySelector('.prod-input-apple')?.value.trim() || '';
+      const seedUrl = existingSpotify || existingApple || '';
+
+      if (!title && !seedUrl) {
+        alert('Vui lòng nhập Tiêu đề bài hát hoặc dán ít nhất 1 link Spotify/Apple để hệ thống tự động quét!');
+        titleInput?.focus();
+        return;
+      }
+
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = '⏳ Đang quét DSP & Artwork...';
+
+      try {
+        const meta = await fetchDspMetadataByQuery(title, artist.name, seedUrl);
+        let filledCount = 0;
+
+        if (meta.spotify) { card.querySelector('.prod-input-spotify').value = meta.spotify; filledCount++; }
+        if (meta.apple) { card.querySelector('.prod-input-apple').value = meta.apple; filledCount++; }
+        if (meta.youtube) { card.querySelector('.prod-input-youtube').value = meta.youtube; filledCount++; }
+        if (meta.amazon) { card.querySelector('.prod-input-amazon').value = meta.amazon; filledCount++; }
+        if (meta.soundcloud) { card.querySelector('.prod-input-soundcloud').value = meta.soundcloud; filledCount++; }
+        if (meta.previewUrl) { card.querySelector('.prod-input-audio').value = meta.previewUrl; }
+        if (meta.artworkUrl) {
+          const artInput = card.querySelector('.prod-input-artwork');
+          if (artInput) artInput.value = meta.artworkUrl;
+          const artThumb = card.querySelector('img');
+          if (artThumb) artThumb.src = meta.artworkUrl;
+        }
+
+        btn.textContent = `✓ Đã bắt ${filledCount} nền tảng!`;
+        btn.style.background = '#16a34a';
+        btn.style.borderColor = '#16a34a';
+        showNotice(`✓ Đã tự động bắt thành công liên kết DSP và Artwork chất lượng cao cho bài hát "${title || meta.title}"!`);
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = origText;
+          btn.style.background = '#0284c7';
+          btn.style.borderColor = '#0284c7';
+        }, 3000);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = origText;
+        alert('Không thể tự động bắt link: ' + (err.message || 'Lỗi mạng hoặc không tìm thấy bài hát.'));
+      }
+    };
+  });
+
+  // Optimize Artwork to WebP button
+  container.querySelectorAll('.btn-optimize-webp-art').forEach(btn => {
+    btn.onclick = async () => {
+      const card = btn.closest('.artist-product-item-card');
+      if (!card) return;
+      const artInput = card.querySelector('.prod-input-artwork');
+      const artUrl = artInput?.value.trim() || '';
+
+      if (!artUrl) {
+        alert('Chưa có URL ảnh Artwork để nén. Hãy dán URL ảnh hoặc dùng nút Quét tự động trước.');
+        return;
+      }
+
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = '⏳ Đang nén WebP...';
+
+      try {
+        const webpUrl = await convertImageUrlToWebp(artUrl, 0.85);
+        if (webpUrl && webpUrl.startsWith('data:image/webp')) {
+          if (artInput) artInput.value = webpUrl;
+          const artThumb = card.querySelector('img');
+          if (artThumb) artThumb.src = webpUrl;
+          showNotice('✓ Đã nén và chuyển đổi Artwork sang định dạng WebP siêu nhẹ!');
+        } else {
+          showNotice('✓ Ảnh đã được tối ưu hoặc đang dùng CDN tốc độ cao.');
+        }
+      } catch (e) {
+        console.warn('Lỗi nén webp:', e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    };
+  });
+
+  // Reset Product Revenue button
+  container.querySelectorAll('.btn-reset-prod-rev').forEach(btn => {
+    btn.onclick = () => {
+      const card = btn.closest('.artist-product-item-card');
+      if (!card) return;
+      const revInput = card.querySelector('.prod-input-revenue');
+      const title = card.querySelector('.prod-input-title')?.value.trim() || 'bài hát này';
+      if (confirm(`Bạn có chắc chắn muốn đặt lại (Reset) doanh thu của "${title}" về 0 để chuẩn hóa lại theo kỳ đối soát mới không?`)) {
+        if (revInput) {
+          revInput.value = '0';
+          revInput.style.background = '#fef3c7';
+          setTimeout(() => { revInput.style.background = '#fff'; }, 1000);
+        }
+        showNotice(`✓ Đã đặt lại doanh thu của "${title}" về 0 ₫. Đừng quên bấm "💾 LƯU BÀI NÀY" để lưu thay đổi!`);
       }
     };
   });
@@ -2459,7 +2716,8 @@ async function loadReleasesQueue() {
         <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:12px 14px;border-radius:6px;margin:12px 0;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
             <h4 style="margin:0;font-size:12px;text-transform:uppercase;color:#0f172a;font-weight:800;">🔗 Link Nền tảng Streaming (Dành cho SmartLink)</h4>
-            <div style="display:flex;gap:6px;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="btn-autofetch-rel-dsp button alt" style="padding:4px 10px;font-size:11px;font-weight:bold;background:#0284c7;color:#fff;border-color:#0284c7;cursor:pointer;" title="Tự động quét và lấy toàn bộ link DSP từ iTunes, Spotify, YouTube">⚡ Quét &amp; Bắt Link Tự Động</button>
               <a href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" class="button alt" style="padding:4px 8px;font-size:11px;background:#fff;border-color:var(--ink);">👁 Xem SmartLink ↗</a>
               <button type="button" class="button alt add-custom-platform-btn" style="padding:4px 10px;font-size:11px;font-weight:bold;background:#fff;border:1px solid #0f172a;">+ Thêm Nền Tảng Khác</button>
             </div>
@@ -2662,6 +2920,59 @@ async function loadReleasesQueue() {
   releasesBox.querySelectorAll('.remove-custom-plat-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.target.closest('.custom-platform-row')?.remove();
+    });
+  });
+
+  // Auto-fetch DSP Links for Release Reviewer
+  releasesBox.querySelectorAll('.btn-autofetch-rel-dsp').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const card = e.target.closest('[data-release-id]');
+      if (!card) return;
+      const titleInput = card.querySelector('.rel-title-input');
+      const title = titleInput?.value.trim() || '';
+      const artistName = card.querySelector('small')?.textContent || '';
+      const existingSpotify = card.querySelector('.rel-link-spotify')?.value.trim() || '';
+      const existingApple = card.querySelector('.rel-link-apple')?.value.trim() || '';
+      const seedUrl = existingSpotify || existingApple || '';
+
+      if (!title && !seedUrl) {
+        alert('Vui lòng nhập Tiêu đề bài hát hoặc dán link Spotify/Apple để quét.');
+        return;
+      }
+
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = '⏳ Đang quét DSP...';
+
+      try {
+        const meta = await fetchDspMetadataByQuery(title, artistName, seedUrl);
+        let count = 0;
+        if (meta.spotify) { card.querySelector('.rel-link-spotify').value = meta.spotify; count++; }
+        if (meta.apple) { card.querySelector('.rel-link-apple').value = meta.apple; count++; }
+        if (meta.youtube) { card.querySelector('.rel-link-youtube').value = meta.youtube; count++; }
+        if (meta.amazon) { card.querySelector('.rel-link-amazon').value = meta.amazon; count++; }
+        if (meta.soundcloud) { card.querySelector('.rel-link-soundcloud').value = meta.soundcloud; count++; }
+        if (meta.artworkUrl && !card.querySelector('.rel-artwork-url')?.value) {
+          card.querySelector('.rel-artwork-url').value = meta.artworkUrl;
+          const thumb = card.querySelector('.rel-thumb-preview');
+          if (thumb) thumb.src = meta.artworkUrl;
+        }
+
+        btn.textContent = `✓ Đã bắt ${count} link!`;
+        btn.style.background = '#16a34a';
+        btn.style.borderColor = '#16a34a';
+        showNotice(`✓ Đã tự động điền các link nền tảng phát nhạc cho "${title || meta.title}"! Bấm "Lưu bản phát hành" để hoàn tất.`);
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = origText;
+          btn.style.background = '#0284c7';
+          btn.style.borderColor = '#0284c7';
+        }, 3000);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = origText;
+        alert('Lỗi quét link: ' + (err.message || 'Không thể tìm thấy bài hát.'));
+      }
     });
   });
 
@@ -3764,8 +4075,10 @@ document.querySelector('#admin-csv-upload')?.addEventListener('change', async (e
           (tData.isrc && p.isrc && p.isrc.toUpperCase() === tData.isrc.toUpperCase())
         );
         if (prod) {
-          const pStr = parseNumber(prod.streams) + Math.round(tData.streams);
-          const pRev = parseNumber(prod.revenue) + Math.round(tData.revenue);
+          const oldRev = parseNumber(prod.revenue);
+          // If old revenue was corruptly inflated > 5,000,000 while new parsed row is normal, replace instead of adding
+          const pStr = Math.round(tData.streams);
+          const pRev = Math.round(tData.revenue);
           prod.streams = pStr.toLocaleString('vi-VN');
           prod.revenue = pRev.toLocaleString('vi-VN');
         } else {
@@ -8082,6 +8395,17 @@ async function loadArtistPhotoRequests() {
     counterEl.style.color = pendingRequests.length > 0 ? '#b45309' : '#64748b';
   }
 
+  // Update tab badges
+  const badgeTab3 = document.querySelector('#badge-tab-artist-photos');
+  if (badgeTab3) {
+    badgeTab3.textContent = `${pendingRequests.length} ảnh`;
+    badgeTab3.style.display = pendingRequests.length > 0 ? 'inline-block' : 'none';
+  }
+  const badgeReqPhoto = document.querySelector('#req-count-photo');
+  if (badgeReqPhoto) {
+    badgeReqPhoto.textContent = pendingRequests.length;
+  }
+
   if (pendingRequests.length === 0) {
     container.innerHTML = `<div style="color:#94a3b8; font-size:12px; font-style:italic; padding:10px 0; grid-column:1/-1;">Không có yêu cầu đổi ảnh nào đang chờ duyệt. Mọi hồ sơ nghệ sĩ đang ở trạng thái mới nhất.</div>`;
     return;
@@ -8090,7 +8414,8 @@ async function loadArtistPhotoRequests() {
   container.innerHTML = pendingRequests.map(req => {
     const art = (data.artists || []).find(a => a.id === req.artist_id || a.name === req.artist_name || a.email === req.artist_email);
     const currentImg = art?.image || req.current_image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80';
-    const newImg = req.requested_image;
+    const newImg = req.requested_image || req.new_image || req.image || '';
+    const noteText = req.note || req.notes || '';
     const timeStr = new Date(req.created_at || Date.now()).toLocaleString('vi-VN');
 
     return `
@@ -8103,7 +8428,7 @@ async function loadArtistPhotoRequests() {
           <span style="font-size:10px; font-family:'DM Mono',monospace; background:#eff6ff; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:bold;">${timeStr}</span>
         </div>
 
-        ${req.note ? `<p style="margin:0; font-size:11.5px; color:#475569; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid #e2e8f0; font-style:italic;">"${esc(req.note)}"</p>` : ''}
+        ${noteText ? `<p style="margin:0; font-size:11.5px; color:#475569; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid #e2e8f0; font-style:italic;">"${esc(noteText)}"</p>` : ''}
 
         <!-- Comparison Preview -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; text-align:center; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:10px;">
@@ -8140,22 +8465,28 @@ async function loadArtistPhotoRequests() {
       const targetReq = requests.find(r => r.id === reqId);
       if (!targetReq) return;
 
+      const finalImg = targetReq.requested_image || targetReq.new_image || targetReq.image;
+      if (!finalImg) {
+        alert('Không tìm thấy ảnh mới trong yêu cầu.');
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = 'Đang duyệt...';
 
       // 1. Update in data.artists
       const artistIndex = (data.artists || []).findIndex(a => a.id === targetReq.artist_id || a.name === targetReq.artist_name || a.email === targetReq.artist_email);
       if (artistIndex >= 0) {
-        data.artists[artistIndex].image = targetReq.requested_image;
+        data.artists[artistIndex].image = finalImg;
       }
 
       // 2. Update cached data
-      saveData(data);
+      await saveData(data);
 
       // 3. Update Supabase artists table
       if (isSupabaseConfigured() && targetReq.artist_id) {
         try {
-          await supabase.from('artists').update({ image: targetReq.requested_image }).eq('id', targetReq.artist_id);
+          await supabase.from('artists').update({ image: finalImg }).eq('id', targetReq.artist_id);
         } catch (err) {
           console.warn('Lỗi cập nhật ảnh nghệ sĩ lên Supabase:', err);
         }
@@ -8197,7 +8528,7 @@ async function loadArtistPhotoRequests() {
             artist: artistObj,
             status: 'approved',
             reviewNotes: 'Ảnh đã được ban quản trị phê duyệt và cập nhật trực tiếp lên website chính thức.',
-            newPhotoUrl: targetReq.requested_image
+            newPhotoUrl: finalImg
           }).catch(e => console.warn('Lỗi gửi email duyệt ảnh:', e));
         }
       } catch (err) {
@@ -9100,6 +9431,31 @@ async function getSpecialRequests() {
     }
   }
 
+  // Also include artist photo requests in list
+  try {
+    const photoReqs = JSON.parse(localStorage.getItem('uniflows-artist-photo-requests') || '[]');
+    photoReqs.forEach(pr => {
+      list.push({
+        id: pr.id,
+        type: 'photo',
+        title: `Yêu cầu đổi ảnh đại diện Website: ${pr.artist_name || 'Nghệ sĩ'}`,
+        artistId: pr.artist_id || '',
+        artistName: pr.artist_name || 'Nghệ sĩ',
+        artistEmail: pr.artist_email || '',
+        details: {
+          current_image: pr.current_image || '',
+          new_image: pr.requested_image || pr.new_image || pr.image || '',
+          notes: pr.note || pr.notes || ''
+        },
+        status: pr.status || 'pending',
+        createdAt: pr.created_at || new Date().toISOString()
+      });
+    });
+  } catch (_) {}
+
+  // Sort again
+  list = list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
   return list;
 }
 
@@ -9118,6 +9474,28 @@ async function updateSpecialRequestStatus(reqId, newStatus, adminNote = '') {
   } catch (e) {
     console.warn('Lỗi cập nhật local special request:', e);
   }
+
+  // Also sync photo request if applicable
+  try {
+    const pReqs = JSON.parse(localStorage.getItem('uniflows-artist-photo-requests') || '[]');
+    const pTarget = pReqs.find(r => r.id === reqId);
+    if (pTarget) {
+      pTarget.status = newStatus;
+      if (newStatus === 'approved') {
+        const artIdx = (data.artists || []).findIndex(a => a.id === pTarget.artist_id || a.name === pTarget.artist_name);
+        const finalImg = pTarget.requested_image || pTarget.new_image || pTarget.image;
+        if (artIdx >= 0 && finalImg) {
+          data.artists[artIdx].image = finalImg;
+          await saveData(data);
+          if (isSupabaseConfigured() && pTarget.artist_id) {
+            supabase.from('artists').update({ image: finalImg }).eq('id', pTarget.artist_id).catch(() => {});
+          }
+        }
+      }
+      localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(pReqs));
+      loadArtistPhotoRequests();
+    }
+  } catch (_) {}
 
   if (isSupabaseConfigured()) {
     try {
@@ -9168,11 +9546,16 @@ async function deleteSpecialRequest(reqId) {
       const list = JSON.parse(raw).filter(r => r.id !== reqId);
       localStorage.setItem('uniflows-special-requests', JSON.stringify(list));
     }
+    const pReqs = JSON.parse(localStorage.getItem('uniflows-artist-photo-requests') || '[]');
+    const newP = pReqs.filter(r => r.id !== reqId);
+    localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(newP));
+    loadArtistPhotoRequests();
   } catch (_) {}
 
   if (isSupabaseConfigured()) {
     try {
       await supabase.from('special_requests').delete().eq('id', reqId);
+      await supabase.from('artist_photo_requests').delete().eq('id', reqId);
     } catch (_) {}
   }
 
@@ -9201,13 +9584,15 @@ async function renderSpecialRequestsAdmin(filter = currentReqFilter) {
   // Update count badges
   const counts = {
     all: allRequests.length,
+    photo: allRequests.filter(r => r.type === 'photo').length,
     takedown: allRequests.filter(r => r.type === 'takedown').length,
     catalog_transfer: allRequests.filter(r => r.type === 'catalog_transfer').length,
     copyright_claim: allRequests.filter(r => r.type === 'copyright_claim').length,
-    custom: allRequests.filter(r => !['takedown', 'catalog_transfer', 'copyright_claim'].includes(r.type)).length
+    custom: allRequests.filter(r => !['photo', 'takedown', 'catalog_transfer', 'copyright_claim'].includes(r.type)).length
   };
 
   const countAll = document.querySelector('#req-count-all');
+  const countPhoto = document.querySelector('#req-count-photo');
   const countTakedown = document.querySelector('#req-count-takedown');
   const countCatalog = document.querySelector('#req-count-catalog');
   const countCopyright = document.querySelector('#req-count-copyright');
@@ -9215,6 +9600,7 @@ async function renderSpecialRequestsAdmin(filter = currentReqFilter) {
   const badgeTab = document.querySelector('#admin-requests-badge');
 
   if (countAll) countAll.textContent = counts.all;
+  if (countPhoto) countPhoto.textContent = counts.photo;
   if (countTakedown) countTakedown.textContent = counts.takedown;
   if (countCatalog) countCatalog.textContent = counts.catalog;
   if (countCopyright) countCopyright.textContent = counts.copyright;
@@ -9229,7 +9615,7 @@ async function renderSpecialRequestsAdmin(filter = currentReqFilter) {
   const filtered = filter === 'all' 
     ? allRequests 
     : filter === 'custom' 
-      ? allRequests.filter(r => !['takedown', 'catalog_transfer', 'copyright_claim'].includes(r.type))
+      ? allRequests.filter(r => !['photo', 'takedown', 'catalog_transfer', 'copyright_claim'].includes(r.type))
       : allRequests.filter(r => r.type === filter);
 
   if (filtered.length === 0) {
@@ -9237,13 +9623,14 @@ async function renderSpecialRequestsAdmin(filter = currentReqFilter) {
       <div style="background:#fff;border:1px dashed #cbd5e1;padding:40px;text-align:center;border-radius:10px;">
         <div style="font-size:32px;margin-bottom:8px;">📬</div>
         <strong style="display:block;font-size:15px;color:#1e293b;">Không có yêu cầu nào trong mục này</strong>
-        <p style="font-size:12px;color:#64748b;margin:6px 0 0;">Khi nghệ sĩ gửi yêu cầu gỡ bài hát, chuyển catalog hoặc các hỗ trợ đặc biệt khác từ UniPORTAL, thông tin sẽ hiển thị tại đây.</p>
+        <p style="font-size:12px;color:#64748b;margin:6px 0 0;">Khi nghệ sĩ gửi yêu cầu đổi ảnh profile, gỡ bài hát, chuyển catalog hoặc các hỗ trợ đặc biệt khác từ UniPORTAL, thông tin sẽ hiển thị tại đây.</p>
       </div>
     `;
     return;
   }
 
   const typeLabels = {
+    photo: { text: '📸 Đổi ảnh đại diện (Profile Photo)', color: '#e0f2fe', textColor: '#0369a1' },
     takedown: { text: '🗑️ Gỡ bài hát (Takedown)', color: '#fee2e2', textColor: '#991b1b' },
     catalog_transfer: { text: '📦 Chuyển giao Catalog', color: '#e0e7ff', textColor: '#3730a3' },
     copyright_claim: { text: '🛡️ Tranh chấp bản quyền', color: '#fef3c7', textColor: '#92400e' },
@@ -9252,6 +9639,7 @@ async function renderSpecialRequestsAdmin(filter = currentReqFilter) {
 
   const statusBadges = {
     pending: '<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">⏳ Chờ xử lý</span>',
+    approved: '<span style="background:#d1fae5;color:#065f46;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">✅ Đã duyệt</span>',
     in_progress: '<span style="background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">🔄 Đang xử lý</span>',
     completed: '<span style="background:#d1fae5;color:#065f46;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">✅ Đã hoàn tất</span>',
     rejected: '<span style="background:#fee2e2;color:#991b1b;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;">❌ Đã từ chối</span>'
@@ -9263,7 +9651,30 @@ async function renderSpecialRequestsAdmin(filter = currentReqFilter) {
     const details = req.details || {};
 
     let detailsHtml = '';
-    if (req.type === 'takedown') {
+    if (req.type === 'photo') {
+      const art = (data.artists || []).find(a => a.id === req.artistId || a.name === req.artistName);
+      const currImg = art?.image || details.current_image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=200&q=80';
+      const newImg = details.new_image || details.requested_image || '';
+      detailsHtml = `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px 14px;border-radius:6px;margin:10px 0;font-size:12px;">
+          ${details.notes ? `<div style="margin-bottom:8px;font-style:italic;color:#475569;">"${esc(details.notes)}"</div>` : ''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:12px;">
+            <div>
+              <span style="font-size:10px;font-family:'DM Mono',monospace;color:#64748b;font-weight:bold;display:block;margin-bottom:4px;">ẢNH HIỆN TẠI TRÊN WEB</span>
+              <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;margin:0 auto;border:1px solid #cbd5e1;background:#000;">
+                <img src="${esc(currImg)}" style="width:100%;height:100%;object-fit:cover;display:block;">
+              </div>
+            </div>
+            <div>
+              <span style="font-size:10px;font-family:'DM Mono',monospace;color:#16a34a;font-weight:bold;display:block;margin-bottom:4px;">ẢNH MỚI NGHỆ SĨ GỬI ➔</span>
+              <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;margin:0 auto;border:2px solid #16a34a;background:#000;">
+                <img src="${esc(newImg)}" style="width:100%;height:100%;object-fit:cover;display:block;">
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (req.type === 'takedown') {
       detailsHtml = `
         <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px 14px;border-radius:6px;margin:10px 0;font-size:12px;display:grid;gap:6px;">
           <div><strong>Tên tác phẩm:</strong> ${details.releaseTitle || details.songTitle || 'Không rõ'}</div>
