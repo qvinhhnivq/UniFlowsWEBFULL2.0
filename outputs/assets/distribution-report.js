@@ -99,9 +99,25 @@ export function formatCurrency(vnd, cur = state.currency) {
 }
 export function formatStreams(n) { return (Number(n)||0).toLocaleString('vi-VN'); }
 export function parseRawNumber(s) {
-  if (typeof s === 'number') return s;
+  if (typeof s === 'number') return isNaN(s) ? 0 : s;
   if (!s) return 0;
-  const v = parseFloat(String(s).replace(/[₫$,\s]/g,'').trim());
+  let str = String(s).replace(/[₫$€£¥\s]/g, '').trim();
+  if (!str) return 0;
+  if (str.includes(',') && str.includes('.')) {
+    if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else {
+      str = str.replace(/,/g, '');
+    }
+  } else if (str.includes(',')) {
+    const parts = str.split(',');
+    if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+      str = str.replace(/,/g, '');
+    } else {
+      str = str.replace(',', '.');
+    }
+  }
+  const v = parseFloat(str);
   return isNaN(v) ? 0 : v;
 }
 
@@ -125,60 +141,74 @@ export function parseCSV(text) {
     return out;
   }
 
-  const hdrs = splitRow(lines[0]).map(h=>h.toLowerCase().trim());
+  const hdrs = splitRow(lines[0]).map(h=>h.toLowerCase().trim().normalize('NFC'));
   function col(exact, fuzzy=[]) {
-    for (const e of exact) { const i=hdrs.indexOf(e.toLowerCase()); if (i!==-1) return i; }
-    for (const f of fuzzy) { const i=hdrs.findIndex(h=>h.includes(f.toLowerCase())); if (i!==-1) return i; }
+    for (const e of exact) { const i=hdrs.indexOf(e.toLowerCase().normalize('NFC')); if (i!==-1) return i; }
+    for (const f of fuzzy) { const i=hdrs.findIndex(h=>h.includes(f.toLowerCase().normalize('NFC'))); if (i!==-1) return i; }
     return -1;
   }
 
-  const iArtist  = col(['track artist','release artist','artist_name','artist','performer'],['artist','performer']);
-  const iTrack   = col(['track title','release title','song_title','track','title'],['track','title','song']);
-  const iSource  = col(['source'],['source']);
-  const iSubSrc  = col(['sub source','subsource'],['sub source']);
-  const iConfig  = col(['configuration'],['config']);
-  const iStreams  = col(['units','quantity','streams','plays'],['unit','stream','play']);
-  const iTerritory = col(['territory','country'],['territory','country']);
-  const iIsrc    = col(['isrc'],['isrc']);
-  const iDate    = col(['sale date','transaction date'],['date']);
-  const iGross   = hdrs.indexOf('gross amount');
-  const iNet     = hdrs.indexOf('net amount');
-  const iNetPay  = hdrs.indexOf('net payable');
-  const iGrossC  = hdrs.indexOf('gross amount in currency');
-  const iNetC    = hdrs.indexOf('net amount in currency');
-  const iExRate  = hdrs.indexOf('exchange rate');
-  const iOrigCur = hdrs.indexOf('original currency');
-  const iCur     = col(['currency'],['currency']);
+  const iArtist  = col(['nghệ sĩ','tên nghệ sĩ','track artist','release artist','artist_name','artist','performer','ca sĩ'],['nghệ sĩ','performer','artist']);
+  const iTrack   = col(['bài hát','tên bài hát','tựa đề','track title','release title','song_title','track','title'],['bài hát','tựa đề','track','title','song']);
+  const iSource  = col(['dsp','nền tảng','source','platform'],['dsp','source','nền tảng']);
+  const iSubSrc  = col(['sub source','subsource','sub_source'],['sub source']);
+  const iConfig  = col(['loại stream','loại','configuration','config','stream type'],['loại','config']);
+  const iStreams = col(['streams','lượt nghe','số lượt nghe','units','quantity','plays','views'],['stream','lượt nghe','unit','play']);
+  const iTerritory = col(['quốc gia','khu vực','territory','country'],['quốc gia','territory','country']);
+  const iIsrc    = col(['isrc','mã isrc'],['isrc']);
+  const iDate    = col(['ngày','sale date','transaction date','date'],['ngày','date']);
+  
+  // Revenue columns
+  const iArtistNet = col(['artist (','thực nhận','artist net','artist share','net payable'],['artist (','thực nhận','artist net','net pay']);
+  const iGross   = col(['gross (vnd)','gross (usd)','gross amount in currency','gross amount','gross revenue','gross','doanh thu gross','tổng doanh thu'],['gross','doanh thu']);
+  const iNet     = col(['net amount in currency','net amount','net revenue','net'],['net amount']);
+  const iExRate  = col(['exchange rate','tỷ giá'],['exchange rate','tỷ giá']);
 
   const records = [];
   for (let i=1;i<lines.length;i++) {
     const cells = splitRow(lines[i]);
     if (!cells.some(Boolean)) continue;
 
-    const artist  = iArtist  !==-1 ? (cells[iArtist] ||'UniFLOWs Artist').trim() : 'UniFLOWs Artist';
-    const track   = iTrack   !==-1 ? (cells[iTrack]  ||'Track '+i).trim()        : 'Track '+i;
+    const rawArtist = iArtist !==-1 ? (cells[iArtist] || '').trim() : '';
+    const rawTrack  = iTrack  !==-1 ? (cells[iTrack]  || '').trim() : '';
+
+    // Ignore summary, total, header-repeat, or footer rows
+    const aLower = rawArtist.toLowerCase();
+    const tLower = rawTrack.toLowerCase();
+    if (!rawArtist && !rawTrack) continue;
+    if (aLower.includes('tổng cộng') || aLower.includes('tong cong') || aLower.includes('total') || aLower.includes('summary') || aLower.includes('★') || aLower.includes('grand total')) continue;
+    if (tLower.includes('rows') || tLower.includes('dòng') || tLower.includes('records')) continue;
+    if (aLower === 'nghệ sĩ' || aLower === 'artist' || aLower === 'track artist') continue;
+
+    const artist  = rawArtist || 'UniFLOWs Artist';
+    const track   = rawTrack  || 'Track '+i;
     const rawSrc  = iSource  !==-1 ? (cells[iSource] ||'Khác').trim()            : 'Khác';
     const dsp     = normDSP(rawSrc);
     const subSrc  = iSubSrc  !==-1 ? (cells[iSubSrc]  ||'').trim() : '';
     const config  = iConfig  !==-1 ? (cells[iConfig]  ||'').trim() : '';
-    const streams = iStreams  !==-1 ? Math.max(0, Math.round(parseRawNumber(cells[iStreams]))) : 0;
+    const streams = iStreams !==-1 ? Math.max(0, Math.round(parseRawNumber(cells[iStreams]))) : 0;
     const territory = iTerritory !==-1 ? (cells[iTerritory]||'VN').trim() : 'VN';
     const isrc    = iIsrc    !==-1 ? (cells[iIsrc]||'').trim() : '';
     const date    = iDate    !==-1 ? (cells[iDate]||'').trim() : '';
 
     const exRate = iExRate !==-1 ? parseRawNumber(cells[iExRate]) : state.exchangeRate;
     let revenue = 0;
-    const gVnd  = iGross  !==-1 ? parseRawNumber(cells[iGross])  : 0;
-    const nVnd  = iNet    !==-1 ? parseRawNumber(cells[iNet])    : 0;
-    const nPay  = iNetPay !==-1 ? parseRawNumber(cells[iNetPay]) : 0;
-    const gCur  = iGrossC !==-1 ? parseRawNumber(cells[iGrossC]) : 0;
-    const nCur  = iNetC   !==-1 ? parseRawNumber(cells[iNetC])   : 0;
+    const artistNetVal = iArtistNet !==-1 ? parseRawNumber(cells[iArtistNet]) : 0;
+    const grossVal = iGross !==-1 ? parseRawNumber(cells[iGross]) : 0;
+    const netVal   = iNet !==-1 ? parseRawNumber(cells[iNet]) : 0;
 
-    if (nPay  > 0) revenue = nPay;
-    else if (nVnd  > 0) revenue = nVnd;
-    else if (gVnd  > 0) revenue = gVnd;
-    else if (nCur  > 0 && exRate > 0) revenue = nCur * exRate;
-    else if (gCur  > 0 && exRate > 0) revenue = gCur * exRate;
+    if (artistNetVal > 0) {
+      revenue = artistNetVal;
+    } else if (grossVal > 0) {
+      revenue = grossVal;
+    } else if (netVal > 0) {
+      revenue = netVal;
+    }
+
+    // Auto-convert foreign currency if revenue is tiny (USD/EUR fractions)
+    if (revenue > 0 && revenue < 100 && exRate > 1000) {
+      revenue = revenue * exRate;
+    }
 
     records.push({ artist, track, dsp, rawDsp:rawSrc, subSource:subSrc, configuration:config, streams, revenue, currency:'VND', isrc, territory, saleDate:date });
   }
@@ -1196,7 +1226,9 @@ export async function syncDistributionToPortal() {
 
   const artistGroups = new Map();
   targetRecords.forEach(r => {
-    const artName = (r.artist || 'Chưa rõ').trim();
+    const artName = (r.artist || '').trim();
+    const aLower = artName.toLowerCase();
+    if (!artName || aLower.includes('tổng cộng') || aLower.includes('tong cong') || aLower.includes('total') || aLower.includes('summary') || aLower.includes('★') || aLower.includes('grand total')) return;
     if (!artistGroups.has(artName)) {
       artistGroups.set(artName, []);
     }

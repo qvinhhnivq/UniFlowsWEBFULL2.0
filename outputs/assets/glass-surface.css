@@ -46,6 +46,38 @@
 }
 
 /* ==============================================================================
+   0. GLASS LAYERS & NON-INTERFERING UTILITIES
+   ============================================================================== */
+.glass-surface-glare {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+  opacity: 0.6;
+}
+
+.glass-surface-filter-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  z-index: 0 !important;
+}
+
+.glass-svg-defs-container {
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  z-index: -9999 !important;
+}
+
+/* ==============================================================================
    1. HIGH-CONTRAST READABILITY & AMBIENT AURORA BACKDROP
    ============================================================================== */
 .portal-body {

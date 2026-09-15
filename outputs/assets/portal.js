@@ -37,21 +37,59 @@ const cancelReleaseBtn = document.querySelector('#cancel-release-btn');
 let currentDraftId = null;
 
 let data = await getData();
-const sessionArtistId = sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id');
+
+// Auto-clean any dummy summary accounts from memory
+if (Array.isArray(data.artists)) {
+  data.artists = data.artists.filter(a => {
+    const n = (a.name || '').toLowerCase();
+    const id = (a.id || '').toLowerCase();
+    return !n.includes('tổng cộng') && !n.includes('tong cong') && !n.includes('★') && !id.includes('tong-cong') && !id.includes('tongcong');
+  });
+}
+
+function removeVietnameseTonesHelper(str) {
+  if (!str) return '';
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+}
+
+function cleanAlphanumericHelper(str) {
+  if (!str) return '';
+  return removeVietnameseTonesHelper(str).replace(/[^a-z0-9]/g, '');
+}
+
+const sessionArtistId = sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id') || '';
 const sessionEmail = sessionStorage.getItem('uniflows-artist-email') || localStorage.getItem('uniflows-artist-email') || '';
 const sessionArtistName = sessionStorage.getItem('uniflows-artist-name') || localStorage.getItem('uniflows-artist-name') || '';
 const emailPrefix = sessionEmail ? sessionEmail.split('@')[0].toLowerCase() : '';
 
-// Tự động tìm nghệ sĩ theo ID, Email đăng nhập, hoặc Username
-let artist = (data.artists || []).find(a => 
-  (sessionArtistId && a.id === sessionArtistId) ||
-  (sessionArtistId && a.username === sessionArtistId) ||
-  (sessionEmail && a.email && a.email.toLowerCase() === sessionEmail.toLowerCase()) ||
-  (emailPrefix && a.id && a.id.toLowerCase() === emailPrefix) ||
-  (emailPrefix && a.username && a.username.toLowerCase() === emailPrefix) ||
-  (emailPrefix && a.name && a.name.toLowerCase() === emailPrefix) ||
-  (sessionArtistName && a.name && a.name.toLowerCase() === sessionArtistName.toLowerCase())
-);
+const targetId = sessionArtistId.toLowerCase().trim();
+const targetEmail = sessionEmail.toLowerCase().trim();
+const targetName = sessionArtistName.toLowerCase().trim();
+const targetToneLess = removeVietnameseTonesHelper(sessionArtistName || sessionArtistId || emailPrefix);
+const targetSlug = cleanAlphanumericHelper(sessionArtistName || sessionArtistId || emailPrefix);
+
+// Tự động tìm nghệ sĩ thông minh (Khớp chính xác, không dấu, slug, username, email)
+let artist = (data.artists || []).find(a => {
+  if (!a) return false;
+  const aId = (a.id || '').toLowerCase().trim();
+  const aUser = (a.username || '').toLowerCase().trim();
+  const aEmail = (a.email || '').toLowerCase().trim();
+  const aName = (a.name || '').toLowerCase().trim();
+  const aToneLess = removeVietnameseTonesHelper(a.name);
+  const aSlug = cleanAlphanumericHelper(a.name || a.id || '');
+
+  if (targetId && (aId === targetId || aUser === targetId || aSlug === targetId)) return true;
+  if (targetEmail && aEmail === targetEmail) return true;
+  if (emailPrefix && (aId === emailPrefix || aUser === emailPrefix || aName === emailPrefix)) return true;
+  if (targetName && (aName === targetName || aToneLess === targetToneLess)) return true;
+  if (targetSlug && aSlug && (aSlug === targetSlug || aId.includes(targetSlug) || targetSlug.includes(aSlug))) return true;
+  return false;
+});
+
+// Fallback to sole artist in roster if only 1 exists
+if (!artist && Array.isArray(data.artists) && data.artists.length === 1) {
+  artist = data.artists[0];
+}
 
 if (!artist) {
   const fallbackName = sessionArtistName || (emailPrefix ? (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)) : 'Nghệ sĩ');
@@ -61,8 +99,43 @@ if (!artist) {
     monthlyStreams: '0',
     estimatedRevenue: '0',
     payableBalance: '0',
+    pendingBalance: '0',
     products: []
   };
+}
+
+// --------------------------------------------------------------------------
+// DIRECT SUPABASE LIVE SYNC: Fetch real-time fresh stats directly from Supabase
+// --------------------------------------------------------------------------
+if (isSupabaseConfigured() && artist) {
+  try {
+    const { data: dbRows, error: dbErr } = await supabase
+      .from('artists')
+      .select('*')
+      .or(`id.eq.${artist.id},name.eq.${artist.name}`)
+      .limit(1);
+
+    if (Array.isArray(dbRows) && dbRows.length > 0) {
+      const live = dbRows[0];
+      if (live.monthly_streams !== undefined && live.monthly_streams !== null && live.monthly_streams !== '') {
+        artist.monthlyStreams = live.monthly_streams;
+      }
+      if (live.estimated_revenue !== undefined && live.estimated_revenue !== null && live.estimated_revenue !== '') {
+        artist.estimatedRevenue = live.estimated_revenue;
+      }
+      if (live.payable_balance !== undefined && live.payable_balance !== null && live.payable_balance !== '') {
+        artist.payableBalance = live.payable_balance;
+      }
+      if (live.pending_balance !== undefined && live.pending_balance !== null && live.pending_balance !== '') {
+        artist.pendingBalance = live.pending_balance;
+      }
+      if (live.image) artist.image = live.image;
+      if (live.banking) artist.banking = live.banking;
+      if (live.role_type) artist.roleType = live.role_type;
+    }
+  } catch (liveErr) {
+    console.warn('Direct live artist query from Supabase:', liveErr);
+  }
 }
 
 const currentArtistId = artist.id;
@@ -6229,7 +6302,6 @@ document.querySelectorAll('.percent-pill-btn').forEach(btn => {
 
 quickPayoutBtn?.addEventListener('click', () => {
   openPayoutModalWithPrefill();
-});
 });
 
 closePayoutDialogBtn?.addEventListener('click', () => {

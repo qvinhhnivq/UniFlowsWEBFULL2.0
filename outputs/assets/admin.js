@@ -3539,8 +3539,40 @@ document.querySelector('#admin-csv-upload')?.addEventListener('change', async (e
     // 1. Refresh live data from database first to make sure any newly added artists are in memory
     data = await getData();
 
+    // Auto-clean any dummy "★ TỔNG CỘNG" accounts previously created by mistake
+    if (Array.isArray(data.artists)) {
+      data.artists = data.artists.filter(a => {
+        const n = (a.name || '').toLowerCase();
+        const id = (a.id || '').toLowerCase();
+        return !n.includes('tổng cộng') && !n.includes('tong cong') && !n.includes('★') && !id.includes('tong-cong') && !id.includes('tongcong');
+      });
+    }
+
     const text = await file.text();
     const { headers, rows } = parseCSVAdvanced(text);
+
+    function parseCurrencyNum(val) {
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      if (!val) return 0;
+      let str = String(val).replace(/[₫$€£¥\s]/g, '').trim();
+      if (!str) return 0;
+      if (str.includes(',') && str.includes('.')) {
+        if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
+          str = str.replace(/\./g, '').replace(',', '.');
+        } else {
+          str = str.replace(/,/g, '');
+        }
+      } else if (str.includes(',')) {
+        const parts = str.split(',');
+        if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+          str = str.replace(/,/g, '');
+        } else {
+          str = str.replace(',', '.');
+        }
+      }
+      const v = parseFloat(str);
+      return isNaN(v) ? 0 : v;
+    }
 
     function findCol(exactList, fuzzyList = []) {
       for (const e of exactList) {
@@ -3555,30 +3587,37 @@ document.querySelector('#admin-csv-upload')?.addEventListener('change', async (e
     }
 
     const iArtist = findCol(
-      ['track artist', 'release artist', 'artist_name', 'artist name', 'artist', 'performer', 'display artist', 'nghệ sĩ', 'ten nghe si', 'tên nghệ sĩ', 'ca sĩ'],
-      ['artist', 'nghệ sĩ', 'performer', 'singer']
+      ['nghệ sĩ', 'tên nghệ sĩ', 'track artist', 'release artist', 'artist_name', 'artist name', 'artist', 'performer', 'display artist', 'ca sĩ'],
+      ['nghệ sĩ', 'performer', 'singer', 'artist']
     );
     const iArtistId = findCol(
       ['artist_id', 'artist id', 'id nghệ sĩ', 'id', 'slug', 'account id', 'mã nghệ sĩ'],
       ['artist_id', 'artist id']
     );
     const iTrack = findCol(
-      ['track title', 'release title', 'song title', 'song_title', 'track_name', 'track', 'title', 'song', 'bài hát', 'tên bài hát', 'tựa đề'],
-      ['track', 'title', 'song', 'bài hát']
+      ['bài hát', 'tên bài hát', 'tựa đề', 'track title', 'release title', 'song title', 'song_title', 'track_name', 'track', 'title', 'song'],
+      ['bài hát', 'tựa đề', 'track', 'title', 'song']
     );
     const iIsrc = findCol(['isrc', 'isrc code', 'mã isrc'], ['isrc']);
     const iBarcode = findCol(['barcode', 'upc', 'ean', 'cat no', 'catalog no'], ['barcode', 'upc']);
     const iEmail = findCol(['email', 'artist email', 'tài khoản', 'email nghệ sĩ'], ['email']);
-    const iStreams = findCol(['units', 'quantity', 'streams', 'plays', 'lượt nghe', 'số lượt nghe', 'plays count', 'views'], ['unit', 'stream', 'play', 'lượt nghe']);
+    const iStreams = findCol(['streams', 'lượt nghe', 'số lượt nghe', 'units', 'quantity', 'plays', 'views', 'plays count'], ['stream', 'lượt nghe', 'unit', 'play']);
     
     // Revenue columns
-    const iNetPay = headers.indexOf('net payable');
-    const iNetAmount = headers.indexOf('net amount');
-    const iGrossAmount = headers.indexOf('gross amount');
-    const iNetInCurr = headers.indexOf('net amount in currency');
-    const iGrossInCurr = headers.indexOf('gross amount in currency');
-    const iExRate = headers.indexOf('exchange rate');
-    const iRevenue = findCol(['revenue', 'doanh thu', 'doanh_thu', 'amount', 'earnings', 'usd', 'vnd', 'thực nhận'], ['revenue', 'doanh thu', 'amount']);
+    const iArtistNet = findCol(
+      ['artist (', 'thực nhận', 'artist net', 'artist share', 'net payable', 'artist amount', 'artist earnings'],
+      ['artist (', 'thực nhận', 'artist net', 'net pay']
+    );
+    const iGrossAmount = findCol(
+      ['gross (vnd)', 'gross (usd)', 'gross amount in currency', 'gross amount', 'gross revenue', 'gross', 'tổng doanh thu', 'doanh thu gross'],
+      ['gross', 'doanh thu']
+    );
+    const iNetAmount = findCol(
+      ['net amount in currency', 'net amount', 'net revenue', 'net'],
+      ['net amount']
+    );
+    const iExRate = findCol(['exchange rate', 'tỷ giá'], ['exchange rate', 'tỷ giá']);
+    const iRevenue = findCol(['revenue', 'doanh thu', 'doanh_thu', 'amount', 'earnings', 'usd', 'vnd'], ['revenue', 'amount']);
 
     const matchedMap = new Map(); // artistId -> { artist, revenue, streams, rowCount, tracks: Map, matchTier }
     const unmatchedMap = new Map(); // rawName -> { name, revenue, streams, rowCount, tracks: Map }
@@ -3592,24 +3631,32 @@ document.querySelector('#admin-csv-upload')?.addEventListener('change', async (e
       const rawIsrc = iIsrc !== -1 ? (row[iIsrc] || '').trim() : '';
       const rawBarcode = iBarcode !== -1 ? (row[iBarcode] || '').trim() : '';
       
-      const streams = iStreams !== -1 ? Math.max(0, Math.round(parseFloat(String(row[iStreams] || '0').replace(/[^0-9.]/g, '')) || 0)) : 0;
-      
-      const exRate = iExRate !== -1 ? (parseFloat(String(row[iExRate] || '0').replace(/[^0-9.]/g, '')) || 25985) : 25985;
+      // Filter out summary, total, header-repeat, or footer rows
+      const aLower = rawArtist.toLowerCase();
+      const tLower = rawTrack.toLowerCase();
+      if (!rawArtist && !rawTrack) continue;
+      if (aLower.includes('tổng cộng') || aLower.includes('tong cong') || aLower.includes('total') || aLower.includes('summary') || aLower.includes('★') || aLower.includes('grand total')) continue;
+      if (tLower.includes('rows') || tLower.includes('dòng') || tLower.includes('records')) continue;
+      if (aLower === 'nghệ sĩ' || aLower === 'artist' || aLower === 'track artist') continue;
+
+      const streams = iStreams !== -1 ? Math.max(0, Math.round(parseCurrencyNum(row[iStreams]))) : 0;
+      const exRate = iExRate !== -1 ? (parseCurrencyNum(row[iExRate]) || 25985) : 25985;
       
       let rev = 0;
-      const netPayVal = iNetPay !== -1 ? parseFloat(String(row[iNetPay] || '0').replace(/[^0-9.]/g, '')) : 0;
-      const netAmtVal = iNetAmount !== -1 ? parseFloat(String(row[iNetAmount] || '0').replace(/[^0-9.]/g, '')) : 0;
-      const netCurrVal = iNetInCurr !== -1 ? parseFloat(String(row[iNetInCurr] || '0').replace(/[^0-9.]/g, '')) : 0;
-      const grossAmtVal = iGrossAmount !== -1 ? parseFloat(String(row[iGrossAmount] || '0').replace(/[^0-9.]/g, '')) : 0;
-      const grossCurrVal = iGrossInCurr !== -1 ? parseFloat(String(row[iGrossInCurr] || '0').replace(/[^0-9.]/g, '')) : 0;
-      const genRevVal = iRevenue !== -1 ? parseFloat(String(row[iRevenue] || '0').replace(/[^0-9.]/g, '')) : 0;
+      const artistNetVal = iArtistNet !== -1 ? parseCurrencyNum(row[iArtistNet]) : 0;
+      const grossAmtVal = iGrossAmount !== -1 ? parseCurrencyNum(row[iGrossAmount]) : 0;
+      const netAmtVal = iNetAmount !== -1 ? parseCurrencyNum(row[iNetAmount]) : 0;
+      const genRevVal = iRevenue !== -1 ? parseCurrencyNum(row[iRevenue]) : 0;
 
-      if (netPayVal > 0) rev = netPayVal;
-      else if (netAmtVal > 0) rev = netAmtVal;
-      else if (netCurrVal > 0) rev = netCurrVal * exRate;
+      if (artistNetVal > 0) rev = artistNetVal;
       else if (grossAmtVal > 0) rev = grossAmtVal;
-      else if (grossCurrVal > 0) rev = grossCurrVal * exRate;
+      else if (netAmtVal > 0) rev = netAmtVal;
       else if (genRevVal > 0) rev = genRevVal;
+
+      // Auto-convert foreign currency if revenue is tiny fraction
+      if (rev > 0 && rev < 100 && exRate > 1000) {
+        rev = rev * exRate;
+      }
 
       const matchRes = findMatchingArtistSmart(data.artists, {
         artistId: rawArtistId,
