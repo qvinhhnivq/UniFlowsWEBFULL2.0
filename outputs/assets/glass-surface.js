@@ -388,16 +388,33 @@ export function initPortalGlassSurfaces() {
     document.head.appendChild(link);
   }
 
-  // Profile Bar
+  // 1. Navigation Menu Liquid Glass
+  enhanceWithGlassSurface('.card-nav-bar', {
+    borderRadius: 0,
+    distortionScale: -120,
+    redOffset: 0,
+    greenOffset: 6,
+    blueOffset: 12
+  });
+  document.querySelectorAll('.card-nav-card').forEach(card => {
+    enhanceWithGlassSurface(card, {
+      borderRadius: 20,
+      distortionScale: -140,
+      redOffset: 0,
+      greenOffset: 8,
+      blueOffset: 16
+    });
+  });
+
+  // 2. Profile Bar & Overview Status
   enhanceWithGlassSurface('.portal-profile-bar', {
     borderRadius: 24,
-    distortionScale: -150,
+    distortionScale: -160,
     redOffset: 0,
     greenOffset: 8,
     blueOffset: 16
   });
 
-  // Overview status bar
   const statusBar = document.querySelector('#tab-overview > div:first-child');
   if (statusBar) {
     enhanceWithGlassSurface(statusBar, {
@@ -409,24 +426,82 @@ export function initPortalGlassSurfaces() {
     });
   }
 
-  // Role Banner
-  enhanceWithGlassSurface('#portal-role-banner', {
-    borderRadius: 14,
-    distortionScale: -100
-  });
-
-  // Stats & metric cards
-  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card').forEach(card => {
+  // 3. Stats & Metric Cards
+  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card, .portal-grid-stats > div').forEach(card => {
     enhanceWithGlassSurface(card, {
       borderRadius: 20,
-      distortionScale: -140,
+      distortionScale: -150,
       redOffset: 0,
       greenOffset: 8,
       blueOffset: 16
     });
   });
 
-  // Modal dialogs
+  // 4. Executive Profile & Settings Dialog
+  const profileDlg = document.querySelector('#profile-settings-dialog');
+  if (profileDlg) {
+    enhanceWithGlassSurface(profileDlg, {
+      borderRadius: 26,
+      distortionScale: -180,
+      redOffset: 0,
+      greenOffset: 10,
+      blueOffset: 20
+    });
+  }
+
+  // 5. Release Studio Builder Modal
+  document.querySelectorAll('dialog.release-dialog-shell, dialog[open].release-dialog-shell').forEach(dlg => {
+    enhanceWithGlassSurface(dlg, {
+      borderRadius: 24,
+      distortionScale: -180,
+      redOffset: 0,
+      greenOffset: 10,
+      blueOffset: 20
+    });
+  });
+
+  // 6. Payout Dialogs & Banking Options
+  document.querySelectorAll('#payout-dialog, #payout-method-dialog, .payout-modal-box').forEach(dlg => {
+    enhanceWithGlassSurface(dlg, {
+      borderRadius: 26,
+      distortionScale: -170,
+      redOffset: 0,
+      greenOffset: 8,
+      blueOffset: 18
+    });
+  });
+  document.querySelectorAll('.bank-option-item').forEach(item => {
+    enhanceWithGlassSurface(item, {
+      borderRadius: 16,
+      distortionScale: -110,
+      redOffset: 0,
+      greenOffset: 6,
+      blueOffset: 12
+    });
+  });
+
+  // 7. Notification Hub & Cards
+  const notifBox = document.querySelector('.notif-drawer-glass-box');
+  if (notifBox) {
+    enhanceWithGlassSurface(notifBox, {
+      borderRadius: 0,
+      distortionScale: -160,
+      redOffset: 0,
+      greenOffset: 8,
+      blueOffset: 16
+    });
+  }
+  document.querySelectorAll('.notif-card-item').forEach(item => {
+    enhanceWithGlassSurface(item, {
+      borderRadius: 16,
+      distortionScale: -110,
+      redOffset: 0,
+      greenOffset: 6,
+      blueOffset: 12
+    });
+  });
+
+  // 8. General Modal dialogs
   document.querySelectorAll('dialog, .portal-dialog').forEach(dlg => {
     enhanceWithGlassSurface(dlg, {
       borderRadius: 26,
@@ -437,7 +512,7 @@ export function initPortalGlassSurfaces() {
     });
   });
 
-  // Data tables & release items
+  // 9. Data tables & release items
   document.querySelectorAll('.data-table, .release-row, .track-row, .catalog-item, .payout-history-table').forEach(item => {
     if (!item.classList.contains('glass-surface')) {
       item.classList.add('glass-surface');
