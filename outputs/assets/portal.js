@@ -5,6 +5,7 @@ import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimi
 import './security.js';
 import { initCardNav } from './card-nav.js';
 import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
+import { initRippleDistortion, RippleDistortion } from './ripple-distortion.js';
 
 // Kiểm tra quyền đăng nhập
 const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
@@ -156,6 +157,29 @@ if (artist) {
   // GLASS SURFACE INITIALIZATION (LIQUID GLASS EFFECT)
   // ----------------------------------------------------
   initPortalGlassSurfaces();
+
+  // ----------------------------------------------------
+  // RIPPLE DISTORTION INTERACTIVE LIQUID POINTER EFFECT
+  // ----------------------------------------------------
+  initRippleDistortion(document.body, {
+    brushSize: 150,
+    strength: 0.2,
+    swirl: 1,
+    rings: 4,
+    grayscale: false,
+    spread: 5,
+    fade: 3,
+    spacing: 15,
+    dispersion: 0,
+    glint: 0,
+    tint: '#a855f7',
+    tintAmount: 0.1,
+    highlightColor: '#ffffff',
+    trigger: 'hover',
+    clickStrength: 2,
+    quality: 'low',
+    enabled: true
+  });
 
   // ----------------------------------------------------
   // ARTIST WEBSITE PROFILE PHOTO CHANGE REQUEST FLOW
