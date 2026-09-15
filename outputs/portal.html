@@ -279,6 +279,9 @@
           </div>
         </div>
 
+        <!-- Active Draft Alert Banner (if draft exists) -->
+        <div id="portal-active-draft-alert" style="display:none;margin-top:16px;"></div>
+
         <!-- Search Bar & Filters -->
         <div style="margin-top:18px;">
           <div class="portal-search-bar-wrap">
@@ -291,6 +294,7 @@
             <button class="filter-chip active" data-release-filter="all">Tất cả sản phẩm (<span id="filter-count-all">0</span>)</button>
             <button class="filter-chip" data-release-filter="live">🟢 Đã phát hành (<span id="filter-count-live">0</span>)</button>
             <button class="filter-chip" data-release-filter="pending">⏳ Đang chờ duyệt (<span id="filter-count-pending">0</span>)</button>
+            <button class="filter-chip" data-release-filter="draft">📝 Bản nháp (<span id="filter-count-draft">0</span>)</button>
             <button class="filter-chip" data-release-filter="takedown">🔴 Yêu cầu gỡ (<span id="filter-count-takedown">0</span>)</button>
           </div>
         </div>
@@ -752,10 +756,15 @@
     <!-- Header -->
     <div class="release-modal-header">
       <div>
-        <span class="eyebrow" style="color:#60a5fa;margin:0;letter-spacing:1.5px;">UniFLOWs Distribution Studio</span>
-        <h2 style="margin:4px 0 0;font-size:22px;letter-spacing:-0.03em;color:#fff;">Tạo & Nộp bản phát hành mới</h2>
+        <span class="eyebrow" style="color:#94a3b8;margin:0;letter-spacing:1.5px;font-family:'DM Mono',monospace;font-size:10px;">UniFLOWs Studio Release Builder</span>
+        <h2 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.02em;color:#fff;">Tạo &amp; Nộp bản phát hành mới</h2>
       </div>
-      <button type="button" id="close-release-dialog-btn" class="button alt" style="padding:6px 14px;font-size:12px;font-weight:bold;background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);">✕ Đóng</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button type="button" id="btn-save-release-draft-header" class="button alt" style="padding:6px 14px;font-size:12px;font-weight:600;background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.25);cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+          💾 Lưu Bản Nháp
+        </button>
+        <button type="button" id="close-release-dialog-btn" class="button alt" style="padding:6px 14px;font-size:12px;font-weight:bold;background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);cursor:pointer;">✕ Đóng</button>
+      </div>
     </div>
 
     <!-- Multi-Step Stepper Bar -->
@@ -880,22 +889,22 @@
           </div>
         </div>
 
-        <!-- Explicit Content Visual Selector -->
+        <!-- Explicit Content Visual Selector (Harmonized Styling) -->
         <div class="field" style="margin-top:14px;">
           <label style="font-weight:700;display:block;margin-bottom:8px;">Nội dung nhạy cảm (Explicit Content) *</label>
-          <div class="explicit-toggle-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <label class="explicit-choice-card" id="explicit-card-clean" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:2px solid #16a34a;background:#f0fdf4;border-radius:8px;cursor:pointer;">
-              <input type="radio" name="explicit" id="explicit-radio-clean" value="false" checked style="accent-color:#16a34a;width:18px;height:18px;margin-top:2px;">
+          <div class="explicit-toggle-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:12px;">
+            <label class="explicit-choice-card" id="explicit-card-clean" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1.5px solid #0f172a;background:#f8fafc;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+              <input type="radio" name="explicit" id="explicit-radio-clean" value="false" checked style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#15803d;">🟢 Clean (An toàn)</b>
-                <span style="font-size:11.5px;color:#64748b;line-height:1.3;display:block;margin-top:2px;">Ca từ trong sáng, không chứa từ ngữ thô tục, bạo lực hay 18+</span>
+                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">Clean (Bản tiêu chuẩn)</b>
+                <span style="font-size:12px;color:#64748b;line-height:1.4;display:block;margin-top:2px;">Ca từ trong sáng, phù hợp mọi lứa tuổi, không chứa từ ngữ thô tục hay 18+</span>
               </div>
             </label>
-            <label class="explicit-choice-card" id="explicit-card-explicit" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;cursor:pointer;">
-              <input type="radio" name="explicit" id="explicit-radio-explicit" value="true" style="accent-color:#dc2626;width:18px;height:18px;margin-top:2px;">
+            <label class="explicit-choice-card" id="explicit-card-explicit" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+              <input type="radio" name="explicit" id="explicit-radio-explicit" value="true" style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#b91c1c;">🔞 [E] Explicit (Nhạy cảm)</b>
-                <span style="font-size:11.5px;color:#64748b;line-height:1.3;display:block;margin-top:2px;">Chứa từ ngữ nhạy cảm, người lớn hoặc tiếng lóng 18+ (Gắn mác E)</span>
+                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">[E] Explicit (Bản nhạy cảm)</b>
+                <span style="font-size:12px;color:#64748b;line-height:1.4;display:block;margin-top:2px;">Chứa từ ngữ người lớn, nhạy cảm hoặc tiếng lóng (gắn nhãn [E] trên DSPs)</span>
               </div>
             </label>
           </div>
@@ -948,10 +957,10 @@
         </div>
 
         <!-- Section 2: Dedicated Audio & Track Studio -->
-        <div style="background:#f8fafc;border:2px solid #0284c7;border-radius:10px;padding:20px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;">
+        <div style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;border-bottom:1px solid #e2e8f0;padding-bottom:14px;">
             <div>
-              <span class="eyebrow" style="color:#0284c7;margin:0;font-size:10px;">TRACK &amp; AUDIO MASTER STUDIO</span>
+              <span class="eyebrow" style="color:#475569;margin:0;font-size:10px;">TRACK &amp; AUDIO MASTER STUDIO</span>
               <h4 style="margin:2px 0 0;font-size:16px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
                 🎵 2. Quản Lý Danh Sách Bài Hát, File Master &amp; Tác Quyền Từng Bài
               </h4>
@@ -959,34 +968,34 @@
             </div>
 
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <div class="track-mode-switch" style="display:inline-flex;gap:4px;background:#e2e8f0;padding:3px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;">
-                <button type="button" id="track-mode-single-btn" class="track-mode-pill active" style="border:none;background:#fff;padding:5px 12px;border-radius:4px;cursor:pointer;font-weight:bold;color:#0f172a;box-shadow:0 1px 2px rgba(0,0,0,0.06);">1 Bài (Single)</button>
-                <button type="button" id="track-mode-multi-btn" class="track-mode-pill" style="border:none;background:transparent;padding:5px 12px;border-radius:4px;cursor:pointer;color:#64748b;font-weight:bold;">Nhiều Bài (EP/Album)</button>
+              <div class="track-mode-switch" style="display:inline-flex;gap:4px;background:#f1f5f9;padding:3px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;">
+                <button type="button" id="track-mode-single-btn" class="track-mode-pill active" style="border:none;background:#0f172a;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:bold;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.08);">1 Bài (Single)</button>
+                <button type="button" id="track-mode-multi-btn" class="track-mode-pill" style="border:none;background:transparent;padding:6px 14px;border-radius:4px;cursor:pointer;color:#64748b;font-weight:bold;">Nhiều Bài (EP/Album)</button>
               </div>
 
-              <label class="button alt" style="padding:6px 14px;font-size:11.5px;margin:0;cursor:pointer;background:#fff;border:1px solid #cbd5e1;display:inline-flex;align-items:center;gap:6px;font-weight:700;">
+              <label class="button alt" style="padding:6px 14px;font-size:11.5px;margin:0;cursor:pointer;background:#fff;border:1px solid #cbd5e1;color:#0f172a;display:inline-flex;align-items:center;gap:6px;font-weight:700;">
                 📂 Tải Hàng Loạt Audio (Batch)
                 <input type="file" id="batch-audio-input" multiple accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
               </label>
 
-              <button type="button" id="btn-add-tracklist-item" class="button" style="padding:6px 14px;font-size:11.5px;background:#0284c7;color:#fff;border-color:#0284c7;font-weight:bold;display:inline-flex;align-items:center;gap:4px;">
+              <button type="button" id="btn-add-tracklist-item" class="button" style="padding:6px 14px;font-size:11.5px;background:#0f172a;color:#fff;border-color:#0f172a;font-weight:bold;display:inline-flex;align-items:center;gap:4px;">
                 + Thêm Bài Hát
               </button>
             </div>
           </div>
 
           <!-- Summary bar -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-            <span id="tracklist-summary-badge" style="font-size:12px;font-weight:700;color:#0369a1;font-family:'DM Mono',monospace;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <span id="tracklist-summary-badge" style="font-size:12px;font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;background:#f1f5f9;padding:4px 10px;border-radius:4px;">
               1 bài hát trong danh sách phát hành
             </span>
-            <span style="font-size:11px;color:#64748b;">
+            <span style="font-size:11.5px;color:#64748b;">
               💡 Tiêu chuẩn Audio: WAV/FLAC 16/24-bit · 44.1kHz - 96kHz Stereo
             </span>
           </div>
 
           <!-- Spacious Tracklist Container -->
-          <div id="tracklist-studio-container" style="display:grid;gap:16px;">
+          <div id="tracklist-studio-container" style="display:grid;gap:18px;">
             <!-- Rendered dynamically with spacious, full-detail track cards -->
           </div>
         </div>
@@ -1025,23 +1034,23 @@
         <div class="field" style="margin-bottom:18px;">
           <label style="font-weight:700;display:block;margin-bottom:8px;">Mã số thương phẩm quốc tế UPC / EAN *</label>
           <div class="upc-toggle-grid" style="display:grid;gap:10px;">
-            <label class="upc-choice-card" id="upc-card-auto" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:2px solid #2563eb;background:#eff6ff;border-radius:8px;cursor:pointer;">
-              <input type="radio" name="upc_choice" id="upc-radio-auto" value="auto" checked style="accent-color:#2563eb;width:18px;height:18px;margin-top:2px;">
+            <label class="upc-choice-card" id="upc-card-auto" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1.5px solid #0f172a;background:#f8fafc;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+              <input type="radio" name="upc_choice" id="upc-radio-auto" value="auto" checked style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#1e40af;">✨ UniFLOWs Label cấp mã UPC/EAN mới tự động (Mặc định - Miễn phí 100%)</b>
-                <span style="font-size:11.5px;color:#475569;display:block;margin-top:2px;line-height:1.4;">Hệ thống phân phối quốc tế của UniFLOWs sẽ tự động đăng ký và sinh mã vạch GS1 chuẩn quốc tế cho bản phát hành này khi đưa lên DSPs.</span>
+                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">UniFLOWs Label cấp mã UPC/EAN mới tự động (Mặc định - Miễn phí 100%)</b>
+                <span style="font-size:12px;color:#64748b;display:block;margin-top:2px;line-height:1.4;">Hệ thống phân phối quốc tế của UniFLOWs sẽ tự động đăng ký và sinh mã vạch GS1 chuẩn quốc tế cho bản phát hành này khi đưa lên DSPs.</span>
               </div>
             </label>
-            <label class="upc-choice-card" id="upc-card-custom" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;cursor:pointer;">
-              <input type="radio" name="upc_choice" id="upc-radio-custom" value="custom" style="accent-color:#2563eb;width:18px;height:18px;margin-top:2px;">
+            <label class="upc-choice-card" id="upc-card-custom" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+              <input type="radio" name="upc_choice" id="upc-radio-custom" value="custom" style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#0f172a;">🏷️ Tôi đã có mã UPC cũ (Dành cho việc chuyển nhạc sang UniFLOWs Label)</b>
-                <span style="font-size:11.5px;color:#475569;display:block;margin-top:2px;line-height:1.4;">Chọn tùy chọn này nếu bạn chuyển bản phát hành từ nhà phân phối khác sang UniFLOWs Label và muốn bảo lưu mã vạch cũ cùng toàn bộ số lượt streams / thuật toán playlist.</span>
+                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">Tôi đã có mã UPC cũ (Dành cho việc chuyển nhạc sang UniFLOWs Label)</b>
+                <span style="font-size:12px;color:#64748b;display:block;margin-top:2px;line-height:1.4;">Chọn tùy chọn này nếu bạn chuyển bản phát hành từ nhà phân phối khác sang UniFLOWs Label và muốn bảo lưu mã vạch cũ cùng toàn bộ số lượt streams / thuật toán playlist.</span>
               </div>
             </label>
           </div>
 
-          <div id="upc-custom-input-box" style="display:none;margin-top:10px;padding:12px 14px;background:#f8fafc;border:1px dashed #0284c7;border-radius:8px;">
+          <div id="upc-custom-input-box" style="display:none;margin-top:10px;padding:12px 14px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;">
             <label style="font-size:11.5px;font-weight:700;color:#0f172a;display:block;margin-bottom:4px;">Nhập mã UPC / EAN cũ của bạn (12–13 chữ số):</label>
             <input name="upc" id="wizard-upc-input" placeholder="Ví dụ: 198000123456" style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;letter-spacing:1px;padding:8px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
           </div>
@@ -1157,18 +1166,21 @@
         </div>
 
         <div style="margin:20px 0 0;display:grid;gap:10px;">
-          <label class="consent"><input required type="checkbox"> Tôi cam kết sở hữu đầy đủ quyền đối với Master, Artwork và các phần sáng tác để phát hành.</label>
-          <label class="consent"><input required type="checkbox"> Tôi đã kiểm tra toàn bộ metadata và credits trước khi nộp.</label>
+          <label class="consent"><input required type="checkbox" style="accent-color:#0f172a;width:16px;height:16px;"> Tôi cam kết sở hữu đầy đủ quyền đối với Master, Artwork và các phần sáng tác để phát hành.</label>
+          <label class="consent"><input required type="checkbox" style="accent-color:#0f172a;width:16px;height:16px;"> Tôi đã kiểm tra toàn bộ metadata và credits trước khi nộp.</label>
         </div>
       </div>
 
       <!-- Footer Navigation Controls -->
       <div class="release-modal-footer">
         <button type="button" id="prev-step-btn" class="button alt" style="padding:10px 20px;display:none;">← Quay lại</button>
-        <div style="display:flex;gap:10px;margin-left:auto;">
+        <div style="display:flex;gap:10px;margin-left:auto;align-items:center;flex-wrap:wrap;">
+          <button type="button" id="btn-save-release-draft-footer" class="button alt" style="padding:10px 18px;font-size:12.5px;font-weight:700;background:#f8fafc;color:#0f172a;border-color:#cbd5e1;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+            💾 Lưu Bản Nháp
+          </button>
           <button type="button" id="cancel-release-btn" class="button alt" style="padding:10px 18px;">Hủy bỏ</button>
-          <button type="button" id="next-step-btn" class="button" style="padding:10px 24px;background:#3b82f6;color:#fff;font-weight:bold;">Tiếp tục: Audio & Artwork →</button>
-          <button type="submit" id="submit-release-btn" class="button" style="padding:10px 28px;background:#000;color:#fff;font-weight:bold;display:none;">🚀 Gửi bản phát hành tới UniFLOWs</button>
+          <button type="button" id="next-step-btn" class="button" style="padding:10px 24px;background:#0f172a;color:#fff;font-weight:bold;border-color:#0f172a;">Tiếp tục: Audio & Artwork →</button>
+          <button type="submit" id="submit-release-btn" class="button" style="padding:10px 28px;background:#0f172a;color:#fff;font-weight:bold;border-color:#0f172a;display:none;">🚀 Gửi bản phát hành tới UniFLOWs</button>
         </div>
       </div>
     </form>

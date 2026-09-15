@@ -33,6 +33,7 @@ const openReleaseModalBtn = document.querySelector('#open-release-modal-btn');
 const quickOpenReleaseModalBtn = document.querySelector('#quick-open-release-modal-btn');
 const closeReleaseDialogBtn = document.querySelector('#close-release-dialog-btn');
 const cancelReleaseBtn = document.querySelector('#cancel-release-btn');
+let currentDraftId = null;
 
 let data = await getData();
 const sessionArtistId = sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id');
@@ -683,6 +684,16 @@ openReleaseModalBtn?.addEventListener('click', () => {
     alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
     return;
   }
+  const savedDraftRaw = localStorage.getItem('uniflows_release_draft_' + (artist?.id || 'artist'));
+  if (savedDraftRaw && !currentDraftId) {
+    try {
+      const d = JSON.parse(savedDraftRaw);
+      if (confirm(`Bạn đang có 1 bản nháp phát hành: "${d.title || 'Chưa đặt tên'}".\nBạn có muốn tiếp tục chỉnh sửa bản nháp này không?`)) {
+        restoreReleaseDraft(d);
+        return;
+      }
+    } catch (e) {}
+  }
   prepareReleaseWizard();
   releaseDialog?.showModal();
 });
@@ -691,6 +702,16 @@ quickOpenReleaseModalBtn?.addEventListener('click', () => {
   if (artist.roleType === 'collab') {
     alert('Tài khoản Nghệ sĩ Collab không có quyền gửi bản phát hành mới. Vui lòng liên hệ Nghệ sĩ chính hoặc Admin của UniFLOWs.');
     return;
+  }
+  const savedDraftRaw = localStorage.getItem('uniflows_release_draft_' + (artist?.id || 'artist'));
+  if (savedDraftRaw && !currentDraftId) {
+    try {
+      const d = JSON.parse(savedDraftRaw);
+      if (confirm(`Bạn đang có 1 bản nháp phát hành: "${d.title || 'Chưa đặt tên'}".\nBạn có muốn tiếp tục chỉnh sửa bản nháp này không?`)) {
+        restoreReleaseDraft(d);
+        return;
+      }
+    } catch (e) {}
   }
   prepareReleaseWizard();
   releaseDialog?.showModal();
@@ -702,6 +723,441 @@ closeReleaseDialogBtn?.addEventListener('click', () => {
 
 cancelReleaseBtn?.addEventListener('click', () => {
   releaseDialog?.close();
+});
+
+// ====================================================
+// UNIFLOWS STUDIO — RELEASE DRAFT ENGINE
+// ====================================================
+
+export function collectReleaseDraftData() {
+  const formEl = document.querySelector('#release-form');
+  const titleVal = document.querySelector('#wizard-title-input')?.value.trim() || '';
+  const typeVal = document.querySelector('#wizard-type-select')?.value || 'Single';
+  const featVal = document.querySelector('#wizard-feat-input')?.value.trim() || '';
+  const genreVal = document.querySelector('#wizard-genre-select')?.value || '';
+  const secondaryGenreVal = document.querySelector('#wizard-secondary-genre-select')?.value || '';
+  const langVal = formEl?.querySelector('[name="language"]')?.value || 'Tiếng Việt';
+  const explicitVal = formEl?.querySelector('input[name="explicit"]:checked')?.value || 'false';
+  const artworkExtUrl = document.querySelector('#artwork-external-url')?.value.trim() || '';
+  const artworkPreviewSrc = document.querySelector('#wizard-art-preview')?.getAttribute('src') || '';
+  const upcChoice = formEl?.querySelector('input[name="upc_choice"]:checked')?.value || 'auto';
+  const upcVal = document.querySelector('#wizard-upc-input')?.value.trim() || '';
+  const territoriesVal = formEl?.querySelector('[name="territories"]')?.value || 'Toàn cầu (Worldwide - 150+ Lãnh thổ)';
+  const pricingVal = formEl?.querySelector('[name="pricing"]')?.value || 'Standard';
+  const songwritersVal = document.querySelector('#wizard-global-songwriters')?.value.trim() || formEl?.querySelector('[name="songwriters"]')?.value.trim() || '';
+  const producersVal = document.querySelector('#wizard-global-producers')?.value.trim() || formEl?.querySelector('[name="producers"]')?.value.trim() || '';
+  const phonogramVal = formEl?.querySelector('[name="phonogram"]')?.value.trim() || '';
+  const copyrightVal = formEl?.querySelector('[name="copyright"]')?.value.trim() || '';
+  const lyricsTextVal = formEl?.querySelector('[name="lyricsText"]')?.value || '';
+  const lyricsLrcVal = formEl?.querySelector('[name="lyricsLrc"]')?.value || '';
+  const syncConsent = formEl?.querySelector('[name="syncLicensingConsent"]')?.checked ?? true;
+  const releaseDateVal = document.querySelector('#wizard-date-input')?.value || '';
+  const preSaveDateVal = formEl?.querySelector('[name="preSaveDate"]')?.value || '';
+  const notesVal = formEl?.querySelector('[name="notes"]')?.value || '';
+
+  // Splits
+  const splits = [];
+  document.querySelectorAll('#royalty-splits-container .royalty-split-row').forEach(row => {
+    const name = row.querySelector('.split-name')?.value.trim();
+    const role = row.querySelector('.split-role')?.value || 'Contributor';
+    const percentage = parseFloat(row.querySelector('.split-pct')?.value) || 0;
+    if (name) {
+      splits.push({ artistName: name, role, percentage });
+    }
+  });
+
+  // Wizard tracks copy
+  const tracksCopy = wizardTracks.map(t => ({
+    trackNum: t.trackNum || 1,
+    title: t.title || '',
+    featuredArtist: t.featuredArtist || '',
+    version: t.version || '',
+    audioUrl: t.audioUrl || '',
+    dolbyAtmosUrl: t.dolbyAtmosUrl || '',
+    lyricsText: t.lyricsText || '',
+    lyricsLrc: t.lyricsLrc || '',
+    credits: Array.isArray(t.credits) ? JSON.parse(JSON.stringify(t.credits)) : [],
+    explicit: t.explicit === true,
+    isrc: t.isrc || '',
+    duration: t.duration || ''
+  }));
+
+  const draftId = currentDraftId || ('draft_' + (artist?.id || 'artist') + '_' + Date.now());
+
+  return {
+    id: draftId,
+    artistId: artist?.id || 'artist',
+    title: titleVal,
+    type: typeVal,
+    featuredArtist: featVal,
+    genre: genreVal,
+    secondaryGenre: secondaryGenreVal,
+    language: langVal,
+    explicit: explicitVal,
+    artworkExternalUrl: artworkExtUrl,
+    artworkUrl: artworkPreviewSrc,
+    upc_choice: upcChoice,
+    upc: upcVal,
+    territories: territoriesVal,
+    pricing: pricingVal,
+    songwriters: songwritersVal,
+    producers: producersVal,
+    phonogram: phonogramVal,
+    copyright: copyrightVal,
+    lyricsText: lyricsTextVal,
+    lyricsLrc: lyricsLrcVal,
+    syncLicensingConsent: syncConsent,
+    releaseDate: releaseDateVal,
+    preSaveDate: preSaveDateVal,
+    notes: notesVal,
+    splits,
+    wizardTracks: tracksCopy,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+export async function saveReleaseDraft(isSilent = false) {
+  const draftData = collectReleaseDraftData();
+  currentDraftId = draftData.id;
+
+  // 1. Lưu LocalStorage an toàn
+  try {
+    localStorage.setItem('uniflows_release_draft_' + (artist?.id || 'artist'), JSON.stringify(draftData));
+  } catch (e) {
+    console.warn('Lỗi lưu draft localStorage:', e);
+  }
+
+  // 2. Đồng bộ lên Supabase nếu có kết nối
+  if (isSupabaseConfigured()) {
+    try {
+      const dbPayload = {
+        id: draftData.id,
+        artist_id: artist.id,
+        title: draftData.title || 'Bản nháp chưa đặt tên',
+        type: draftData.type || 'Single',
+        release_date: draftData.releaseDate || null,
+        pre_save_date: draftData.preSaveDate || null,
+        slug: slug(draftData.title || 'draft-' + Date.now()),
+        genre: draftData.genre || 'V-Pop',
+        language: draftData.language || 'Tiếng Việt',
+        explicit: draftData.explicit === 'true',
+        upc: draftData.upc || '',
+        tracks: draftData.wizardTracks || [],
+        primary_artist: artist.name,
+        featured_artist: draftData.featuredArtist || '',
+        songwriters: draftData.songwriters || artist.name,
+        producers: draftData.producers || 'UniFLOWs Label',
+        phonogram: draftData.phonogram || '℗ 2026 UniFLOWs Label',
+        copyright: draftData.copyright || '© 2026 UniFLOWs Label',
+        territories: draftData.territories || 'Toàn cầu',
+        pricing: draftData.pricing || 'Standard',
+        notes: draftData.notes || '',
+        submission_status: 'Bản nháp',
+        artwork_url: draftData.artworkExternalUrl || draftData.artworkUrl || '',
+        audio_url: draftData.wizardTracks?.[0]?.audioUrl || '',
+        metadata: {
+          isDraft: true,
+          draftData,
+          splits: draftData.splits || [],
+          updatedAt: draftData.updatedAt
+        }
+      };
+      await supabase.from('releases').upsert(dbPayload);
+    } catch (e) {
+      console.warn('Lỗi lưu draft Supabase:', e);
+    }
+  }
+
+  updateActiveDraftBanner();
+  await renderReleases();
+
+  if (!isSilent) {
+    // Phản hồi trực quan trên nút bấm
+    const headerBtn = document.querySelector('#btn-save-release-draft-header');
+    const footerBtn = document.querySelector('#btn-save-release-draft-footer');
+    if (headerBtn) {
+      const origText = headerBtn.innerHTML;
+      headerBtn.innerHTML = '✓ Đã Lưu Nháp!';
+      headerBtn.style.background = '#15803d';
+      headerBtn.style.color = '#fff';
+      setTimeout(() => {
+        headerBtn.innerHTML = origText;
+        headerBtn.style.background = 'rgba(255,255,255,0.12)';
+        headerBtn.style.color = '#fff';
+      }, 2000);
+    }
+    if (footerBtn) {
+      const origText = footerBtn.innerHTML;
+      footerBtn.innerHTML = '✓ Đã Lưu Nháp!';
+      footerBtn.style.background = '#15803d';
+      footerBtn.style.color = '#fff';
+      setTimeout(() => {
+        footerBtn.innerHTML = origText;
+        footerBtn.style.background = '#f8fafc';
+        footerBtn.style.color = '#0f172a';
+      }, 2000);
+    }
+    showNotice(`✓ Đã lưu bản nháp "${draftData.title || 'Chưa đặt tên'}" thành công! Dữ liệu được bảo toàn an toàn.`);
+  }
+}
+
+export function restoreReleaseDraft(draftData) {
+  if (!draftData) return;
+  currentDraftId = draftData.id || null;
+
+  // Title
+  const titleInput = document.querySelector('#wizard-title-input');
+  if (titleInput) titleInput.value = draftData.title || '';
+
+  // Type
+  const typeSelect = document.querySelector('#wizard-type-select');
+  if (typeSelect && draftData.type) typeSelect.value = draftData.type;
+
+  // Featured Artist
+  const featInput = document.querySelector('#wizard-feat-input');
+  if (featInput) featInput.value = draftData.featuredArtist || '';
+
+  // Primary Artist
+  if (primaryArtistInput) primaryArtistInput.value = artist.name;
+
+  // Genre
+  const genreSelect = document.querySelector('#wizard-genre-select');
+  if (genreSelect && draftData.genre) genreSelect.value = draftData.genre;
+
+  // Secondary Genre
+  const secGenreSelect = document.querySelector('#wizard-secondary-genre-select');
+  if (secGenreSelect) secGenreSelect.value = draftData.secondaryGenre || '';
+
+  // Language
+  const langSelect = document.querySelector('#release-form [name="language"]');
+  if (langSelect && draftData.language) langSelect.value = draftData.language;
+
+  // Explicit
+  const isExp = draftData.explicit === 'true' || draftData.explicit === true;
+  const cleanRadio = document.querySelector('#explicit-radio-clean');
+  const expRadio = document.querySelector('#explicit-radio-explicit');
+  if (cleanRadio && expRadio) {
+    cleanRadio.checked = !isExp;
+    expRadio.checked = isExp;
+    updateExplicitDisplay();
+  }
+
+  // Artwork
+  const artworkExtUrlInput = document.querySelector('#artwork-external-url');
+  if (artworkExtUrlInput) artworkExtUrlInput.value = draftData.artworkExternalUrl || '';
+  const artPreview = document.querySelector('#wizard-art-preview');
+  const artContent = document.querySelector('#art-drop-content');
+  const artUrl = draftData.artworkUrl || draftData.artworkExternalUrl;
+  if (artUrl && artPreview) {
+    artPreview.src = artUrl;
+    artPreview.style.display = 'block';
+    if (artContent) artContent.style.display = 'none';
+  }
+
+  // Tracks
+  if (Array.isArray(draftData.wizardTracks) && draftData.wizardTracks.length > 0) {
+    wizardTracks = JSON.parse(JSON.stringify(draftData.wizardTracks));
+  } else {
+    wizardTracks = [{
+      trackNum: 1,
+      title: draftData.title || 'Track 01',
+      featuredArtist: draftData.featuredArtist || '',
+      version: 'Original Mix',
+      audioUrl: '',
+      dolbyAtmosUrl: '',
+      lyricsText: '',
+      lyricsLrc: '',
+      credits: createDefaultCredits(),
+      explicit: false,
+      isrc: ''
+    }];
+  }
+  renderWizardTracklist();
+
+  // Mode pill
+  if (wizardTracks.length > 1) {
+    setTrackMode('multi');
+  } else {
+    setTrackMode('single');
+  }
+
+  // UPC
+  const upcCustomRadio = document.querySelector('#upc-radio-custom');
+  const upcAutoRadio = document.querySelector('#upc-radio-auto');
+  const upcInput = document.querySelector('#wizard-upc-input');
+  if (draftData.upc_choice === 'custom' && upcCustomRadio) {
+    upcCustomRadio.checked = true;
+    if (upcInput) upcInput.value = draftData.upc || '';
+  } else if (upcAutoRadio) {
+    upcAutoRadio.checked = true;
+  }
+  updateUpcDisplay();
+
+  // Songwriters & Producers
+  const sw = document.querySelector('#wizard-global-songwriters') || document.querySelector('[name="songwriters"]');
+  if (sw && draftData.songwriters) sw.value = draftData.songwriters;
+  const prod = document.querySelector('#wizard-global-producers') || document.querySelector('[name="producers"]');
+  if (prod && draftData.producers) prod.value = draftData.producers;
+  const ph = document.querySelector('[name="phonogram"]');
+  if (ph && draftData.phonogram) ph.value = draftData.phonogram;
+  const cp = document.querySelector('[name="copyright"]');
+  if (cp && draftData.copyright) cp.value = draftData.copyright;
+
+  // Splits
+  if (Array.isArray(draftData.splits) && draftData.splits.length > 0) {
+    const splitsContainer = document.querySelector('#royalty-splits-container');
+    if (splitsContainer) {
+      splitsContainer.innerHTML = '';
+      draftData.splits.forEach((sp, idx) => {
+        const row = document.createElement('div');
+        row.className = 'royalty-split-row';
+        row.style = 'display:flex;gap:8px;align-items:center;background:#fff;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;';
+        const isPrimary = idx === 0;
+        row.innerHTML = `
+          <input class="split-name" value="${esc(sp.artistName || '')}" ${isPrimary ? 'readonly style="flex:2;padding:8px;font-size:12px;background:#f1f5f9;font-weight:bold;"' : 'placeholder="Tên Nghệ sĩ / Producer" style="flex:2;padding:8px;font-size:12px;"'}>
+          <select class="split-role" style="flex:1.5;padding:8px;font-size:12px;background:#fff;">
+            <option value="Primary Artist" ${sp.role === 'Primary Artist' ? 'selected' : ''}>Primary Artist</option>
+            <option value="Producer" ${sp.role === 'Producer' ? 'selected' : ''}>Producer</option>
+            <option value="Songwriter" ${sp.role === 'Songwriter' ? 'selected' : ''}>Songwriter</option>
+            <option value="Featured Artist" ${sp.role === 'Featured Artist' ? 'selected' : ''}>Featured Artist</option>
+            <option value="Composer" ${sp.role === 'Composer' ? 'selected' : ''}>Composer</option>
+            <option value="Mixing Engineer" ${sp.role === 'Mixing Engineer' ? 'selected' : ''}>Mixing Engineer</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:4px;flex:1;">
+            <input class="split-pct" type="number" min="1" max="100" value="${sp.percentage || 100}" style="padding:8px;font-size:12px;text-align:right;font-weight:bold;width:100%;">
+            <span style="font-size:12px;font-weight:bold;">%</span>
+          </div>
+          ${isPrimary ? '<span style="width:24px;text-align:center;color:#94a3b8;font-size:12px;">🔒</span>' : '<button type="button" class="remove-split-btn button alt" style="padding:4px 8px;font-size:11px;color:#dc2626;border-color:#fecaca;">✕</button>'}
+        `;
+        splitsContainer.appendChild(row);
+      });
+      updateSplitsTotal();
+    }
+  }
+
+  // Lyrics & Sync
+  const lyricsTextEl = document.querySelector('#release-form [name="lyricsText"]');
+  if (lyricsTextEl && draftData.lyricsText) lyricsTextEl.value = draftData.lyricsText;
+  const lyricsLrcEl = document.querySelector('#release-form [name="lyricsLrc"]');
+  if (lyricsLrcEl && draftData.lyricsLrc) lyricsLrcEl.value = draftData.lyricsLrc;
+  const syncConsentEl = document.querySelector('#release-form [name="syncLicensingConsent"]');
+  if (syncConsentEl) syncConsentEl.checked = draftData.syncLicensingConsent !== false;
+
+  // Step 4 Dates & Notes
+  const dateInput = document.querySelector('#wizard-date-input');
+  if (dateInput) dateInput.value = draftData.releaseDate || '';
+  const preSaveInput = document.querySelector('#release-form [name="preSaveDate"]');
+  if (preSaveInput) preSaveInput.value = draftData.preSaveDate || '';
+  const notesInput = document.querySelector('#release-form [name="notes"]');
+  if (notesInput) notesInput.value = draftData.notes || '';
+
+  // Update step and mockup
+  updateWizardStep(1);
+  updateLiveMockup();
+
+  if (releaseDialog && !releaseDialog.open) {
+    releaseDialog.showModal();
+  }
+  showNotice(`✓ Đã khôi phục bản nháp "${draftData.title || 'Chưa đặt tên'}"`);
+}
+
+export async function discardReleaseDraft(draftId) {
+  localStorage.removeItem('uniflows_release_draft_' + (artist?.id || 'artist'));
+  if (draftId && isSupabaseConfigured()) {
+    try {
+      await supabase.from('releases').delete().eq('id', draftId);
+    } catch (e) {
+      console.warn('Lỗi xóa draft trên Supabase:', e);
+    }
+  }
+  if (currentDraftId === draftId) {
+    currentDraftId = null;
+  }
+  updateActiveDraftBanner();
+  await renderReleases();
+  showNotice('✓ Đã xóa bản nháp thành công.');
+}
+
+export function updateActiveDraftBanner() {
+  const banner = document.querySelector('#portal-active-draft-alert');
+  if (!banner) return;
+
+  // Check localStorage first
+  let activeDraft = null;
+  const rawLocal = localStorage.getItem('uniflows_release_draft_' + (artist?.id || 'artist'));
+  if (rawLocal) {
+    try {
+      activeDraft = JSON.parse(rawLocal);
+    } catch (e) {}
+  }
+
+  // If not found in local, check cachedFetchedReleases for 'Bản nháp'
+  if (!activeDraft && Array.isArray(cachedFetchedReleases)) {
+    const dbDraft = cachedFetchedReleases.find(r => r.submissionStatus === 'Bản nháp' || r.isDraft);
+    if (dbDraft) {
+      activeDraft = dbDraft.metadata?.draftData || dbDraft;
+    }
+  }
+
+  if (!activeDraft) {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    return;
+  }
+
+  const draftTitle = activeDraft.title || 'Bản phát hành chưa đặt tên';
+  const trackCount = (activeDraft.wizardTracks || []).length || 1;
+  const updateTime = activeDraft.updatedAt ? new Date(activeDraft.updatedAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Vừa xong';
+
+  banner.style.display = 'block';
+  banner.innerHTML = `
+    <div style="background:#f8fafc;border:1.5px solid #cbd5e1;border-left:4px solid #0f172a;border-radius:8px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 2px 8px rgba(15,23,42,0.06);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;line-height:1;">📝</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#0f172a;letter-spacing:-0.01em;">
+            Bản nháp phát hành: <span style="color:#0284c7;">"${esc(draftTitle)}"</span>
+            <span style="font-size:11px;font-family:'DM Mono',monospace;background:#e2e8f0;color:#334155;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600;">${esc(activeDraft.type || 'Single')} · ${trackCount} track</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">
+            Đã lưu lúc: <b>${updateTime}</b> · Tiến trình được bảo toàn an toàn để bạn hoàn thiện trước khi gửi duyệt.
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button type="button" id="btn-banner-resume-draft" class="button" style="padding:8px 16px;font-size:12px;font-weight:700;background:#0f172a;color:#fff;border-color:#0f172a;cursor:pointer;">
+          ✏️ Tiếp tục chỉnh sửa →
+        </button>
+        <button type="button" id="btn-banner-discard-draft" class="button alt" style="padding:8px 12px;font-size:12px;color:#dc2626;border-color:#fecaca;cursor:pointer;">
+          ✕ Xóa nháp
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.querySelector('#btn-banner-resume-draft')?.addEventListener('click', () => {
+    restoreReleaseDraft(activeDraft);
+  });
+
+  document.querySelector('#btn-banner-discard-draft')?.addEventListener('click', async () => {
+    if (confirm(`Bạn có chắc chắn muốn xóa bản nháp "${draftTitle}" không? Dữ liệu nháp chưa nộp sẽ bị hủy.`)) {
+      await discardReleaseDraft(activeDraft.id);
+    }
+  });
+}
+
+// Bind Save Draft buttons in Header and Footer
+document.querySelector('#btn-save-release-draft-header')?.addEventListener('click', () => saveReleaseDraft(false));
+document.querySelector('#btn-save-release-draft-footer')?.addEventListener('click', () => saveReleaseDraft(false));
+
+// Keyboard shortcut Ctrl+S / Cmd+S to quickly save release draft
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+    if (releaseDialog && releaseDialog.open) {
+      e.preventDefault();
+      saveReleaseDraft(false);
+    }
+  }
 });
 
 // ====================================================
@@ -977,6 +1433,7 @@ function addTrackItem(data = {}) {
     trackNum: wizardTracks.length + 1,
     title: defaultTitle,
     featuredArtist: data.featuredArtist || '',
+    version: data.version || '',
     audioFile: data.audioFile || null,
     audioUrl: data.audioUrl || '',
     dolbyAtmosFile: data.dolbyAtmosFile || null,
@@ -985,6 +1442,7 @@ function addTrackItem(data = {}) {
     lyricsLrc: data.lyricsLrc || '',
     showLrc: Boolean(data.lyricsLrc),
     explicit: data.explicit === true,
+    isInstrumental: Boolean(data.isInstrumental),
     isrc: data.isrc || '',
     duration: data.duration || '',
     credits: (Array.isArray(data.credits) && data.credits.length > 0)
@@ -1006,7 +1464,7 @@ function renderWizardTracklist() {
 
   if (wizardTracks.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center;padding:24px;background:#fff;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;font-size:12px;">
+      <div style="text-align:center;padding:32px;background:#fff;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;font-size:13px;">
         Chưa có bài hát nào trong danh sách. Bấm <b>"+ Thêm bài hát"</b> hoặc <b>"Tải hàng loạt Audio"</b> để bắt đầu!
       </div>
     `;
@@ -1014,143 +1472,170 @@ function renderWizardTracklist() {
   }
 
   container.innerHTML = wizardTracks.map((tr, idx) => {
+    const hasAudio = Boolean(tr.audioFile || tr.audioUrl);
     const audioStateText = tr.audioFile 
       ? `✓ ${tr.audioFile.name} (${(tr.audioFile.size / (1024 * 1024)).toFixed(1)} MB)` 
-      : (tr.audioUrl ? `✓ URL: ${tr.audioUrl.substring(0, 28)}...` : 'Chưa chọn file Audio');
-    const audioStateColor = (tr.audioFile || tr.audioUrl) ? '#16a34a' : '#dc2626';
+      : (tr.audioUrl ? `✓ URL: ${tr.audioUrl.substring(0, 32)}...` : 'Chưa chọn file Audio');
+    const audioStateColor = hasAudio ? '#0f172a' : '#64748b';
 
+    const hasAtmos = Boolean(tr.dolbyAtmosFile || tr.dolbyAtmosUrl);
     const atmosStateText = tr.dolbyAtmosFile
       ? `✓ ${tr.dolbyAtmosFile.name} (${(tr.dolbyAtmosFile.size / (1024 * 1024)).toFixed(1)} MB)`
-      : (tr.dolbyAtmosUrl ? `✓ URL: ${tr.dolbyAtmosUrl.substring(0, 28)}...` : 'Chưa có file Dolby Atmos (Tùy chọn)');
-    const atmosStateColor = (tr.dolbyAtmosFile || tr.dolbyAtmosUrl) ? '#0284c7' : '#64748b';
+      : (tr.dolbyAtmosUrl ? `✓ URL: ${tr.dolbyAtmosUrl.substring(0, 32)}...` : 'Chưa có file Dolby Atmos (Tùy chọn)');
+    const atmosStateColor = hasAtmos ? '#0f172a' : '#64748b';
 
     return `
-      <div class="tracklist-studio-card" data-track-idx="${idx}" style="background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px;padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:grid;gap:14px;">
+      <div class="tracklist-studio-card" data-track-idx="${idx}" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:grid;gap:18px;">
         
-        <!-- Header of Track Card -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:260px;">
-            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:800;background:#0f172a;color:#fff;padding:4px 10px;border-radius:6px;white-space:nowrap;">
+        <!-- Header of Track Card (AWAL Style) -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span style="font-family:'DM Mono',monospace;font-size:11.5px;font-weight:800;background:#0f172a;color:#fff;padding:5px 12px;border-radius:6px;letter-spacing:0.5px;">
               TRACK #${String(idx + 1).padStart(2, '0')}
             </span>
-            <input type="text" class="track-input-title" placeholder="Tên bài hát *" value="${esc(tr.title)}" style="font-size:14px;font-weight:700;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;flex:1;min-width:160px;background:#fff;" required>
-            <input type="text" class="track-input-feat" placeholder="Nghệ sĩ feat (nếu có)" value="${esc(tr.featuredArtist)}" style="font-size:12px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;flex:1;min-width:130px;background:#fff;">
+            <span class="track-header-title-summary" style="font-size:14.5px;font-weight:700;color:#0f172a;">
+              ${esc(tr.title || 'Chưa đặt tên')}
+            </span>
+            <span class="track-header-audio-badge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:${hasAudio ? '#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;' : '#f8fafc;color:#64748b;border:1px solid #e2e8f0;'}">
+              ${hasAudio ? '✓ Đã có Audio Master' : '⏳ Cần tải file Audio'}
+            </span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button type="button" class="btn-track-up button alt" style="padding:5px 10px;font-size:11px;margin:0;" ${idx === 0 ? 'disabled' : ''} title="Đưa lên">▲</button>
-            <button type="button" class="btn-track-down button alt" style="padding:5px 10px;font-size:11px;margin:0;" ${idx === wizardTracks.length - 1 ? 'disabled' : ''} title="Đưa xuống">▼</button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" class="btn-track-up button alt" style="padding:6px 12px;font-size:11.5px;margin:0;border-color:#cbd5e1;" ${idx === 0 ? 'disabled' : ''} title="Đưa lên">▲</button>
+            <button type="button" class="btn-track-down button alt" style="padding:6px 12px;font-size:11.5px;margin:0;border-color:#cbd5e1;" ${idx === wizardTracks.length - 1 ? 'disabled' : ''} title="Đưa xuống">▼</button>
             ${wizardTracks.length > 1 ? `
-              <button type="button" class="btn-track-remove button alt remove" style="padding:5px 10px;font-size:11px;margin:0;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xoá bài này khỏi danh sách">✕ Xóa bài</button>
+              <button type="button" class="btn-track-remove button alt remove" style="padding:6px 12px;font-size:11.5px;margin:0;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xoá bài này khỏi danh sách">✕ Xóa bài</button>
             ` : ''}
           </div>
         </div>
 
-        <!-- Audio Files Grid: Master Audio + Optional Dolby Atmos -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;background:#f8fafc;padding:14px;border-radius:8px;border:1px solid #e2e8f0;">
-          <!-- 1. Master Audio -->
-          <div style="display:flex;flex-direction:column;gap:6px;">
+        <!-- 1. Main Track Details Grid (Spacious 3-Column Layout) -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
+          <div class="field" style="margin:0;">
+            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
+              Tên bài hát (Track Title) *
+            </label>
+            <input type="text" class="track-input-title" placeholder="Nhập tên bài hát..." value="${esc(tr.title)}" style="font-size:14px;font-weight:600;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;" required>
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
+              Nghệ sĩ hợp tác (Featured Artist - Tùy chọn)
+            </label>
+            <input type="text" class="track-input-feat" placeholder="Ví dụ: feat. Binz, Grey D..." value="${esc(tr.featuredArtist)}" style="font-size:13px;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
+              Phiên bản (Version / Mix - Tùy chọn)
+            </label>
+            <input type="text" class="track-input-version" placeholder="Radio Edit, Acoustic, Remix..." value="${esc(tr.version || '')}" style="font-size:13px;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+          </div>
+        </div>
+
+        <!-- 2. Audio Files Grid: Master Audio + Optional Dolby Atmos -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;background:#f8fafc;padding:18px;border-radius:8px;border:1px solid #e2e8f0;">
+          <!-- Master Audio -->
+          <div style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <label style="font-size:11.5px;font-weight:700;color:#0f172a;text-transform:uppercase;">
+              <label style="font-size:12px;font-weight:700;color:#0f172a;text-transform:uppercase;">
                 🎵 File Master Audio (Stereo) *
               </label>
-              <span style="font-size:10px;color:#16a34a;font-family:'DM Mono',monospace;font-weight:700;">WAV / FLAC / MP3</span>
+              <span style="font-size:10.5px;color:#0f172a;background:#e2e8f0;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:700;">WAV / FLAC / MP3</span>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <label class="button" style="padding:6px 12px;font-size:11px;margin:0;cursor:pointer;background:#0f172a;color:#fff;border-color:#0f172a;font-weight:700;white-space:nowrap;">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <label class="button" style="padding:8px 14px;font-size:12px;margin:0;cursor:pointer;background:#0f172a;color:#fff;border-color:#0f172a;font-weight:700;white-space:nowrap;">
                 📁 Chọn Master File
                 <input type="file" class="track-audio-input" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
               </label>
-              <span class="track-audio-status" style="font-size:11px;color:${audioStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+              <span class="track-audio-status" style="font-size:11.5px;color:${audioStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
                 ${audioStateText}
               </span>
             </div>
-            <input type="url" class="track-input-audio-url" placeholder="Hoặc dán Link Google Drive/Dropbox Master (https://...)" value="${esc(tr.audioUrl || '')}" style="font-size:11px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;margin-top:2px;">
+            <input type="url" class="track-input-audio-url" placeholder="Hoặc dán Link Google Drive/Dropbox Master (https://...)" value="${esc(tr.audioUrl || '')}" style="font-size:12px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
           </div>
 
-          <!-- 2. Dolby Atmos Spatial Audio (Optional) -->
-          <div style="display:flex;flex-direction:column;gap:6px;">
+          <!-- Dolby Atmos Spatial Audio -->
+          <div style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <label style="font-size:11.5px;font-weight:700;color:#0284c7;text-transform:uppercase;">
+              <label style="font-size:12px;font-weight:700;color:#0f172a;text-transform:uppercase;">
                 🎧 Dolby Atmos Spatial Audio (Tùy chọn)
               </label>
-              <span style="font-size:10px;color:#0284c7;background:#e0f2fe;padding:2px 6px;border-radius:4px;font-weight:700;">ADM BWF / WAV</span>
+              <span style="font-size:10.5px;color:#0f172a;background:#e2e8f0;padding:2px 8px;border-radius:4px;font-weight:700;font-family:'DM Mono',monospace;">ADM BWF / WAV</span>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <label class="button alt" style="padding:6px 12px;font-size:11px;margin:0;cursor:pointer;background:#fff;color:#0284c7;border-color:#7dd3fc;font-weight:700;white-space:nowrap;">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <label class="button alt" style="padding:8px 14px;font-size:12px;margin:0;cursor:pointer;background:#fff;color:#0f172a;border-color:#cbd5e1;font-weight:700;white-space:nowrap;">
                 🎧 Chọn File Atmos
                 <input type="file" class="track-atmos-input" accept="audio/wav,audio/x-wav,.wav" style="display:none;">
               </label>
-              <span class="track-atmos-status" style="font-size:11px;color:${atmosStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+              <span class="track-atmos-status" style="font-size:11.5px;color:${atmosStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
                 ${atmosStateText}
               </span>
             </div>
-            <input type="url" class="track-input-atmos-url" placeholder="Hoặc dán Link Drive/Dropbox Dolby Atmos Master (https://...)" value="${esc(tr.dolbyAtmosUrl || '')}" style="font-size:11px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;margin-top:2px;">
+            <input type="url" class="track-input-atmos-url" placeholder="Hoặc dán Link Drive/Dropbox Dolby Atmos (https://...)" value="${esc(tr.dolbyAtmosUrl || '')}" style="font-size:12px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
           </div>
         </div>
 
-        <!-- Lyrics Section -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-            <label style="font-size:11.5px;font-weight:800;color:#334155;text-transform:uppercase;margin:0;">
-              📝 Lời Bài Hát (Lyrics Studio)
-            </label>
-            <button type="button" class="btn-toggle-lrc button alt" style="padding:3px 10px;font-size:10.5px;color:#2563eb;border-color:#93c5fd;cursor:pointer;">
-              ${tr.showLrc ? 'Ẩn Lời Đồng Bộ LRC' : '+ Thêm Lời Đồng Bộ LRC (Tùy chọn)'}
-            </button>
+        <!-- 3. Track Settings Row: Content Explicit Type & ISRC Code -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:16px;padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+          <div class="field" style="margin:0;">
+            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">Phân loại nội dung bài hát:</label>
+            <select class="track-select-explicit" style="font-size:12.5px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;font-weight:600;width:100%;">
+              <option value="false" ${!tr.explicit && !tr.isInstrumental ? 'selected' : ''}>Clean (Bản tiêu chuẩn / Không nhạy cảm)</option>
+              <option value="true" ${tr.explicit ? 'selected' : ''}>[E] Explicit (Có từ ngữ nhạy cảm / 18+)</option>
+              <option value="instrumental" ${tr.isInstrumental ? 'selected' : ''}>Instrumental (Nhạc không lời)</option>
+            </select>
           </div>
-          <textarea class="track-textarea-lyrics" rows="3" placeholder="Dán toàn bộ lời bài hát (Plain text) tại đây để hiển thị trên Apple Music, Spotify, Zing MP3..." style="font-size:12px;padding:8px 10px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;font-family:inherit;">${esc(tr.lyricsText || '')}</textarea>
-
-          <div class="track-lrc-wrapper" style="display:${tr.showLrc ? 'block' : 'none'};margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">
-            <label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:4px;">
-              Định dạng lời đồng bộ thời gian (.LRC):
-            </label>
-            <textarea class="track-textarea-lrc" rows="3" placeholder="[00:12.30] Dòng lời bài hát thứ nhất...&#10;[00:15.80] Dòng lời bài hát thứ hai..." style="font-size:11.5px;font-family:'DM Mono',monospace;padding:8px 10px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;">${esc(tr.lyricsLrc || '')}</textarea>
+          <div class="field" style="margin:0;">
+            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">Mã ISRC của bài hát (Tùy chọn):</label>
+            <input type="text" class="track-input-isrc" placeholder="Để trống nếu muốn UniFLOWs cấp tự động" value="${esc(tr.isrc)}" style="font-family:'DM Mono',monospace;font-size:12.5px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:6px;width:100%;background:#fff;">
           </div>
         </div>
 
-        <!-- Music Production Credits & Roles Section -->
-        <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:12px 14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <!-- 4. Production Credits Section (AWAL style) -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
             <div>
-              <label style="font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;display:block;margin:0;">
+              <label style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;display:block;margin:0;">
                 👥 Đội Ngũ Sản Xuất &amp; Tác Quyền Bài Hát (Production Credits)
               </label>
-              <span style="font-size:11px;color:#64748b;">Chọn vai trò trong danh sách chuẩn ngành và nhập tên tương ứng:</span>
+              <span style="font-size:11.5px;color:#64748b;">Chọn vai trò trong danh sách chuẩn ngành và nhập tên tương ứng:</span>
             </div>
-            <button type="button" class="btn-add-track-credit button alt" style="padding:4px 10px;font-size:11px;font-weight:700;background:#fff;border-color:#0284c7;color:#0284c7;cursor:pointer;">
+            <button type="button" class="btn-add-track-credit button alt" style="padding:6px 14px;font-size:12px;font-weight:700;background:#fff;border-color:#0f172a;color:#0f172a;cursor:pointer;">
               + Thêm Vai Trò / Người Tham Gia
             </button>
           </div>
 
-          <!-- Credit rows -->
-          <div class="track-credits-container" style="display:grid;gap:6px;">
+          <div class="track-credits-container" style="display:grid;gap:8px;">
             ${(tr.credits || []).map((cr, cIdx) => `
-              <div class="track-credit-row" data-credit-idx="${cIdx}" style="display:flex;gap:8px;align-items:center;background:#fff;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;">
-                <select class="credit-input-role" style="font-size:11.5px;padding:5px 8px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;flex:1;max-width:260px;font-weight:600;">
+              <div class="track-credit-row" data-credit-idx="${cIdx}" style="display:flex;gap:10px;align-items:center;background:#fff;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;">
+                <select class="credit-input-role" style="font-size:12px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;flex:1;max-width:260px;font-weight:600;">
                   ${INDUSTRY_PRODUCTION_ROLES.map(role => `
                     <option value="${esc(role)}" ${cr.role === role ? 'selected' : ''}>${esc(role)}</option>
                   `).join('')}
                 </select>
-                <input type="text" class="credit-input-name" placeholder="Họ và tên / Nghệ danh..." value="${esc(cr.name || '')}" style="font-size:12px;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;flex:1;" required>
-                <button type="button" class="btn-del-credit button alt remove" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xóa vai trò này">✕</button>
+                <input type="text" class="credit-input-name" placeholder="Họ và tên / Nghệ danh..." value="${esc(cr.name || '')}" style="font-size:12.5px;padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;flex:1;" required>
+                <button type="button" class="btn-del-credit button alt remove" style="padding:5px 10px;font-size:11.5px;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xóa vai trò này">✕</button>
               </div>
             `).join('')}
           </div>
         </div>
 
-        <!-- Footer Track Settings: Explicit & ISRC -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:4px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <label style="font-size:11px;font-weight:700;color:#334155;">Nội dung bài hát này:</label>
-            <select class="track-select-explicit" style="font-size:11.5px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;font-weight:600;">
-              <option value="false" ${!tr.explicit ? 'selected' : ''}>🟢 Clean (Không nhạy cảm)</option>
-              <option value="true" ${tr.explicit ? 'selected' : ''}>🔞 [E] Explicit (Có từ ngữ nhạy cảm)</option>
-            </select>
+        <!-- 5. Lyrics Section -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <label style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;margin:0;">
+              📝 Lời Bài Hát (Lyrics Studio)
+            </label>
+            <button type="button" class="btn-toggle-lrc button alt" style="padding:4px 12px;font-size:11px;font-weight:600;color:#0f172a;border-color:#cbd5e1;cursor:pointer;">
+              ${tr.showLrc ? 'Ẩn Lời Đồng Bộ LRC' : '+ Thêm Lời Đồng Bộ LRC (Tùy chọn)'}
+            </button>
           </div>
+          <textarea class="track-textarea-lyrics" rows="4" placeholder="Dán toàn bộ lời bài hát (Plain text) tại đây để hiển thị trên Apple Music, Spotify, Zing MP3..." style="font-size:12.5px;padding:10px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;font-family:inherit;line-height:1.5;">${esc(tr.lyricsText || '')}</textarea>
 
-          <div style="display:flex;align-items:center;gap:6px;">
-            <label style="font-size:11px;font-weight:700;color:#334155;">Mã ISRC (nếu có):</label>
-            <input type="text" class="track-input-isrc" placeholder="VN-UF0-26-XXXXX" value="${esc(tr.isrc)}" style="font-size:11.5px;font-family:'DM Mono',monospace;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;width:150px;background:#fff;">
+          <div class="track-lrc-wrapper" style="display:${tr.showLrc ? 'block' : 'none'};margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0;">
+            <label style="font-size:11.5px;font-weight:700;color:#0f172a;display:block;margin-bottom:4px;">
+              Định dạng lời đồng bộ thời gian (.LRC):
+            </label>
+            <textarea class="track-textarea-lrc" rows="4" placeholder="[00:12.30] Dòng lời bài hát thứ nhất...&#10;[00:15.80] Dòng lời bài hát thứ hai..." style="font-size:12px;font-family:'DM Mono',monospace;padding:10px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;line-height:1.4;">${esc(tr.lyricsLrc || '')}</textarea>
           </div>
         </div>
       </div>
@@ -1162,13 +1647,19 @@ function renderWizardTracklist() {
     const item = wizardTracks[idx];
     if (!item) return;
 
-    // Title & Feat
+    // Title, Feat, Version
     card.querySelector('.track-input-title')?.addEventListener('input', (e) => {
       item.title = e.target.value;
+      const summaryEl = card.querySelector('.track-header-title-summary');
+      if (summaryEl) summaryEl.textContent = item.title || 'Chưa đặt tên';
     });
 
     card.querySelector('.track-input-feat')?.addEventListener('input', (e) => {
       item.featuredArtist = e.target.value;
+    });
+
+    card.querySelector('.track-input-version')?.addEventListener('input', (e) => {
+      item.version = e.target.value;
     });
 
     // Master Audio
@@ -1179,7 +1670,14 @@ function renderWizardTracklist() {
         const statusEl = card.querySelector('.track-audio-status');
         if (statusEl) {
           statusEl.textContent = `✓ ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
-          statusEl.style.color = '#16a34a';
+          statusEl.style.color = '#0f172a';
+        }
+        const badgeEl = card.querySelector('.track-header-audio-badge');
+        if (badgeEl) {
+          badgeEl.textContent = '✓ Đã có Audio Master';
+          badgeEl.style.background = '#f1f5f9';
+          badgeEl.style.color = '#0f172a';
+          badgeEl.style.border = '1px solid #cbd5e1';
         }
       }
     });
@@ -1188,8 +1686,14 @@ function renderWizardTracklist() {
       item.audioUrl = e.target.value.trim();
       const statusEl = card.querySelector('.track-audio-status');
       if (statusEl && !item.audioFile) {
-        statusEl.textContent = item.audioUrl ? `✓ URL: ${item.audioUrl.substring(0, 28)}...` : 'Chưa chọn file Audio';
-        statusEl.style.color = item.audioUrl ? '#16a34a' : '#dc2626';
+        statusEl.textContent = item.audioUrl ? `✓ URL: ${item.audioUrl.substring(0, 32)}...` : 'Chưa chọn file Audio';
+        statusEl.style.color = item.audioUrl ? '#0f172a' : '#64748b';
+      }
+      const badgeEl = card.querySelector('.track-header-audio-badge');
+      if (badgeEl && !item.audioFile) {
+        badgeEl.textContent = item.audioUrl ? '✓ Đã có Audio Master' : '⏳ Cần tải file Audio';
+        badgeEl.style.background = item.audioUrl ? '#f1f5f9' : '#f8fafc';
+        badgeEl.style.color = item.audioUrl ? '#0f172a' : '#64748b';
       }
     });
 
@@ -1201,7 +1705,7 @@ function renderWizardTracklist() {
         const statusEl = card.querySelector('.track-atmos-status');
         if (statusEl) {
           statusEl.textContent = `✓ ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
-          statusEl.style.color = '#0284c7';
+          statusEl.style.color = '#0f172a';
         }
       }
     });
@@ -1210,8 +1714,8 @@ function renderWizardTracklist() {
       item.dolbyAtmosUrl = e.target.value.trim();
       const statusEl = card.querySelector('.track-atmos-status');
       if (statusEl && !item.dolbyAtmosFile) {
-        statusEl.textContent = item.dolbyAtmosUrl ? `✓ URL: ${item.dolbyAtmosUrl.substring(0, 28)}...` : 'Chưa có file Dolby Atmos (Tùy chọn)';
-        statusEl.style.color = item.dolbyAtmosUrl ? '#0284c7' : '#64748b';
+        statusEl.textContent = item.dolbyAtmosUrl ? `✓ URL: ${item.dolbyAtmosUrl.substring(0, 32)}...` : 'Chưa có file Dolby Atmos (Tùy chọn)';
+        statusEl.style.color = item.dolbyAtmosUrl ? '#0f172a' : '#64748b';
       }
     });
 
@@ -1257,7 +1761,17 @@ function renderWizardTracklist() {
 
     // Explicit & ISRC
     card.querySelector('.track-select-explicit')?.addEventListener('change', (e) => {
-      item.explicit = e.target.value === 'true';
+      const val = e.target.value;
+      if (val === 'instrumental') {
+        item.isInstrumental = true;
+        item.explicit = false;
+      } else if (val === 'true') {
+        item.isInstrumental = false;
+        item.explicit = true;
+      } else {
+        item.isInstrumental = false;
+        item.explicit = false;
+      }
     });
 
     card.querySelector('.track-input-isrc')?.addEventListener('input', (e) => {
@@ -1328,22 +1842,22 @@ function initUpcControls() {
     if (upcRadioCustom?.checked) {
       if (upcCustomBox) upcCustomBox.style.display = 'block';
       if (upcCardCustom) {
-        upcCardCustom.style.borderColor = '#2563eb';
-        upcCardCustom.style.background = '#eff6ff';
+        upcCardCustom.style.borderColor = '#0f172a';
+        upcCardCustom.style.background = '#f8fafc';
       }
       if (upcCardAuto) {
-        upcCardAuto.style.borderColor = '#cbd5e1';
+        upcCardAuto.style.borderColor = '#e2e8f0';
         upcCardAuto.style.background = '#fff';
       }
       wizardUpcInput?.focus();
     } else {
       if (upcCustomBox) upcCustomBox.style.display = 'none';
       if (upcCardAuto) {
-        upcCardAuto.style.borderColor = '#2563eb';
-        upcCardAuto.style.background = '#eff6ff';
+        upcCardAuto.style.borderColor = '#0f172a';
+        upcCardAuto.style.background = '#f8fafc';
       }
       if (upcCardCustom) {
-        upcCardCustom.style.borderColor = '#cbd5e1';
+        upcCardCustom.style.borderColor = '#e2e8f0';
         upcCardCustom.style.background = '#fff';
       }
     }
@@ -1363,20 +1877,20 @@ function initExplicitControls() {
   function updateExplicitDisplay() {
     if (explicitRadioExplicit?.checked) {
       if (explicitCardExplicit) {
-        explicitCardExplicit.style.borderColor = '#dc2626';
-        explicitCardExplicit.style.background = '#fef2f2';
+        explicitCardExplicit.style.borderColor = '#0f172a';
+        explicitCardExplicit.style.background = '#f8fafc';
       }
       if (explicitCardClean) {
-        explicitCardClean.style.borderColor = '#cbd5e1';
+        explicitCardClean.style.borderColor = '#e2e8f0';
         explicitCardClean.style.background = '#fff';
       }
     } else {
       if (explicitCardClean) {
-        explicitCardClean.style.borderColor = '#16a34a';
-        explicitCardClean.style.background = '#f0fdf4';
+        explicitCardClean.style.borderColor = '#0f172a';
+        explicitCardClean.style.background = '#f8fafc';
       }
       if (explicitCardExplicit) {
-        explicitCardExplicit.style.borderColor = '#cbd5e1';
+        explicitCardExplicit.style.borderColor = '#e2e8f0';
         explicitCardExplicit.style.background = '#fff';
       }
     }
@@ -1552,17 +2066,20 @@ function updateFilterCounters() {
   const countAll = cachedFetchedReleases.length;
   const countLive = cachedFetchedReleases.filter(r => !r.submissionStatus || r.submissionStatus === 'Đã phát hành').length;
   const countPending = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('chờ')).length;
+  const countDraft = cachedFetchedReleases.filter(r => r.submissionStatus === 'Bản nháp' || r.isDraft).length;
   const countTakedown = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('gỡ')).length;
 
   const elAll = document.querySelector('#filter-count-all');
   const elLive = document.querySelector('#filter-count-live');
   const elPending = document.querySelector('#filter-count-pending');
+  const elDraft = document.querySelector('#filter-count-draft');
   const elTakedown = document.querySelector('#filter-count-takedown');
   const elNavCount = document.querySelector('#nav-releases-count');
 
   if (elAll) elAll.textContent = countAll;
   if (elLive) elLive.textContent = countLive;
   if (elPending) elPending.textContent = countPending;
+  if (elDraft) elDraft.textContent = countDraft;
   if (elTakedown) elTakedown.textContent = countTakedown;
   if (elNavCount) elNavCount.textContent = countAll;
 }
@@ -1577,6 +2094,8 @@ function renderReleaseListItems() {
     filtered = cachedFetchedReleases.filter(r => !r.submissionStatus || r.submissionStatus === 'Đã phát hành');
   } else if (currentReleaseFilter === 'pending') {
     filtered = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('chờ'));
+  } else if (currentReleaseFilter === 'draft') {
+    filtered = cachedFetchedReleases.filter(r => r.submissionStatus === 'Bản nháp' || r.isDraft);
   } else if (currentReleaseFilter === 'takedown') {
     filtered = cachedFetchedReleases.filter(r => r.submissionStatus && r.submissionStatus.includes('gỡ'));
   }
@@ -1597,6 +2116,7 @@ function renderReleaseListItems() {
   }
 
   list.innerHTML = filtered.map(p => {
+    const isDraft = p.submissionStatus === 'Bản nháp' || p.isDraft;
     const isTakedownRequested = p.submissionStatus === 'Yêu cầu gỡ / xóa bản phát hành';
     const isPending = p.submissionStatus?.includes('chờ');
     const isRevision = p.submissionStatus === 'Yêu cầu chỉnh sửa' || p.submissionStatus?.includes('chỉnh sửa');
@@ -1608,7 +2128,9 @@ function renderReleaseListItems() {
       : '';
 
     let statusBadge = '';
-    if (isPending) {
+    if (isDraft) {
+      statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:12px;font-size:11px;font-weight:bold;">📝 Bản nháp (Chưa nộp)</span>`;
+    } else if (isPending) {
       statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fef3c7;color:#b45309;border-radius:12px;font-size:11px;font-weight:bold;">⏳ Đang chờ UniFLOWs duyệt</span>`;
     } else if (isRevision) {
       statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;font-size:11px;font-weight:bold;">⚠️ Cần chỉnh sửa lại</span>`;
@@ -1627,6 +2149,15 @@ function renderReleaseListItems() {
     const artworkSrc = p.artworkUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
     const arNote = p.metadata?.arFeedback || p.arFeedback || '';
 
+    const actionButtons = isDraft ? `
+      <button type="button" class="button btn-resume-draft-card" data-draft-id="${esc(p.id)}" style="padding:6px 14px;font-size:11px;font-weight:bold;background:#0f172a;color:#fff;border-color:#0f172a;cursor:pointer;">Tiếp tục sửa ✏️</button>
+      <button type="button" class="button alt btn-delete-draft-card" data-draft-id="${esc(p.id)}" style="padding:6px 10px;font-size:11px;color:#dc2626;border-color:#fecaca;cursor:pointer;">Xóa nháp ✕</button>
+    ` : `
+      ${p.audioUrl ? `<a href="${esc(p.audioUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;font-weight:bold;">🎵 Master</a>` : ''}
+      ${p.artworkUrl ? `<a href="${esc(p.artworkUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;">🖼 Artwork</a>` : ''}
+      <a href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" class="button" style="padding:6px 14px;font-size:11px;font-weight:bold;background:#000;color:#fff;">SmartLink ↗</a>
+    `;
+
     return `
       <div class="portal-release-card" style="${isRevision ? 'border:2px solid #f87171;' : ''}">
         <img class="portal-release-thumb" src="${esc(artworkSrc)}" alt="${esc(p.title)}">
@@ -1640,10 +2171,16 @@ function renderReleaseListItems() {
           <div style="font-size:12px;color:#64748b;margin-bottom:6px;">
             Nghệ sĩ chính: <b>${esc(p.primaryArtistName || artist.name)}</b> · Vai trò: <b>${esc(p.userRole || 'Main')}</b>
           </div>
-          <div style="font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;">🎧 Streams bạn nhận: <b>${p.userStreams.toLocaleString('vi-VN')}</b></span>
-            <span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:bold;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</span>
-          </div>
+          ${isDraft ? `
+            <div style="font-size:12px;color:#64748b;background:#f8fafc;padding:4px 8px;border-radius:4px;display:inline-block;">
+              📝 Tiến trình: <b>${(p.metadata?.draftData?.wizardTracks || []).length || 1} tracks</b> · Thể loại: <b>${esc(p.metadata?.draftData?.genre || 'Chưa chọn')}</b>
+            </div>
+          ` : `
+            <div style="font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;">🎧 Streams bạn nhận: <b>${p.userStreams.toLocaleString('vi-VN')}</b></span>
+              <span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:bold;">₫ ${p.userRevenue.toLocaleString('vi-VN')}</span>
+            </div>
+          `}
           ${playlistsHtml}
           ${arNote ? `
             <div style="margin-top:10px;background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:10px 14px;font-size:13px;color:#9f1239;line-height:1.5;">
@@ -1655,12 +2192,10 @@ function renderReleaseListItems() {
           ` : ''}
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          ${p.audioUrl ? `<a href="${esc(p.audioUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;font-weight:bold;">🎵 Master</a>` : ''}
-          ${p.artworkUrl ? `<a href="${esc(p.artworkUrl)}" target="_blank" class="button alt" style="padding:6px 12px;font-size:11px;">🖼 Artwork</a>` : ''}
-          <a href="/listen?release=${encodeURIComponent(releaseSlug)}" target="_blank" class="button" style="padding:6px 14px;font-size:11px;font-weight:bold;background:#000;color:#fff;">SmartLink ↗</a>
+          ${actionButtons}
         </div>
         <div>
-          ${(p.id && artist.roleType !== 'collab') ? (
+          ${(p.id && !isDraft && artist.roleType !== 'collab') ? (
             isTakedownRequested
               ? `<span style="font-size:11px;color:#d9534f;font-weight:bold;display:block;">⏳ Đang chờ duyệt gỡ</span>`
               : `<button class="button alt remove" type="button" data-request-takedown="${esc(p.id)}" style="padding:6px 10px;font-size:10px;">Yêu cầu gỡ</button>`
@@ -1669,6 +2204,29 @@ function renderReleaseListItems() {
       </div>
     `;
   }).join('');
+
+  // Attach draft resume and delete events
+  list.querySelectorAll('.btn-resume-draft-card').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const draftId = btn.dataset.draftId;
+      const targetDraft = cachedFetchedReleases.find(r => r.id === draftId);
+      if (targetDraft) {
+        const draftData = targetDraft.metadata?.draftData || targetDraft;
+        restoreReleaseDraft(draftData);
+      }
+    });
+  });
+
+  list.querySelectorAll('.btn-delete-draft-card').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const draftId = btn.dataset.draftId;
+      if (confirm('Bạn có chắc chắn muốn xóa bản nháp này không?')) {
+        await discardReleaseDraft(draftId);
+      }
+    });
+  });
 
   // Attach takedown request events
   list.querySelectorAll('[data-request-takedown]').forEach(btn => {
@@ -1802,6 +2360,39 @@ async function renderReleases() {
     }
   });
 
+  // Check and merge local draft if not already in participatingReleases
+  const localDraftRaw = localStorage.getItem('uniflows_release_draft_' + (artist?.id || 'artist'));
+  if (localDraftRaw) {
+    try {
+      const localDraft = JSON.parse(localDraftRaw);
+      if (localDraft && !participatingReleases.some(r => r.id === localDraft.id)) {
+        participatingReleases.unshift({
+          id: localDraft.id,
+          title: localDraft.title || 'Bản nháp chưa đặt tên',
+          type: localDraft.type || 'Single',
+          slug: slug(localDraft.title || 'draft'),
+          primaryArtistName: artist.name,
+          submissionStatus: 'Bản nháp',
+          audioUrl: localDraft.audioExternalUrl || (localDraft.wizardTracks?.[0]?.audioUrl || ''),
+          artworkUrl: localDraft.artworkExternalUrl || localDraft.artworkUrl || '',
+          links: {},
+          totalStreams: 0,
+          totalRevenue: 0,
+          userStreams: 0,
+          userRevenue: 0,
+          percentage: 100,
+          userRole: 'Nghệ sĩ chính',
+          isSplit: false,
+          playlists: [],
+          metadata: { isDraft: true, draftData: localDraft },
+          isDraft: true
+        });
+      }
+    } catch (e) {
+      console.warn('Lỗi đọc draft local:', e);
+    }
+  }
+
   cachedFetchedReleases = participatingReleases;
 
   // Update Overview stats for Collab / Partner automatically
@@ -1817,8 +2408,9 @@ async function renderReleases() {
   const pending = participatingReleases.filter(r => r.submissionStatus?.includes('chờ') || r.submissionStatus?.includes('Duyệt') || r.submissionStatus?.includes('gỡ')).length;
   if (pendingCountEl) pendingCountEl.textContent = String(pending).padStart(2, '0');
 
-  // Render filter items
+  // Render filter items & draft alert banner
   renderReleaseListItems();
+  updateActiveDraftBanner();
 
   // 2. Render Track Earnings Breakdown table with Split percentage
   const trackEarningsList = document.querySelector('#track-earnings-list');
@@ -2419,47 +3011,96 @@ form?.addEventListener('submit', async (e) => {
       tracklist: finalTracklist
     };
 
-    // 4. Lưu vào Database
+    // 4. Lưu vào Database (Cập nhật bản nháp nếu có, hoặc tạo mới)
     if (isSupabaseConfigured()) {
       submitBtn.textContent = 'Đang lưu dữ liệu...';
-      const { data: inserted, error: dbError } = await supabase.from('releases').insert({
-        artist_id: artist.id,
-        title: v.title,
-        type: releaseTypeFormatted,
-        release_date: v.releaseDate,
-        pre_save_date: v.preSaveDate || null,
-        slug: releaseSlug,
-        genre: v.genre || 'V-Pop',
-        language: v.language || 'Tiếng Việt',
-        explicit: isExplicit,
-        upc: finalUpc,
-        tracks: finalTracklist,
-        primary_artist: v.primaryArtist || artist.name,
-        featured_artist: v.featuredArtist || '',
-        songwriters: finalSongwriters,
-        producers: finalProducers,
-        phonogram: v.phonogram || '℗ 2026 UniFLOWs Label',
-        copyright: v.copyright || '© 2026 UniFLOWs Label',
-        territories: v.territories,
-        pricing: v.pricing,
-        notes: v.notes,
-        submission_status: 'Đang chờ UniFLOWs duyệt',
-        audio_url: audioUrl,
-        artwork_url: artworkUrl,
-        links,
-        metadata: {
-          ...metadataPayload,
-          tracklist: finalTracklist
-        }
-      }).select().single();
+      let inserted = null;
 
-      if (dbError) throw dbError;
+      if (currentDraftId) {
+        const { data: updated, error: dbError } = await supabase.from('releases').update({
+          artist_id: artist.id,
+          title: v.title,
+          type: releaseTypeFormatted,
+          release_date: v.releaseDate || null,
+          pre_save_date: v.preSaveDate || null,
+          slug: releaseSlug,
+          genre: v.genre || 'V-Pop',
+          language: v.language || 'Tiếng Việt',
+          explicit: isExplicit,
+          upc: finalUpc,
+          tracks: finalTracklist,
+          primary_artist: v.primaryArtist || artist.name,
+          featured_artist: v.featuredArtist || '',
+          songwriters: finalSongwriters,
+          producers: finalProducers,
+          phonogram: v.phonogram || '℗ 2026 UniFLOWs Label',
+          copyright: v.copyright || '© 2026 UniFLOWs Label',
+          territories: v.territories,
+          pricing: v.pricing,
+          notes: v.notes,
+          submission_status: 'Đang chờ UniFLOWs duyệt',
+          audio_url: audioUrl,
+          artwork_url: artworkUrl,
+          links,
+          metadata: {
+            ...metadataPayload,
+            tracklist: finalTracklist
+          }
+        }).eq('id', currentDraftId).select().single();
+
+        if (dbError) throw dbError;
+        inserted = updated;
+      } else {
+        const { data: newRow, error: dbError } = await supabase.from('releases').insert({
+          artist_id: artist.id,
+          title: v.title,
+          type: releaseTypeFormatted,
+          release_date: v.releaseDate || null,
+          pre_save_date: v.preSaveDate || null,
+          slug: releaseSlug,
+          genre: v.genre || 'V-Pop',
+          language: v.language || 'Tiếng Việt',
+          explicit: isExplicit,
+          upc: finalUpc,
+          tracks: finalTracklist,
+          primary_artist: v.primaryArtist || artist.name,
+          featured_artist: v.featuredArtist || '',
+          songwriters: finalSongwriters,
+          producers: finalProducers,
+          phonogram: v.phonogram || '℗ 2026 UniFLOWs Label',
+          copyright: v.copyright || '© 2026 UniFLOWs Label',
+          territories: v.territories,
+          pricing: v.pricing,
+          notes: v.notes,
+          submission_status: 'Đang chờ UniFLOWs duyệt',
+          audio_url: audioUrl,
+          artwork_url: artworkUrl,
+          links,
+          metadata: {
+            ...metadataPayload,
+            tracklist: finalTracklist
+          }
+        }).select().single();
+
+        if (dbError) throw dbError;
+        inserted = newRow;
+      }
+
       if (inserted) newReleaseObj.id = inserted.id;
     }
 
-    // 5. Cập nhật state local
+    // 5. Cập nhật state local & xóa draft đã nộp
+    localStorage.removeItem('uniflows_release_draft_' + (artist?.id || 'artist'));
+    currentDraftId = null;
+    updateActiveDraftBanner();
+
     artist.products = artist.products || [];
-    artist.products.unshift(newReleaseObj);
+    const existIdx = artist.products.findIndex(p => p.id === newReleaseObj.id);
+    if (existIdx >= 0) {
+      artist.products[existIdx] = newReleaseObj;
+    } else {
+      artist.products.unshift(newReleaseObj);
+    }
     await saveData(data);
 
     // 6. Gửi thông báo đến Admin Notification Center
@@ -2476,6 +3117,7 @@ form?.addEventListener('submit', async (e) => {
 
     form.reset();
     wizardTracks = [];
+    currentDraftId = null;
     setTrackMode('single');
     if (audioFilename) audioFilename.textContent = 'Thả hoặc chọn file master WAV/FLAC vào đây';
     if (artworkFilename) artworkFilename.textContent = 'Artwork 3000 × 3000 px';

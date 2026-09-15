@@ -891,15 +891,16 @@ dialog:not([open]) {
 }
 
 dialog[open].release-dialog-shell {
-  border: 2px solid var(--portal-card-border);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 0;
-  max-width: 900px;
-  width: 95%;
-  max-height: 90vh;
+  max-width: 1180px;
+  width: 96vw;
+  max-height: 94vh;
   height: auto;
   background: var(--portal-card-bg);
   color: var(--portal-text-main);
-  box-shadow: 12px 12px 0 #0b0b0b;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
   overflow: hidden;
   display: flex !important;
   flex-direction: column;
@@ -974,14 +975,54 @@ dialog[open].release-dialog-shell {
 
 .release-step-panel {
   display: none;
-  padding: 24px;
-  max-height: calc(90vh - 190px);
+  padding: 28px 36px;
+  max-height: calc(94vh - 170px);
   overflow-y: auto;
   flex: 1;
 }
 
+@media (max-width: 768px) {
+  .release-step-panel {
+    padding: 16px;
+  }
+}
+
 .release-step-panel.active {
   display: block;
+}
+
+/* AWAL Studio Layout Input Enhancements */
+.release-step-panel .field input,
+.release-step-panel .field select,
+.release-step-panel .field textarea {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.release-step-panel .field input:focus,
+.release-step-panel .field select:focus,
+.release-step-panel .field textarea:focus {
+  outline: none;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.12);
+}
+
+.release-step-panel .mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .release-step-panel .mini-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .release-modal-footer {

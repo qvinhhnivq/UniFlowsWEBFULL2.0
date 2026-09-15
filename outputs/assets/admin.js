@@ -2205,6 +2205,8 @@ async function loadReleasesQueue() {
     filtered = filtered.filter(r => r.submission_status && r.submission_status.includes('chờ'));
   } else if (filterVal === 'live') {
     filtered = filtered.filter(r => !r.submission_status || r.submission_status === 'Đã phát hành');
+  } else if (filterVal === 'draft') {
+    filtered = filtered.filter(r => r.submission_status === 'Bản nháp' || r.submissionStatus === 'Bản nháp');
   } else if (filterVal === 'takedown') {
     filtered = filtered.filter(r => r.submission_status && r.submission_status.includes('gỡ'));
   }
@@ -2468,6 +2470,7 @@ async function loadReleasesQueue() {
               <select class="rel-status-select" style="padding:8px 10px;border:1px solid var(--ink);font-weight:bold;background:#fff;border-radius:4px;">
                 <option value="Đang chờ UniFLOWs duyệt" ${status === 'Đang chờ UniFLOWs duyệt' ? 'selected' : ''}>⏳ Đang chờ UniFLOWs duyệt</option>
                 <option value="Đã phát hành" ${status === 'Đã phát hành' ? 'selected' : ''}>🟢 Đã phát hành (Live)</option>
+                <option value="Bản nháp" ${status === 'Bản nháp' ? 'selected' : ''}>📝 Bản nháp (Artist Draft)</option>
                 <option value="Yêu cầu chỉnh sửa" ${status === 'Yêu cầu chỉnh sửa' ? 'selected' : ''}>⚠️ Yêu cầu chỉnh sửa (A&R Revision)</option>
                 <option value="Từ chối duyệt" ${status === 'Từ chối duyệt' ? 'selected' : ''}>❌ Từ chối duyệt (Rejected)</option>
                 <option value="Yêu cầu gỡ / xóa bản phát hành" ${status === 'Yêu cầu gỡ / xóa bản phát hành' ? 'selected' : ''}>🔴 Yêu cầu gỡ / xóa</option>
