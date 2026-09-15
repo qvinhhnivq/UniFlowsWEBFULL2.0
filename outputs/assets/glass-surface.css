@@ -5,23 +5,23 @@
    ============================================================================== */
 
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.42);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.28);
-  --glass-bg-elevated: rgba(255, 255, 255, 0.68);
-  --glass-border: rgba(255, 255, 255, 0.78);
-  --glass-border-subtle: rgba(255, 255, 255, 0.48);
-  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 40%, rgba(168, 85, 247, 0.4) 70%, rgba(56, 189, 248, 0.45) 100%);
-  --glass-shadow: 0 20px 50px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(15, 23, 42, 0.02), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.25);
-  --glass-shadow-hover: 0 30px 65px rgba(15, 23, 42, 0.09), 0 4px 12px rgba(15, 23, 42, 0.04), inset 0 1.5px 2.5px 0 rgba(255, 255, 255, 1), inset 0 -1px 1.5px 0 rgba(255, 255, 255, 0.35);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.25) 45%, rgba(168, 85, 247, 0.25) 75%, rgba(56, 189, 248, 0.25) 100%);
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.58);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.95);
+  --glass-border-subtle: rgba(226, 232, 240, 0.85);
+  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 40%, rgba(168, 85, 247, 0.35) 70%, rgba(56, 189, 248, 0.4) 100%);
+  --glass-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03), inset 0 1px 1.5px 0 rgba(255, 255, 255, 1), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.4);
+  --glass-shadow-hover: 0 24px 50px rgba(15, 23, 42, 0.09), 0 4px 12px rgba(15, 23, 42, 0.04), inset 0 1.5px 2px 0 rgba(255, 255, 255, 1), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.5);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.3) 45%, rgba(168, 85, 247, 0.2) 75%, rgba(56, 189, 248, 0.2) 100%);
   --glass-blur: 24px;
   
-  --portal-bg: transparent;
-  --portal-card-bg: rgba(255, 255, 255, 0.42);
-  --portal-card-border: rgba(255, 255, 255, 0.78);
+  --portal-bg: #f8fafc;
+  --portal-card-bg: rgba(255, 255, 255, 0.78);
+  --portal-card-border: rgba(255, 255, 255, 0.95);
   --portal-text-main: #090d16;
-  --portal-text-muted: #1e293b;
-  --portal-text-dim: #475569;
+  --portal-text-muted: #334155;
+  --portal-text-dim: #64748b;
 }
 
 [data-theme="dark"],
@@ -194,6 +194,7 @@ dialog:hover .glass-surface-glare {
 .portal-card-metric,
 .portal-grid-stats > div,
 .card,
+.service-card,
 .portal-stat-card,
 .metric-card,
 .dashboard-card,
@@ -221,7 +222,8 @@ dialog,
 .glass-surface::before,
 .portal-profile-bar::before,
 .portal-card-metric::before,
-.card::before {
+.card::before,
+.service-card::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -239,6 +241,7 @@ dialog,
 /* Floating Elevation on Card Hover */
 .portal-card-metric:hover,
 .card:hover,
+.service-card:hover,
 .portal-stat-card:hover,
 .metric-card:hover {
   transform: translateY(-3px);
@@ -426,9 +429,16 @@ dialog,
 }
 
 .notif-tab-btn.active {
-  background: var(--portal-text-main);
-  color: var(--portal-bg) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #090d16 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .notif-tab-btn.active,
+.portal-body.dark-mode .notif-tab-btn.active {
+  background: #ffffff !important;
+  color: #090d16 !important;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2) !important;
 }
 
 .notif-mark-all-btn {

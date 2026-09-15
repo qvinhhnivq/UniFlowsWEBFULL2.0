@@ -17,7 +17,7 @@
 }
 
 /* ------------------------------------------------------------------------------
-   Portal Light Mode Iridescent Backdrop
+   Portal Light Mode Iridescent Backdrop (Soft Pastel, Low-Glare)
    ------------------------------------------------------------------------------ */
 .portal-iridescence-backdrop {
   position: fixed;
@@ -30,13 +30,14 @@
   overflow: hidden;
   opacity: 0;
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #f8fafc;
 }
 
-/* Active in Light Mode */
+/* Active in Light Mode: Soft, elegant, non-glaring translucency */
 .portal-body:not(.dark-mode) .portal-iridescence-backdrop,
 html:not([data-theme="dark"]) .portal-body .portal-iridescence-backdrop,
 [data-theme="light"] .portal-iridescence-backdrop {
-  opacity: 0.95;
+  opacity: 0.32;
 }
 
 /* Hidden in Dark Mode */

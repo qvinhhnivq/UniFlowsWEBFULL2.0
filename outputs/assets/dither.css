@@ -1,0 +1,50 @@
+/* ==============================================================================
+   Dither — Retro dithered noise shader background
+   Vanilla JS & CSS Port of React Bits @react-bits/Dither-JS-CSS
+   ============================================================================== */
+
+.dither-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.dither-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ------------------------------------------------------------------------------
+   Portal Dark Mode Dither Backdrop
+   ------------------------------------------------------------------------------ */
+.portal-dither-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s ease;
+}
+
+/* Active in Dark Mode */
+[data-theme="dark"] .portal-dither-backdrop,
+.portal-body.dark-mode .portal-dither-backdrop {
+  opacity: 0.95;
+  visibility: visible;
+}
+
+/* Hidden in Light Mode */
+.portal-body:not(.dark-mode) .portal-dither-backdrop,
+html:not([data-theme="dark"]) .portal-body .portal-dither-backdrop,
+[data-theme="light"] .portal-dither-backdrop {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}

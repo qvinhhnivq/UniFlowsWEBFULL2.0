@@ -6,6 +6,7 @@ import './security.js';
 import { initCardNav } from './card-nav.js';
 import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
 import { initIridescence } from './iridescence.js';
+import { initDither } from './dither.js';
 // Kiểm tra quyền đăng nhập
 const rawAuth = sessionStorage.getItem('uniflows-artist') || localStorage.getItem('uniflows-artist');
 const isArtistAuth = rawAuth === 'true' || (rawAuth && rawAuth.startsWith('{')) || !!(sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id'));
@@ -7417,22 +7418,44 @@ async function loadArtistServiceRequests() {
 }
 
 // ==========================================
-// Theme Toggle (Light / Dark Mode) & Dynamic Iridescence Background
+// Theme Toggle (Light: Iridescence / Dark: Dither Retro Waves)
 // ==========================================
 let portalIridescenceInstance = null;
+let portalDitherInstance = null;
 
 function setupPortalIridescence() {
   const bgEl = document.querySelector('#portal-iridescence-bg');
   if (bgEl && !portalIridescenceInstance) {
     try {
       portalIridescenceInstance = initIridescence(bgEl, {
-        color: [1, 1, 1],
+        color: [0.85, 0.85, 0.9],
         mouseReact: false,
-        amplitude: 0.1,
-        speed: 1.0
+        amplitude: 0.08,
+        speed: 0.6
       });
     } catch (err) {
       console.warn('Iridescence init warning:', err);
+    }
+  }
+}
+
+function setupPortalDither() {
+  const ditherEl = document.querySelector('#portal-dither-bg');
+  if (ditherEl && !portalDitherInstance) {
+    try {
+      portalDitherInstance = initDither(ditherEl, {
+        waveColor: [0.5, 0.5, 0.5],
+        backgroundColor: [0, 0, 0],
+        disableAnimation: false,
+        enableMouseInteraction: true,
+        mouseRadius: 0.3,
+        colorNum: 4,
+        waveAmplitude: 0.3,
+        waveFrequency: 3,
+        waveSpeed: 0.05
+      });
+    } catch (err) {
+      console.warn('Dither init warning:', err);
     }
   }
 }
@@ -7457,6 +7480,8 @@ function applyPortalTheme(theme) {
   if (isDark) {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.body.classList.add('dark-mode');
+    // Active WebGL Dither Shader in dark mode
+    setupPortalDither();
   } else {
     document.documentElement.removeAttribute('data-theme');
     document.body.classList.remove('dark-mode');

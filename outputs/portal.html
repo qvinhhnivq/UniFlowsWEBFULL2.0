@@ -12,11 +12,15 @@
   <link rel="stylesheet" href="/assets/card-nav.css?v=20260915_r5">
   <link rel="stylesheet" href="/assets/glass-surface.css?v=20260915_r5">
   <link rel="stylesheet" href="/assets/iridescence.css?v=20260915_r5">
+  <link rel="stylesheet" href="/assets/dither.css?v=20260915_r5">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
 </head>
 <body class="portal-body">
   <!-- Dynamic WebGL Iridescence Shader Background for Light Theme -->
   <div id="portal-iridescence-bg" class="portal-iridescence-backdrop" aria-hidden="true"></div>
+
+  <!-- Dynamic WebGL Dither Shader Background for Dark Theme -->
+  <div id="portal-dither-bg" class="portal-dither-backdrop" aria-hidden="true"></div>
 
   <!-- CardNav Navigation Component -->
   <div id="portal-card-nav"></div>
@@ -474,7 +478,7 @@
               <h3 data-i18n="service_isrc_title">Cấp mã ISRC & Bản quyền ℗</h3>
               <p data-i18n="service_isrc_desc">Đăng ký định danh ISRC chuẩn quốc tế và chứng nhận bản quyền ghi âm độc quyền cho bài hát.</p>
             </div>
-            <button type="button" id="open-isrc-dialog-btn" class="button alt" data-i18n="service_isrc_btn" style="text-align:center;padding:12px;background:rgba(139,92,246,0.1);color:#8b5cf6;border-color:rgba(139,92,246,0.3);font-size:11px;font-weight:bold;">
+            <button type="button" id="open-isrc-dialog-btn" class="button" data-i18n="service_isrc_btn" style="text-align:center;padding:12px;background:#8b5cf6;color:#fff;border-color:#8b5cf6;font-size:11px;font-weight:bold;">
               🏷️ + Yêu cầu cấp mã ISRC
             </button>
           </div>
