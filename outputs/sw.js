@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uniflows-v3-cache';
+const CACHE_NAME = 'uniflows-v4-cache';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

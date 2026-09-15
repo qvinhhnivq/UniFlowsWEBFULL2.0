@@ -5,18 +5,21 @@
  */
 
 export async function ensureGSAP() {
-  if (window.gsap) return window.gsap;
-  return new Promise((resolve, reject) => {
+  if (typeof window !== 'undefined' && window.gsap) return window.gsap;
+  return new Promise((resolve) => {
     const existing = document.querySelector('script[src*="gsap"]');
     if (existing) {
-      existing.addEventListener('load', () => resolve(window.gsap));
-      existing.addEventListener('error', reject);
+      if (window.gsap) return resolve(window.gsap);
+      existing.addEventListener('load', () => resolve(window.gsap || null), { once: true });
+      existing.addEventListener('error', () => resolve(null), { once: true });
+      setTimeout(() => resolve(window.gsap || null), 1000);
       return;
     }
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js';
-    script.onload = () => resolve(window.gsap);
-    script.onerror = () => reject(new Error('Failed to load GSAP CDN'));
+    script.onload = () => resolve(window.gsap || null);
+    script.onerror = () => resolve(null);
+    setTimeout(() => resolve(window.gsap || null), 1500);
     document.head.appendChild(script);
   });
 }
@@ -284,20 +287,26 @@ export async function initCardNav(mountTarget, options = {}) {
     const naturalHeight = dropdown.offsetHeight;
     dropdown.style.height = '0px';
 
-    gsap.to(dropdown, {
-      height: naturalHeight,
-      duration: 0.45,
-      ease: opts.ease || 'power3.out',
-      onComplete: () => {
-        dropdown.style.height = 'auto';
-        busy = false;
-      }
-    });
+    if (gsap) {
+      gsap.to(dropdown, {
+        height: naturalHeight,
+        duration: 0.45,
+        ease: opts.ease || 'power3.out',
+        onComplete: () => {
+          dropdown.style.height = 'auto';
+          busy = false;
+        }
+      });
 
-    gsap.fromTo(cardElements, 
-      { y: 18, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', stagger: 0.08, delay: 0.1 }
-    );
+      gsap.fromTo(cardElements, 
+        { y: 18, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', stagger: 0.08, delay: 0.1 }
+      );
+    } else {
+      dropdown.style.height = 'auto';
+      cardElements.forEach(c => { c.style.opacity = '1'; c.style.transform = 'none'; });
+      busy = false;
+    }
   }
 
   function doClose() {
@@ -309,15 +318,21 @@ export async function initCardNav(mountTarget, options = {}) {
     toggleBtn.textContent = 'Menu';
     backdrop.classList.remove('active');
 
-    gsap.to(dropdown, {
-      height: 0,
-      duration: 0.3,
-      ease: 'power3.in',
-      onComplete: () => {
-        dropdown.style.opacity = '0';
-        busy = false;
-      }
-    });
+    if (gsap) {
+      gsap.to(dropdown, {
+        height: 0,
+        duration: 0.3,
+        ease: 'power3.in',
+        onComplete: () => {
+          dropdown.style.opacity = '0';
+          busy = false;
+        }
+      });
+    } else {
+      dropdown.style.height = '0px';
+      dropdown.style.opacity = '0';
+      busy = false;
+    }
   }
 
   function toggle() {

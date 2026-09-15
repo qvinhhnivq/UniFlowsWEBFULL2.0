@@ -34,8 +34,10 @@ const releaseDialog = document.querySelector('#release-dialog');
 const openReleaseModalBtn = document.querySelector('#open-release-modal-btn');
 const quickOpenReleaseModalBtn = document.querySelector('#quick-open-release-modal-btn');
 const closeReleaseDialogBtn = document.querySelector('#close-release-dialog-btn');
-const cancelReleaseBtn = document.querySelector('#cancel-release-btn');
 let currentDraftId = null;
+export let cachedFetchedReleases = [];
+let currentReleaseFilter = 'all';
+let currentSearchQuery = '';
 
 let data = await getData();
 
@@ -222,36 +224,44 @@ if (artist) {
       }
     ];
 
-    window.cardNavInstance = await initCardNav(cardNavMount, {
-      items: portalNavItems,
-      baseColor: '#ffffff',
-      menuColor: '#000000',
-      buttonBgColor: '#111111',
-      buttonTextColor: '#ffffff',
-      ease: 'power3.out',
-      theme: 'dark',
-      artistName: artist.name || 'Nghệ sĩ',
-      artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist',
-      onLangChange: (targetLang) => {
-        setLang(targetLang);
-      },
-      onThemeToggle: () => {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const nextTheme = isDark ? 'light' : 'dark';
-        applyPortalTheme(nextTheme);
-        localStorage.setItem('uniflows-theme', nextTheme);
-        return nextTheme === 'dark';
-      },
-      onProfileClick: () => {
-        document.querySelector('#open-profile-settings-btn')?.click();
-      }
-    });
+    try {
+      window.cardNavInstance = await initCardNav(cardNavMount, {
+        items: portalNavItems,
+        baseColor: '#ffffff',
+        menuColor: '#000000',
+        buttonBgColor: '#111111',
+        buttonTextColor: '#ffffff',
+        ease: 'power3.out',
+        theme: 'dark',
+        artistName: artist.name || 'Nghệ sĩ',
+        artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist',
+        onLangChange: (targetLang) => {
+          setLang(targetLang);
+        },
+        onThemeToggle: () => {
+          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+          const nextTheme = isDark ? 'light' : 'dark';
+          applyPortalTheme(nextTheme);
+          localStorage.setItem('uniflows-theme', nextTheme);
+          return nextTheme === 'dark';
+        },
+        onProfileClick: () => {
+          document.querySelector('#open-profile-settings-btn')?.click();
+        }
+      });
+    } catch (navErr) {
+      console.warn('CardNav initialization warning:', navErr);
+    }
   }
 
   // ----------------------------------------------------
   // GLASS SURFACE INITIALIZATION (LIQUID GLASS EFFECT)
   // ----------------------------------------------------
-  initPortalGlassSurfaces();
+  try {
+    initPortalGlassSurfaces();
+  } catch (glassErr) {
+    console.warn('Glass surface warning:', glassErr);
+  }
 
   // ----------------------------------------------------
   // ARTIST WEBSITE PROFILE PHOTO CHANGE REQUEST FLOW
@@ -4318,11 +4328,7 @@ function showNotice(msg, isError = false) {
   scrollTo({ top: notice.offsetTop - 80, behavior: 'smooth' });
 }
 
-let currentReleaseFilter = 'all';
-let currentSearchQuery = '';
-let cachedFetchedReleases = [];
-
-// Search bar
+// Release Search & Filter Controls
 const releaseSearchInput = document.querySelector('#release-search-input');
 releaseSearchInput?.addEventListener('input', (e) => {
   currentSearchQuery = e.target.value.trim().toLowerCase();
@@ -8484,17 +8490,17 @@ function simulateDemoAudioPlayback() {
   }, 200);
 }
 
-initPortalTheme();
-initPortalLanguage();
-renderReleases();
-loadArtistPayouts();
-renderArtistPublishingEarnings();
-loadArtistServiceRequests();
-initNotifications();
-renderReleaseCalendar();
-initSyncedLyricsStudio();
-initDspControls();
-initTerritoryControls();
-initLanguageSearchableControls();
-initSearchableBankDropdown();
-initProfileSettingsDialog();
+try { initPortalTheme(); } catch (e) { console.warn('initPortalTheme err:', e); }
+try { initPortalLanguage(); } catch (e) { console.warn('initPortalLanguage err:', e); }
+try { renderReleases(); } catch (e) { console.warn('renderReleases err:', e); }
+try { loadArtistPayouts(); } catch (e) { console.warn('loadArtistPayouts err:', e); }
+try { renderArtistPublishingEarnings(); } catch (e) { console.warn('renderArtistPublishingEarnings err:', e); }
+try { loadArtistServiceRequests(); } catch (e) { console.warn('loadArtistServiceRequests err:', e); }
+try { initNotifications(); } catch (e) { console.warn('initNotifications err:', e); }
+try { renderReleaseCalendar(); } catch (e) { console.warn('renderReleaseCalendar err:', e); }
+try { initSyncedLyricsStudio(); } catch (e) { console.warn('initSyncedLyricsStudio err:', e); }
+try { initDspControls(); } catch (e) { console.warn('initDspControls err:', e); }
+try { initTerritoryControls(); } catch (e) { console.warn('initTerritoryControls err:', e); }
+try { initLanguageSearchableControls(); } catch (e) { console.warn('initLanguageSearchableControls err:', e); }
+try { initSearchableBankDropdown(); } catch (e) { console.warn('initSearchableBankDropdown err:', e); }
+try { initProfileSettingsDialog(); } catch (e) { console.warn('initProfileSettingsDialog err:', e); }
