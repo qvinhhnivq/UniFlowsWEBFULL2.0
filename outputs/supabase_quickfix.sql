@@ -1,7 +1,10 @@
 -- ==============================================================================
--- UNIFLOWS LABEL — SUPABASE COMPLETE SAFE UPGRADE & QUICK-FIX (2026)
--- Hướng dẫn: Mở Supabase Dashboard -> SQL Editor -> New Query -> Dán mã này -> Run
--- (100% AN TOÀN — SỬ DỤNG 'IF NOT EXISTS', KHÔNG XÓA DỮ LIỆU ĐANG CÓ TRÊN DATABASE)
+-- UNIFLOWS LABEL — SUPABASE COMPLETE DATABASE & STORAGE SETUP (2026)
+-- Hướng dẫn: 
+-- 1. Đăng nhập https://supabase.com -> Chọn Project của bạn
+-- 2. Vào mục "SQL Editor" -> Chọn "+ New Query"
+-- 3. Dán toàn bộ nội dung script này vào và nhấn "RUN" (hoặc Ctrl+Enter)
+-- (Script an toàn 100%, tự động tạo bảng nếu chưa có, không làm mất dữ liệu cũ)
 -- ==============================================================================
 
 -- 1. BẢNG CẤU HÌNH TỔNG QUAN WEBSITE (SITE SETTINGS)
@@ -14,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
   email text DEFAULT 'hello@uniflowslabel.com',
   emails jsonb DEFAULT '[]'::jsonb,
   city text DEFAULT 'Hồ Chí Minh · Việt Nam',
+  socials jsonb DEFAULT '[]'::jsonb,
   announcements jsonb DEFAULT '[]'::jsonb,
   publishing jsonb DEFAULT '{}'::jsonb,
   unihube jsonb DEFAULT '{}'::jsonb,
@@ -25,6 +29,19 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
 );
 
+-- Tạo bản ghi mặc định id = 'main' nếu chưa có
+INSERT INTO public.site_settings (id, tagline, hero_text, about_title, about_text, email, city)
+VALUES (
+  'main',
+  'MAKE THE WORLD MOVE.',
+  'UniFLOWs Label phát triển âm nhạc, nghệ sĩ và những chuyển động văn hoá dành cho thế hệ mới.',
+  'Không chỉ phát hành âm nhạc. Chúng tôi tạo ra dòng chảy.',
+  'Từ phòng thu đến sân khấu, từ những bản demo đầu tiên đến cộng đồng người hâm mộ — UniFLOWs là ngôi nhà cho những tiếng nói táo bạo và chân thật.',
+  'hello@uniflowslabel.com',
+  'Hồ Chí Minh · Việt Nam'
+)
+ON CONFLICT (id) DO NOTHING;
+
 -- 2. BẢNG NGHỆ SĨ & HỒ SƠ TÀI KHOẢN (ARTISTS)
 CREATE TABLE IF NOT EXISTS public.artists (
   id text PRIMARY KEY,
@@ -32,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.artists (
   username text,
   email text,
   password text,
-  role_type text DEFAULT 'exclusive',
+  role_type text DEFAULT 'distribution',
   show_on_web boolean DEFAULT true,
   genre text,
   image text,
@@ -49,6 +66,7 @@ CREATE TABLE IF NOT EXISTS public.artists (
   payout_cycle text DEFAULT 'Hàng tháng (Monthly)',
   royalty_rate text DEFAULT '80% Master',
   contract_term text DEFAULT '2024 - 2027',
+  banking jsonb DEFAULT null,
   stats jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
@@ -64,6 +82,9 @@ CREATE TABLE IF NOT EXISTS public.releases (
   pre_save_date text,
   slug text,
   genre text,
+  language text DEFAULT 'Tiếng Việt',
+  explicit boolean DEFAULT false,
+  upc text,
   submission_status text DEFAULT 'Đã phát hành',
   artwork_url text,
   audio_url text,
@@ -71,6 +92,7 @@ CREATE TABLE IF NOT EXISTS public.releases (
   metadata jsonb DEFAULT '{}'::jsonb,
   tracklist jsonb DEFAULT '[]'::jsonb,
   tracks jsonb DEFAULT '[]'::jsonb,
+  show_on_web boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
 );
@@ -85,6 +107,7 @@ CREATE TABLE IF NOT EXISTS public.articles (
   read_time text DEFAULT '3 phút đọc',
   cover text,
   excerpt text,
+  body text,
   content text,
   images jsonb DEFAULT '[]'::jsonb,
   published boolean DEFAULT true,
@@ -106,17 +129,20 @@ CREATE TABLE IF NOT EXISTS public.payout_requests (
 -- 6. BẢNG THÔNG BÁO NGHỆ SĨ & HỆ THỐNG (NOTIFICATIONS)
 CREATE TABLE IF NOT EXISTS public.notifications (
   id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  artist_id text,
   recipient_id text,
   title text NOT NULL,
   message text NOT NULL,
-  action_url text,
+  type text DEFAULT 'info',
+  link text DEFAULT '',
+  action_url text DEFAULT '',
   is_read boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 7. BẢNG THÔNG BÁO DÀNH CHO ADMIN (ADMIN NOTIFICATIONS)
 CREATE TABLE IF NOT EXISTS public.admin_notifications (
-  id text PRIMARY KEY,
+  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   type text DEFAULT 'general',
   title text NOT NULL,
   message text NOT NULL,
@@ -125,13 +151,14 @@ CREATE TABLE IF NOT EXISTS public.admin_notifications (
   artist_avatar text DEFAULT '',
   target_tab text DEFAULT 'admin-tab-overview',
   details jsonb DEFAULT '{}'::jsonb,
+  metadata jsonb DEFAULT '{}'::jsonb,
   is_read boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 8. BẢNG TIẾP NHẬN YÊU CẦU ĐẶC BIỆT (SPECIAL REQUESTS: Takedown, Catalog, Tranh chấp)
 CREATE TABLE IF NOT EXISTS public.special_requests (
-  id text PRIMARY KEY,
+  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   type text NOT NULL,
   title text NOT NULL,
   artist_id text,
@@ -141,13 +168,14 @@ CREATE TABLE IF NOT EXISTS public.special_requests (
   details jsonb DEFAULT '{}'::jsonb,
   status text DEFAULT 'pending',
   admin_note text DEFAULT '',
+  admin_notes text DEFAULT '',
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 9. BẢNG DUYỆT ĐỔI ẢNH HỒ SƠ NGHỆ SĨ (ARTIST PHOTO REQUESTS)
 CREATE TABLE IF NOT EXISTS public.artist_photo_requests (
-  id text PRIMARY KEY,
+  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   artist_id text,
   artist_name text,
   current_image text,
@@ -214,6 +242,7 @@ CREATE TABLE IF NOT EXISTS public.subscribers (
   email text UNIQUE NOT NULL,
   name text DEFAULT '',
   source text DEFAULT 'website_newsletter',
+  subscribed_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -226,20 +255,42 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 15. BẢNG HỒ SƠ PHÂN QUYỀN (PROFILES)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid PRIMARY KEY,
+  email text,
+  role text DEFAULT 'artist' CHECK (role IN ('admin', 'artist')),
+  artist_id text,
+  full_name text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- ==============================================================================
--- 15. BỔ SUNG CỘT BẢO ĐẢM KHÔNG THIẾU Ở CÁC BẢNG HIỆN HỮU (ADD COLUMN IF NOT EXISTS)
+-- 16. BỔ SUNG CỘT BẢO ĐẢM KHÔNG BỊ THIẾU Ở CÁC BẢNG HIỆN HỮU (ADD COLUMN IF NOT EXISTS)
 -- ==============================================================================
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS socials jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS announcements jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS publishing jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS unihube jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS collective48k jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS admin_accounts jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS music_submissions jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS shortlinks jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS artist_order jsonb DEFAULT '[]'::jsonb;
+
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS username text;
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS email text;
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS password text;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS role_type text DEFAULT 'exclusive';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS role_type text DEFAULT 'distribution';
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS show_on_web boolean DEFAULT true;
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS monthly_streams text DEFAULT '0';
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS estimated_revenue text DEFAULT '0';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS pending_balance text DEFAULT '0';
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS payable_balance text DEFAULT '0';
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS payout_cycle text DEFAULT 'Hàng tháng (Monthly)';
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS royalty_rate text DEFAULT '80% Master';
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS contract_term text DEFAULT '2024 - 2027';
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS banking jsonb DEFAULT null;
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS stats jsonb DEFAULT '{}'::jsonb;
 ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
 
@@ -250,17 +301,24 @@ ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS audio_url text;
 ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS links jsonb DEFAULT '{}'::jsonb;
 ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
 ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS tracklist jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS tracks jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS show_on_web boolean DEFAULT true;
 ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
 
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS cover text;
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS excerpt text;
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS body text;
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS content text;
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS author text DEFAULT 'UniFLOWs Editorial';
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS read_time text DEFAULT '3 phút đọc';
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
 
-ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS action_url text;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS link text DEFAULT '';
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS action_url text DEFAULT '';
 
 -- ==============================================================================
--- 16. KÍCH HOẠT ROW LEVEL SECURITY (RLS) & PHÂN QUYỀN TRUY CẬP CHO TOÀN BỘ BẢNG
+-- 17. KÍCH HOẠT ROW LEVEL SECURITY (RLS) & CHÍNH SÁCH TRUY CẬP (POLICIES)
 -- ==============================================================================
 DO $$
 DECLARE
@@ -277,11 +335,13 @@ BEGIN
   END LOOP;
 END $$;
 
--- 17. TẠO & CẤU HÌNH STORAGE BUCKETS (artworks & audio-masters)
+-- ==============================================================================
+-- 18. TẠO & CẤU HÌNH STORAGE BUCKETS (artworks & audio-masters)
+-- ==============================================================================
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES 
-  ('artworks', 'artworks', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/*']),
-  ('audio-masters', 'audio-masters', true, 104857600, ARRAY['audio/wav', 'audio/x-wav', 'audio/mpeg', 'audio/mp3', 'audio/flac', 'audio/*'])
+  ('artworks', 'artworks', true, 15728640, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/*']),
+  ('audio-masters', 'audio-masters', true, 209715200, ARRAY['audio/wav', 'audio/x-wav', 'audio/mpeg', 'audio/mp3', 'audio/flac', 'audio/*'])
 ON CONFLICT (id) DO UPDATE SET 
   public = true,
   file_size_limit = EXCLUDED.file_size_limit,
@@ -303,10 +363,41 @@ CREATE POLICY "Mọi người đều có thể tải/nghe Audio Masters" ON stor
 CREATE POLICY "Người dùng có thể upload Audio Masters" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'audio-masters');
 CREATE POLICY "Toàn quyền xóa sửa Audio Masters" ON storage.objects FOR ALL USING (bucket_id = 'audio-masters');
 
--- 18. CẤP QUYỀN SCHEMA CHO CLIENT (ANON / AUTHENTICATED)
+-- ==============================================================================
+-- 19. CẤP QUYỀN SCHEMA CHO CLIENT (ANON / AUTHENTICATED)
+-- ==============================================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 GRANT USAGE ON SCHEMA storage TO anon, authenticated;
 GRANT ALL ON TABLE storage.objects TO anon, authenticated;
 GRANT ALL ON TABLE storage.buckets TO anon, authenticated;
+
+-- ==============================================================================
+-- 20. BẬT REALTIME REPLICATION CHO CÁC BẢNG QUAN TRỌNG
+-- ==============================================================================
+DO $$
+DECLARE
+  tbl text;
+  tables text[] := ARRAY[
+    'site_settings', 'artists', 'releases', 'articles',
+    'payout_requests', 'notifications', 'admin_notifications',
+    'special_requests', 'artist_photo_requests', 'copyright_reports',
+    'greenlist_requests', 'appointments'
+  ];
+BEGIN
+  FOREACH tbl IN ARRAY tables LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' 
+      AND schemaname = 'public' 
+      AND tablename = tbl
+    ) THEN
+      BEGIN
+        EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I;', tbl);
+      EXCEPTION WHEN OTHERS THEN
+        -- Ignore if already added or publication is disabled
+      END;
+    END IF;
+  END LOOP;
+END $$;

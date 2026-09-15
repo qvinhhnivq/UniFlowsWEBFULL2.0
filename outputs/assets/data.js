@@ -456,12 +456,25 @@ export async function getData() {
   }
 
   try {
-    // Run queries in parallel with a 3.5s timeout protection to prevent UI freeze
+    // Run queries in parallel with graceful per-query fallback and a 3.5s timeout protection
+    const fetchSettings = async () => {
+      try {
+        const { data: sData } = await supabase.from('site_settings').select('*').limit(1);
+        if (Array.isArray(sData) && sData.length > 0) return { data: sData[0] };
+        // Fallback to 'settings' table if 'site_settings' is not present
+        const { data: altData } = await supabase.from('settings').select('*').limit(1);
+        if (Array.isArray(altData) && altData.length > 0) return { data: altData[0] };
+        return { data: null };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    };
+
     const fetchPromise = Promise.all([
-      supabase.from('site_settings').select('*').eq('id', 'main').single(),
-      supabase.from('artists').select('*'),
-      supabase.from('releases').select('*'),
-      supabase.from('articles').select('*').order('created_at', { ascending: false })
+      fetchSettings(),
+      supabase.from('artists').select('*').catch(err => ({ data: null, error: err })),
+      supabase.from('releases').select('*').catch(err => ({ data: null, error: err })),
+      supabase.from('articles').select('*').order('created_at', { ascending: false }).catch(err => ({ data: null, error: err }))
     ]);
 
     const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 3500));
@@ -656,6 +669,7 @@ export async function getData() {
             topCountry: stats.topCountry || localCachedArtist.topCountry || 'Việt Nam',
             topCity: stats.topCity || localCachedArtist.topCity || 'Hồ Chí Minh',
             topSource: stats.topSource || localCachedArtist.topSource || 'Spotify Editorial & Algorithmic',
+            banking: a.banking || stats.banking || localCachedArtist.banking || null,
             products: finalProducts
           };
         });
@@ -764,7 +778,7 @@ export async function saveData(data) {
       try {
         const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
         if (settingsError) {
-          console.warn('Upsert site_settings full error, trying standard columns:', settingsError);
+          console.warn('Upsert site_settings full error, trying standard columns or fallback table:', settingsError);
           const standardPayload = {
             id: 'main',
             tagline: data.tagline || '',
@@ -775,7 +789,10 @@ export async function saveData(data) {
             city: data.city || '',
             updated_at: new Date().toISOString()
           };
-          await supabase.from('site_settings').upsert(standardPayload);
+          const { error: stdErr } = await supabase.from('site_settings').upsert(standardPayload);
+          if (stdErr) {
+            await supabase.from('settings').upsert(standardPayload).catch(() => {});
+          }
         }
       } catch (sErr) {
         console.warn('site_settings upsert caught error:', sErr);
@@ -824,6 +841,7 @@ export async function saveData(data) {
             topCountry: a.topCountry || 'Việt Nam',
             topCity: a.topCity || 'Hồ Chí Minh',
             topSource: a.topSource || 'Spotify Editorial & Algorithmic',
+            banking: a.banking || null,
             products: a.products || []
           };
 
@@ -848,6 +866,7 @@ export async function saveData(data) {
             payout_cycle: a.payoutCycle || 'Hàng tháng (Monthly)',
             royalty_rate: a.royaltyRate || '80% Master',
             contract_term: a.contractTerm || '2024 - 2027',
+            banking: a.banking || null,
             stats: stats,
             updated_at: new Date().toISOString()
           };
