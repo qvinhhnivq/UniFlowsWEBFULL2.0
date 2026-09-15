@@ -3,201 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>UniFLOWs Label — Liquid Iridescence & Monochrome Editorial</title>
+  <title>UniFLOWs Label</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
   <meta property="og:image" content="/og-image.jpg">
   <link rel="stylesheet" href="assets/app.css">
-  <link rel="stylesheet" href="assets/RippleDistortion.css">
 </head>
 <body data-page="index">
-
-  <!-- Fixed Editorial Header (Zero-flicker Native Render) -->
-  <header class="nav">
-    <a href="index.html" class="brand">UNIFLOWS<small>SAIGON / EST. 2024</small></a>
-    
-    <!-- Centered Minimalist Language Switcher (Underline-free text links) -->
-    <div class="nav-center-locale">
-      <button type="button" class="locale-link active" data-lang="vi">VN</button>
-      <span class="locale-sep">/</span>
-      <button type="button" class="locale-link" data-lang="en">EN</button>
-    </div>
-
-    <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
-
-    <nav class="nav-links">
-      <a href="artists.html" data-i18n="nav_artists">Nghệ sĩ</a>
-      <a href="unihube.html" data-i18n="nav_unihube">Uni-HUBE</a>
-      <a href="48kcollective.html" data-i18n="nav_48k">48K Collective</a>
-      <a href="unipublishing.html" data-i18n="nav_publishing">UniPUBLISHING</a>
-      <a href="about.html" data-i18n="nav_about">Về chúng tôi</a>
-      <a href="news.html" data-i18n="nav_news">Tạp chí</a>
-      <a href="submit-music.html" class="nav-demo-pill" data-i18n="nav_submit_music">Gửi Demo</a>
-      <a class="artist-login-link" href="artist-login.html" data-i18n="nav_artist_login">Artist login ↗</a>
-    </nav>
-  </header>
-
   <main>
-    <!-- HERO: Molten Iridescent Fluid Canvas behind Monumental Roobert Typography -->
-    <section class="home-hero" id="hero">
-      <!-- 60FPS Interactive Liquid Canvas -->
-      <canvas id="hero-canvas" class="hero-liquid-canvas"></canvas>
-      <div class="hero-iridescent-overlay"></div>
-
+    <section class="home-hero">
+      <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=2200&q=90" alt="Đám đông tại concert">
       <div class="home-content">
-        <span class="eyebrow" data-i18n="home_eyebrow">INDEPENDENT ENTERTAINMENT // VIETNAM</span>
-        
-        <div class="hero-title-container">
-          <h1 class="hero-display-headline" data-content="tagline">MAKE THE<br>WORLD MOVE.</h1>
-        </div>
-
-        <div class="hero-actions">
-          <a href="#roster" class="btn-ghost-dark">KHÁM PHÁ NGHỆ SĨ ↓</a>
-          <a href="submit-music.html" class="btn-ghost-dark" data-i18n="nav_submit_music">GỬI DEMO ↗</a>
-        </div>
-
-        <p class="home-copy" data-content="heroText">
-          UniFLOWs Label phát triển âm nhạc, nghệ sĩ và những chuyển động văn hoá dành cho thế hệ mới.
-        </p>
-      </div>
-
-      <!-- Rotating Scroll Indicator Badge (Monopo Saigon Signature) -->
-      <div class="scroll-badge" aria-hidden="true">
-        <svg viewBox="0 0 100 100" class="rotating-badge">
-          <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="none" />
-          <text font-size="8.8" fill="currentColor" letter-spacing="2.3">
-            <textPath href="#circlePath">SCROLL DOWN · SCROLL DOWN · </textPath>
-          </text>
-        </svg>
-        <div class="scroll-badge-arrow">↓</div>
-      </div>
-
-      <!-- Geographical Coordinate & Sound Aura Indicator -->
-      <div class="hero-bottom-coord">
-        <button type="button" class="audio-aura-btn" aria-label="Toggle ambient atmosphere">
-          <span class="audio-bars"><i></i><i></i><i></i><i></i></span>
-          <span class="audio-status">SOUND: OFF</span>
-        </button>
-        <span class="coord-label">10°46'37"N 106°42'04"E · SAIGON</span>
+        <span class="eyebrow" data-i18n="home_eyebrow">Independent entertainment / Vietnam</span>
+        <h1 data-content="tagline">MAKE THE WORLD MOVE.</h1>
+        <p class="home-copy" data-content="heroText">UniFLOWs Label phát triển âm nhạc, nghệ sĩ và những chuyển động văn hoá dành cho thế hệ mới.</p>
       </div>
     </section>
-
-    <!-- SECTION 01: The Whisper Manifesto (Roobert 78px Weight 300) -->
-    <section class="intro" id="manifesto">
-      <div class="intro-aside">
-        <span class="kicker">01 / OUR CURRENT</span>
-        <div class="studio-badge-label">EST. 2024 · SAIGON</div>
-      </div>
-      <div class="intro-body">
-        <h2 class="whisper-heading" data-content="aboutTitle">
-          Không chỉ phát hành âm nhạc.<br>Chúng tôi tạo ra dòng chảy.
-        </h2>
-        <p class="editorial-lead" data-content="aboutText">
-          Từ phòng thu đến sân khấu, từ những bản demo đầu tiên đến cộng đồng người hâm mộ — UniFLOWs là ngôi nhà cho những tiếng nói táo bạo và chân thật.
-        </p>
-        <div class="manifesto-stats-grid">
-          <div class="stat-cell">
-            <strong>100%</strong>
-            <span>ARTISTIC INTEGRITY</span>
-          </div>
-          <div class="stat-cell">
-            <strong>85%+</strong>
-            <span>DIRECT MASTER REVENUE</span>
-          </div>
-          <div class="stat-cell">
-            <strong>GLOBAL</strong>
-            <span>DIGITAL DISTRIBUTION</span>
-          </div>
-        </div>
-
-        <!-- Interactive Tactile Ripple Distortion Installation (ReactBits WebGL) -->
-        <div class="ripple-distortion-block" style="margin-top: 56px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; border-bottom: 1px solid var(--color-obsidian); padding-bottom: 8px;">
-            <span class="kicker" style="font-size: 11px;">TACTILE WATER DISPLACEMENT // WEBGL ENGINE</span>
-            <span style="font-size: 11px; color: var(--color-pewter); letter-spacing: 0.05em;">HOVER TO DISTORT</span>
-          </div>
-          <div class="ripple-distortion-wrapper" style="width: 600px; height: 400px; max-width: 100%; margin: 0 auto;">
-            <div id="ripple-distortion-frame" class="ripple-distortion" style="width: 100%; height: 100%;"></div>
-            <div class="ripple-badge">INTERACTIVE RIPPLE · 150PX BRUSH</div>
-          </div>
-        </div>
+    <section class="intro">
+      <span class="kicker">01 / Our current</span>
+      <div>
+        <h2 data-content="aboutTitle">Không chỉ phát hành âm nhạc. Chúng tôi tạo ra dòng chảy.</h2>
+        <p data-content="aboutText">Từ phòng thu đến sân khấu, từ những bản demo đầu tiên đến cộng đồng người hâm mộ — UniFLOWs là ngôi nhà cho những tiếng nói táo bạo và chân thật.</p>
       </div>
     </section>
-
-    <!-- SECTION 02: Featured Artists / Museum-grade Editorial Project Rows -->
-    <section class="editorial-roster-section" id="roster">
+    <section>
       <div class="section-head">
-        <div>
-          <span class="kicker" style="display:block;margin-bottom:8px;">ROSTER SHOWCASE</span>
-          <h2 data-i18n="featured_artists">02 / Featured Artists</h2>
-        </div>
-        <a href="artists.html" class="underline-free-link" data-i18n="view_all">Xem tất cả nghệ sĩ →</a>
+        <h2 data-i18n="featured_artists">02 / Featured artists</h2>
+        <a href="/artists" class="kicker" data-i18n="view_all">Xem tất cả →</a>
       </div>
-      <div class="artists editorial-roster-container" data-artists></div>
+      <div class="artists" data-artists></div>
     </section>
-
-    <!-- SECTION 03: Dense Typographic Statement (Anchor Weight 400 at 94px) -->
-    <section class="statement" id="statement">
-      <div class="statement-sculpture">
-        <span class="sculpture-line">ÂM NHẠC HAY</span>
-        <span class="sculpture-line italic">TẠO RA KẾT NỐI.</span>
-        <span class="sculpture-line">KẾT NỐI</span>
-        <span class="sculpture-line italic">TẠO RA THAY ĐỔI.</span>
-      </div>
-      <div class="statement-action-wrap">
-        <a href="about.html" class="btn-ghost-dark">ĐỌC BẢN TUYÊN NGÔN ↗</a>
-      </div>
+    <section class="statement">
+      <p data-i18n="home_statement">Âm nhạc hay tạo ra <em>kết nối.</em><br>Kết nối tạo ra <em>thay đổi.</em></p>
     </section>
-
-    <!-- SECTION 04: Editorial Journal / Publications -->
-    <section class="editorial-journal-section" id="journal">
+    <section>
       <div class="section-head">
-        <div>
-          <span class="kicker" style="display:block;margin-bottom:8px;">PUBLICATIONS & EDITORIAL</span>
-          <h2 data-i18n="from_uniflows">03 / Từ UniFLOWs</h2>
-        </div>
-        <a href="news.html" class="underline-free-link" data-i18n="view_all">Xem tất cả bài viết →</a>
+        <h2 data-i18n="from_uniflows">03 / Từ UniFLOWs</h2>
+        <a href="/news" class="kicker" data-i18n="view_all">Xem tất cả →</a>
       </div>
-      <div class="editorial-journal-container" data-articles></div>
+      <div class="news-grid" data-articles></div>
     </section>
   </main>
-
-  <!-- Editorial Studio Footer -->
-  <footer>
-    <div class="footer-grid">
-      <div class="footer-col">
-        <h5>STUDIO // SAIGON</h5>
-        <p>UniFLOWs Independent Entertainment</p>
-        <p>District 1, Ho Chi Minh City, Vietnam</p>
-        <p class="footer-muted">10°46'37"N 106°42'04"E</p>
-      </div>
-      <div class="footer-col">
-        <h5>COMMUNICATION</h5>
-        <p><a href="mailto:hello@uniflowslabel.com">hello@uniflowslabel.com</a></p>
-        <p><a href="mailto:demos@uniflowslabel.com">demos@uniflowslabel.com</a></p>
-        <p><a href="booking.html">Booking & Agency ↗</a></p>
-      </div>
-      <div class="footer-col">
-        <h5>DIVISIONS</h5>
-        <p><a href="unihube.html">Uni-HUBE Creative</a></p>
-        <p><a href="48kcollective.html">48K Collective</a></p>
-        <p><a href="unipublishing.html">UniPUBLISHING Rights</a></p>
-        <p><a href="artist-login.html">Artist Portal 2.0 ↗</a></p>
-      </div>
-    </div>
-    
-    <div class="footer-bottom-bar">
-      <span>© 2024–2026 UNIFLOWS LABEL. RADICAL MONOCHROME EDITORIAL.</span>
-      <span id="footer-city">SAIGON · VIETNAM</span>
-      <span>ALL RIGHTS RESERVED.</span>
-    </div>
-
-    <!-- Monumental Watermark across bottom -->
-    <div class="footer-watermark" aria-hidden="true">UNIFLOWS</div>
-  </footer>
-
   <script type="module" src="assets/app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
