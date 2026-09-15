@@ -4,6 +4,7 @@ import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import { compressImageFile, uploadImageSmart, formatBytes } from './image-optimizer.js';
 import './security.js';
 import { initCardNav } from './card-nav.js';
+import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
 
 // Kiểm tra quyền đăng nhập
 const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
@@ -150,6 +151,11 @@ if (artist) {
       artistRole: artist.roleType === 'exclusive' ? 'Exclusive Artist' : 'Distribution Artist'
     });
   }
+
+  // ----------------------------------------------------
+  // GLASS SURFACE INITIALIZATION (LIQUID GLASS EFFECT)
+  // ----------------------------------------------------
+  initPortalGlassSurfaces();
 
   // ----------------------------------------------------
   // ARTIST WEBSITE PROFILE PHOTO CHANGE REQUEST FLOW
