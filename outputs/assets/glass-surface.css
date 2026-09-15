@@ -126,7 +126,7 @@ dialog:hover .glass-surface-glare {
 }
 
 .portal-body p, 
-.portal-body span:not(.tag):not(.badge):not(.notif-counter-pill), 
+.portal-body span:not(.tag):not(.badge):not(.notif-counter-pill):not(.notif-pulse-dot):not(.step-dot), 
 .portal-body label {
   color: var(--portal-text-muted);
 }
@@ -137,6 +137,80 @@ dialog:hover .glass-surface-glare {
   font-weight: 900;
 }
 
+/* Explicit Dark Mode Universal High-Contrast Boost */
+[data-theme="dark"] .portal-body,
+[data-theme="dark"] .portal-main,
+.portal-body.dark-mode {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .portal-body h1,
+[data-theme="dark"] .portal-body h2,
+[data-theme="dark"] .portal-body h3,
+[data-theme="dark"] .portal-body h4,
+[data-theme="dark"] .portal-body h5,
+[data-theme="dark"] .portal-body h6,
+[data-theme="dark"] .portal-body strong,
+[data-theme="dark"] .portal-body b,
+[data-theme="dark"] .portal-body th,
+[data-theme="dark"] .portal-body .section-head h2,
+[data-theme="dark"] .section-head h2,
+[data-theme="dark"] .portal-body .eyebrow,
+.portal-body.dark-mode h1,
+.portal-body.dark-mode h2,
+.portal-body.dark-mode h3,
+.portal-body.dark-mode h4,
+.portal-body.dark-mode h5,
+.portal-body.dark-mode h6,
+.portal-body.dark-mode strong,
+.portal-body.dark-mode b,
+.portal-body.dark-mode th,
+.portal-body.dark-mode .section-head h2,
+.portal-body.dark-mode .eyebrow {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .portal-body p,
+[data-theme="dark"] .portal-body label,
+[data-theme="dark"] .portal-body small,
+[data-theme="dark"] .portal-body span:not(.tag):not(.badge):not(.notif-counter-pill):not(.notif-pulse-dot):not(.step-dot),
+[data-theme="dark"] .portal-body .section-head p,
+[data-theme="dark"] .section-head p,
+.portal-body.dark-mode p,
+.portal-body.dark-mode label,
+.portal-body.dark-mode small,
+.portal-body.dark-mode span:not(.tag):not(.badge):not(.notif-counter-pill):not(.notif-pulse-dot):not(.step-dot),
+.portal-body.dark-mode .section-head p {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .portal-body .kicker,
+.portal-body.dark-mode .kicker {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .portal-body .eyebrow,
+.portal-body.dark-mode .eyebrow {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .portal-body .metric-val,
+.portal-body.dark-mode .metric-val {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .portal-body select,
+[data-theme="dark"] .portal-body input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] .portal-body textarea,
+.portal-body.dark-mode select,
+.portal-body.dark-mode input:not([type="checkbox"]):not([type="radio"]),
+.portal-body.dark-mode textarea {
+  background: rgba(24, 27, 44, 0.88) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
 /* Section Head Structural Purity */
 .section-head {
   padding: 0 0 15px !important;
@@ -144,6 +218,7 @@ dialog:hover .glass-surface-glare {
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
+  margin-bottom: 22px !important;
 }
 
 /* Multi-orb Aurora Glowing Mesh (Dark mode atmosphere) */
@@ -208,6 +283,10 @@ dialog:hover .glass-surface-glare {
 .metric-card,
 .dashboard-card,
 .portal-section-card,
+.financial-statement-card,
+.earnings-table > div,
+.hide-mobile-grid > div,
+.contract-card,
 .portal-filter-bar,
 #portal-announcements-section > div,
 #tab-overview > div:first-child,
@@ -232,7 +311,8 @@ dialog,
 .portal-profile-bar::before,
 .portal-card-metric::before,
 .card::before,
-.service-card::before {
+.service-card::before,
+.financial-statement-card::before {
   content: '';
   position: absolute;
   inset: 0;
