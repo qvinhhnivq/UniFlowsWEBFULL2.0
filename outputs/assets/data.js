@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase.js';
+import { supabase, isSupabaseConfigured, withTimeout } from './supabase.js';
 
 export const defaultData = {
   tagline: 'MAKE THE WORLD MOVE.',
@@ -722,206 +722,210 @@ export async function saveData(data) {
 
   if (!isSupabaseConfigured()) return true;
 
-  try {
-    // 1. Save site_settings safely
-    const settingsPayload = {
-      id: 'main',
-      tagline: data.tagline,
-      hero_text: data.heroText,
-      about_title: data.aboutTitle,
-      about_text: data.aboutText,
-      email: data.email,
-      emails: data.emails || defaultData.emails,
-      announcements: data.announcements || defaultData.announcements,
-      publishing: data.publishing || defaultData.publishing,
-      unihube: data.unihube || defaultData.unihube,
-      collective48k: data.collective48k || defaultData.collective48k,
-      admin_accounts: data.adminAccounts || defaultData.adminAccounts,
-      music_submissions: data.musicSubmissions || defaultData.musicSubmissions,
-      shortlinks: data.shortlinks || defaultData.shortlinks || [],
-      artist_order: data.artist_order || (data.artists || []).map(a => a.id),
-      city: data.city,
-      updated_at: new Date().toISOString()
-    };
-
+  const performSupabaseSync = async () => {
     try {
-      const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
-      if (settingsError) {
-        console.warn('Upsert site_settings full error, trying standard columns:', settingsError);
-        const standardPayload = {
-          id: 'main',
-          tagline: data.tagline || '',
-          hero_text: data.heroText || '',
-          about_title: data.aboutTitle || '',
-          about_text: data.aboutText || '',
-          email: data.email || '',
-          city: data.city || '',
-          updated_at: new Date().toISOString()
-        };
-        await supabase.from('site_settings').upsert(standardPayload);
-      }
-    } catch (sErr) {
-      console.warn('site_settings upsert caught error:', sErr);
-    }
+      // 1. Save site_settings safely
+      const settingsPayload = {
+        id: 'main',
+        tagline: data.tagline,
+        hero_text: data.heroText,
+        about_title: data.aboutTitle,
+        about_text: data.aboutText,
+        email: data.email,
+        emails: data.emails || defaultData.emails,
+        announcements: data.announcements || defaultData.announcements,
+        publishing: data.publishing || defaultData.publishing,
+        unihube: data.unihube || defaultData.unihube,
+        collective48k: data.collective48k || defaultData.collective48k,
+        admin_accounts: data.adminAccounts || defaultData.adminAccounts,
+        music_submissions: data.musicSubmissions || defaultData.musicSubmissions,
+        shortlinks: data.shortlinks || data.shortlinks || [],
+        artist_order: data.artist_order || (data.artists || []).map(a => a.id),
+        city: data.city,
+        updated_at: new Date().toISOString()
+      };
 
-    // 2. Save artists & releases in parallel
-    if (Array.isArray(data.artists)) {
-      // Sync local artist accounts for immediate local authentication
       try {
-        const storedAccounts = data.artists.map(a => ({
-          id: a.id,
-          username: a.username || a.id,
-          email: a.email || '',
-          password: a.password || '',
-          name: a.name || a.id,
-          roleType: a.roleType || 'distribution',
-          showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false'
-        }));
-        localStorage.setItem('uniflows-artist-accounts', JSON.stringify(storedAccounts));
-      } catch (_) {}
+        const { error: settingsError } = await supabase.from('site_settings').upsert(settingsPayload);
+        if (settingsError) {
+          console.warn('Upsert site_settings full error, trying standard columns:', settingsError);
+          const standardPayload = {
+            id: 'main',
+            tagline: data.tagline || '',
+            hero_text: data.heroText || '',
+            about_title: data.aboutTitle || '',
+            about_text: data.aboutText || '',
+            email: data.email || '',
+            city: data.city || '',
+            updated_at: new Date().toISOString()
+          };
+          await supabase.from('site_settings').upsert(standardPayload);
+        }
+      } catch (sErr) {
+        console.warn('site_settings upsert caught error:', sErr);
+      }
 
-      const allReleasesToUpsert = [];
-
-      const artistPromises = data.artists.filter(a => !MOCK_IDS.artists.includes(a.id)).map(async a => {
-        const stats = {
-          username: a.username || a.id,
-          password: a.password || '',
-          email: a.email || '',
-          payableBalance: String(a.payableBalance || '0'),
-          showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false',
-          roleType: a.roleType || 'distribution',
-          payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
-          royaltyRate: a.royaltyRate || '80% Master',
-          contractTerm: a.contractTerm || '2024 - 2027',
-          publishingRevenue: a.publishingRevenue || '0',
-          publishingRoyaltyRate: a.publishingRoyaltyRate || '75%',
-          publishingContracts: a.publishingContracts || [],
-          spotifyStreams: a.spotifyStreams || '0',
-          spotifyRevenue: a.spotifyRevenue || '0',
-          appleStreams: a.appleStreams || '0',
-          appleRevenue: a.appleRevenue || '0',
-          youtubeStreams: a.youtubeStreams || '0',
-          youtubeRevenue: a.youtubeRevenue || '0',
-          otherStreams: a.otherStreams || '0',
-          otherRevenue: a.otherRevenue || '0',
-          topCountry: a.topCountry || 'Việt Nam',
-          topCity: a.topCity || 'Hồ Chí Minh',
-          topSource: a.topSource || 'Spotify Editorial & Algorithmic',
-          products: a.products || []
-        };
-
-        const fullArtistPayload = {
-          id: a.id,
-          name: a.name,
-          username: a.username || a.id,
-          email: a.email || '',
-          password: a.password || '',
-          role_type: a.roleType || 'distribution',
-          show_on_web: a.showOnWeb !== false && a.showOnWeb !== 'false',
-          genre: a.genre || 'Music',
-          image: a.image || '',
-          bio: a.bio || '',
-          gallery: Array.isArray(a.gallery) ? a.gallery : [],
-          instagram: a.instagram || '',
-          youtube: a.youtube || '',
-          tiktok: a.tiktok || '',
-          monthly_streams: String(a.monthlyStreams || '0'),
-          estimated_revenue: String(a.estimatedRevenue || '0'),
-          payable_balance: String(a.payableBalance || '0'),
-          payout_cycle: a.payoutCycle || 'Hàng tháng (Monthly)',
-          royalty_rate: a.royaltyRate || '80% Master',
-          contract_term: a.contractTerm || '2024 - 2027',
-          stats: stats,
-          updated_at: new Date().toISOString()
-        };
-
-        const standardArtistPayload = {
-          id: a.id,
-          name: a.name,
-          username: a.username || a.id,
-          email: a.email || '',
-          password: a.password || '',
-          genre: a.genre || 'Music',
-          image: a.image || '',
-          bio: a.bio || '',
-          gallery: Array.isArray(a.gallery) ? a.gallery : [],
-          instagram: a.instagram || '',
-          youtube: a.youtube || '',
-          tiktok: a.tiktok || '',
-          monthly_streams: String(a.monthlyStreams || '0'),
-          estimated_revenue: String(a.estimatedRevenue || '0'),
-          payable_balance: String(a.payableBalance || '0'),
-          payout_cycle: a.payoutCycle || 'Hàng tháng (Monthly)',
-          royalty_rate: a.royaltyRate || '80% Master',
-          contract_term: a.contractTerm || '2024 - 2027',
-          stats: stats,
-          updated_at: new Date().toISOString()
-        };
-
+      // 2. Save artists & releases in parallel
+      if (Array.isArray(data.artists)) {
+        // Sync local artist accounts for immediate local authentication
         try {
-          const { error: aErr } = await supabase.from('artists').upsert(fullArtistPayload);
-          if (aErr) {
-            console.warn('Upsert artist full payload warning, retrying with standard payload:', aErr);
-            await supabase.from('artists').upsert(standardArtistPayload);
-          }
-        } catch (err) {
+          const storedAccounts = data.artists.map(a => ({
+            id: a.id,
+            username: a.username || a.id,
+            email: a.email || '',
+            password: a.password || '',
+            name: a.name || a.id,
+            roleType: a.roleType || 'distribution',
+            showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false'
+          }));
+          localStorage.setItem('uniflows-artist-accounts', JSON.stringify(storedAccounts));
+        } catch (_) {}
+
+        const allReleasesToUpsert = [];
+
+        const artistPromises = data.artists.filter(a => !MOCK_IDS.artists.includes(a.id)).map(async a => {
+          const stats = {
+            username: a.username || a.id,
+            password: a.password || '',
+            email: a.email || '',
+            payableBalance: String(a.payableBalance || '0'),
+            showOnWeb: a.showOnWeb !== false && a.showOnWeb !== 'false',
+            roleType: a.roleType || 'distribution',
+            payoutCycle: a.payoutCycle || 'Hàng tháng (Monthly)',
+            royaltyRate: a.royaltyRate || '80% Master',
+            contractTerm: a.contractTerm || '2024 - 2027',
+            publishingRevenue: a.publishingRevenue || '0',
+            publishingRoyaltyRate: a.publishingRoyaltyRate || '75%',
+            publishingContracts: a.publishingContracts || [],
+            spotifyStreams: a.spotifyStreams || '0',
+            spotifyRevenue: a.spotifyRevenue || '0',
+            appleStreams: a.appleStreams || '0',
+            appleRevenue: a.appleRevenue || '0',
+            youtubeStreams: a.youtubeStreams || '0',
+            youtubeRevenue: a.youtubeRevenue || '0',
+            otherStreams: a.otherStreams || '0',
+            otherRevenue: a.otherRevenue || '0',
+            topCountry: a.topCountry || 'Việt Nam',
+            topCity: a.topCity || 'Hồ Chí Minh',
+            topSource: a.topSource || 'Spotify Editorial & Algorithmic',
+            products: a.products || []
+          };
+
+          const fullArtistPayload = {
+            id: a.id,
+            name: a.name,
+            username: a.username || a.id,
+            email: a.email || '',
+            password: a.password || '',
+            role_type: a.roleType || 'distribution',
+            show_on_web: a.showOnWeb !== false && a.showOnWeb !== 'false',
+            genre: a.genre || 'Music',
+            image: a.image || '',
+            bio: a.bio || '',
+            gallery: Array.isArray(a.gallery) ? a.gallery : [],
+            instagram: a.instagram || '',
+            youtube: a.youtube || '',
+            tiktok: a.tiktok || '',
+            monthly_streams: String(a.monthlyStreams || '0'),
+            estimated_revenue: String(a.estimatedRevenue || '0'),
+            payable_balance: String(a.payableBalance || '0'),
+            payout_cycle: a.payoutCycle || 'Hàng tháng (Monthly)',
+            royalty_rate: a.royaltyRate || '80% Master',
+            contract_term: a.contractTerm || '2024 - 2027',
+            stats: stats,
+            updated_at: new Date().toISOString()
+          };
+
+          const standardArtistPayload = {
+            id: a.id,
+            name: a.name,
+            genre: a.genre || 'Music',
+            image: a.image || '',
+            bio: a.bio || '',
+            gallery: Array.isArray(a.gallery) ? a.gallery : [],
+            instagram: a.instagram || '',
+            youtube: a.youtube || '',
+            tiktok: a.tiktok || '',
+            monthly_streams: String(a.monthlyStreams || '0'),
+            estimated_revenue: String(a.estimatedRevenue || '0'),
+            payable_balance: String(a.payableBalance || '0'),
+            stats: stats,
+            updated_at: new Date().toISOString()
+          };
+
           try {
-            await supabase.from('artists').upsert(standardArtistPayload);
-          } catch (err2) {
-            console.warn('Standard artist upsert error:', err2);
+            const { error: aErr } = await supabase.from('artists').upsert(fullArtistPayload);
+            if (aErr) {
+              console.warn('Upsert artist full payload warning, retrying with standard payload:', aErr);
+              await supabase.from('artists').upsert(standardArtistPayload);
+            }
+          } catch (err) {
+            try {
+              await supabase.from('artists').upsert(standardArtistPayload);
+            } catch (err2) {
+              console.warn('Standard artist upsert error:', err2);
+            }
           }
-        }
 
-        // Collect releases for batch upsert
-        if (Array.isArray(a.products)) {
-          for (const p of a.products) {
-            const relSlug = p.slug || String(p.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            allReleasesToUpsert.push({
-              id: p.id || `rel-${Date.now()}-${relSlug}`,
-              artist_id: a.id,
-              title: p.title || 'Untitled Release',
-              type: p.type || 'Single',
-              slug: relSlug,
-              submission_status: p.submissionStatus || 'Đã phát hành',
-              links: p.links || {},
-              audio_url: p.audioUrl || '',
-              artwork_url: p.artworkUrl || a.image || '',
-              metadata: {
-                streams: p.streams || '0',
-                revenue: p.revenue || '0',
-                playlists: p.playlists || [],
-                splits: p.splits || [],
-                userRole: p.userRole || 'Main',
-                isSplit: p.isSplit || false,
-                percentage: p.percentage || 100,
-                ...(p.metadata || {})
-              }
-            });
+          // Collect releases for batch upsert
+          if (Array.isArray(a.products)) {
+            for (const p of a.products) {
+              const relSlug = p.slug || String(p.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+              allReleasesToUpsert.push({
+                id: p.id || `rel-${Date.now()}-${relSlug}`,
+                artist_id: a.id,
+                title: p.title || 'Untitled Release',
+                type: p.type || 'Single',
+                slug: relSlug,
+                submission_status: p.submissionStatus || 'Đã phát hành',
+                links: p.links || {},
+                audio_url: p.audioUrl || '',
+                artwork_url: p.artworkUrl || a.image || '',
+                metadata: {
+                  streams: p.streams || '0',
+                  revenue: p.revenue || '0',
+                  playlists: p.playlists || [],
+                  splits: p.splits || [],
+                  userRole: p.userRole || 'Main',
+                  isSplit: p.isSplit || false,
+                  percentage: p.percentage || 100,
+                  ...(p.metadata || {})
+                }
+              });
+            }
           }
-        }
-      });
+        });
 
-      await Promise.allSettled(artistPromises);
+        await Promise.allSettled(artistPromises);
 
-      // Batch upsert releases to avoid individual sequential requests
-      if (allReleasesToUpsert.length > 0) {
-        try {
-          await supabase.from('releases').upsert(allReleasesToUpsert);
-        } catch (rErr) {
-          console.warn('Batch releases upsert error:', rErr);
+        // Batch upsert releases to avoid individual sequential requests
+        if (allReleasesToUpsert.length > 0) {
+          try {
+            await supabase.from('releases').upsert(allReleasesToUpsert);
+          } catch (rErr) {
+            console.warn('Batch releases upsert error:', rErr);
+          }
         }
       }
-    }
 
-    // 3. Save articles
-    if (Array.isArray(data.articles)) {
-      await saveAllArticlesToSupabase(data.articles);
-    }
+      // 3. Save articles
+      if (Array.isArray(data.articles)) {
+        await saveAllArticlesToSupabase(data.articles);
+      }
 
-    return true;
+      return true;
+    } catch (err) {
+      console.error('Lỗi khi lưu dữ liệu lên Supabase:', err);
+      return false;
+    }
+  };
+
+  try {
+    const res = await withTimeout(performSupabaseSync(), 4500, false);
+    return res !== false;
   } catch (err) {
-    console.error('Lỗi khi lưu dữ liệu lên Supabase:', err);
-    return false;
+    console.warn('Timeout hoặc lỗi khi đồng bộ Supabase (đã lưu an toàn Offline):', err);
+    return true;
   }
 }
 

@@ -2,6 +2,9 @@ import { getData, saveData, defaultData, saveSingleArticle, deleteArticleFromSup
 import { 
   supabase, 
   isSupabaseConfigured, 
+  isOfflineModeActive,
+  setOfflineMode,
+  withTimeout,
   uploadArtworkFile, 
   uploadAudioFile, 
   testSupabaseConnection, 
@@ -501,10 +504,32 @@ function renderSelectedArtistEditor() {
   attachArtistReorderEvents();
   attachArtistBalanceEvents(currentArtist, idx);
   attachArtistLiveSync(currentArtist, idx);
+  attachArtistProductEvents(currentArtist, idx);
 }
 
 const artistEditor = (a, idx) => {
   const isPublic = a.showOnWeb !== false && a.showOnWeb !== 'false';
+  if (!Array.isArray(a.products)) a.products = [];
+
+  // Merge any releases from releases queue for this artist if not already in a.products
+  (releases || []).forEach(r => {
+    if ((r.artist_id === a.id || r.artists?.name === a.name) && !a.products.some(p => p.id === r.id || (p.slug && p.slug === r.slug))) {
+      const meta = (typeof r.metadata === 'object' && r.metadata) ? r.metadata : {};
+      a.products.push({
+        id: r.id,
+        title: r.title,
+        type: r.type || 'Single',
+        slug: r.slug || slug(r.title),
+        submissionStatus: r.submission_status || 'Đã phát hành',
+        artworkUrl: r.artwork_url || '',
+        audioUrl: r.audio_url || '',
+        links: r.links || {},
+        streams: meta.streams || '0',
+        revenue: meta.revenue || '0',
+        metadata: meta
+      });
+    }
+  });
 
   return `
   <div class="item-editor" data-artist data-artist-id="${esc(a.id)}" data-artist-idx="${idx}" style="background:#fff;border:2px solid var(--ink);padding:24px;margin-top:10px;">
@@ -654,6 +679,35 @@ const artistEditor = (a, idx) => {
           <button type="button" class="btn-quick-adjust-add button" data-idx="${idx}" style="background:#15803d;color:#fff;border-color:#15803d;font-weight:bold;padding:6px 12px;font-size:11px;">+ Cộng Tiền</button>
           <button type="button" class="btn-quick-adjust-sub button" data-idx="${idx}" style="background:#dc2626;color:#fff;border-color:#dc2626;font-weight:bold;padding:6px 12px;font-size:11px;">- Trừ Tiền</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 04: MUSIC CATALOG, RELEASES & SMARTLINKS (BẢN PHÁT HÀNH, SMARTLINK & SỐ LIỆU) -->
+    <div style="background:#f0f9ff;border:2px solid #0284c7;padding:18px;margin:15px 0;border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span class="eyebrow" style="color:#0284c7;margin:0;font-size:10px;">Music Catalog & SmartLinks</span>
+          <h4 style="margin:2px 0 0;font-size:14px;text-transform:uppercase;color:#0369a1;">
+            💿 Quản Lý Bản Phát Hành & SmartLink (${(a.products || []).length} tác phẩm)
+          </h4>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="btn-artist-add-quick-rel button" data-artist-id="${esc(a.id)}" style="background:#16a34a;color:#fff;border-color:#16a34a;font-weight:bold;padding:6px 14px;font-size:11px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+            ⚡ + Phát Hành Nhanh Cho Nghệ Sĩ Này
+          </button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#475569;margin:0 0 14px;line-height:1.4;">
+        Admin có thể chỉnh sửa trực tiếp đường dẫn SmartLink (<code>/listen?release=...</code>), liên kết các nền tảng (Spotify, Apple Music, YouTube Music, Zing MP3, TikTok) và cập nhật số liệu lượt nghe & doanh thu cho từng bài hát của nghệ sĩ.
+      </p>
+
+      <div class="artist-products-container" style="display:flex;flex-direction:column;gap:12px;">
+        ${(!a.products || a.products.length === 0) ? `
+          <div style="text-align:center;padding:22px;background:#fff;border:1px dashed #7dd3fc;border-radius:6px;color:#64748b;font-size:12px;">
+            Chưa có bài hát hoặc bản phát hành nào được gán cho nghệ sĩ này.<br>
+            Bấm nút <b>"⚡ + Phát Hành Nhanh Cho Nghệ Sĩ Này"</b> ở trên để tạo bản phát hành ngay lập tức lên Web!
+          </div>
+        ` : a.products.map((p, pIdx) => renderArtistProductCard(p, pIdx, a, idx)).join('')}
       </div>
     </div>
 
@@ -859,6 +913,291 @@ function attachArtistLiveSync(artist, idx) {
       }
     };
   }
+}
+
+function renderArtistProductCard(p, pIdx, a, aIdx) {
+  const pSlug = p.slug || slug(p.title);
+  const smartLinkUrl = `${location.origin}/listen?release=${encodeURIComponent(pSlug)}`;
+  const pArtwork = p.artworkUrl || a.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80';
+  const links = p.links || {};
+
+  return `
+    <div class="artist-product-item-card" data-prod-idx="${pIdx}" style="background:#fff;border:1px solid #bae6fd;border-radius:6px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <img src="${esc(pArtwork)}" alt="Artwork" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid #cbd5e1;flex-shrink:0;">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="font-family:'DM Mono',monospace;font-size:10px;font-weight:bold;background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:3px;">${esc(p.type || 'Single')}</span>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;font-weight:bold;background:${p.submissionStatus === 'Đã phát hành' ? '#dcfce7;color:#15803d' : '#fef3c7;color:#b45309'};padding:2px 6px;border-radius:3px;">● ${esc(p.submissionStatus || 'Đã phát hành')}</span>
+            </div>
+            <h5 style="margin:4px 0 0;font-size:15px;font-weight:800;color:#0f172a;">${esc(p.title || 'Untitled Track')}</h5>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <a href="/listen?release=${encodeURIComponent(pSlug)}" target="_blank" class="button alt" style="padding:4px 10px;font-size:11px;font-weight:bold;color:#0284c7;border-color:#7dd3fc;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+            🔗 Mở SmartLink
+          </a>
+          <button type="button" class="btn-copy-prod-smartlink button alt" data-url="${esc(smartLinkUrl)}" style="padding:4px 8px;font-size:11px;font-weight:bold;">
+            📋 Chép Link
+          </button>
+          <button type="button" class="btn-save-single-product button" data-artist-idx="${aIdx}" data-prod-idx="${pIdx}" style="background:#10b981;color:#fff;border-color:#10b981;font-weight:bold;padding:5px 12px;font-size:11px;cursor:pointer;">
+            💾 Lưu Bài Này
+          </button>
+          <button type="button" class="btn-delete-single-product button alt remove" data-artist-idx="${aIdx}" data-prod-idx="${pIdx}" style="padding:4px 8px;font-size:11px;cursor:pointer;">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Metadata & Metrics Grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:10px;background:#f8fafc;padding:12px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:10px;">
+        <div class="field" style="margin:0;">
+          <label style="font-size:10.5px;font-weight:bold;color:#1e293b;">Tiêu đề bài hát (Track Title)</label>
+          <input class="prod-input-title" value="${esc(p.title || '')}" style="font-size:12px;padding:6px 8px;background:#fff;">
+        </div>
+        <div class="field" style="margin:0;">
+          <label style="font-size:10.5px;font-weight:bold;color:#1e293b;">Định dạng (Type)</label>
+          <select class="prod-input-type" style="font-size:12px;padding:6px 8px;background:#fff;">
+            <option value="Single" ${p.type === 'Single' ? 'selected' : ''}>Single</option>
+            <option value="EP" ${p.type === 'EP' ? 'selected' : ''}>EP</option>
+            <option value="Album" ${p.type === 'Album' ? 'selected' : ''}>Album</option>
+            <option value="Remix" ${p.type === 'Remix' ? 'selected' : ''}>Remix</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label style="font-size:10.5px;font-weight:bold;color:#1e293b;">Trạng thái phát hành</label>
+          <select class="prod-input-status" style="font-size:12px;padding:6px 8px;background:#fff;font-weight:600;">
+            <option value="Đã phát hành" ${p.submissionStatus === 'Đã phát hành' ? 'selected' : ''}>🟢 Đã phát hành (Live)</option>
+            <option value="Chờ duyệt" ${p.submissionStatus && p.submissionStatus.includes('chờ') ? 'selected' : ''}>🟡 Chờ duyệt</option>
+            <option value="Đã gỡ" ${p.submissionStatus && p.submissionStatus.includes('gỡ') ? 'selected' : ''}>🔴 Đã gỡ (Takedown)</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label style="font-size:10.5px;font-weight:bold;color:#0284c7;">Đường dẫn Slug SmartLink (/listen?release=...)</label>
+          <input class="prod-input-slug" value="${esc(pSlug)}" style="font-size:12px;font-family:'DM Mono',monospace;font-weight:bold;padding:6px 8px;color:#0284c7;background:#fff;">
+        </div>
+        <div class="field" style="margin:0;">
+          <label style="font-size:10.5px;font-weight:bold;color:#059669;">Số lượt nghe (Streams)</label>
+          <input class="prod-input-streams" value="${esc(p.streams || '0')}" placeholder="Ví dụ: 290,000" style="font-size:12px;font-family:'DM Mono',monospace;font-weight:bold;padding:6px 8px;color:#059669;background:#fff;">
+        </div>
+        <div class="field" style="margin:0;">
+          <label style="font-size:10.5px;font-weight:bold;color:#b45309;">Doanh thu bài hát (Revenue ₫)</label>
+          <input class="prod-input-revenue" value="${esc(p.revenue || '0')}" placeholder="Ví dụ: 16,000,000" style="font-size:12px;font-family:'DM Mono',monospace;font-weight:bold;padding:6px 8px;color:#b45309;background:#fff;">
+        </div>
+        <div class="field" style="margin:0;grid-column:1/-1;">
+          <label style="font-size:10.5px;font-weight:bold;color:#1e293b;">URL Ảnh Artwork</label>
+          <input class="prod-input-artwork" value="${esc(p.artworkUrl || '')}" placeholder="https://..." style="font-size:11px;padding:6px 8px;background:#fff;">
+        </div>
+      </div>
+
+      <!-- DSP Platform SmartLinks Grid -->
+      <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;padding:10px 12px;">
+        <span style="font-size:10.5px;font-weight:bold;text-transform:uppercase;color:#334155;display:block;margin-bottom:8px;">
+          🔗 Liên kết SmartLink Đa Nền Tảng (DSP Platforms):
+        </span>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:8px;">
+          <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#166534;">Spotify URL</label>
+            <input class="prod-input-spotify" value="${esc(links.spotify || '')}" placeholder="https://open.spotify.com/..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#991b1b;">Apple Music URL</label>
+            <input class="prod-input-apple" value="${esc(links.apple || '')}" placeholder="https://music.apple.com/..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#b91c1c;">YouTube Music / Video URL</label>
+            <input class="prod-input-youtube" value="${esc(links.youtube || '')}" placeholder="https://youtube.com/..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#4338ca;">Zing MP3 URL</label>
+            <input class="prod-input-zing" value="${esc(links.zing || '')}" placeholder="https://zingmp3.vn/..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#0f172a;">TikTok Sound URL</label>
+            <input class="prod-input-tiktok" value="${esc(links.tiktok || '')}" placeholder="https://tiktok.com/music/..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:10px;font-weight:600;color:#0284c7;">Audio Master / Preview URL</label>
+            <input class="prod-input-audio" value="${esc(p.audioUrl || '')}" placeholder="https://..." style="font-size:11px;padding:5px 8px;background:#fff;">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachArtistProductEvents(artist, idx) {
+  const container = document.querySelector(`.item-editor[data-artist-idx="${idx}"]`);
+  if (!container) return;
+
+  // Add Quick Release button in artist section
+  container.querySelectorAll('.btn-artist-add-quick-rel').forEach(btn => {
+    btn.onclick = () => {
+      const artSelect = document.querySelector('#quick-rel-artist');
+      const openBtn = document.querySelector('#btn-open-quick-release-modal');
+      if (openBtn) openBtn.click();
+      if (artSelect) {
+        artSelect.value = artist.id;
+      }
+    };
+  });
+
+  // Copy Smartlink button
+  container.querySelectorAll('.btn-copy-prod-smartlink').forEach(btn => {
+    btn.onclick = async (e) => {
+      const url = btn.dataset.url;
+      if (url) {
+        try {
+          await navigator.clipboard.writeText(url);
+          const orig = btn.textContent;
+          btn.textContent = '✓ Đã chép!';
+          setTimeout(() => { btn.textContent = orig; }, 2000);
+        } catch {
+          prompt('Sao chép liên kết SmartLink:', url);
+        }
+      }
+    };
+  });
+
+  // Save single product
+  container.querySelectorAll('.btn-save-single-product').forEach(btn => {
+    btn.onclick = async () => {
+      const pIdx = parseInt(btn.dataset.prodIdx, 10);
+      const card = btn.closest('.artist-product-item-card');
+      if (!card || isNaN(pIdx) || !artist.products || !artist.products[pIdx]) return;
+
+      btn.disabled = true;
+      const orig = btn.textContent;
+      btn.textContent = '⏳ Đang lưu...';
+
+      try {
+        const title = card.querySelector('.prod-input-title')?.value.trim() || 'Untitled Track';
+        const type = card.querySelector('.prod-input-type')?.value || 'Single';
+        const submissionStatus = card.querySelector('.prod-input-status')?.value || 'Đã phát hành';
+        const slugVal = card.querySelector('.prod-input-slug')?.value.trim() || slug(title);
+        const streams = card.querySelector('.prod-input-streams')?.value.trim() || '0';
+        const revenue = card.querySelector('.prod-input-revenue')?.value.trim() || '0';
+        const artworkUrl = card.querySelector('.prod-input-artwork')?.value.trim() || '';
+        const audioUrl = card.querySelector('.prod-input-audio')?.value.trim() || '';
+
+        const spotify = card.querySelector('.prod-input-spotify')?.value.trim() || '';
+        const apple = card.querySelector('.prod-input-apple')?.value.trim() || '';
+        const youtube = card.querySelector('.prod-input-youtube')?.value.trim() || '';
+        const zing = card.querySelector('.prod-input-zing')?.value.trim() || '';
+        const tiktok = card.querySelector('.prod-input-tiktok')?.value.trim() || '';
+
+        const existingProd = artist.products[pIdx];
+        const updatedProd = {
+          ...existingProd,
+          title,
+          type,
+          submissionStatus,
+          slug: slugVal,
+          streams,
+          revenue,
+          artworkUrl: artworkUrl || existingProd.artworkUrl || '',
+          audioUrl: audioUrl || existingProd.audioUrl || '',
+          links: {
+            ...(existingProd.links || {}),
+            spotify,
+            apple,
+            youtube,
+            zing,
+            tiktok
+          },
+          metadata: {
+            ...(existingProd.metadata || {}),
+            streams,
+            revenue
+          }
+        };
+
+        artist.products[pIdx] = updatedProd;
+        if (data.artists && data.artists[idx] && data.artists[idx].products) {
+          data.artists[idx].products[pIdx] = updatedProd;
+        }
+
+        // Also sync in releases array if present
+        const relMatch = (releases || []).find(r => r.id === updatedProd.id || r.slug === updatedProd.slug);
+        if (relMatch) {
+          relMatch.title = title;
+          relMatch.type = type;
+          relMatch.submission_status = submissionStatus;
+          relMatch.slug = slugVal;
+          relMatch.artwork_url = updatedProd.artworkUrl;
+          relMatch.audio_url = updatedProd.audioUrl;
+          relMatch.links = updatedProd.links;
+          if (!relMatch.metadata) relMatch.metadata = {};
+          relMatch.metadata.streams = streams;
+          relMatch.metadata.revenue = revenue;
+        }
+
+        // Save data to localStorage & Supabase
+        await saveData(data);
+
+        // Sync to Supabase releases table if configured
+        if (isSupabaseConfigured()) {
+          try {
+            await withTimeout(supabase.from('releases').upsert({
+              id: updatedProd.id,
+              artist_id: artist.id,
+              title,
+              type,
+              slug: slugVal,
+              submission_status: submissionStatus,
+              artwork_url: updatedProd.artworkUrl,
+              audio_url: updatedProd.audioUrl,
+              links: updatedProd.links,
+              metadata: updatedProd.metadata,
+              updated_at: new Date().toISOString()
+            }), 3000, null);
+          } catch (e) {
+            console.warn('Lỗi lưu release lên Supabase:', e);
+          }
+        }
+
+        await logAuditEvent('Cập nhật SmartLink', `Đã lưu SmartLink và số liệu cho "${title}" (${artist.name})`);
+        showNotice(`✓ Đã lưu thành công SmartLink & số liệu bài hát "${title}"!`);
+        renderSelectedArtistEditor();
+        loadReleasesQueue();
+      } catch (err) {
+        alert(`Lỗi khi lưu bài hát: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+      }
+    };
+  });
+
+  // Delete single product
+  container.querySelectorAll('.btn-delete-single-product').forEach(btn => {
+    btn.onclick = async () => {
+      const pIdx = parseInt(btn.dataset.prodIdx, 10);
+      if (isNaN(pIdx) || !artist.products || !artist.products[pIdx]) return;
+      const targetP = artist.products[pIdx];
+
+      if (!confirm(`Bạn có chắc chắn muốn xóa bài hát "${targetP.title}" khỏi danh sách phát hành của nghệ sĩ "${artist.name}"?`)) return;
+
+      artist.products.splice(pIdx, 1);
+      if (data.artists && data.artists[idx] && data.artists[idx].products) {
+        data.artists[idx].products.splice(pIdx, 1);
+      }
+
+      await saveData(data);
+
+      if (isSupabaseConfigured() && targetP.id) {
+        try {
+          await withTimeout(supabase.from('releases').delete().eq('id', targetP.id), 3000, null);
+        } catch (_) {}
+      }
+
+      await logAuditEvent('Xóa bản phát hành', `Đã xóa bài hát "${targetP.title}" của ${artist.name}`);
+      showNotice(`✓ Đã xóa bài hát "${targetP.title}"!`);
+      renderSelectedArtistEditor();
+      loadReleasesQueue();
+    };
+  });
 }
 
 // ----------------------------------------------------
@@ -1195,13 +1534,17 @@ async function loadPayoutRequests() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data: dbPayouts, error } = await supabase
-        .from('payout_requests')
-        .select('*, artists(name)')
-        .order('created_at', { ascending: false });
+      const res = await withTimeout(
+        supabase
+          .from('payout_requests')
+          .select('*, artists(name)')
+          .order('created_at', { ascending: false }),
+        2500,
+        null
+      );
 
-      if (!error && dbPayouts) {
-        list = dbPayouts;
+      if (res && !res.error && res.data) {
+        list = res.data;
         try { localStorage.setItem('uniflows-payouts', JSON.stringify(list)); } catch {}
       }
     } catch (err) {
@@ -1495,9 +1838,9 @@ async function loadAdminCopyrightReports() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data: dbList, error } = await supabase.from('copyright_reports').select('*').order('created_at', { ascending: false });
-      if (!error && dbList) {
-        list = dbList;
+      const res = await withTimeout(supabase.from('copyright_reports').select('*').order('created_at', { ascending: false }), 2500, null);
+      if (res && !res.error && res.data) {
+        list = res.data;
         localStorage.setItem('uniflows-copyright-reports', JSON.stringify(list));
       }
     } catch {}
@@ -1657,9 +2000,9 @@ async function loadAdminGreenlistRequests() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data: dbList, error } = await supabase.from('greenlist_requests').select('*').order('created_at', { ascending: false });
-      if (!error && dbList) {
-        list = dbList;
+      const res = await withTimeout(supabase.from('greenlist_requests').select('*').order('created_at', { ascending: false }), 2500, null);
+      if (res && !res.error && res.data) {
+        list = res.data;
         localStorage.setItem('uniflows-greenlist-requests', JSON.stringify(list));
       }
     } catch {}
@@ -1809,19 +2152,32 @@ async function loadReleasesQueue() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data: dbReleases, error } = await supabase
-        .from('releases')
-        .select('*, artists(name)')
-        .order('created_at', { ascending: false });
+      const res = await withTimeout(
+        supabase
+          .from('releases')
+          .select('*, artists(name)')
+          .order('created_at', { ascending: false }),
+        3000,
+        null
+      );
 
-      if (!error && dbReleases) {
-        releases = dbReleases;
+      if (res && !res.error && Array.isArray(res.data) && res.data.length > 0) {
+        releases = res.data;
         renderDashboard();
         renderPitchingBoard();
       }
     } catch (e) {
-      console.warn('Lỗi tải queue từ Supabase:', e);
+      console.warn('Lỗi tải queue từ Supabase (dùng fallback cục bộ):', e);
     }
+  }
+
+  // Fallback: If releases is empty (offline or disconnected), populate from artist products
+  if (!releases || releases.length === 0) {
+    releases = (data.artists || []).flatMap(a => (a.products || []).map(p => ({
+      ...p,
+      artist_id: a.id,
+      artists: { name: a.name }
+    })));
   }
 
   // Filter Releases by Status and Artist
@@ -5957,10 +6313,27 @@ function updateSupabaseStatusBanner() {
   const text = document.querySelector('#supabase-live-status-text');
   const sub = document.querySelector('#supabase-live-status-sub');
   
+  const isOffline = isOfflineModeActive();
   const configured = isSupabaseConfigured();
   const currentUrl = getSupabaseUrl();
 
-  if (configured) {
+  const btnQuickOffline = document.querySelector('#btn-quick-toggle-offline');
+  const btnQuickReconnect = document.querySelector('#btn-quick-reconnect-supabase');
+  const btnTabOffline = document.querySelector('#btn-tab-toggle-offline');
+  const btnTabReconnect = document.querySelector('#btn-tab-reconnect-supabase');
+
+  if (isOffline) {
+    if (dot) {
+      dot.style.background = '#f59e0b';
+      dot.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.25)';
+    }
+    if (text) text.textContent = '⚡ Chế độ Ngoại Tuyến (Offline Mode: Đang Bật)';
+    if (sub) sub.textContent = 'Dữ liệu được lưu và chỉnh sửa trực tiếp trên trình duyệt (LocalStorage). Không đồng bộ lên Supabase Cloud.';
+    if (btnQuickOffline) btnQuickOffline.style.display = 'none';
+    if (btnQuickReconnect) btnQuickReconnect.style.display = 'inline-flex';
+    if (btnTabOffline) btnTabOffline.style.display = 'none';
+    if (btnTabReconnect) btnTabReconnect.style.display = 'inline-flex';
+  } else if (configured) {
     if (dot) {
       dot.style.background = '#10b981';
       dot.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.2)';
@@ -5969,6 +6342,10 @@ function updateSupabaseStatusBanner() {
     let host = '';
     try { host = new URL(currentUrl).hostname; } catch { host = currentUrl; }
     if (sub) sub.textContent = `Endpoint: ${host} · Sẵn sàng đồng bộ cơ sở dữ liệu và lưu trữ Storage.`;
+    if (btnQuickOffline) btnQuickOffline.style.display = 'inline-flex';
+    if (btnQuickReconnect) btnQuickReconnect.style.display = 'none';
+    if (btnTabOffline) btnTabOffline.style.display = 'inline-flex';
+    if (btnTabReconnect) btnTabReconnect.style.display = 'none';
   } else {
     if (dot) {
       dot.style.background = '#ef4444';
@@ -5976,6 +6353,10 @@ function updateSupabaseStatusBanner() {
     }
     if (text) text.textContent = 'Supabase Cloud: Chưa kích hoạt';
     if (sub) sub.textContent = 'Hệ thống đang hoạt động ở chế độ Local Storage Offline (Chưa cấu hình URL hoặc Anon Key).';
+    if (btnQuickOffline) btnQuickOffline.style.display = 'inline-flex';
+    if (btnQuickReconnect) btnQuickReconnect.style.display = 'none';
+    if (btnTabOffline) btnTabOffline.style.display = 'inline-flex';
+    if (btnTabReconnect) btnTabReconnect.style.display = 'none';
   }
 
   // Populate Tab 7 inputs
@@ -6286,6 +6667,26 @@ function initSupabaseCloudAdmin() {
     await openSqlSchemaDialog(schemaDialog, 'quickfix');
   });
 
+  const handleToggleOffline = () => {
+    setOfflineMode(true);
+    updateSupabaseStatusBanner();
+    showNotice('⚡ Đã kích hoạt Chế độ Ngoại Tuyến (Offline Mode)! Toàn bộ dữ liệu & thao tác sẽ lưu trực tiếp trên máy của bạn.');
+  };
+
+  const handleReconnectSupabase = () => {
+    setOfflineMode(false);
+    updateSupabaseStatusBanner();
+    showNotice('🌐 Đang kết nối lại Supabase Cloud...');
+    if (bannerDiagBox) {
+      runSupabaseDiagnosticTest(bannerDiagBox);
+    }
+  };
+
+  document.querySelector('#btn-quick-toggle-offline')?.addEventListener('click', handleToggleOffline);
+  document.querySelector('#btn-tab-toggle-offline')?.addEventListener('click', handleToggleOffline);
+  document.querySelector('#btn-quick-reconnect-supabase')?.addEventListener('click', handleReconnectSupabase);
+  document.querySelector('#btn-tab-reconnect-supabase')?.addEventListener('click', handleReconnectSupabase);
+
   document.querySelector('#close-supabase-config-dialog-btn')?.addEventListener('click', () => configDialog?.close());
   document.querySelector('#modal-close-supabase-btn')?.addEventListener('click', () => configDialog?.close());
   document.querySelector('#close-sql-schema-dialog-btn')?.addEventListener('click', () => schemaDialog?.close());
@@ -6515,14 +6916,18 @@ async function loadSentNotifications() {
   // 1. Try Supabase first
   if (isSupabaseConfigured()) {
     try {
-      const { data: dbNotifs, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30);
+      const res = await withTimeout(
+        supabase
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(30),
+        2500,
+        null
+      );
 
-      if (!error && dbNotifs && dbNotifs.length > 0) {
-        list = dbNotifs;
+      if (res && !res.error && res.data && res.data.length > 0) {
+        list = res.data;
       }
     } catch (err) {
       console.warn('Lỗi đọc notifications từ Supabase:', err);
@@ -6942,10 +7347,16 @@ async function loadArtistPhotoRequests() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data: dbRequests, error } = await supabase
-        .from('artist_photo_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const res = await withTimeout(
+        supabase
+          .from('artist_photo_requests')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        2500,
+        null
+      );
+      const dbRequests = res?.data;
+      const error = res?.error;
       if (!error && Array.isArray(dbRequests) && dbRequests.length > 0) {
         requests = dbRequests;
         try { localStorage.setItem('uniflows-artist-photo-requests', JSON.stringify(requests)); } catch {}
@@ -7445,13 +7856,30 @@ function initQuickReleaseAdmin() {
         // Prepend to artist products
         targetArtist.products.unshift(releaseObj);
 
-        // Save data to localStorage
-        saveData(data);
+        // Prepend to releases queue
+        if (!Array.isArray(releases)) releases = [];
+        releases.unshift({
+          id: newReleaseId,
+          artist_id: artistId,
+          title,
+          type,
+          slug: cleanSlug,
+          submission_status: 'Đã phát hành',
+          artwork_url: finalArtworkUrl,
+          audio_url: finalAudioUrl,
+          links: releaseObj.links,
+          metadata: releaseObj.metadata,
+          created_at: new Date().toISOString(),
+          artists: { name: targetArtist.name }
+        });
 
-        // Sync to Supabase releases table
+        // Save data to localStorage & Supabase
+        await saveData(data);
+
+        // Sync to Supabase releases table with timeout
         if (isSupabaseConfigured()) {
           try {
-            await supabase.from('releases').upsert({
+            await withTimeout(supabase.from('releases').upsert({
               id: newReleaseId,
               artist_id: artistId,
               title,
@@ -7463,13 +7891,20 @@ function initQuickReleaseAdmin() {
               links: releaseObj.links,
               metadata: releaseObj.metadata,
               created_at: new Date().toISOString()
-            });
+            }), 3000, null);
           } catch (dbErr) {
             console.warn('Lỗi lưu release lên Supabase:', dbErr);
           }
         }
 
         modal.close();
+
+        // Focus on target artist and switch to Tab 03 so admin can edit SmartLink & metrics
+        selectedArtistId = artistId;
+        renderArtistSelector();
+        renderSelectedArtistEditor();
+        loadReleasesQueue();
+        switchAdminTab('admin-tab-artists');
 
         const smartLinkUrl = `${location.origin}/listen?release=${encodeURIComponent(cleanSlug)}`;
         const artistPageUrl = `${location.origin}/artist-detail?id=${encodeURIComponent(artistId)}`;
@@ -7478,15 +7913,13 @@ function initQuickReleaseAdmin() {
           `• Tác phẩm: "${title}" (${type})\n` +
           `• Nghệ sĩ: ${targetArtist.name}\n` +
           `• Đoạn preview: ${formatTimeMinSec(startSec)} ➔ ${formatTimeMinSec(startSec + activeSnippetDuration)} (${activeSnippetDuration}s)\n\n` +
-          `Đã đưa lên Website và tạo SmartLink thành công!\n` +
+          `Đã đưa lên Website & tạo SmartLink thành công!\n` +
+          `Tác phẩm đã xuất hiện ngay bên dưới trong mục của nghệ sĩ "${targetArtist.name}" để bạn chỉnh sửa SmartLink và cập nhật số liệu.\n\n` +
           `SmartLink: ${smartLinkUrl}\n` +
           `Trang nghệ sĩ: ${artistPageUrl}`);
 
-        showNotice(`✓ Đã phát hành nhanh "${title}" lên Web & tạo SmartLink thành công!`);
+        showNotice(`✓ Đã phát hành nhanh "${title}" lên Web! Đã hiển thị trong mục của "${targetArtist.name}" để chỉnh sửa SmartLink & số liệu.`);
         await logAuditEvent('Phát hành nhanh', `Đã phát hành "${title}" cho nghệ sĩ ${targetArtist.name} (Slug: ${cleanSlug})`);
-
-        // Refresh releases reviewer
-        loadReleasesQueue();
       } catch (err) {
         alert(`Lỗi phát hành nhanh: ${err.message}`);
       } finally {
@@ -7653,11 +8086,17 @@ async function getAdminNotifications() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from('admin_notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
+      const res = await withTimeout(
+        supabase
+          .from('admin_notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100),
+        2500,
+        null
+      );
+      const data = res?.data;
+      const error = res?.error;
       if (!error && Array.isArray(data) && data.length > 0) {
         const sbList = data.map(row => ({
           id: row.id,
@@ -7854,10 +8293,16 @@ async function getSpecialRequests() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from('special_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const res = await withTimeout(
+        supabase
+          .from('special_requests')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        2500,
+        null
+      );
+      const data = res?.data;
+      const error = res?.error;
       if (!error && Array.isArray(data) && data.length > 0) {
         const sbList = data.map(row => ({
           id: row.id,
@@ -8693,10 +9138,16 @@ async function getAppointments() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .order('date', { ascending: true });
+      const res = await withTimeout(
+        supabase
+          .from('appointments')
+          .select('*')
+          .order('date', { ascending: true }),
+        2500,
+        null
+      );
+      const data = res?.data;
+      const error = res?.error;
       if (!error && Array.isArray(data) && data.length > 0) {
         const sbList = data.map(r => ({
           id: r.id,
@@ -9206,21 +9657,28 @@ function initAppointmentsAdmin() {
 
     if (isSupabaseConfigured() && typeof supabase !== 'undefined' && supabase) {
       try {
-        const { error: apptInsertErr } = await supabase.from('appointments').insert([{
-          id: newSlot.id,
-          date: newSlot.date,
-          time_slot: newSlot.timeSlot,
-          duration_minutes: newSlot.durationMinutes,
-          host: newSlot.host,
-          topic_category: newSlot.topicCategory,
-          status: 'open',
-          slot_notes: newSlot.slotNotes,
-          created_at: newSlot.createdAt
-        }]);
-        if (apptInsertErr) {
-          console.error('Lỗi ghi Supabase appointment:', apptInsertErr);
-          showNotice(`⚠️ Đã lưu local nhưng Supabase lỗi: ${apptInsertErr.message}`, true);
+        const res = await withTimeout(
+          supabase.from('appointments').insert([{
+            id: newSlot.id,
+            date: newSlot.date,
+            time_slot: newSlot.timeSlot,
+            duration_minutes: newSlot.durationMinutes,
+            host: newSlot.host,
+            topic_category: newSlot.topicCategory,
+            status: 'open',
+            slot_notes: newSlot.slotNotes,
+            created_at: newSlot.createdAt
+          }]),
+          3000,
+          null
+        );
+        if (res?.error) {
+          console.error('Lỗi ghi Supabase appointment:', res.error);
+          showNotice(`⚠️ Đã lưu local nhưng Supabase lỗi: ${res.error.message}`, true);
         }
+      } catch (apptErr) {
+        console.warn('Lỗi kết nối Supabase khi tạo appointment:', apptErr);
+      }
     }
 
     showNotice(`✓ Đã thêm khung giờ trống ngày ${dateVal} (${timeVal}) thành công!`);

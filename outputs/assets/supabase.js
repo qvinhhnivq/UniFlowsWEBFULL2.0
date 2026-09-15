@@ -22,10 +22,44 @@ export const getSupabaseAnonKey = () => {
   return window.__SUPABASE_ANON_KEY__ || DEFAULT_SUPABASE_ANON_KEY;
 };
 
-export const SUPABASE_URL = getSupabaseUrl();
-export const SUPABASE_ANON_KEY = getSupabaseAnonKey();
+export const isOfflineModeActive = () => {
+  try {
+    return localStorage.getItem('uniflows-offline-mode') === 'true';
+  } catch {
+    return false;
+  }
+};
+
+export const setOfflineMode = (active) => {
+  try {
+    if (active) {
+      localStorage.setItem('uniflows-offline-mode', 'true');
+    } else {
+      localStorage.removeItem('uniflows-offline-mode');
+    }
+  } catch {}
+};
+
+export const withTimeout = (promise, ms = 2500, fallbackVal = null) => {
+  let timer;
+  const timeoutPromise = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(fallbackVal), ms);
+  });
+  return Promise.race([
+    Promise.resolve(promise).then((res) => {
+      clearTimeout(timer);
+      return res;
+    }).catch((err) => {
+      clearTimeout(timer);
+      console.warn(`Supabase operation error (resilient fallback):`, err?.message || err);
+      return fallbackVal;
+    }),
+    timeoutPromise
+  ]);
+};
 
 export const isSupabaseConfigured = () => {
+  if (isOfflineModeActive()) return false;
   const url = getSupabaseUrl();
   const key = getSupabaseAnonKey();
   return Boolean(
@@ -56,7 +90,7 @@ export function resetSupabaseConfig() {
   localStorage.removeItem('uniflows-supabase-key');
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
