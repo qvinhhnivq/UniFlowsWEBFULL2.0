@@ -145,7 +145,7 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
     }
   }
 
-  // 2. Gửi qua Resend API
+  // 2. Gửi qua Resend API (Gửi qua Serverless /api/send-email để vượt lỗi CORS trình duyệt)
   if (cfg.provider === 'resend') {
     if (!cfg.apiKey || !cfg.apiKey.trim()) {
       return { 
@@ -155,15 +155,16 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
     }
 
     try {
-      const res = await fetch('https://api.resend.com/emails', {
+      const res = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${cfg.apiKey.trim()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          provider: 'resend',
+          apiKey: cfg.apiKey.trim(),
           from: sender,
-          to: [to.trim()],
+          to: to.trim(),
           subject,
           html,
           text: plainText
@@ -172,19 +173,12 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
 
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        return { success: true, messageId: json.id, provider: 'resend' };
+        return { success: true, messageId: json.messageId || json.id, provider: 'resend' };
       } else {
-        return { success: false, error: json.message || `Lỗi Resend HTTP ${res.status}`, details: json };
+        return { success: false, error: json.error || `Lỗi Resend HTTP ${res.status}`, details: json };
       }
     } catch (err) {
-      // Resend blocks client-side browser fetch with CORS
-      if (err.name === 'TypeError' || err.message.includes('fetch') || err.message.includes('NetworkError')) {
-        return { 
-          success: false, 
-          error: 'Lỗi CORS trình duyệt: Resend API chặn yêu cầu gửi trực tiếp từ Client Browser. Bạn vui lòng chuyển sang nhà cung cấp Brevo (khuyên dùng, miễn phí 300 mail/ngày và chạy trực tiếp từ web không bị CORS) trong Tab 06.' 
-        };
-      }
-      return { success: false, error: err.message };
+      return { success: false, error: `Lỗi kết nối tới endpoint /api/send-email: ${err.message}` };
     }
   }
 
@@ -267,10 +261,8 @@ export function buildHtmlEmailLayout({ kicker, preheader, headerTitle, badgeText
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>${headerTitle || 'UniFLOWs Label'}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;1,500&display=swap');
     body, table, td, p, a, div, span {
       font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
