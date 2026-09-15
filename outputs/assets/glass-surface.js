@@ -278,6 +278,27 @@ export function initPortalGlassSurfaces() {
       blueOffset: 16
     });
   });
+
+  // Enhance data tables & release items
+  document.querySelectorAll('.data-table, .release-row, .track-row, .catalog-item, .payout-history-table').forEach(item => {
+    if (!item.classList.contains('glass-surface')) {
+      item.classList.add('glass-surface');
+    }
+  });
+}
+
+export function refreshGlassSurfaces() {
+  initPortalGlassSurfaces();
+}
+
+// Auto-enhance when hash or tabs change
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => {
+    setTimeout(initPortalGlassSurfaces, 60);
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    initPortalGlassSurfaces();
+  });
 }
 
 // Auto init if in browser
@@ -285,4 +306,5 @@ if (typeof window !== 'undefined') {
   window.createGlassSurface = createGlassSurface;
   window.enhanceWithGlassSurface = enhanceWithGlassSurface;
   window.initPortalGlassSurfaces = initPortalGlassSurfaces;
+  window.refreshGlassSurfaces = refreshGlassSurfaces;
 }

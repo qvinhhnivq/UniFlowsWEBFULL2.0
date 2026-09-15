@@ -1,44 +1,44 @@
 /* ==============================================================================
    ULTRA-MAXIMIZED LIQUID GLASS & CRYSTAL GLASSMORPHISM SYSTEM
-   High-Contrast Readability + Slide-Over Notification Hub + Ripple Engine
+   Apple VisionOS & React Bits GlassSurface Liquid Refraction Architecture
    Designed for UniPORTAL & UniFLOWs
    ============================================================================== */
 
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.84);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.68);
-  --glass-bg-elevated: rgba(255, 255, 255, 0.96);
-  --glass-border: rgba(255, 255, 255, 0.95);
-  --glass-border-subtle: rgba(226, 232, 240, 0.9);
-  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.4) 40%, rgba(168, 85, 247, 0.45) 70%, rgba(216, 255, 72, 0.5) 100%);
-  --glass-shadow: 0 20px 50px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04), inset 0 1px 2px rgba(255, 255, 255, 1);
-  --glass-shadow-hover: 0 28px 65px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06), inset 0 1px 3px rgba(255, 255, 255, 1);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(168, 85, 247, 0.25) 100%);
-  --glass-blur: 28px;
+  --glass-bg: rgba(255, 255, 255, 0.42);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.28);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.78);
+  --glass-border-subtle: rgba(255, 255, 255, 0.48);
+  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 40%, rgba(168, 85, 247, 0.4) 70%, rgba(56, 189, 248, 0.45) 100%);
+  --glass-shadow: 0 20px 50px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(15, 23, 42, 0.02), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.25);
+  --glass-shadow-hover: 0 30px 65px rgba(15, 23, 42, 0.09), 0 4px 12px rgba(15, 23, 42, 0.04), inset 0 1.5px 2.5px 0 rgba(255, 255, 255, 1), inset 0 -1px 1.5px 0 rgba(255, 255, 255, 0.35);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.25) 45%, rgba(168, 85, 247, 0.25) 75%, rgba(56, 189, 248, 0.25) 100%);
+  --glass-blur: 24px;
   
-  --portal-bg: #f1f5f9;
-  --portal-card-bg: rgba(255, 255, 255, 0.88);
-  --portal-card-border: rgba(255, 255, 255, 0.95);
-  --portal-text-main: #020617;
+  --portal-bg: transparent;
+  --portal-card-bg: rgba(255, 255, 255, 0.42);
+  --portal-card-border: rgba(255, 255, 255, 0.78);
+  --portal-text-main: #090d16;
   --portal-text-muted: #1e293b;
   --portal-text-dim: #475569;
 }
 
 [data-theme="dark"],
 .portal-body.dark-mode {
-  --glass-bg: rgba(13, 14, 20, 0.72);
-  --glass-bg-subtle: rgba(18, 19, 28, 0.55);
-  --glass-bg-elevated: rgba(24, 25, 38, 0.92);
+  --glass-bg: rgba(13, 15, 24, 0.52);
+  --glass-bg-subtle: rgba(18, 20, 32, 0.38);
+  --glass-bg-elevated: rgba(24, 26, 42, 0.74);
   --glass-border: rgba(255, 255, 255, 0.16);
-  --glass-border-subtle: rgba(255, 255, 255, 0.09);
-  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.06) 40%, rgba(168, 85, 247, 0.6) 75%, rgba(216, 255, 72, 0.4) 100%);
-  --glass-shadow: 0 28px 70px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-  --glass-shadow-hover: 0 38px 90px rgba(0, 0, 0, 0.8), 0 0 2px rgba(255, 255, 255, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.25);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(168, 85, 247, 0.3) 100%);
-  --glass-blur: 36px;
+  --glass-border-subtle: rgba(255, 255, 255, 0.08);
+  --glass-border-iridescent: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.06) 40%, rgba(168, 85, 247, 0.6) 75%, rgba(56, 189, 248, 0.4) 100%);
+  --glass-shadow: 0 28px 70px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+  --glass-shadow-hover: 0 38px 90px rgba(0, 0, 0, 0.85), 0 0 2px rgba(255, 255, 255, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(168, 85, 247, 0.4) 75%, rgba(56, 189, 248, 0.3) 100%);
+  --glass-blur: 32px;
   
-  --portal-bg: #07080c;
-  --portal-card-bg: rgba(13, 14, 20, 0.72);
+  --portal-bg: #06070a;
+  --portal-card-bg: rgba(13, 15, 24, 0.52);
   --portal-card-border: rgba(255, 255, 255, 0.16);
   --portal-text-main: #f8fafc;
   --portal-text-muted: #cbd5e1;
@@ -53,9 +53,31 @@
   inset: 0 !important;
   pointer-events: none !important;
   border-radius: inherit !important;
-  z-index: 1 !important;
+  z-index: 2 !important;
   overflow: hidden !important;
-  opacity: 0.6;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    550px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.32),
+    transparent 65%
+  );
+}
+
+.glass-surface:hover .glass-surface-glare,
+.portal-profile-bar:hover .glass-surface-glare,
+.portal-card-metric:hover .glass-surface-glare,
+.card:hover .glass-surface-glare,
+dialog:hover .glass-surface-glare {
+  opacity: 1;
+}
+
+[data-theme="dark"] .glass-surface-glare {
+  background: radial-gradient(
+    550px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.15),
+    transparent 65%
+  );
 }
 
 .glass-surface-filter-layer {
@@ -115,7 +137,7 @@
   font-weight: 900;
 }
 
-/* Multi-orb Aurora Glowing Mesh */
+/* Multi-orb Aurora Glowing Mesh (Dark mode atmosphere) */
 .portal-body::before,
 .portal-body::after {
   content: '';
@@ -124,7 +146,7 @@
   filter: blur(120px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.65;
+  opacity: 0.35;
   transition: all 0.6s ease;
   animation: floatOrb 20s ease-in-out infinite alternate;
 }
@@ -140,7 +162,7 @@
   left: -10%;
   width: 60vw;
   height: 60vw;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.22) 0%, rgba(99, 102, 241, 0.12) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.16) 0%, rgba(99, 102, 241, 0.08) 45%, transparent 70%);
 }
 
 .portal-body::after {
@@ -148,7 +170,7 @@
   right: -10%;
   width: 65vw;
   height: 65vw;
-  background: radial-gradient(circle, rgba(216, 255, 72, 0.18) 0%, rgba(56, 189, 248, 0.12) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(216, 255, 72, 0.12) 0%, rgba(56, 189, 248, 0.08) 50%, transparent 70%);
   animation-delay: -10s;
 }
 
@@ -165,7 +187,7 @@
 }
 
 /* ==============================================================================
-   2. MAXIMIZED CRYSTAL GLASS CONTAINERS & CARDS
+   2. MAXIMIZED LIQUID GLASS CONTAINERS & CARDS
    ============================================================================== */
 .glass-surface,
 .portal-profile-bar,
@@ -183,8 +205,8 @@ dialog,
 .portal-mobile-bottom-nav {
   position: relative;
   background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(105%) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(105%) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
   border: 1px solid var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
   border-radius: 20px;
