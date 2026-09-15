@@ -42,41 +42,9 @@ export function getEmailConfig() {
   return { ...DEFAULT_EMAIL_CONFIG };
 }
 
-export async function syncEmailConfigFromSupabase() {
-  try {
-    const { supabase, isSupabaseConfigured } = await import('./supabase.js');
-    if (isSupabaseConfigured()) {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('data')
-        .eq('id', 'email_config')
-        .maybeSingle();
-      if (!error && data?.data) {
-        const remoteCfg = data.data;
-        const localCfg = getEmailConfig();
-        const merged = { ...localCfg, ...remoteCfg };
-        saveEmailConfig(merged);
-        return merged;
-      }
-    }
-  } catch (err) {
-    console.debug('Không thể đồng bộ email config từ Supabase:', err);
-  }
-  return getEmailConfig();
-}
-
 export function saveEmailConfig(cfg) {
   try {
     localStorage.setItem('uniflows-email-config', JSON.stringify(cfg));
-    import('./supabase.js').then(({ supabase, isSupabaseConfigured }) => {
-      if (isSupabaseConfigured()) {
-        supabase.from('site_settings').upsert({
-          id: 'email_config',
-          data: cfg,
-          updated_at: new Date().toISOString()
-        }).catch(() => {});
-      }
-    }).catch(() => {});
   } catch (e) {
     console.warn('Lỗi lưu cấu hình email:', e);
   }
@@ -131,21 +99,13 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
     : 'notifications@uniflowslabel.com';
   const sender = `${senderName} <${senderEmail}>`;
 
-  const makeFallback = (errMsg, details = null) => ({
-    success: false,
-    error: errMsg,
-    requiresManualDispatch: true,
-    mailtoUrl: `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainText)}`,
-    to,
-    subject,
-    text: plainText,
-    details
-  });
-
   // 1. Gửi qua Brevo (Sendinblue) API v3 (Khuyên dùng - hoạt động trực tiếp trên Browser không bị CORS)
   if (cfg.provider === 'brevo') {
     if (!cfg.apiKey || !cfg.apiKey.trim()) {
-      return makeFallback('Chưa có API Key Brevo. Vui lòng vào Tab 06 / Cấu hình Email để dán API Key (bắt đầu bằng xkeysib-...). Bạn có thể mở Email Client gửi ngay.');
+      return { 
+        success: false, 
+        error: 'Chưa có API Key Brevo. Vui lòng vào Tab 06 / Cấu hình Email để dán API Key (bắt đầu bằng xkeysib-...).' 
+      };
     }
 
     try {
@@ -178,17 +138,20 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
         } else if (errMsg.includes('Key not found') || res.status === 401) {
           errMsg = 'API Key Brevo không hợp lệ hoặc đã bị xoá trên Brevo.';
         }
-        return makeFallback(errMsg, json);
+        return { success: false, error: errMsg, details: json };
       }
     } catch (err) {
-      return makeFallback(`Lỗi kết nối mạng khi gửi Brevo: ${err.message}`);
+      return { success: false, error: `Lỗi kết nối mạng khi gửi Brevo: ${err.message}` };
     }
   }
 
   // 2. Gửi qua Resend API
   if (cfg.provider === 'resend') {
     if (!cfg.apiKey || !cfg.apiKey.trim()) {
-      return makeFallback('Chưa có Resend API Key. Vui lòng vào Tab 06 / Cấu hình Email để nhập API Key từ resend.com (bắt đầu bằng re_...).');
+      return { 
+        success: false, 
+        error: 'Chưa có Resend API Key. Vui lòng vào Tab 06 / Cấu hình Email để nhập API Key từ resend.com (bắt đầu bằng re_...).' 
+      };
     }
 
     try {
@@ -211,14 +174,17 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
       if (res.ok) {
         return { success: true, messageId: json.id, provider: 'resend' };
       } else {
-        return makeFallback(json.message || `Lỗi Resend HTTP ${res.status}`, json);
+        return { success: false, error: json.message || `Lỗi Resend HTTP ${res.status}`, details: json };
       }
     } catch (err) {
       // Resend blocks client-side browser fetch with CORS
       if (err.name === 'TypeError' || err.message.includes('fetch') || err.message.includes('NetworkError')) {
-        return makeFallback('Lỗi CORS trình duyệt: Resend API chặn yêu cầu gửi trực tiếp từ Client Browser. Bạn vui lòng chuyển sang nhà cung cấp Brevo (khuyên dùng, miễn phí 300 mail/ngày và chạy trực tiếp từ web không bị CORS) trong Tab 06.');
+        return { 
+          success: false, 
+          error: 'Lỗi CORS trình duyệt: Resend API chặn yêu cầu gửi trực tiếp từ Client Browser. Bạn vui lòng chuyển sang nhà cung cấp Brevo (khuyên dùng, miễn phí 300 mail/ngày và chạy trực tiếp từ web không bị CORS) trong Tab 06.' 
+        };
       }
-      return makeFallback(err.message);
+      return { success: false, error: err.message };
     }
   }
 
@@ -248,16 +214,16 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
       if (res.ok) {
         return { success: true, provider: 'supabase_edge', details: json };
       } else {
-        return makeFallback(json.error || `Lỗi Edge Function HTTP ${res.status}`);
+        return { success: false, error: json.error || `Lỗi Edge Function HTTP ${res.status}` };
       }
     } catch (err) {
-      return makeFallback(err.message);
+      return { success: false, error: err.message };
     }
   }
 
   // 4. Gửi qua Custom Webhook (Cloudflare Worker, n8n, Zapier)
   if (cfg.provider === 'custom_webhook') {
-    if (!cfg.webhookUrl) return makeFallback('Chưa cấu hình Webhook URL.');
+    if (!cfg.webhookUrl) return { success: false, error: 'Chưa cấu hình Webhook URL.' };
 
     try {
       const res = await fetch(cfg.webhookUrl, {
@@ -269,14 +235,14 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
       if (res.ok) {
         return { success: true, provider: 'webhook' };
       } else {
-        return makeFallback(`Webhook trả về HTTP ${res.status}`);
+        return { success: false, error: `Webhook trả về HTTP ${res.status}` };
       }
     } catch (err) {
-      return makeFallback(err.message);
+      return { success: false, error: err.message };
     }
   }
 
-  return makeFallback('Provider không hợp lệ hoặc chưa được hỗ trợ.');
+  return { success: false, error: 'Provider không hợp lệ hoặc chưa được hỗ trợ.' };
 }
 
 // ----------------------------------------------------------------------------
@@ -1465,40 +1431,15 @@ export async function sendAppointmentConfirmationEmail({ to, bookerName, artistN
     actionBtnUrl: meetingLink || undefined,
     footerNote: `Email xác nhận lịch hẹn A&R UniFLOWs Label &bull; Mã: ${dossierCode}`,
     recipientType,
-  const plainText = `[XÁC NHẬN LỊCH HẸN A&R MEETING — UNIFLOWS LABEL]
-Xin chào ${bookerName || artistName || 'Bạn'},
-
-Đội ngũ A&R & Phát triển Nghệ sĩ của UniFLOWs Label đã chính thức xác nhận lịch hẹn của bạn:
-- Mã lịch hẹn: ${dossierCode}
-- Ngày gặp: ${date}
-- Khung giờ: ${timeSlot}
-- Chủ đề trao đổi: ${topic || 'A&R Demo Listening & Trao đổi Hợp đồng'}
-- Hình thức: ${methodLabel}
-${meetingLink ? `- Đường link tham gia / Địa điểm: ${meetingLink}\n` : ''}${notes ? `- Lời nhắn từ Ban A&R: ${notes}\n` : ''}
-Vui lòng có mặt hoặc truy cập đường link trước giờ hẹn 5 phút để cuộc trao đổi diễn ra thuận lợi nhất.
-Nếu cần dời lịch hoặc gửi file demo, vui lòng liên hệ trực tiếp email management@uniflowslabel.com kèm Mã lịch hẹn [${dossierCode}].
-
-Trân trọng,
-UniFLOWs Record Label
-https://uniflowslabel.com`;
-
-  const subject = `🎉 [UniFLOWs] [Mã: ${dossierCode}] Xác nhận lịch hẹn A&R Meeting: ${date} lúc ${timeSlot}`;
-
-  const res = await sendEmail({
-    to,
-    subject,
-    html,
-    text: plainText,
-    bypassEnabledCheck: true
+    demoRefCode: dossierCode
   });
 
-  return {
-    ...res,
-    dossierCode,
-    subject,
-    plainText,
-    mailtoUrl: res.mailtoUrl || `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainText)}`
-  };
+  return await sendEmail({
+    to,
+    subject: `🎉 [UniFLOWs] [Mã: ${dossierCode}] Xác nhận lịch hẹn A&R Meeting: ${date} lúc ${timeSlot}`,
+    html,
+    bypassEnabledCheck: true
+  });
 }
 
 

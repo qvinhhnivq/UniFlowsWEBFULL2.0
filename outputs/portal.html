@@ -10,7 +10,6 @@
   <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="/assets/app.css">
   <link rel="stylesheet" href="/assets/card-nav.css">
-  <link rel="stylesheet" href="/assets/artist-portal.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
 </head>
 <body class="portal-body">
@@ -130,846 +129,117 @@
 
       <p id="portal-notice" class="notice" style="display: none;"></p>
 
-      <section id="tab-overview" class="tab-pane active" style="padding: 0;">
-        <div class="portal-window-canvas">
-          <div class="portal-window-shell">
-            
-            <!-- macOS Window Titlebar -->
-            <div class="portal-titlebar">
-              <div class="portal-titlebar-left">
-                <div class="portal-traffic-dots">
-                  <span class="portal-traffic-dot red"></span>
-                  <span class="portal-traffic-dot yellow"></span>
-                  <span class="portal-traffic-dot green"></span>
-                </div>
-                <div class="portal-nav-arrows">
-                  <span>&lt;</span>
-                  <span>&gt;</span>
-                </div>
-                <div class="portal-search-box">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                  <input type="text" id="ap-search-input" placeholder="Search...">
-                </div>
-              </div>
+      <!-- ========================================== -->
+      <!-- TAB 1: TỔNG QUAN (OVERVIEW) -->
+      <!-- ========================================== -->
+      <section id="tab-overview" class="tab-pane active">
+        <!-- Studio Certified Distribution Status Bar -->
+        <div style="background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:14px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px;box-shadow:var(--portal-shadow);">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span style="font:11px 'DM Mono',monospace;color:#059669;background:#ecfdf5;border:1px solid #a7f3d0;padding:2px 8px;border-radius:10px;font-weight:700;">● DSP CONNECTED</span>
+            <span>Phân phối tới <b>150+ Nền tảng Âm nhạc Toàn cầu</b></span>
+            <span style="opacity:0.3;">|</span>
+            <span style="color:var(--portal-text-muted);">Chất lượng Master: <b>24-bit Lossless Studio</b></span>
+          </div>
+          <div style="font:11px 'DM Mono',monospace;color:var(--portal-text-dim);">
+            EST. 2024 · UniFLOWs Music Group
+          </div>
+        </div>
 
-              <div class="portal-titlebar-right">
-                <div class="portal-user-pill" id="ap-profile-dropdown-btn">
-                  <img class="portal-user-avatar" id="portal-artist-avatar-top" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar">
-                  <span class="portal-user-name" id="ap-top-artist-name">Vitaliy Dorozhko</span>
-                  <span class="portal-user-chevron">▼</span>
-                </div>
-                <button type="button" class="portal-icon-btn" id="ap-bell-btn" title="Thông báo">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                  <span class="dot-badge"></span>
-                </button>
-                <button type="button" class="portal-btn-signout" id="ap-signout-btn">Sign Out</button>
+        <!-- Role Information Banner (For Partner & Collab) -->
+        <div id="portal-role-banner" style="display:none; margin-bottom: 20px; padding: 14px 18px; border-radius: 10px; font-size: 13px; line-height: 1.5; border: 1px solid var(--portal-card-border);"></div>
+
+        <!-- 4-Card Modern Metrics Grid -->
+        <div class="portal-grid-stats">
+          <div class="portal-card-metric" style="border-top:3px solid #10b981;">
+            <div class="metric-label"><span>🎧 Streams tháng này</span><span style="color:#10b981;font-weight:bold;">Toàn cầu</span></div>
+            <div class="metric-val" id="artist-monthly-streams">0</div>
+            <div class="metric-foot" id="streams-status">Dữ liệu đối soát DSP toàn cầu</div>
+          </div>
+
+          <div class="portal-card-metric" style="border-top:3px solid #3b82f6;">
+            <div class="metric-label"><span>💵 Doanh thu ước tính</span><span style="color:#3b82f6;font-weight:bold;">VNĐ</span></div>
+            <div class="metric-val" id="artist-estimated-revenue" style="color:#2563eb;">₫ 0</div>
+            <div class="metric-foot" id="overview-payout-cycle">Kỳ đối soát: Hàng tháng</div>
+          </div>
+
+          <div class="portal-card-metric" style="border-top:3px solid #f59e0b;">
+            <div class="metric-label"><span>💿 Bản phát hành đang duyệt</span><span style="color:#f59e0b;font-weight:bold;">A&R Queue</span></div>
+            <div class="metric-val" id="pending-count">0</div>
+            <div class="metric-foot">Kiểm duyệt Audio Master & Artwork</div>
+          </div>
+
+          <div class="portal-card-metric" style="border-top:3px solid #8b5cf6;">
+            <div class="metric-label"><span>💳 Số dư khả dụng</span><span style="color:#8b5cf6;font-weight:bold;">Wallet</span></div>
+            <div class="metric-val" id="overview-payable-balance" style="color:#7c3aed;">₫ 0</div>
+            <div class="metric-foot">Sẵn sàng gửi yêu cầu rút tiền</div>
+          </div>
+        </div>
+
+        <!-- Label Official Announcements / Bảng tin Hãng Đĩa UniFLOWs -->
+        <div id="portal-announcements-section" style="margin-bottom: 24px;">
+          <div style="background: var(--portal-card-bg); border: 1px solid var(--portal-card-border); border-radius: 14px; padding: 20px 24px; box-shadow: var(--portal-shadow);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--portal-card-border); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">📢</span>
+                <h3 style="font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: -0.02em; font-weight: bold;">Thông báo từ Hãng Đĩa UniFLOWs</h3>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" id="toggle-announcements-btn" class="button alt" style="padding: 4px 10px; font-size: 11px; cursor: pointer;">Thu gọn ▲</button>
+                <button type="button" id="dismiss-announcements-btn" class="button alt" style="padding: 4px 8px; font-size: 11px; cursor: pointer;" title="Tạm ẩn bảng thông báo">✕</button>
               </div>
             </div>
+            <div id="portal-announcements-list" style="display: grid; gap: 12px;">
+              <p class="empty" style="font-size: 13px; color: var(--portal-text-muted);">Đang tải thông báo từ Label...</p>
+            </div>
+          </div>
+        </div>
 
-            <!-- Window Content Body -->
-            <div class="portal-window-body">
-              
-              <!-- ======================================================== -->
-              <!-- VIEW A: DASHBOARD OVERVIEW & ANALYTICS (MOCKUP 1) -->
-              <!-- ======================================================== -->
-              <div id="ap-view-dashboard">
-                <div class="portal-dashboard-grid">
-                  
-                  <!-- Left Main Column (Releases, DSP/KPI, Royalties) -->
-                  <div class="portal-main-col">
-                    
-                    <!-- Releases Overview Section -->
-                    <div style="display:flex; flex-direction:column; gap:12px;">
-                      <div class="portal-section-header">
-                        <h2 class="portal-section-title">Releases Overview</h2>
-                        <button type="button" class="portal-btn-new-release" id="ap-btn-new-release">
-                          <span>New Release Submission</span>
-                        </button>
-                      </div>
+        <!-- Premium DSP Platform Distribution Breakdown -->
+        <div style="background: var(--portal-card-bg); border: 1px solid var(--portal-card-border); border-radius: 14px; padding: 24px; margin-top: 20px; box-shadow: var(--portal-shadow);">
+          <div class="section-head" style="padding: 0 0 15px; border-bottom: 1px solid var(--portal-card-border);">
+            <div>
+              <h2 style="font-size:16px;margin:0;font-weight:bold;">Thị phần Doanh thu theo Nền tảng Streaming</h2>
+              <p style="font-size:12px;color:var(--portal-text-muted);margin:3px 0 0;">Phân bổ dòng tiền từ các DSPs hàng đầu toàn cầu.</p>
+            </div>
+            <span class="kicker">Top DSPs</span>
+          </div>
 
-                      <div class="portal-releases-subhead">
-                        <span>My Releases</span>
-                        <a href="#releases" id="ap-link-more-releases">More &gt;</a>
-                      </div>
-
-                      <div class="portal-releases-table-wrap">
-                        <table class="portal-releases-table" id="ap-releases-table">
-                          <thead>
-                            <tr>
-                              <th>Release Title</th>
-                              <th>Format</th>
-                              <th>UPC/EAN</th>
-                              <th>Artist(s)</th>
-                              <th>Release Date</th>
-                              <th>Status</th>
-                            </tr>
-                          </thead>
-                          <tbody id="ap-releases-table-body">
-                            <!-- Populated dynamically by artist-portal.js -->
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    <!-- DSP Analytics & KPI Analytics Row -->
-                    <div class="portal-dsp-kpi-row">
-                      <!-- Recent Streams Card -->
-                      <div class="portal-spark-card">
-                        <span class="portal-spark-label">Recent Streams</span>
-                        <div class="portal-spark-val-wrap">
-                          <span class="portal-spark-val" id="artist-monthly-streams">135K</span>
-                          <span class="portal-spark-unit">streams</span>
-                        </div>
-                        <svg class="portal-spark-svg" viewBox="0 0 140 40">
-                          <path d="M 0,26 C 25,12 45,35 70,18 C 95,2 115,22 140,14" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-
-                      <!-- Top Platforms Card -->
-                      <div class="portal-spark-card">
-                        <span class="portal-spark-label">Top Platforms</span>
-                        <div class="portal-spark-val-wrap">
-                          <span class="portal-spark-val">389</span>
-                          <span class="portal-spark-unit kpi">▲ KPI</span>
-                        </div>
-                        <svg class="portal-spark-svg" viewBox="0 0 140 40">
-                          <path d="M 0,30 C 25,32 45,15 70,22 C 95,28 115,10 140,18" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-
-                      <!-- KPI Analytics List Card -->
-                      <div class="portal-kpi-card">
-                        <div class="portal-kpi-head">
-                          <span class="portal-kpi-title">KPI Analytics</span>
-                          <a href="#insights" class="portal-kpi-showall">Show all</a>
-                        </div>
-                        <div class="portal-kpi-list">
-                          <div class="portal-kpi-item">
-                            <span style="background:#fc3c44;width:8px;height:8px;border-radius:2px;display:inline-block;"></span>
-                            <span>Apple Music <b>167</b></span>
-                          </div>
-                          <div class="portal-kpi-item">
-                            <span style="background:#1db954;width:8px;height:8px;border-radius:2px;display:inline-block;"></span>
-                            <span>Spotify <b>133</b></span>
-                          </div>
-                          <div class="portal-kpi-item">
-                            <span style="background:#000;border:1px solid #fff;width:8px;height:8px;border-radius:2px;display:inline-block;"></span>
-                            <span>Tidal <b>79</b></span>
-                          </div>
-                          <div class="portal-kpi-item">
-                            <span>🚩 Regional</span>
-                          </div>
-                          <div class="portal-kpi-item">
-                            <span style="color:#fbbf24;">Zing MP3</span>
-                            <span style="font-size:10px;color:#94a3b8;">Notices pending</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Royalties & Statements Section -->
-                    <div class="portal-royalties-section">
-                      <div class="portal-section-header">
-                        <h3 class="portal-section-title" style="font-size: 20px;">Royalties &amp; Statements</h3>
-                        <a href="#earnings" class="portal-kpi-showall" style="font-size: 12px; color: #64748b;">Show all</a>
-                      </div>
-
-                      <div class="portal-royalties-grid">
-                        <!-- Earnings Overview Line / Area Chart -->
-                        <div class="portal-chart-card">
-                          <div class="portal-chart-header">
-                            <span class="portal-chart-title">Earnings Overview</span>
-                            <div class="portal-chart-toggles">
-                              <button type="button" class="portal-chart-toggle-btn" data-period="today">Today</button>
-                              <button type="button" class="portal-chart-toggle-btn" data-period="week">Week</button>
-                              <button type="button" class="portal-chart-toggle-btn active" data-period="monthly">Monthly</button>
-                            </div>
-                          </div>
-                          <div id="ap-area-chart-container">
-                            <!-- Dynamic SVG chart injected by artist-portal.js -->
-                          </div>
-                        </div>
-
-                        <!-- Balances & PDF Statements Downloads -->
-                        <div class="portal-statements-card">
-                          <div class="portal-balances-row">
-                            <div class="portal-balance-block">
-                              <span>Paid Out</span>
-                              <strong id="artist-payable-balance">$262.67</strong>
-                            </div>
-                            <div class="portal-balance-block" style="text-align:right;">
-                              <span>Pending</span>
-                              <strong id="artist-pending-balance" style="color:#cbd5e1;">$129.00</strong>
-                            </div>
-                          </div>
-
-                          <div class="portal-pdf-downloads">
-                            <div class="portal-pdf-item" data-pdf="q3-2026" title="Nhấn để tải PDF Statement">
-                              <div class="portal-pdf-info">
-                                <span class="portal-pdf-tag">PDF</span>
-                                <div>
-                                  <div class="portal-pdf-name">PDF Statement</div>
-                                  <div class="portal-pdf-sub">Download to .pdf (Q3 2026)</div>
-                                </div>
-                              </div>
-                              <span class="portal-pdf-icon">📥</span>
-                            </div>
-
-                            <div class="portal-pdf-item" data-pdf="q2-2026" title="Nhấn để tải PDF Statement">
-                              <div class="portal-pdf-info">
-                                <span class="portal-pdf-tag">PDF</span>
-                                <div>
-                                  <div class="portal-pdf-name">PDF Statement</div>
-                                  <div class="portal-pdf-sub">Download to .pdf (Q2 2026)</div>
-                                </div>
-                              </div>
-                              <span class="portal-pdf-icon">📥</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <!-- Right Side Column: Platform Insights -->
-                  <div class="portal-side-col">
-                    <h3 class="portal-insights-header">Platform Insights</h3>
-                    
-                    <!-- Apple Music Expanded Card -->
-                    <div class="portal-platform-card expanded">
-                      <div class="portal-platform-head">
-                        <div class="portal-platform-meta">
-                          <div class="portal-platform-logo" style="background:#fc3c44;color:#fff;">♫</div>
-                          <div>
-                            <div class="portal-platform-title">Apple Music</div>
-                            <div class="portal-platform-sub">Apple Music</div>
-                          </div>
-                        </div>
-                        <span style="color:#94a3b8;font-size:11px;">▲</span>
-                      </div>
-
-                      <div class="portal-platform-stats">
-                        <div class="portal-stat-streams">
-                          <strong>26,32K</strong>
-                          <span>Streams count</span>
-                        </div>
-                        <div class="portal-stat-growth">
-                          <strong>▲ 25.%</strong>
-                          <span>User acquisition</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Apple Music Mini -->
-                    <div class="portal-platform-mini-card">
-                      <div class="portal-platform-mini-left">
-                        <div class="portal-platform-logo" style="background:#0284c7;color:#fff;">A</div>
-                        <div>
-                          <div class="portal-platform-mini-name">Apple Music</div>
-                          <div class="portal-platform-mini-sub">The Chainsmokers</div>
-                        </div>
-                      </div>
-                      <span class="portal-platform-arrow">&gt;</span>
-                    </div>
-
-                    <!-- Spotify Mini -->
-                    <div class="portal-platform-mini-card">
-                      <div class="portal-platform-mini-left">
-                        <div class="portal-platform-logo" style="background:#1db954;color:#000;">●</div>
-                        <div>
-                          <div class="portal-platform-mini-name">Spotify</div>
-                          <div class="portal-platform-mini-sub">Spotify</div>
-                        </div>
-                      </div>
-                      <span class="portal-platform-arrow">&gt;</span>
-                    </div>
-
-                    <!-- Tidal Mini -->
-                    <div class="portal-platform-mini-card">
-                      <div class="portal-platform-mini-left">
-                        <div class="portal-platform-logo" style="background:#111;color:#fff;border:1px solid #fff;">T</div>
-                        <div>
-                          <div class="portal-platform-mini-name">Tidal</div>
-                          <div class="portal-platform-mini-sub">Tidal</div>
-                        </div>
-                      </div>
-                      <span class="portal-platform-arrow">&gt;</span>
-                    </div>
-
-                    <!-- Zing MP3 Mini -->
-                    <div class="portal-platform-mini-card">
-                      <div class="portal-platform-mini-left">
-                        <div class="portal-platform-logo" style="background:linear-gradient(135deg,#a855f7,#06b6d4);color:#fff;">Z</div>
-                        <div>
-                          <div class="portal-platform-mini-name">Zing MP3</div>
-                          <div class="portal-platform-mini-sub" style="color:#fbbf24;">Pending</div>
-                        </div>
-                      </div>
-                      <span class="portal-platform-arrow">&gt;</span>
-                    </div>
-                  </div>
-
-                </div>
+          <div class="portal-dsp-grid">
+            <div class="portal-dsp-box" style="border-top:3px solid #1db954;">
+              <div class="portal-dsp-head">
+                <strong><span style="color:#1db954;">●</span> Spotify</strong>
+                <span id="dsp-badge-spotify" style="font-size:11px;font-weight:bold;color:#1db954;">0%</span>
               </div>
+              <b id="overview-spotify" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-spotify" class="portal-dsp-bar-fill" style="background:#1db954;width:0%;"></div></div>
+            </div>
 
-              <!-- ======================================================== -->
-              <!-- VIEW B: 4-STEP CREATE NEW RELEASE WIZARD (MOCKUPS 2-5) -->
-              <!-- ======================================================== -->
-              <div id="ap-view-wizard" class="portal-wizard-container" style="display: none;">
-                
-                <!-- Wizard Header Bar -->
-                <div class="portal-wizard-header">
-                  <h2 class="portal-wizard-title" id="ap-wizard-dynamic-title">Create New Release - Track Upload &amp; Metadata</h2>
-                  <div class="portal-wizard-stepper-line">
-                    <span class="portal-step-pill-indicator" id="ap-wizard-step-indicator">1 of 4</span>
-                  </div>
-                </div>
-
-                <!-- STEP 1 VIEW: TRACK UPLOAD & METADATA (MOCKUP 2) -->
-                <div class="portal-wizard-step-view" data-step="1">
-                  <div class="portal-step1-grid">
-                    
-                    <!-- Left Form Grid -->
-                    <div class="portal-form-grid-left">
-                      
-                      <!-- 1. Audio File Upload -->
-                      <div class="portal-form-box">
-                        <div class="portal-form-box-title">
-                          <span>1. Audio File</span>
-                          <span style="font-size:11px;color:#94a3b8;font-family:'DM Mono',monospace;">1 of 4</span>
-                        </div>
-                        <input type="file" id="ap-audio-input" accept=".wav,.flac,.aiff" style="display:none;">
-                        <div class="portal-dropzone" id="ap-audio-dropzone">
-                          <svg class="portal-dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                          <div class="portal-dropzone-text" id="ap-audio-filename">Upload Audio Track</div>
-                          <div class="portal-dropzone-sub">Drag &amp; drop WAV / FLAC / AIFF file (Max 200MB) or <span class="portal-dropzone-browse">browse</span></div>
-                        </div>
-                      </div>
-
-                      <!-- 2. Basic Metadata -->
-                      <div class="portal-form-box">
-                        <div class="portal-form-box-title">2. Basic Metadata</div>
-                        <div class="portal-input-group">
-                          <label for="ap-track-title">Track Title *</label>
-                          <input type="text" id="ap-track-title" class="portal-input" value="Midnight Echoes" placeholder="Ví dụ: Midnight Echoes">
-                        </div>
-
-                        <div class="portal-field-row">
-                          <div class="portal-input-group">
-                            <label for="ap-primary-artist">Primary Artist *</label>
-                            <input type="text" id="ap-primary-artist" class="portal-input" value="Astral Waves" placeholder="Nghệ danh chính">
-                          </div>
-                          <div class="portal-input-group">
-                            <label for="ap-featured-artists">Featured Artist(s)</label>
-                            <input type="text" id="ap-featured-artists" class="portal-input" placeholder="Nghệ sĩ góp giọng (nếu có)">
-                          </div>
-                        </div>
-
-                        <div class="portal-field-row">
-                          <div class="portal-input-group">
-                            <label for="ap-composers">Composer(s) *</label>
-                            <input type="text" id="ap-composers" class="portal-input" value="Astral Waves" placeholder="Nhạc sĩ sáng tác">
-                          </div>
-                          <div class="portal-input-group">
-                            <label for="ap-lyricists">Lyricist(s) *</label>
-                            <input type="text" id="ap-lyricists" class="portal-input" value="Astral Waves" placeholder="Tác giả lời">
-                          </div>
-                        </div>
-
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;">
-                          <label style="font-size:11px;font-weight:600;color:#94a3b8;">Explicit Content (Nội dung nhạy cảm)</label>
-                          <div class="portal-toggle-pills">
-                            <button type="button" class="portal-toggle-pill" id="ap-explicit-yes">Yes</button>
-                            <button type="button" class="portal-toggle-pill active" id="ap-explicit-no">No</button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- 3. Release Details -->
-                      <div class="portal-form-box">
-                        <div class="portal-form-box-title">3. Release Details</div>
-                        <div class="portal-field-row">
-                          <div class="portal-input-group">
-                            <label for="ap-release-date">Release Date *</label>
-                            <input type="date" id="ap-release-date" class="portal-input" value="2026-10-31">
-                          </div>
-                          <div class="portal-input-group">
-                            <label for="ap-release-time">Time of Release</label>
-                            <select id="ap-release-time" class="portal-select">
-                              <option value="00:00 EST">00:00 EST (Standard Global)</option>
-                              <option value="00:00 Local">00:00 Local Territory Time</option>
-                              <option value="12:00 EST">12:00 EST (Noon Drop)</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div class="portal-input-group">
-                          <label for="ap-label-publisher">Label / Publisher</label>
-                          <input type="text" id="ap-label-publisher" class="portal-input" value="UniFLOWs Label" readonly>
-                        </div>
-                      </div>
-
-                      <!-- 4. Genre & Tags -->
-                      <div class="portal-form-box">
-                        <div class="portal-form-box-title">4. Genre &amp; Tags</div>
-                        <div class="portal-input-group">
-                          <label for="ap-genre-select">Genre *</label>
-                          <select id="ap-genre-select" class="portal-select">
-                            <option value="Pop, Hip-Hop, Electronic">Pop, Hip-Hop, Electronic</option>
-                            <option value="Electronic / Ambient" selected>Electronic / Ambient</option>
-                            <option value="Indie Pop / Dream Pop">Indie Pop / Dream Pop</option>
-                            <option value="R&B / Soul">R&B / Soul</option>
-                            <option value="Lo-Fi / Chillhop">Lo-Fi / Chillhop</option>
-                          </select>
-                        </div>
-                        <div class="portal-input-group">
-                          <label>Tags (Gõ tag và ấn Enter hoặc phẩy)</label>
-                          <div class="portal-tags-container" id="ap-tags-container">
-                            <input type="text" class="portal-tag-input" id="ap-tag-input" placeholder="Thêm tag...">
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- 5. Territory & Pricing -->
-                      <div class="portal-form-box">
-                        <div class="portal-form-box-title">5. Territory &amp; Pricing</div>
-                        <div class="portal-input-group">
-                          <label for="ap-territory-select">Release Territories</label>
-                          <select id="ap-territory-select" class="portal-select">
-                            <option value="Worldwide">Worldwide (150+ Territories)</option>
-                            <option value="Vietnam Only">Vietnam Only</option>
-                            <option value="Asia Pacific">Asia Pacific (APAC)</option>
-                          </select>
-                        </div>
-                        <div class="portal-field-row">
-                          <div class="portal-input-group">
-                            <label>Pricing Tier</label>
-                            <select id="ap-pricing-tier-1" class="portal-select">
-                              <option value="Mid-tier">Mid-tier</option>
-                              <option value="Budget">Budget</option>
-                            </select>
-                          </div>
-                          <div class="portal-input-group">
-                            <label>Pricing Tier</label>
-                            <select id="ap-pricing-tier-2" class="portal-select">
-                              <option value="Full-price">Full-price</option>
-                              <option value="Back-catalog">Back-catalog</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-
-                    <!-- Right Column: Artwork & Delivery Status -->
-                    <div style="display:flex; flex-direction:column; gap:20px;">
-                      
-                      <div class="portal-form-box">
-                        <div class="portal-form-box-title">Release Preview &amp; Options</div>
-                        
-                        <!-- Artwork Upload Area (Auto WebP Conversion) -->
-                        <input type="file" id="ap-artwork-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
-                        <div class="portal-dropzone" id="ap-artwork-dropzone" style="padding:20px 14px;">
-                          <div class="portal-artwork-preview-card" style="max-width:200px;margin:0 auto 10px;">
-                            <img id="ap-artwork-preview-img" class="portal-artwork-img" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80" alt="Artwork Preview">
-                          </div>
-                          <div class="portal-dropzone-text">Add Release Artwork</div>
-                          <div class="portal-dropzone-sub">Drag &amp; drop JPG/PNG (Tự chuyển đổi chuẩn WebP 3000x3000px) hoặc <span class="portal-dropzone-browse">browse</span></div>
-                        </div>
-
-                        <!-- Delivery Status Checklist -->
-                        <div style="margin-top:14px;">
-                          <label style="font-size:11px;font-weight:700;color:#94a3b8;display:block;margin-bottom:8px;">Delivery Status</label>
-                          <div class="portal-delivery-checklist">
-                            <div class="portal-delivery-item">
-                              <div class="portal-delivery-brand">
-                                <span style="color:#fc3c44;">♫</span>
-                                <span>Apple Music</span>
-                              </div>
-                              <span class="portal-badge-pending">Pending</span>
-                            </div>
-                            <div class="portal-delivery-item">
-                              <div class="portal-delivery-brand">
-                                <span style="color:#1db954;">●</span>
-                                <span>Spotify</span>
-                              </div>
-                              <span class="portal-badge-pending">Pending</span>
-                            </div>
-                            <div class="portal-delivery-item">
-                              <div class="portal-delivery-brand">
-                                <span style="color:#fff;">T</span>
-                                <span>Tidal</span>
-                              </div>
-                              <span class="portal-badge-pending">Pending</span>
-                            </div>
-                            <div class="portal-delivery-item">
-                              <div class="portal-delivery-brand">
-                                <span style="color:#a855f7;">Z</span>
-                                <span>Zing MP3</span>
-                              </div>
-                              <span class="portal-badge-pending">Pending</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Step 1 Actions -->
-                      <div class="portal-wizard-actions">
-                        <button type="button" class="portal-btn-secondary" id="ap-btn-cancel-wizard">Cancel</button>
-                        <button type="button" class="portal-btn-primary" id="ap-btn-step1-next">
-                          <span>Continue to Distribution Options ➔</span>
-                        </button>
-                      </div>
-
-                    </div>
-
-                  </div>
-                </div>
-
-                <!-- STEP 2 VIEW: DSP SELECTION (MOCKUP 3) -->
-                <div class="portal-wizard-step-view" data-step="2" style="display:none;">
-                  <div style="margin-bottom:20px;">
-                    <h3 style="font-size:18px;font-weight:700;margin:0 0 6px;color:#fff;">DSP Selection</h3>
-                    <p style="font-size:12px;color:#94a3b8;margin:0;">Lựa chọn các dịch vụ nhạc số (DSPs) phân phối bản ghi lossless toàn cầu.</p>
-                  </div>
-
-                  <div class="portal-dsp-grid-selection">
-                    <!-- 1. Spotify -->
-                    <div class="portal-dsp-card-toggle checked" data-dsp="spotify">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#1db954;color:#000;">●</div>
-                        <div>
-                          <div class="portal-dsp-name">Spotify</div>
-                          <div class="portal-dsp-category">Streaming</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 2. Apple Music -->
-                    <div class="portal-dsp-card-toggle checked" data-dsp="apple">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#fc3c44;color:#fff;">♫</div>
-                        <div>
-                          <div class="portal-dsp-name">Apple Music</div>
-                          <div class="portal-dsp-category">Lossless Audio</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 3. TikTok -->
-                    <div class="portal-dsp-card-toggle" data-dsp="tiktok">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#000;color:#fff;border:1px solid #333;">♬</div>
-                        <div>
-                          <div class="portal-dsp-name">TikTok</div>
-                          <div class="portal-dsp-category">Social &amp; Video</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 4. YouTube Music -->
-                    <div class="portal-dsp-card-toggle" data-dsp="ytmusic">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#ff0000;color:#fff;">▶</div>
-                        <div>
-                          <div class="portal-dsp-name">YouTube Music</div>
-                          <div class="portal-dsp-category">Streaming</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 5. YouTube Content ID -->
-                    <div class="portal-dsp-card-toggle checked" data-dsp="ytcontentid">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#c4302b;color:#fff;">©</div>
-                        <div>
-                          <div class="portal-dsp-name">YouTube Content ID</div>
-                          <div class="portal-dsp-category">Fingerprint Match</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 6. Amazon Music -->
-                    <div class="portal-dsp-card-toggle" data-dsp="amazon">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#232f3e;color:#ff9900;">A</div>
-                        <div>
-                          <div class="portal-dsp-name">Amazon Music</div>
-                          <div class="portal-dsp-category">HD Streaming</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 7. Amazon Prime -->
-                    <div class="portal-dsp-card-toggle" data-dsp="prime">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#00a8e1;color:#fff;">P</div>
-                        <div>
-                          <div class="portal-dsp-name">Amazon Prime</div>
-                          <div class="portal-dsp-category">Bundle Services</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 8. Deezer -->
-                    <div class="portal-dsp-card-toggle" data-dsp="deezer">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#a238ff;color:#fff;">D</div>
-                        <div>
-                          <div class="portal-dsp-name">Deezer</div>
-                          <div class="portal-dsp-category">HiFi Streaming</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 9. Tidal -->
-                    <div class="portal-dsp-card-toggle" data-dsp="tidal">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#000;color:#fff;border:1px solid #444;">T</div>
-                        <div>
-                          <div class="portal-dsp-name">Tidal</div>
-                          <div class="portal-dsp-category">Master Quality MQA</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 10. Zing MP3 -->
-                    <div class="portal-dsp-card-toggle checked" data-dsp="zing">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:#fff;">Z</div>
-                        <div>
-                          <div class="portal-dsp-name">Zing MP3</div>
-                          <div class="portal-dsp-category">Vietnam Domestic</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 11. Pandora -->
-                    <div class="portal-dsp-card-toggle" data-dsp="pandora">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#005483;color:#fff;">P</div>
-                        <div>
-                          <div class="portal-dsp-name">Pandora</div>
-                          <div class="portal-dsp-category">Radio Streaming</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-
-                    <!-- 12. Beatport -->
-                    <div class="portal-dsp-card-toggle" data-dsp="beatport">
-                      <div class="portal-dsp-brand-left">
-                        <div class="portal-dsp-logo-box" style="background:#00ffa7;color:#000;">B</div>
-                        <div>
-                          <div class="portal-dsp-name">Beatport</div>
-                          <div class="portal-dsp-category">Electronic DJ Store</div>
-                        </div>
-                      </div>
-                      <div class="portal-switch"><div class="portal-switch-thumb"></div></div>
-                    </div>
-                  </div>
-
-                  <!-- Floating Bottom Dock Navigation -->
-                  <div class="portal-floating-dock" style="margin-top:28px;">
-                    <button type="button" class="portal-btn-secondary" id="ap-btn-step2-prev">Previous</button>
-                    <button type="button" class="portal-btn-primary" id="ap-btn-step2-next">Next ➔</button>
-                  </div>
-                </div>
-
-                <!-- STEP 3 VIEW: SPLITS & ROYALTIES (MOCKUP 4) -->
-                <div class="portal-wizard-step-view" data-step="3" style="display:none;">
-                  <div class="portal-step3-grid">
-                    
-                    <!-- Left Box: Add Collaborators -->
-                    <div class="portal-form-box">
-                      <div class="portal-form-box-title">Add Collaborators</div>
-                      
-                      <div class="portal-input-group">
-                        <label for="ap-collab-name-input">Enter Name or Email</label>
-                        <input type="text" id="ap-collab-name-input" class="portal-input" placeholder="Tên hoặc email người cộng tác">
-                      </div>
-
-                      <div class="portal-input-group">
-                        <label for="ap-collab-role-select">Role</label>
-                        <select id="ap-collab-role-select" class="portal-select">
-                          <option value="Producer">Producer</option>
-                          <option value="Songwriter, Artist">Songwriter, Artist</option>
-                          <option value="Artist">Artist</option>
-                          <option value="Mastering Engineer">Mastering Engineer</option>
-                          <option value="Vocalist">Vocalist</option>
-                        </select>
-                      </div>
-
-                      <div class="portal-input-group">
-                        <label for="ap-collab-split-input">Royalty % Split</label>
-                        <input type="number" id="ap-collab-split-input" class="portal-input" min="1" max="100" placeholder="Ví dụ: 25">
-                      </div>
-
-                      <button type="button" class="portal-btn-add-collab" id="ap-btn-add-collab">
-                        + Add Collaborator
-                      </button>
-
-                      <!-- Collaborators List -->
-                      <div class="portal-collab-list" id="ap-collab-list">
-                        <!-- Populated dynamically by artist-portal.js -->
-                      </div>
-                    </div>
-
-                    <!-- Right Box: Revenue Distribution PieChart -->
-                    <div class="portal-form-box">
-                      <div class="portal-form-box-title">Revenue Distribution</div>
-                      
-                      <div class="portal-pie-chart-wrap" id="ap-splits-pie-container">
-                        <!-- Dynamic SVG PieChart rendered by artist-portal.js -->
-                      </div>
-
-                      <div class="portal-splits-summary-bar" id="ap-splits-summary-bar">
-                        <span>Total Splits: <b>100%</b></span>
-                        <span>Unallocated: <b>0%</b></span>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <!-- Step 3 Actions -->
-                  <div class="portal-wizard-actions">
-                    <button type="button" class="portal-btn-secondary" id="ap-btn-step3-prev">Previous</button>
-                    <button type="button" class="portal-btn-primary" id="ap-btn-step3-next">Save &amp; Continue ➔</button>
-                  </div>
-                </div>
-
-                <!-- STEP 4 VIEW: REVIEW & SUBMIT (MOCKUP 5) -->
-                <div class="portal-wizard-step-view" data-step="4" style="display:none;">
-                  <div class="portal-review-container">
-                    
-                    <div class="portal-review-grid">
-                      <!-- Artwork Column -->
-                      <div class="portal-review-artwork-col">
-                        <div class="portal-review-cover-wrap">
-                          <img id="ap-review-cover-img" class="portal-review-cover-img" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80" alt="Cover Art">
-                        </div>
-                        <div style="text-align:center;">
-                          <div class="portal-review-cover-title" id="ap-review-cover-title">Midnight Echoes</div>
-                          <div class="portal-review-cover-artist" id="ap-review-cover-artist">Astral Waves</div>
-                        </div>
-                      </div>
-
-                      <!-- Metadata Column -->
-                      <div class="portal-review-meta-col">
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">💿</span>
-                          <span>Album Title: <b id="ap-review-album-title">Midnight Echoes</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">👤</span>
-                          <span>Artist: <b id="ap-review-artist">Astral Waves</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">🎨</span>
-                          <span>Genre: <b id="ap-review-genre">Electronic / Ambient</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">🏷️</span>
-                          <span>Release Type: <b>Single</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">🔢</span>
-                          <span>Total Tracks: <b>1</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">🕒</span>
-                          <span>Total Duration: <b>03:45</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">🏛️</span>
-                          <span>Label: <b>UniFLOWs Label</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">🔖</span>
-                          <span>UPC: <b class="portal-cell-mono" id="ap-review-upc">001000830016</b></span>
-                        </div>
-                        <div class="portal-review-meta-item">
-                          <span class="portal-review-meta-icon">📡</span>
-                          <span>ISRC (Track 1): <b class="portal-cell-mono" id="ap-review-isrc" style="color:#38bdf8;">VN-A12-26-00001</b></span>
-                        </div>
-                      </div>
-
-                      <!-- Checklist Column -->
-                      <div class="portal-review-checklist-col">
-                        <div class="portal-review-checklist-title">Ready to Submit:</div>
-                        <label class="portal-check-row">
-                          <input type="checkbox" id="ap-check-metadata" checked>
-                          <span>Metadata verified</span>
-                        </label>
-                        <label class="portal-check-row">
-                          <input type="checkbox" id="ap-check-cover" checked>
-                          <span>Cover art meets requirements</span>
-                        </label>
-                        <label class="portal-check-row">
-                          <input type="checkbox" id="ap-check-rights" checked>
-                          <span>Distribution rights confirmed</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <!-- Horizontal Timeline Stepper -->
-                    <div class="portal-timeline-stepper">
-                      <div class="portal-timeline-track"></div>
-                      
-                      <div class="portal-timeline-node">
-                        <span class="portal-timeline-dot"></span>
-                        <span class="portal-timeline-label">Track Uploaded</span>
-                        <span class="portal-timeline-date">2026-09-01</span>
-                      </div>
-
-                      <div class="portal-timeline-node">
-                        <span class="portal-timeline-dot"></span>
-                        <span class="portal-timeline-label">Details Added</span>
-                        <span class="portal-timeline-date">2026-09-05</span>
-                      </div>
-
-                      <div class="portal-timeline-node">
-                        <span class="portal-timeline-dot"></span>
-                        <span class="portal-timeline-label">Distribution Chosen</span>
-                        <span class="portal-timeline-date">2026-09-10</span>
-                      </div>
-
-                      <div class="portal-timeline-node">
-                        <span class="portal-timeline-dot active"></span>
-                        <span class="portal-timeline-label" style="color:#fff;font-weight:700;">Review &amp; Submit</span>
-                        <span class="portal-timeline-date" style="color:#38bdf8;">Today</span>
-                      </div>
-
-                      <div class="portal-timeline-node">
-                        <span class="portal-timeline-dot" style="background:#475569;box-shadow:none;"></span>
-                        <span class="portal-timeline-label" style="color:#94a3b8;">Release Date</span>
-                        <span class="portal-timeline-date" id="ap-review-release-date">2026-10-31</span>
-                      </div>
-                    </div>
-
-                    <!-- Final Action Buttons -->
-                    <div class="portal-wizard-actions">
-                      <button type="button" class="portal-btn-secondary" id="ap-btn-step4-prev">Previous</button>
-                      <button type="button" class="portal-btn-primary" id="ap-btn-submit-release" style="box-shadow:0 0 25px rgba(255,255,255,0.4);">
-                        <span>🚀 Submit Release</span>
-                      </button>
-                    </div>
-
-                  </div>
-                </div>
-
+            <div class="portal-dsp-box" style="border-top:3px solid #fc3c44;">
+              <div class="portal-dsp-head">
+                <strong><span style="color:#fc3c44;">●</span> Apple Music</strong>
+                <span id="dsp-badge-apple" style="font-size:11px;font-weight:bold;color:#fc3c44;">0%</span>
               </div>
+              <b id="overview-apple" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-apple" class="portal-dsp-bar-fill" style="background:#fc3c44;width:0%;"></div></div>
+            </div>
 
+            <div class="portal-dsp-box" style="border-top:3px solid #ff0000;">
+              <div class="portal-dsp-head">
+                <strong><span style="color:#ff0000;">●</span> YouTube Music</strong>
+                <span id="dsp-badge-youtube" style="font-size:11px;font-weight:bold;color:#ff0000;">0%</span>
+              </div>
+              <b id="overview-youtube" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-youtube" class="portal-dsp-bar-fill" style="background:#ff0000;width:0%;"></div></div>
+            </div>
+
+            <div class="portal-dsp-box" style="border-top:3px solid #8b5cf6;">
+              <div class="portal-dsp-head">
+                <strong><span style="color:#8b5cf6;">●</span> NCT / Zing / Khác</strong>
+                <span id="dsp-badge-other" style="font-size:11px;font-weight:bold;color:#8b5cf6;">0%</span>
+              </div>
+              <b id="overview-other" style="font-size:22px;letter-spacing:-0.04em;display:block;">₫ 0</b>
+              <div class="portal-dsp-bar-wrap"><div id="dsp-bar-other" class="portal-dsp-bar-fill" style="background:#8b5cf6;width:0%;"></div></div>
             </div>
           </div>
         </div>
