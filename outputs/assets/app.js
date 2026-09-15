@@ -1,6 +1,7 @@
 import { getData, getLocalCachedData } from './data.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import './security.js';
+import { initStaggeredMenu } from './staggered-menu.js';
 
 // Auto-redirect subdomains cleanly to main domain canonical paths
 (function autoRedirectSubdomains() {
@@ -85,26 +86,64 @@ function getNavLinks() {
 
 const navLinks = getNavLinks();
 
-// Insert Header with Clean URLs
+// Insert Header with Clean URLs & StaggeredMenu
 if (!$('.nav')) {
   document.body.insertAdjacentHTML('afterbegin', `
-    <header class="nav">
+    <header class="nav staggered-nav">
       <a href="${navLinks.home}" class="brand">UNIFLOWs<small>label / est. 2024</small></a>
-      <button class="menu" aria-label="Mở menu" aria-expanded="false"><i></i></button>
-      <nav class="nav-links">
-        <a href="${navLinks.artists}" data-i18n="nav_artists">Nghệ sĩ</a>
-        <a href="${navLinks.unihube}" data-i18n="nav_unihube">Uni-HUBE</a>
-        <a href="${navLinks.collective48k}" data-i18n="nav_48k">48K Collective</a>
-        <a href="${navLinks.publishing}" data-i18n="nav_publishing">UniPUBLISHING</a>
-        <a href="${navLinks.submitMusic}" data-i18n="nav_submit_music" style="color:#0284c7;font-weight:700;">Gửi Demo</a>
-        <a href="${navLinks.about}" data-i18n="nav_about">Về chúng tôi</a>
-        <a href="${navLinks.news}" data-i18n="nav_news">Tạp chí</a>
-        <a href="${navLinks.contact}" data-i18n="nav_contact">Liên hệ</a>
-        <button type="button" class="lang-toggle-btn button alt" style="padding:4px 10px;font-size:11px;border-radius:20px;cursor:pointer;margin-left:4px;box-shadow:none;">🇬🇧 English</button>
-        <a class="artist-login-link" href="${navLinks.artistLogin}" data-i18n="nav_artist_login">Artist login ↗</a>
-      </nav>
+      <div class="nav-actions">
+        <button type="button" class="lang-toggle-btn button alt" style="padding:5px 12px;font-size:11px;border-radius:20px;cursor:pointer;box-shadow:none;">🇬🇧 English</button>
+        <div id="staggered-menu-mount"></div>
+      </div>
     </header>
   `);
+}
+
+export let staggeredMenuInstance = null;
+
+const menuItems = [
+  { label: 'Trang chủ', enLabel: 'Home', ariaLabel: 'Go to home page', link: navLinks.home, i18nKey: 'nav_home' },
+  { label: 'Nghệ sĩ', enLabel: 'Artists', ariaLabel: 'View our artists', link: navLinks.artists, i18nKey: 'nav_artists' },
+  { label: 'Uni-HUBE', enLabel: 'Uni-HUBE', ariaLabel: 'Uni-HUBE Creative Studio', link: navLinks.unihube, i18nKey: 'nav_unihube' },
+  { label: '48K Collective', enLabel: '48K Collective', ariaLabel: '48K Collective', link: navLinks.collective48k, i18nKey: 'nav_48k' },
+  { label: 'UniPUBLISHING', enLabel: 'UniPUBLISHING', ariaLabel: 'UniPUBLISHING music publishing', link: navLinks.publishing, i18nKey: 'nav_publishing' },
+  { label: 'Gửi Demo', enLabel: 'Submit Demo', ariaLabel: 'Submit your demo', link: navLinks.submitMusic, highlight: true, i18nKey: 'nav_submit_music' },
+  { label: 'Về chúng tôi', enLabel: 'About Us', ariaLabel: 'Learn about us', link: navLinks.about, i18nKey: 'nav_about' },
+  { label: 'Tạp chí', enLabel: 'Magazine', ariaLabel: 'UniFLOWs News and Magazine', link: navLinks.news, i18nKey: 'nav_news' },
+  { label: 'Liên hệ', enLabel: 'Contact', ariaLabel: 'Get in touch with UniFLOWs', link: navLinks.contact, i18nKey: 'nav_contact' },
+  { label: 'Artist login ↗', enLabel: 'Artist login ↗', ariaLabel: 'Artist login portal', link: navLinks.artistLogin, isSpecial: true, i18nKey: 'nav_artist_login' }
+];
+
+const socialItems = [
+  { label: 'Instagram', link: 'https://instagram.com/uniflowslabel' },
+  { label: 'YouTube', link: 'https://youtube.com' },
+  { label: 'TikTok', link: 'https://tiktok.com' },
+  { label: 'Facebook', link: 'https://facebook.com' },
+  { label: 'Spotify', link: 'https://open.spotify.com' }
+];
+
+const menuMount = $('#staggered-menu-mount');
+if (menuMount) {
+  initStaggeredMenu(menuMount, {
+    position: 'right',
+    items: menuItems,
+    socialItems: socialItems,
+    displaySocials: true,
+    displayItemNumbering: true,
+    menuButtonColor: 'currentColor',
+    openMenuButtonColor: '#ffffff',
+    changeMenuColorOnOpen: true,
+    colors: ['#B497CF', '#00d2ff', '#5227FF'],
+    accentColor: '#00d2ff',
+    closeOnClickAway: true,
+    onMenuOpen: () => console.log('StaggeredMenu opened'),
+    onMenuClose: () => console.log('StaggeredMenu closed'),
+  }).then(inst => {
+    staggeredMenuInstance = inst;
+    if (staggeredMenuInstance && getCurrentLang() === 'en') {
+      staggeredMenuInstance.updateLabels(true);
+    }
+  }).catch(e => console.warn('StaggeredMenu init error:', e));
 }
 
 // Insert Footer & Smart Modal
@@ -664,6 +703,9 @@ function renderAll() {
   articleDetail();
   smartPage();
   applyTranslations();
+  if (staggeredMenuInstance) {
+    staggeredMenuInstance.updateLabels(getCurrentLang() === 'en');
+  }
 }
 
 renderAll();

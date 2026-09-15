@@ -5,6 +5,7 @@
 export const translations = {
   vi: {
     // Navigation & Header
+    nav_home: 'Trang chủ',
     nav_artists: 'Nghệ sĩ',
     nav_unihube: 'Uni-HUBE',
     nav_48k: '48K Collective',
@@ -192,6 +193,7 @@ export const translations = {
 
   en: {
     // Navigation & Header
+    nav_home: 'Home',
     nav_artists: 'Artists',
     nav_unihube: 'Uni-HUBE',
     nav_48k: '48K Collective',
