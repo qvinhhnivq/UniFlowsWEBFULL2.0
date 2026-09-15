@@ -228,20 +228,11 @@ export async function initCardNav(mountTarget, options = {}) {
         if (typeof linkItem.onClick === 'function') {
           linkItem.onClick();
         } else if (linkItem.action === 'password') {
-          const openProfileBtn = document.querySelector('#open-profile-settings-btn') || document.querySelector('#top-nav-profile-pill');
-          if (openProfileBtn) openProfileBtn.click();
-          setTimeout(() => {
-            document.querySelector('.profile-tab-btn[data-tab="profile-tab-security"]')?.click();
-          }, 60);
+          document.querySelector('#open-password-dialog-btn')?.click();
         } else if (linkItem.action === 'theme') {
           document.querySelector('#theme-toggle-btn')?.click() || document.querySelector('#mobile-theme-toggle-btn')?.click();
         } else if (linkItem.action === 'logout') {
-          if (typeof window.handleArtistLogout === 'function') {
-            window.handleArtistLogout();
-          } else {
-            const profLogout = document.querySelector('#profile-logout-btn') || document.querySelector('#artist-logout');
-            if (profLogout) profLogout.click();
-          }
+          document.querySelector('#artist-logout')?.click();
         } else if (linkItem.hash) {
           location.hash = linkItem.hash;
         } else if (linkItem.tab) {
