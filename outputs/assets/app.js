@@ -1,6 +1,8 @@
 import { getData, getLocalCachedData } from './data.js';
 import { applyTranslations, getCurrentLang, setLang, t } from './i18n.js';
 import './security.js';
+import { initFluidCanvas } from './fluid.js';
+import { initInteractions } from './interactions.js';
 
 // Auto-redirect subdomains cleanly to main domain canonical paths
 (function autoRedirectSubdomains() {
@@ -195,27 +197,38 @@ function artists() {
   const publicArtists = (data.artists || []).filter(a => a.showOnWeb !== false && a.showOnWeb !== 'false');
   
   if (publicArtists.length === 0) {
-    grid.innerHTML = `<p class="empty" style="padding:20px;grid-column:1/-1;">${getCurrentLang() === 'en' ? 'Artist roster is being updated.' : 'Danh sách nghệ sĩ đang được cập nhật.'}</p>`;
+    grid.innerHTML = `<p class="empty" style="padding:64px 0;text-align:center;color:var(--color-felt-gray);">${getCurrentLang() === 'en' ? 'Artist roster is being updated.' : 'Danh sách nghệ sĩ đang được cập nhật.'}</p>`;
     return;
   }
 
   const isArtistsPage = document.body.dataset.page === 'artists';
-  // On both homepage and roster page, default to showing top 3 artists (1 full row in 3-col grid)
-  const limit = 3;
+  const limit = isArtistsPage ? 12 : 3;
   const shouldTruncate = publicArtists.length > limit;
   const visibleArtists = (shouldTruncate && !isArtistsExpanded) ? publicArtists.slice(0, limit) : publicArtists;
 
-  const exploreText = t('explore_artist');
+  const exploreText = t('explore_artist') || 'View Talent';
 
-  const cardsHtml = visibleArtists.map((a, i) => `
-    <a class="artist" href="${navLinks.artist}?id=${encodeURIComponent(a.id)}" style="animation: fadeIn 0.35s ease ${i * 0.05}s both;">
-      <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80')}" alt="${esc(a.name)}">
-      <div class="artist-info">
-        <span>${esc(a.genre || 'Music')}</span>
-        <h4>${esc(a.name)}</h4>
-        <b>${esc(exploreText)}</b>
-      </div>
-    </a>
+  const rowsHtml = visibleArtists.map((a, i) => `
+    <div class="editorial-project-row" data-cursor="VIEW">
+      <a class="editorial-project-link" href="${navLinks.artist}?id=${encodeURIComponent(a.id)}">
+        <div class="editorial-image-frame">
+          <img src="${esc(a.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1400&q=85')}" alt="${esc(a.name)}" loading="lazy">
+          <div class="editorial-row-floating-tags">
+            <span class="editorial-badge-pill">0${i + 1} / TALENT</span>
+            <span class="editorial-genre-pill">${esc(a.genre || 'Independent')}</span>
+          </div>
+        </div>
+        <div class="editorial-meta-row">
+          <div class="editorial-name-stack">
+            <h3 class="editorial-artist-name">${esc(a.name)}</h3>
+            <p class="editorial-artist-bio-brief">${esc(a.bio ? a.bio.slice(0, 120) + '...' : (a.genre || 'UniFLOWs Artist'))}</p>
+          </div>
+          <div class="editorial-cta-wrap">
+            <span class="btn-ghost-light">${esc(exploreText)} →</span>
+          </div>
+        </div>
+      </a>
+    </div>
   `).join('');
 
   let toggleBtnHtml = '';
@@ -225,15 +238,15 @@ function artists() {
       : t('view_all_artists', { count: publicArtists.length });
     
     toggleBtnHtml = `
-      <div class="artists-toggle-bar" style="grid-column: 1 / -1; margin-top: 32px; text-align: center; width: 100%;">
-        <button type="button" id="btn-toggle-artists-roster" class="btn-ghost-light">
+      <div class="artists-toggle-bar" style="text-align: center; width: 100%; padding-top: 56px;">
+        <button type="button" id="btn-toggle-artists-roster" class="btn-ghost-light" style="padding: 13px 40px; font-size: 13px; letter-spacing: 0.08em;">
           ${esc(btnLabel)}
         </button>
       </div>
     `;
   }
 
-  grid.innerHTML = cardsHtml + toggleBtnHtml;
+  grid.innerHTML = rowsHtml + toggleBtnHtml;
 
   // Update counts on artists page
   const kickerCount = document.querySelector('[data-page="artists"] .section-head .kicker');
@@ -262,14 +275,27 @@ function articleCards() {
     let all = (data.articles || []).filter(a => a.published);
     let q = ($('#article-search')?.value || '').toLowerCase();
     let filtered = all.filter(a => (a.title + (a.category || '')).toLowerCase().includes(q));
+    if (filtered.length === 0) {
+      return '<p class="empty" style="padding: 64px 0; color: var(--color-felt-gray); text-align: center;">Không tìm thấy bài viết phù hợp.</p>';
+    }
     return filtered.map((a, i) => `
-      <article class="${i ? 'news-card' : 'feature'}">
-        <span class="date">${esc(a.category)} / ${esc(a.date)}</span>
-        <h3>${esc(a.title)}</h3>
-        <p>${esc(a.excerpt || '')}</p>
-        <a class="card-link" href="${navLinks.article}?id=${encodeURIComponent(a.id)}">Đọc bài đầy đủ →</a>
+      <article class="editorial-journal-row">
+        <div class="journal-meta-col">
+          <span class="journal-index">0${i + 1}</span>
+          <span class="journal-date">${esc(a.date)}</span>
+          <span class="journal-tag-pill">${esc(a.category || 'Editorial')}</span>
+        </div>
+        <div class="journal-content-col">
+          <h3 class="journal-title"><a href="${navLinks.article}?id=${encodeURIComponent(a.id)}">${esc(a.title)}</a></h3>
+          <p class="journal-excerpt">${esc(a.excerpt || '')}</p>
+        </div>
+        <div class="journal-action-col">
+          <a class="journal-arrow-link" href="${navLinks.article}?id=${encodeURIComponent(a.id)}" aria-label="Đọc bài viết">
+            <span>Đọc tiếp</span> →
+          </a>
+        </div>
       </article>
-    `).join('') || '<p class="empty">Không tìm thấy bài viết phù hợp.</p>';
+    `).join('');
   };
   root.innerHTML = build();
   $('#article-search')?.addEventListener('input', () => root.innerHTML = build());
@@ -678,14 +704,34 @@ function renderAll() {
 
 renderAll();
 
+function updateLocaleUI() {
+  const current = getCurrentLang();
+  document.querySelectorAll('.locale-link').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === current);
+  });
+}
+
+document.querySelectorAll('.locale-link').forEach(btn => {
+  btn.onclick = () => {
+    if (btn.dataset.lang) {
+      setLang(btn.dataset.lang);
+      renderAll();
+      updateLocaleUI();
+    }
+  };
+});
+
 document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
   btn.onclick = () => {
     const current = getCurrentLang();
     const next = current === 'vi' ? 'en' : 'vi';
     setLang(next);
     renderAll();
+    updateLocaleUI();
   };
 });
+
+updateLocaleUI();
 
 getData().then(liveData => {
   data = liveData;
@@ -703,76 +749,18 @@ $('#smart-modal')?.addEventListener('click', e => {
 });
 
 // ----------------------------------------------------
-// DYNAMIC BREATHING MULTI-RING CURSOR CONTROLLER
+// MONOPO SAIGON ENGINE BOOTSTRAP
 // ----------------------------------------------------
-function initCustomCursor() {
-  if (window.matchMedia('(hover: none) or (pointer: coarse)').matches) return;
-
-  let dot = document.querySelector('.uniflows-cursor-dot');
-  let aura = document.querySelector('.uniflows-cursor-aura');
-
-  if (!dot) {
-    dot = document.createElement('div');
-    dot.className = 'uniflows-cursor-dot';
-    document.body.appendChild(dot);
+function bootstrapMonopoExperience() {
+  const canvas = document.getElementById('hero-canvas');
+  if (canvas) {
+    initFluidCanvas(canvas);
   }
-  if (!aura) {
-    aura = document.createElement('div');
-    aura.className = 'uniflows-cursor-aura';
-    aura.innerHTML = `
-      <span class="ring ring-outer"></span>
-      <span class="ring ring-1"></span>
-      <span class="ring ring-core"></span>
-    `;
-    document.body.appendChild(aura);
-  }
-
-  let mouseX = -100, mouseY = -100;
-  let auraX = -100, auraY = -100;
-  let isMoving = false;
-
-  window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    dot.style.left = `${mouseX}px`;
-    dot.style.top = `${mouseY}px`;
-    if (!isMoving) {
-      isMoving = true;
-      auraX = mouseX;
-      auraY = mouseY;
-    }
-  }, { passive: true });
-
-  window.addEventListener('mousedown', () => document.body.classList.add('cursor-active'));
-  window.addEventListener('mouseup', () => document.body.classList.remove('cursor-active'));
-
-  // Smooth fluid lerp interpolation for giant atmospheric aura
-  function animateAura() {
-    auraX += (mouseX - auraX) * 0.11;
-    auraY += (mouseY - auraY) * 0.11;
-    aura.style.left = `${auraX}px`;
-    aura.style.top = `${auraY}px`;
-    requestAnimationFrame(animateAura);
-  }
-  requestAnimationFrame(animateAura);
-
-  // Hover detection on interactive elements
-  document.addEventListener('mouseover', (e) => {
-    const target = e.target.closest('a, button, input, select, textarea, .artist, .card, .producer-track-row, .hube-service-card, .release, .track-link-pill');
-    if (target) {
-      document.body.classList.add('cursor-hover');
-    }
-  });
-  document.addEventListener('mouseout', (e) => {
-    const target = e.target.closest('a, button, input, select, textarea, .artist, .card, .producer-track-row, .hube-service-card, .release, .track-link-pill');
-    if (target) {
-      document.body.classList.remove('cursor-hover');
-    }
-  });
+  initInteractions();
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initCustomCursor);
+  document.addEventListener('DOMContentLoaded', bootstrapMonopoExperience);
 } else {
-  initCustomCursor();
+  bootstrapMonopoExperience();
 }
