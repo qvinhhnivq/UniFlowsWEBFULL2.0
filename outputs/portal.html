@@ -8,9 +8,9 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
-  <link rel="stylesheet" href="/assets/app.css">
-  <link rel="stylesheet" href="/assets/card-nav.css">
-  <link rel="stylesheet" href="/assets/glass-surface.css">
+  <link rel="stylesheet" href="/assets/app.css?v=20260915_r4">
+  <link rel="stylesheet" href="/assets/card-nav.css?v=20260915_r4">
+  <link rel="stylesheet" href="/assets/glass-surface.css?v=20260915_r4">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
 </head>
 <body class="portal-body">
@@ -690,14 +690,14 @@
     <!-- Header -->
     <div class="release-modal-header">
       <div>
-        <span class="eyebrow" style="color:#94a3b8;margin:0;letter-spacing:1.5px;font-family:'DM Mono',monospace;font-size:10px;">UniFLOWs Studio Release Builder</span>
-        <h2 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.02em;color:#fff;">Tạo &amp; Nộp bản phát hành mới</h2>
+        <span class="eyebrow">UniFLOWs Studio Release Builder</span>
+        <h2 style="margin:4px 0 0;font-size:20px;letter-spacing:-0.02em;">Tạo &amp; Nộp bản phát hành mới</h2>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
-        <button type="button" id="btn-save-release-draft-header" class="button alt" style="padding:6px 14px;font-size:12px;font-weight:600;background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.25);cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+        <button type="button" id="btn-save-release-draft-header" class="button alt" style="display:inline-flex;align-items:center;gap:6px;">
           💾 Lưu Bản Nháp
         </button>
-        <button type="button" id="close-release-dialog-btn" class="button alt" style="padding:6px 14px;font-size:12px;font-weight:bold;background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);cursor:pointer;">✕ Đóng</button>
+        <button type="button" id="close-release-dialog-btn" class="button alt">✕ Đóng</button>
       </div>
     </div>
 
@@ -834,18 +834,18 @@
         <div class="field" style="margin-top:14px;">
           <label style="font-weight:700;display:block;margin-bottom:8px;">Nội dung nhạy cảm (Explicit Content) *</label>
           <div class="explicit-toggle-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:12px;">
-            <label class="explicit-choice-card" id="explicit-card-clean" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1.5px solid #0f172a;background:#f8fafc;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
-              <input type="radio" name="explicit" id="explicit-radio-clean" value="false" checked style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
+            <label class="explicit-choice-card" id="explicit-card-clean" style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+              <input type="radio" name="explicit" id="explicit-radio-clean" value="false" checked style="accent-color:#a855f7;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">Clean (Bản tiêu chuẩn)</b>
-                <span style="font-size:12px;color:#64748b;line-height:1.4;display:block;margin-top:2px;">Ca từ trong sáng, phù hợp mọi lứa tuổi, không chứa từ ngữ thô tục hay 18+</span>
+                <b style="display:block;font-size:13px;font-weight:800;color:var(--portal-text-main);">Clean (Bản tiêu chuẩn)</b>
+                <span style="font-size:12px;color:var(--portal-text-muted);line-height:1.4;display:block;margin-top:2px;">Ca từ trong sáng, phù hợp mọi lứa tuổi, không chứa từ ngữ thô tục hay 18+</span>
               </div>
             </label>
-            <label class="explicit-choice-card" id="explicit-card-explicit" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
-              <input type="radio" name="explicit" id="explicit-radio-explicit" value="true" style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
+            <label class="explicit-choice-card" id="explicit-card-explicit" style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+              <input type="radio" name="explicit" id="explicit-radio-explicit" value="true" style="accent-color:#a855f7;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">[E] Explicit (Bản nhạy cảm)</b>
-                <span style="font-size:12px;color:#64748b;line-height:1.4;display:block;margin-top:2px;">Chứa từ ngữ người lớn, nhạy cảm hoặc tiếng lóng (gắn nhãn [E] trên DSPs)</span>
+                <b style="display:block;font-size:13px;font-weight:800;color:var(--portal-text-main);">[E] Explicit (Bản nhạy cảm)</b>
+                <span style="font-size:12px;color:var(--portal-text-muted);line-height:1.4;display:block;margin-top:2px;">Chứa từ ngữ người lớn, nhạy cảm hoặc tiếng lóng (gắn nhãn [E] trên DSPs)</span>
               </div>
             </label>
           </div>
@@ -860,12 +860,12 @@
         </div>
 
         <!-- Section 1: Artwork Upload -->
-        <div style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:18px;margin-bottom:20px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-            <label style="font-weight:800;font-size:13px;text-transform:uppercase;color:#0f172a;margin:0;">
+        <div style="background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:16px;padding:22px;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+            <label style="font-weight:800;font-size:13.5px;text-transform:uppercase;color:var(--portal-text-main);margin:0;">
               🖼️ 1. Ảnh Bìa Bản Phát Hành (Cover Artwork · 3000 × 3000 px) *
             </label>
-            <span style="font-size:11px;font-family:'DM Mono',monospace;color:#64748b;">Định dạng: JPG/PNG/WebP · Hệ màu RGB</span>
+            <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--portal-text-dim);">Định dạng: JPG/PNG/WebP · Hệ màu RGB</span>
           </div>
 
           <div style="display:grid;grid-template-columns:minmax(140px, 180px) 1fr;gap:18px;align-items:start;">
@@ -875,51 +875,51 @@
               <div id="art-drop-content">
                 <span style="font-size:26px;display:block;margin-bottom:4px;">🖼️</span>
                 <b id="artwork-filename" style="font-size:12px;display:block;margin-bottom:2px;">Chọn hoặc kéo ảnh</b>
-                <span style="font-size:11px;color:#64748b;">Vuông 1:1</span>
+                <span style="font-size:11px;color:var(--portal-text-dim);">Vuông 1:1</span>
               </div>
             </div>
 
             <div>
               <div class="field" style="margin-top:0;">
-                <label style="font-size:11px;color:#475569;font-weight:600;">Hoặc dán Link URL ảnh bìa trực tiếp (Google Drive, Imgur, CDN):</label>
-                <input name="artworkExternalUrl" id="artwork-external-url" placeholder="https://drive.google.com/... hoặc https://..." style="font-size:12px;padding:8px 10px;width:100%;border:1px solid #cbd5e1;border-radius:6px;">
+                <label style="font-size:11.5px;color:var(--portal-text-dim);font-weight:700;">Hoặc dán Link URL ảnh bìa trực tiếp (Google Drive, Imgur, CDN):</label>
+                <input name="artworkExternalUrl" id="artwork-external-url" placeholder="https://drive.google.com/... hoặc https://..." style="font-size:12.5px;padding:9px 12px;width:100%;border-radius:10px;">
               </div>
 
               <!-- Artwork Pre-flight Quality Inspector Box -->
-              <div id="artwork-inspect-container" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;">
+              <div id="artwork-inspect-container" style="display:none;margin-top:10px;background:var(--glass-bg-elevated);border:1px solid var(--glass-border-subtle);border-radius:10px;padding:12px 16px;font-size:12px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <strong style="font-size:11px;text-transform:uppercase;color:#475569;letter-spacing:0.5px;" data-i18n="art_inspect_title">🔍 Kiểm định kỹ thuật Artwork (Pre-flight)</strong>
+                  <strong style="font-size:11px;text-transform:uppercase;color:var(--portal-text-main);letter-spacing:0.5px;" data-i18n="art_inspect_title">🔍 Kiểm định kỹ thuật Artwork (Pre-flight)</strong>
                   <span id="art-status-badge" style="font-size:10px;font-weight:bold;padding:2px 8px;border-radius:4px;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">DSP READY</span>
                 </div>
-                <div id="art-inspect-details" style="display:grid;gap:4px;color:#334155;font-size:11.5px;"></div>
+                <div id="art-inspect-details" style="display:grid;gap:4px;color:var(--portal-text-muted);font-size:11.5px;"></div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Section 2: Dedicated Audio & Track Studio -->
-        <div style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;border-bottom:1px solid #e2e8f0;padding-bottom:14px;">
+        <div style="background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:16px;padding:22px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--glass-border-subtle);padding-bottom:14px;">
             <div>
-              <span class="eyebrow" style="color:#475569;margin:0;font-size:10px;">TRACK &amp; AUDIO MASTER STUDIO</span>
-              <h4 style="margin:2px 0 0;font-size:16px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
+              <span class="eyebrow" style="color:var(--portal-text-dim);margin:0;font-size:10.5px;">TRACK &amp; AUDIO MASTER STUDIO</span>
+              <h4 style="margin:2px 0 0;font-size:16.5px;font-weight:800;color:var(--portal-text-main);letter-spacing:-0.02em;">
                 🎵 2. Quản Lý Danh Sách Bài Hát, File Master &amp; Tác Quyền Từng Bài
               </h4>
-              <p style="margin:2px 0 0;font-size:12px;color:#64748b;">Mỗi bài hát có khu vực riêng biệt: Master WAV/FLAC, Dolby Atmos (tùy chọn), lời bài hát và đội ngũ sản xuất.</p>
+              <p style="margin:2px 0 0;font-size:12.5px;color:var(--portal-text-muted);">Mỗi bài hát có khu vực riêng biệt: Master WAV/FLAC, Dolby Atmos (tùy chọn), lời bài hát và đội ngũ sản xuất.</p>
             </div>
 
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <div class="track-mode-switch" style="display:inline-flex;gap:4px;background:#f1f5f9;padding:3px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;">
-                <button type="button" id="track-mode-single-btn" class="track-mode-pill active" style="border:none;background:#0f172a;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:bold;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.08);">1 Bài (Single)</button>
-                <button type="button" id="track-mode-multi-btn" class="track-mode-pill" style="border:none;background:transparent;padding:6px 14px;border-radius:4px;cursor:pointer;color:#64748b;font-weight:bold;">Nhiều Bài (EP/Album)</button>
+              <div class="track-mode-switch" style="display:inline-flex;gap:4px;background:var(--glass-bg-elevated);padding:3px;border-radius:999px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid var(--glass-border-subtle);">
+                <button type="button" id="track-mode-single-btn" class="track-mode-pill active" style="border:none;background:var(--portal-text-main);padding:6px 14px;border-radius:999px;cursor:pointer;font-weight:800;color:var(--portal-bg);">1 Bài (Single)</button>
+                <button type="button" id="track-mode-multi-btn" class="track-mode-pill" style="border:none;background:transparent;padding:6px 14px;border-radius:999px;cursor:pointer;color:var(--portal-text-dim);font-weight:800;">Nhiều Bài (EP/Album)</button>
               </div>
 
-              <label class="button alt" style="padding:6px 14px;font-size:11.5px;margin:0;cursor:pointer;background:#fff;border:1px solid #cbd5e1;color:#0f172a;display:inline-flex;align-items:center;gap:6px;font-weight:700;">
+              <label class="button alt" style="padding:7px 16px;font-size:11.5px;margin:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:700;border-radius:999px;">
                 📂 Tải Hàng Loạt Audio (Batch)
                 <input type="file" id="batch-audio-input" multiple accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
               </label>
 
-              <button type="button" id="btn-add-tracklist-item" class="button" style="padding:6px 14px;font-size:11.5px;background:#0f172a;color:#fff;border-color:#0f172a;font-weight:bold;display:inline-flex;align-items:center;gap:4px;">
+              <button type="button" id="btn-add-tracklist-item" class="button" style="padding:7px 16px;font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;gap:4px;border-radius:999px;">
                 + Thêm Bài Hát
               </button>
             </div>
@@ -927,7 +927,7 @@
 
           <!-- Summary bar -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-            <span id="tracklist-summary-badge" style="font-size:12px;font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;background:#f1f5f9;padding:4px 10px;border-radius:4px;">
+            <span id="tracklist-summary-badge" style="font-size:12px;font-weight:800;color:var(--portal-text-main);font-family:'DM Mono',monospace;background:var(--glass-bg-elevated);padding:4px 12px;border-radius:8px;border:1px solid var(--glass-border-subtle);">
               1 bài hát trong danh sách phát hành
             </span>
             <span style="font-size:11.5px;color:#64748b;">
@@ -975,50 +975,50 @@
         <div class="field" style="margin-bottom:18px;">
           <label style="font-weight:700;display:block;margin-bottom:8px;">Mã số thương phẩm quốc tế UPC / EAN *</label>
           <div class="upc-toggle-grid" style="display:grid;gap:10px;">
-            <label class="upc-choice-card" id="upc-card-auto" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1.5px solid #0f172a;background:#f8fafc;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
-              <input type="radio" name="upc_choice" id="upc-radio-auto" value="auto" checked style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
+            <label class="upc-choice-card" id="upc-card-auto" style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+              <input type="radio" name="upc_choice" id="upc-radio-auto" value="auto" checked style="accent-color:#a855f7;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">UniFLOWs Label cấp mã UPC/EAN mới tự động (Mặc định - Miễn phí 100%)</b>
-                <span style="font-size:12px;color:#64748b;display:block;margin-top:2px;line-height:1.4;">Hệ thống phân phối quốc tế của UniFLOWs sẽ tự động đăng ký và sinh mã vạch GS1 chuẩn quốc tế cho bản phát hành này khi đưa lên DSPs.</span>
+                <b style="display:block;font-size:13px;font-weight:800;color:var(--portal-text-main);">UniFLOWs Label cấp mã UPC/EAN mới tự động (Mặc định - Miễn phí 100%)</b>
+                <span style="font-size:12px;color:var(--portal-text-muted);display:block;margin-top:2px;line-height:1.4;">Hệ thống phân phối quốc tế của UniFLOWs sẽ tự động đăng ký và sinh mã vạch GS1 chuẩn quốc tế cho bản phát hành này khi đưa lên DSPs.</span>
               </div>
             </label>
-            <label class="upc-choice-card" id="upc-card-custom" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
-              <input type="radio" name="upc_choice" id="upc-radio-custom" value="custom" style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
+            <label class="upc-choice-card" id="upc-card-custom" style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+              <input type="radio" name="upc_choice" id="upc-radio-custom" value="custom" style="accent-color:#a855f7;width:18px;height:18px;margin-top:2px;">
               <div>
-                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">Tôi đã có mã UPC cũ (Dành cho việc chuyển nhạc sang UniFLOWs Label)</b>
-                <span style="font-size:12px;color:#64748b;display:block;margin-top:2px;line-height:1.4;">Chọn tùy chọn này nếu bạn chuyển bản phát hành từ nhà phân phối khác sang UniFLOWs Label và muốn bảo lưu mã vạch cũ cùng toàn bộ số lượt streams / thuật toán playlist.</span>
+                <b style="display:block;font-size:13px;font-weight:800;color:var(--portal-text-main);">Tôi đã có mã UPC cũ (Dành cho việc chuyển nhạc sang UniFLOWs Label)</b>
+                <span style="font-size:12px;color:var(--portal-text-muted);display:block;margin-top:2px;line-height:1.4;">Chọn tùy chọn này nếu bạn chuyển bản phát hành từ nhà phân phối khác sang UniFLOWs Label và muốn bảo lưu mã vạch cũ cùng toàn bộ số lượt streams / thuật toán playlist.</span>
               </div>
             </label>
           </div>
 
-          <div id="upc-custom-input-box" style="display:none;margin-top:10px;padding:12px 14px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;">
-            <label style="font-size:11.5px;font-weight:700;color:#0f172a;display:block;margin-bottom:4px;">Nhập mã UPC / EAN cũ của bạn (12–13 chữ số):</label>
-            <input name="upc" id="wizard-upc-input" placeholder="Nhập mã UPC / EAN (12–13 chữ số)..." style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;letter-spacing:1px;padding:8px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+          <div id="upc-custom-input-box" style="display:none;margin-top:10px;padding:12px 14px;background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:10px;">
+            <label style="font-size:11.5px;font-weight:700;color:var(--portal-text-main);display:block;margin-bottom:4px;">Nhập mã UPC / EAN cũ của bạn (12–13 chữ số):</label>
+            <input name="upc" id="wizard-upc-input" placeholder="Nhập mã UPC / EAN (12–13 chữ số)..." style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;letter-spacing:1px;padding:9px 12px;width:100%;border-radius:8px;">
           </div>
         </div>
 
         <!-- 00A: NỀN TẢNG PHÁT HÀNH TRỰC TUYẾN (DSP CHANNELS) -->
-        <div style="background:#fff;border:1.5px solid #cbd5e1;border-radius:10px;padding:20px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+        <div style="background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:16px;padding:22px;margin-bottom:20px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
             <div>
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:18px;line-height:1;">🌐</span>
-                <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
+                <h4 style="margin:0;font-size:15.5px;font-weight:800;color:var(--portal-text-main);letter-spacing:-0.02em;">
                   Nền Tảng Phát Hành Trực Tuyến (DSP Channels) *
                 </h4>
               </div>
-              <p style="margin:4px 0 0;font-size:12.5px;color:#64748b;">
+              <p style="margin:4px 0 0;font-size:12.5px;color:var(--portal-text-muted);">
                 Chọn các dịch vụ streaming, mạng xã hội và kênh bản quyền bạn muốn phát hành tác phẩm tới (Mặc định chọn tất cả).
               </p>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span id="dsp-selected-badge" style="font-size:11.5px;font-family:'DM Mono',monospace;font-weight:700;padding:4px 10px;background:#f8fafc;color:#0f172a;border-radius:6px;border:1px solid #cbd5e1;">
+              <span id="dsp-selected-badge" style="font-size:11.5px;font-family:'DM Mono',monospace;font-weight:800;padding:4px 12px;background:var(--glass-bg-elevated);color:var(--portal-text-main);border-radius:8px;border:1px solid var(--glass-border-subtle);">
                 Đã chọn: <b id="dsp-selected-count">33</b>/33 nền tảng
               </span>
-              <button type="button" id="btn-dsp-select-all" class="button alt" style="padding:5px 12px;font-size:11.5px;font-weight:700;color:#0f172a;border-color:#cbd5e1;background:#fff;cursor:pointer;">
+              <button type="button" id="btn-dsp-select-all" class="button alt" style="padding:6px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border-radius:999px;">
                 ✓ Chọn tất cả
               </button>
-              <button type="button" id="btn-dsp-deselect-all" class="button alt" style="padding:5px 12px;font-size:11.5px;color:#dc2626;border-color:#fecaca;background:#fff;cursor:pointer;">
+              <button type="button" id="btn-dsp-deselect-all" class="button alt" style="padding:6px 14px;font-size:11.5px;color:#ef4444;border-color:rgba(239,68,68,0.3);cursor:pointer;border-radius:999px;">
                 ✕ Bỏ chọn tất cả
               </button>
             </div>
@@ -3013,14 +3013,14 @@
 
       <!-- Footer Navigation Controls -->
       <div class="release-modal-footer">
-        <button type="button" id="prev-step-btn" class="button alt" style="padding:10px 20px;display:none;">← Quay lại</button>
+        <button type="button" id="prev-step-btn" class="button alt" style="display:none;">← Quay lại</button>
         <div style="display:flex;gap:10px;margin-left:auto;align-items:center;flex-wrap:wrap;">
-          <button type="button" id="btn-save-release-draft-footer" class="button alt" style="padding:10px 18px;font-size:12.5px;font-weight:700;background:#f8fafc;color:#0f172a;border-color:#cbd5e1;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+          <button type="button" id="btn-save-release-draft-footer" class="button alt" style="display:inline-flex;align-items:center;gap:6px;">
             💾 Lưu Bản Nháp
           </button>
-          <button type="button" id="cancel-release-btn" class="button alt" style="padding:10px 18px;">Hủy bỏ</button>
-          <button type="button" id="next-step-btn" class="button" style="padding:10px 24px;background:#0f172a;color:#fff;font-weight:bold;border-color:#0f172a;">Tiếp tục: Audio & Artwork →</button>
-          <button type="submit" id="submit-release-btn" class="button" style="padding:10px 28px;background:#0f172a;color:#fff;font-weight:bold;border-color:#0f172a;display:none;">🚀 Gửi bản phát hành tới UniFLOWs</button>
+          <button type="button" id="cancel-release-btn" class="button alt">Hủy bỏ</button>
+          <button type="button" id="next-step-btn" class="button">Tiếp tục: Audio & Artwork →</button>
+          <button type="submit" id="submit-release-btn" class="button" style="display:none;">🚀 Gửi bản phát hành tới UniFLOWs</button>
         </div>
       </div>
     </form>
@@ -3029,26 +3029,26 @@
   <!-- ========================================== -->
   <!-- MODAL: ĐỔI MẬT KHẨU -->
   <!-- ========================================== -->
-  <dialog id="password-dialog" style="border:1px solid var(--ink);padding:24px;max-width:380px;width:90%;background:#fff;box-shadow:0 12px 36px rgba(0,0,0,0.18);">
+  <dialog id="password-dialog" style="padding:28px;max-width:420px;width:90%;">
     <h3 style="margin-top:0;font-size:18px;text-transform:uppercase;letter-spacing:-0.02em;">Đổi mật khẩu mới</h3>
     <p style="font-size:12px;opacity:0.8;margin-bottom:15px;">Mật khẩu mới sẽ áp dụng ngay cho tài khoản nghệ sĩ của bạn.</p>
     <p id="password-notice" class="notice" style="display:none;margin-bottom:12px;"></p>
     <form id="change-password-form">
       <div class="field" style="margin-bottom:12px;">
         <label for="old-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mật khẩu hiện tại</label>
-        <input id="old-password" type="password" required minlength="6" placeholder="Nhập mật khẩu hiện tại" style="width:100%;padding:10px;border:1px solid var(--ink);">
+        <input id="old-password" type="password" required minlength="6" placeholder="Nhập mật khẩu hiện tại" style="width:100%;padding:10px;">
       </div>
       <div class="field" style="margin-bottom:12px;">
         <label for="new-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Mật khẩu mới</label>
-        <input id="new-password" type="password" required minlength="6" placeholder="Tối thiểu 6 ký tự" style="width:100%;padding:10px;border:1px solid var(--ink);">
+        <input id="new-password" type="password" required minlength="6" placeholder="Tối thiểu 6 ký tự" style="width:100%;padding:10px;">
       </div>
       <div class="field" style="margin-bottom:18px;">
         <label for="confirm-password" style="font-size:11px;font-weight:bold;text-transform:uppercase;display:block;margin-bottom:4px;">Xác nhận mật khẩu mới</label>
-        <input id="confirm-password" type="password" required minlength="6" placeholder="Nhập lại mật khẩu mới" style="width:100%;padding:10px;border:1px solid var(--ink);">
+        <input id="confirm-password" type="password" required minlength="6" placeholder="Nhập lại mật khẩu mới" style="width:100%;padding:10px;">
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
-        <button type="button" id="close-password-dialog-btn" class="button alt" style="padding:8px 14px;font-size:11px;">Hủy</button>
-        <button type="submit" id="save-password-submit-btn" class="button" style="padding:8px 14px;font-size:11px;">Lưu mật khẩu</button>
+        <button type="button" id="close-password-dialog-btn" class="button alt" style="border-radius:999px;">Hủy</button>
+        <button type="submit" id="save-password-submit-btn" class="button" style="border-radius:999px;">Lưu mật khẩu</button>
       </div>
     </form>
   </dialog>
@@ -3056,7 +3056,7 @@
   <!-- ========================================== -->
   <!-- MODAL: YÊU CẦU RÚT TIỀN (EXECUTIVE PAYOUT) -->
   <!-- ========================================== -->
-  <dialog id="payout-dialog" style="border:1px solid var(--ink);padding:28px;max-width:480px;width:90%;background:#fff;box-shadow:0 14px 40px rgba(0,0,0,0.2);border-radius:6px;">
+  <dialog id="payout-dialog" style="padding:28px;max-width:500px;width:90%;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:12px;">
       <div>
         <span class="eyebrow" style="color:#2563eb;margin:0;">UniFLOWs Treasury</span>
@@ -3490,7 +3490,7 @@
   </aside>
   <div id="portal-notif-backdrop" class="portal-notif-backdrop"></div>
 
-  <script type="module" src="/assets/portal.js?v=20260915_r3"></script>
+  <script type="module" src="/assets/portal.js?v=20260915_r4"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

@@ -2395,24 +2395,28 @@ export function initTerritoryControls() {
       if (radioWorldwide) radioWorldwide.checked = true;
       if (radioCustom) radioCustom.checked = false;
       if (cardWorldwide) {
-        cardWorldwide.style.borderColor = '#0f172a';
-        cardWorldwide.style.background = '#f8fafc';
+        cardWorldwide.classList.add('selected');
+        cardWorldwide.style.borderColor = '';
+        cardWorldwide.style.background = '';
       }
       if (cardCustom) {
-        cardCustom.style.borderColor = '#e2e8f0';
-        cardCustom.style.background = '#fff';
+        cardCustom.classList.remove('selected');
+        cardCustom.style.borderColor = '';
+        cardCustom.style.background = '';
       }
       if (customPanel) customPanel.style.display = 'none';
     } else {
       if (radioWorldwide) radioWorldwide.checked = false;
       if (radioCustom) radioCustom.checked = true;
       if (cardCustom) {
-        cardCustom.style.borderColor = '#0f172a';
-        cardCustom.style.background = '#f8fafc';
+        cardCustom.classList.add('selected');
+        cardCustom.style.borderColor = '';
+        cardCustom.style.background = '';
       }
       if (cardWorldwide) {
-        cardWorldwide.style.borderColor = '#e2e8f0';
-        cardWorldwide.style.background = '#fff';
+        cardWorldwide.classList.remove('selected');
+        cardWorldwide.style.borderColor = '';
+        cardWorldwide.style.background = '';
       }
       if (customPanel) customPanel.style.display = 'block';
     }
@@ -2611,12 +2615,14 @@ function prepareReleaseWizard() {
   if (radWorldwide) radWorldwide.checked = true;
   if (radCustom) radCustom.checked = false;
   if (cardWorldwide) {
-    cardWorldwide.style.borderColor = '#0f172a';
-    cardWorldwide.style.background = '#f8fafc';
+    cardWorldwide.classList.add('selected');
+    cardWorldwide.style.borderColor = '';
+    cardWorldwide.style.background = '';
   }
   if (cardCustom) {
-    cardCustom.style.borderColor = '#e2e8f0';
-    cardCustom.style.background = '#fff';
+    cardCustom.classList.remove('selected');
+    cardCustom.style.borderColor = '';
+    cardCustom.style.background = '';
   }
   if (customPanel) customPanel.style.display = 'none';
 
@@ -3025,24 +3031,28 @@ export function restoreReleaseDraft(rawDraft) {
       if (radWorldwide) radWorldwide.checked = true;
       if (radCustom) radCustom.checked = false;
       if (cardWorldwide) {
-        cardWorldwide.style.borderColor = '#0f172a';
-        cardWorldwide.style.background = '#f8fafc';
+        cardWorldwide.classList.add('selected');
+        cardWorldwide.style.borderColor = '';
+        cardWorldwide.style.background = '';
       }
       if (cardCustom) {
-        cardCustom.style.borderColor = '#e2e8f0';
-        cardCustom.style.background = '#fff';
+        cardCustom.classList.remove('selected');
+        cardCustom.style.borderColor = '';
+        cardCustom.style.background = '';
       }
       if (customPanel) customPanel.style.display = 'none';
     } else {
       if (radWorldwide) radWorldwide.checked = false;
       if (radCustom) radCustom.checked = true;
       if (cardCustom) {
-        cardCustom.style.borderColor = '#0f172a';
-        cardCustom.style.background = '#f8fafc';
+        cardCustom.classList.add('selected');
+        cardCustom.style.borderColor = '';
+        cardCustom.style.background = '';
       }
       if (cardWorldwide) {
-        cardWorldwide.style.borderColor = '#e2e8f0';
-        cardWorldwide.style.background = '#fff';
+        cardWorldwide.classList.remove('selected');
+        cardWorldwide.style.borderColor = '';
+        cardWorldwide.style.background = '';
       }
       if (customPanel) customPanel.style.display = 'block';
     }
@@ -3621,35 +3631,35 @@ function renderWizardTracklist() {
     const audioStateText = tr.audioFile 
       ? `✓ ${tr.audioFile.name} (${(tr.audioFile.size / (1024 * 1024)).toFixed(1)} MB)` 
       : (tr.audioUrl ? `✓ URL: ${tr.audioUrl.substring(0, 32)}...` : 'Chưa chọn file Audio');
-    const audioStateColor = hasAudio ? '#0f172a' : '#64748b';
+    const audioStateColor = hasAudio ? 'var(--portal-text-main)' : 'var(--portal-text-dim)';
 
     const hasAtmos = Boolean(tr.dolbyAtmosFile || tr.dolbyAtmosUrl);
     const atmosStateText = tr.dolbyAtmosFile
       ? `✓ ${tr.dolbyAtmosFile.name} (${(tr.dolbyAtmosFile.size / (1024 * 1024)).toFixed(1)} MB)`
       : (tr.dolbyAtmosUrl ? `✓ URL: ${tr.dolbyAtmosUrl.substring(0, 32)}...` : 'Chưa có file Dolby Atmos (Tùy chọn)');
-    const atmosStateColor = hasAtmos ? '#0f172a' : '#64748b';
+    const atmosStateColor = hasAtmos ? 'var(--portal-text-main)' : 'var(--portal-text-dim)';
 
     return `
-      <div class="tracklist-studio-card" data-track-idx="${idx}" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:grid;gap:18px;">
+      <div class="tracklist-studio-card" data-track-idx="${idx}" style="display:grid;gap:18px;">
         
         <!-- Header of Track Card (AWAL Style) -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--glass-border-subtle);padding-bottom:14px;">
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <span style="font-family:'DM Mono',monospace;font-size:11.5px;font-weight:800;background:#0f172a;color:#fff;padding:5px 12px;border-radius:6px;letter-spacing:0.5px;">
+            <span style="font-family:'DM Mono',monospace;font-size:11.5px;font-weight:800;background:linear-gradient(135deg, #0284c7, #a855f7);color:#fff;padding:5px 12px;border-radius:6px;letter-spacing:0.5px;">
               TRACK #${String(idx + 1).padStart(2, '0')}
             </span>
-            <span class="track-header-title-summary" style="font-size:14.5px;font-weight:700;color:#0f172a;">
+            <span class="track-header-title-summary" style="font-size:15px;font-weight:800;color:var(--portal-text-main);">
               ${esc(tr.title || 'Chưa đặt tên')}
             </span>
-            <span class="track-header-audio-badge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:${hasAudio ? '#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;' : '#f8fafc;color:#64748b;border:1px solid #e2e8f0;'}">
+            <span class="track-header-audio-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:${hasAudio ? 'rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.25);' : 'var(--glass-bg-subtle);color:var(--portal-text-dim);border:1px solid var(--glass-border-subtle);'}">
               ${hasAudio ? '✓ Đã có Audio Master' : '⏳ Cần tải file Audio'}
             </span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
-            <button type="button" class="btn-track-up button alt" style="padding:6px 12px;font-size:11.5px;margin:0;border-color:#cbd5e1;" ${idx === 0 ? 'disabled' : ''} title="Đưa lên">▲</button>
-            <button type="button" class="btn-track-down button alt" style="padding:6px 12px;font-size:11.5px;margin:0;border-color:#cbd5e1;" ${idx === wizardTracks.length - 1 ? 'disabled' : ''} title="Đưa xuống">▼</button>
+            <button type="button" class="btn-track-up button alt" style="padding:6px 12px;font-size:11.5px;margin:0;" ${idx === 0 ? 'disabled' : ''} title="Đưa lên">▲</button>
+            <button type="button" class="btn-track-down button alt" style="padding:6px 12px;font-size:11.5px;margin:0;" ${idx === wizardTracks.length - 1 ? 'disabled' : ''} title="Đưa xuống">▼</button>
             ${wizardTracks.length > 1 ? `
-              <button type="button" class="btn-track-remove button alt remove" style="padding:6px 12px;font-size:11.5px;margin:0;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xoá bài này khỏi danh sách">✕ Xóa bài</button>
+              <button type="button" class="btn-track-remove button alt remove" style="padding:6px 12px;font-size:11.5px;margin:0;color:#ef4444;border-color:rgba(239,68,68,0.3);cursor:pointer;" title="Xoá bài này khỏi danh sách">✕ Xóa bài</button>
             ` : ''}
           </div>
         </div>
@@ -3657,130 +3667,130 @@ function renderWizardTracklist() {
         <!-- 1. Main Track Details Grid (Spacious 3-Column Layout) -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
           <div class="field" style="margin:0;">
-            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
+            <label style="font-size:12px;font-weight:700;color:var(--portal-text-main);display:block;margin-bottom:6px;">
               Tên bài hát (Track Title) *
             </label>
-            <input type="text" class="track-input-title" placeholder="Nhập tên bài hát..." value="${esc(tr.title)}" style="font-size:14px;font-weight:600;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;" required>
+            <input type="text" class="track-input-title" placeholder="Nhập tên bài hát..." value="${esc(tr.title)}" style="font-size:14px;font-weight:600;padding:10px 14px;width:100%;border-radius:10px;" required>
           </div>
           <div class="field" style="margin:0;">
-            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
+            <label style="font-size:12px;font-weight:700;color:var(--portal-text-main);display:block;margin-bottom:6px;">
               Nghệ sĩ hợp tác (Featured Artist - Tùy chọn)
             </label>
-            <input type="text" class="track-input-feat" placeholder="Tên nghệ sĩ kết hợp (nếu có)..." value="${esc(tr.featuredArtist)}" style="font-size:13px;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <input type="text" class="track-input-feat" placeholder="Tên nghệ sĩ kết hợp (nếu có)..." value="${esc(tr.featuredArtist)}" style="font-size:13px;padding:10px 14px;width:100%;border-radius:10px;">
           </div>
           <div class="field" style="margin:0;">
-            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
+            <label style="font-size:12px;font-weight:700;color:var(--portal-text-main);display:block;margin-bottom:6px;">
               Phiên bản (Version / Mix - Tùy chọn)
             </label>
-            <input type="text" class="track-input-version" placeholder="Radio Edit, Acoustic, Remix..." value="${esc(tr.version || '')}" style="font-size:13px;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <input type="text" class="track-input-version" placeholder="Radio Edit, Acoustic, Remix..." value="${esc(tr.version || '')}" style="font-size:13px;padding:10px 14px;width:100%;border-radius:10px;">
           </div>
         </div>
 
         <!-- 2. Audio Files Grid: Master Audio + Optional Dolby Atmos -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;background:#f8fafc;padding:18px;border-radius:8px;border:1px solid #e2e8f0;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;background:var(--glass-bg-subtle);padding:18px;border-radius:14px;border:1px solid var(--glass-border-subtle);">
           <!-- Master Audio -->
           <div style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <label style="font-size:12px;font-weight:700;color:#0f172a;text-transform:uppercase;">
+              <label style="font-size:12px;font-weight:800;color:var(--portal-text-main);text-transform:uppercase;">
                 🎵 File Master Audio (Stereo) *
               </label>
-              <span style="font-size:10.5px;color:#0f172a;background:#e2e8f0;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:700;">WAV / FLAC / MP3</span>
+              <span style="font-size:10.5px;color:var(--portal-text-main);background:var(--glass-bg-elevated);padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:700;border:1px solid var(--glass-border-subtle);">WAV / FLAC / MP3</span>
             </div>
             <div style="display:flex;gap:10px;align-items:center;">
-              <label class="button" style="padding:8px 14px;font-size:12px;margin:0;cursor:pointer;background:#0f172a;color:#fff;border-color:#0f172a;font-weight:700;white-space:nowrap;">
+              <label class="button" style="padding:8px 16px;font-size:12px;margin:0;cursor:pointer;font-weight:700;white-space:nowrap;border-radius:999px;">
                 📁 Chọn Master File
                 <input type="file" class="track-audio-input" accept="audio/wav,audio/flac,audio/x-wav,audio/mp3,audio/mpeg" style="display:none;">
               </label>
-              <span class="track-audio-status" style="font-size:11.5px;color:${audioStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+              <span class="track-audio-status" style="font-size:11.5px;color:${audioStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-weight:600;">
                 ${audioStateText}
               </span>
             </div>
-            <input type="url" class="track-input-audio-url" placeholder="Hoặc dán Link Google Drive/Dropbox Master (https://...)" value="${esc(tr.audioUrl || '')}" style="font-size:12px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <input type="url" class="track-input-audio-url" placeholder="Hoặc dán Link Google Drive/Dropbox Master (https://...)" value="${esc(tr.audioUrl || '')}" style="font-size:12px;padding:9px 12px;border-radius:10px;">
           </div>
 
           <!-- Dolby Atmos Spatial Audio -->
           <div style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <label style="font-size:12px;font-weight:700;color:#0f172a;text-transform:uppercase;">
+              <label style="font-size:12px;font-weight:800;color:var(--portal-text-main);text-transform:uppercase;">
                 🎧 Dolby Atmos Spatial Audio (Tùy chọn)
               </label>
-              <span style="font-size:10.5px;color:#0f172a;background:#e2e8f0;padding:2px 8px;border-radius:4px;font-weight:700;font-family:'DM Mono',monospace;">ADM BWF / WAV</span>
+              <span style="font-size:10.5px;color:var(--portal-text-main);background:var(--glass-bg-elevated);padding:2px 8px;border-radius:4px;font-weight:700;font-family:'DM Mono',monospace;border:1px solid var(--glass-border-subtle);">ADM BWF / WAV</span>
             </div>
             <div style="display:flex;gap:10px;align-items:center;">
-              <label class="button alt" style="padding:8px 14px;font-size:12px;margin:0;cursor:pointer;background:#fff;color:#0f172a;border-color:#cbd5e1;font-weight:700;white-space:nowrap;">
+              <label class="button alt" style="padding:8px 16px;font-size:12px;margin:0;cursor:pointer;font-weight:700;white-space:nowrap;border-radius:999px;">
                 🎧 Chọn File Atmos
                 <input type="file" class="track-atmos-input" accept="audio/wav,audio/x-wav,.wav" style="display:none;">
               </label>
-              <span class="track-atmos-status" style="font-size:11.5px;color:${atmosStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+              <span class="track-atmos-status" style="font-size:11.5px;color:${atmosStateColor};font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-weight:600;">
                 ${atmosStateText}
               </span>
             </div>
-            <input type="url" class="track-input-atmos-url" placeholder="Hoặc dán Link Drive/Dropbox Dolby Atmos (https://...)" value="${esc(tr.dolbyAtmosUrl || '')}" style="font-size:12px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <input type="url" class="track-input-atmos-url" placeholder="Hoặc dán Link Drive/Dropbox Dolby Atmos (https://...)" value="${esc(tr.dolbyAtmosUrl || '')}" style="font-size:12px;padding:9px 12px;border-radius:10px;">
           </div>
         </div>
 
         <!-- 3. Track Settings Row: Content Explicit Type & ISRC Code -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:16px;padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:16px;padding:14px 18px;background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:12px;">
           <div class="field" style="margin:0;">
-            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">Phân loại nội dung bài hát:</label>
-            <select class="track-select-explicit" style="font-size:12.5px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;font-weight:600;width:100%;">
+            <label style="font-size:12px;font-weight:700;color:var(--portal-text-main);display:block;margin-bottom:6px;">Phân loại nội dung bài hát:</label>
+            <select class="track-select-explicit" style="font-size:12.5px;padding:9px 12px;border-radius:10px;font-weight:600;width:100%;">
               <option value="false" ${!tr.explicit && !tr.isInstrumental ? 'selected' : ''}>Clean (Bản tiêu chuẩn / Không nhạy cảm)</option>
               <option value="true" ${tr.explicit ? 'selected' : ''}>[E] Explicit (Có từ ngữ nhạy cảm / 18+)</option>
               <option value="instrumental" ${tr.isInstrumental ? 'selected' : ''}>Instrumental (Nhạc không lời)</option>
             </select>
           </div>
           <div class="field" style="margin:0;">
-            <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">Mã ISRC của bài hát (Tùy chọn):</label>
-            <input type="text" class="track-input-isrc" placeholder="Để trống nếu muốn UniFLOWs cấp tự động" value="${esc(tr.isrc)}" style="font-family:'DM Mono',monospace;font-size:12.5px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:6px;width:100%;background:#fff;">
+            <label style="font-size:12px;font-weight:700;color:var(--portal-text-main);display:block;margin-bottom:6px;">Mã ISRC của bài hát (Tùy chọn):</label>
+            <input type="text" class="track-input-isrc" placeholder="Để trống nếu muốn UniFLOWs cấp tự động" value="${esc(tr.isrc)}" style="font-family:'DM Mono',monospace;font-size:12.5px;padding:9px 12px;border-radius:10px;width:100%;">
           </div>
         </div>
 
         <!-- 4. Production Credits Section (AWAL style) -->
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px;">
+        <div style="background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:12px;padding:16px 18px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
             <div>
-              <label style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;display:block;margin:0;">
+              <label style="font-size:12px;font-weight:800;color:var(--portal-text-main);text-transform:uppercase;display:block;margin:0;">
                 👥 Đội Ngũ Sản Xuất &amp; Tác Quyền Bài Hát (Production Credits)
               </label>
-              <span style="font-size:11.5px;color:#64748b;">Chọn vai trò trong danh sách chuẩn ngành và nhập tên tương ứng:</span>
+              <span style="font-size:11.5px;color:var(--portal-text-dim);">Chọn vai trò trong danh sách chuẩn ngành và nhập tên tương ứng:</span>
             </div>
-            <button type="button" class="btn-add-track-credit button alt" style="padding:6px 14px;font-size:12px;font-weight:700;background:#fff;border-color:#0f172a;color:#0f172a;cursor:pointer;">
+            <button type="button" class="btn-add-track-credit button alt" style="padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;border-radius:999px;">
               + Thêm Vai Trò / Người Tham Gia
             </button>
           </div>
 
           <div class="track-credits-container" style="display:grid;gap:8px;">
             ${(tr.credits || []).map((cr, cIdx) => `
-              <div class="track-credit-row" data-credit-idx="${cIdx}" style="display:flex;gap:10px;align-items:center;background:#fff;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;">
-                <select class="credit-input-role" style="font-size:12px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;flex:1;max-width:260px;font-weight:600;">
+              <div class="track-credit-row" data-credit-idx="${cIdx}" style="display:flex;gap:10px;align-items:center;background:var(--glass-bg-elevated);padding:8px 12px;border:1px solid var(--glass-border-subtle);border-radius:10px;">
+                <select class="credit-input-role" style="font-size:12px;padding:7px 10px;border-radius:8px;flex:1;max-width:260px;font-weight:600;">
                   ${INDUSTRY_PRODUCTION_ROLES.map(role => `
                     <option value="${esc(role)}" ${cr.role === role ? 'selected' : ''}>${esc(role)}</option>
                   `).join('')}
                 </select>
-                <input type="text" class="credit-input-name" placeholder="Họ và tên / Nghệ danh..." value="${esc(cr.name || '')}" style="font-size:12.5px;padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;flex:1;" required>
-                <button type="button" class="btn-del-credit button alt remove" style="padding:5px 10px;font-size:11.5px;color:#dc2626;border-color:#fca5a5;cursor:pointer;" title="Xóa vai trò này">✕</button>
+                <input type="text" class="credit-input-name" placeholder="Họ và tên / Nghệ danh..." value="${esc(cr.name || '')}" style="font-size:12.5px;padding:7px 12px;border-radius:8px;flex:1;" required>
+                <button type="button" class="btn-del-credit button alt remove" style="padding:5px 10px;font-size:11.5px;color:#ef4444;border-color:rgba(239,68,68,0.3);cursor:pointer;border-radius:8px;" title="Xóa vai trò này">✕</button>
               </div>
             `).join('')}
           </div>
         </div>
 
         <!-- 5. Lyrics Section -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px;">
+        <div style="background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);border-radius:12px;padding:16px 18px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-            <label style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;margin:0;">
+            <label style="font-size:12px;font-weight:800;color:var(--portal-text-main);text-transform:uppercase;margin:0;">
               📝 Lời Bài Hát (Lyrics Studio)
             </label>
-            <button type="button" class="btn-toggle-lrc button alt" style="padding:4px 12px;font-size:11px;font-weight:600;color:#0f172a;border-color:#cbd5e1;cursor:pointer;">
+            <button type="button" class="btn-toggle-lrc button alt" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border-radius:999px;">
               ${tr.showLrc ? 'Ẩn Lời Đồng Bộ LRC' : '+ Thêm Lời Đồng Bộ LRC (Tùy chọn)'}
             </button>
           </div>
-          <textarea class="track-textarea-lyrics" rows="4" placeholder="Dán toàn bộ lời bài hát (Plain text) tại đây để hiển thị trên Apple Music, Spotify, Zing MP3..." style="font-size:12.5px;padding:10px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;font-family:inherit;line-height:1.5;">${esc(tr.lyricsText || '')}</textarea>
+          <textarea class="track-textarea-lyrics" rows="4" placeholder="Dán toàn bộ lời bài hát (Plain text) tại đây để hiển thị trên Apple Music, Spotify, Zing MP3..." style="font-size:12.5px;padding:10px 12px;width:100%;border-radius:10px;resize:vertical;font-family:inherit;line-height:1.5;">${esc(tr.lyricsText || '')}</textarea>
 
-          <div class="track-lrc-wrapper" style="display:${tr.showLrc ? 'block' : 'none'};margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0;">
-            <label style="font-size:11.5px;font-weight:700;color:#0f172a;display:block;margin-bottom:4px;">
+          <div class="track-lrc-wrapper" style="display:${tr.showLrc ? 'block' : 'none'};margin-top:10px;padding-top:10px;border-top:1px dashed var(--glass-border-subtle);">
+            <label style="font-size:11.5px;font-weight:700;color:var(--portal-text-main);display:block;margin-bottom:4px;">
               Định dạng lời đồng bộ thời gian (.LRC):
             </label>
-            <textarea class="track-textarea-lrc" rows="4" placeholder="[00:12.30] Dòng lời bài hát thứ nhất...&#10;[00:15.80] Dòng lời bài hát thứ hai..." style="font-size:12px;font-family:'DM Mono',monospace;padding:10px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;line-height:1.4;">${esc(tr.lyricsLrc || '')}</textarea>
+            <textarea class="track-textarea-lrc" rows="4" placeholder="[00:12.30] Dòng lời bài hát thứ nhất...&#10;[00:15.80] Dòng lời bài hát thứ hai..." style="font-size:12px;font-family:'DM Mono',monospace;padding:10px 12px;width:100%;border-radius:10px;resize:vertical;line-height:1.4;">${esc(tr.lyricsLrc || '')}</textarea>
           </div>
         </div>
       </div>

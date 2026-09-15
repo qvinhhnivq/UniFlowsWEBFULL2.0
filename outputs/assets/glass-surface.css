@@ -636,3 +636,429 @@ dialog::backdrop {
   -webkit-backdrop-filter: blur(40px) saturate(220%) !important;
   border-bottom: 1px solid var(--glass-border) !important;
 }
+
+/* ==============================================================================
+   8. STUDIO RELEASE BUILDER & ULTRA-MODERN GLASS MODAL WIZARD
+   ============================================================================== */
+
+/* Modal Shell Container */
+dialog[open].release-dialog-shell {
+  border: 1px solid var(--glass-border) !important;
+  padding: 0 !important;
+  max-width: 1200px !important;
+  width: 95vw !important;
+  max-height: 92vh !important;
+  height: 92vh !important;
+  background: var(--glass-bg-elevated) !important;
+  backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
+  -webkit-backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
+  color: var(--portal-text-main) !important;
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.35), 0 0 1px rgba(255, 255, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 9999 !important;
+}
+
+[data-theme="dark"] dialog[open].release-dialog-shell,
+.portal-body.dark-mode dialog[open].release-dialog-shell {
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Modal Header */
+.release-modal-header {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  color: var(--portal-text-main) !important;
+  border-bottom: 1px solid var(--glass-border-subtle) !important;
+  padding: 18px 28px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+.release-modal-header .eyebrow {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  color: #0284c7 !important;
+  margin: 0 !important;
+}
+
+[data-theme="dark"] .release-modal-header .eyebrow,
+.portal-body.dark-mode .release-modal-header .eyebrow {
+  color: #38bdf8 !important;
+}
+
+.release-modal-header h2 {
+  margin: 4px 0 0 !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--portal-text-main) !important;
+}
+
+/* Header Glass Action Buttons */
+#btn-save-release-draft-header,
+#close-release-dialog-btn,
+#close-epk-btn,
+#close-mig-dialog-btn {
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--portal-text-main) !important;
+  border-radius: 9999px !important;
+  padding: 7px 16px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+}
+
+#btn-save-release-draft-header:hover {
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+  border-color: #0284c7 !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15) !important;
+}
+
+#close-release-dialog-btn:hover,
+#close-epk-btn:hover,
+#close-mig-dialog-btn:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Stepper Bar */
+.release-stepper {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  background: var(--glass-bg-subtle) !important;
+  border-bottom: 1px solid var(--glass-border-subtle) !important;
+  flex-shrink: 0 !important;
+  gap: 0 !important;
+}
+
+.stepper-item {
+  padding: 14px 16px !important;
+  text-align: center !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: var(--portal-text-muted) !important;
+  border-bottom: 2.5px solid transparent !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  position: relative !important;
+  background: transparent !important;
+}
+
+.stepper-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--portal-text-main) !important;
+}
+
+.stepper-item.active {
+  color: var(--portal-text-main) !important;
+  font-weight: 800 !important;
+  background: var(--glass-bg-elevated) !important;
+  border-bottom-color: #a855f7 !important;
+}
+
+.stepper-item.completed {
+  color: #10b981 !important;
+}
+
+.stepper-item .step-num {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: var(--portal-text-dim) !important;
+  transition: all 0.25s ease !important;
+}
+
+.stepper-item.active .step-num {
+  background: linear-gradient(135deg, #0284c7 0%, #a855f7 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 10px rgba(168, 85, 247, 0.4) !important;
+}
+
+.stepper-item.completed .step-num {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
+/* Step Panels */
+.release-step-panel {
+  display: none;
+  padding: 28px 36px !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+}
+
+.release-step-panel.active {
+  display: block !important;
+}
+
+/* Studio Dropzone */
+.studio-dropzone {
+  border: 2px dashed var(--glass-border) !important;
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-radius: 16px !important;
+  padding: 22px !important;
+  color: var(--portal-text-main) !important;
+  transition: all 0.25s ease !important;
+}
+
+.studio-dropzone:hover {
+  border-color: #a855f7 !important;
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.15) !important;
+}
+
+/* Choice Cards (Radio / Toggles) */
+.explicit-choice-card,
+.upc-choice-card {
+  background: var(--glass-bg-subtle) !important;
+  border: 1.5px solid var(--glass-border-subtle) !important;
+  border-radius: 14px !important;
+  padding: 14px 18px !important;
+  transition: all 0.2s ease !important;
+}
+
+.explicit-choice-card:hover,
+.upc-choice-card:hover {
+  border-color: #0284c7 !important;
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+}
+
+.explicit-choice-card:has(input:checked),
+.upc-choice-card:has(input:checked) {
+  border-color: #a855f7 !important;
+  background: rgba(168, 85, 247, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.15) !important;
+}
+
+[data-theme="dark"] .explicit-choice-card:has(input:checked),
+[data-theme="dark"] .upc-choice-card:has(input:checked) {
+  background: rgba(168, 85, 247, 0.18) !important;
+}
+
+/* Track Studio Cards */
+.tracklist-studio-card {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 18px !important;
+  padding: 22px 26px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+.tracklist-studio-card:hover {
+  border-color: var(--glass-border) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* DSP Platform Cards */
+.dsp-card {
+  background: var(--glass-bg-subtle) !important;
+  border: 1.5px solid var(--glass-border-subtle) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  color: var(--portal-text-main) !important;
+  transition: all 0.2s ease !important;
+}
+
+.dsp-card:hover {
+  border-color: #0284c7 !important;
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+}
+
+.dsp-card.selected,
+.dsp-card.dsp-card-active {
+  border-color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.08) !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="dark"] .dsp-card.selected,
+[data-theme="dark"] .dsp-card.dsp-card-active {
+  background: rgba(2, 132, 199, 0.2) !important;
+}
+
+/* Country Cards */
+.country-card {
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  color: var(--portal-text-main) !important;
+  transition: all 0.18s ease !important;
+}
+
+.country-card:hover {
+  border-color: #0284c7 !important;
+  background: var(--glass-bg-elevated) !important;
+}
+
+.country-card.selected {
+  border-color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.08) !important;
+}
+
+/* Live Studio Mockup Card in Step 4 */
+.release-live-preview-card {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 18px !important;
+  padding: 24px !important;
+  color: var(--portal-text-main) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06) !important;
+}
+
+.preview-art {
+  border-radius: 12px !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Footer Navigation Bar */
+.release-modal-footer {
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-top: 1px solid var(--glass-border-subtle) !important;
+  padding: 16px 28px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  gap: 12px !important;
+}
+
+/* Modern Pill Action Buttons */
+#prev-step-btn {
+  border-radius: 9999px !important;
+  padding: 10px 22px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--portal-text-main) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+#prev-step-btn:hover {
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+}
+
+#btn-save-release-draft-footer {
+  border-radius: 9999px !important;
+  padding: 10px 22px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--portal-text-main) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+#btn-save-release-draft-footer:hover {
+  background: var(--glass-bg-elevated) !important;
+  transform: translateY(-1px);
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15) !important;
+}
+
+#cancel-release-btn {
+  border-radius: 9999px !important;
+  padding: 10px 20px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  background: rgba(239, 68, 68, 0.06) !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  color: #ef4444 !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+#cancel-release-btn:hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border-color: #ef4444 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2) !important;
+}
+
+#next-step-btn {
+  border-radius: 9999px !important;
+  padding: 11px 28px !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.2px !important;
+  background: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+#next-step-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+}
+
+#submit-release-btn {
+  border-radius: 9999px !important;
+  padding: 12px 34px !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 10px 28px rgba(16, 185, 129, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+#submit-release-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 36px rgba(16, 185, 129, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+}
