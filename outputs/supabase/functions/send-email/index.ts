@@ -38,7 +38,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: from || "UniFLOWs Record Label <notifications@uniflowslabel.com>",
+          from: from || "UniFLOWs Record Label <no-reply@uniflowslabel.com>",
           to: Array.isArray(to) ? to : [to],
           subject,
           html,
@@ -63,7 +63,7 @@ serve(async (req) => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          sender: { name: "UniFLOWs Record Label", email: from || "notifications@uniflowslabel.com" },
+          sender: { name: "UniFLOWs Record Label", email: from || "no-reply@uniflowslabel.com" },
           to: [{ email: to }],
           subject,
           htmlContent: html,

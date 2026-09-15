@@ -7573,7 +7573,7 @@ function initEmailConfigAdmin() {
     const updatedCfg = {
       enabled: chkEnabled.checked,
       provider: selProvider?.value || 'brevo',
-      senderEmail: inputSenderEmail?.value.trim() || 'notifications@uniflowslabel.com',
+      senderEmail: inputSenderEmail?.value.trim() || 'no-reply@uniflowslabel.com',
       senderName: inputSenderName?.value.trim() || 'UniFLOWs Record Label',
       apiKey: inputApiKey?.value.trim() || '',
       webhookUrl: inputWebhookUrl?.value.trim() || '',

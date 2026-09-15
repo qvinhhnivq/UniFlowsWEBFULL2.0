@@ -10,7 +10,7 @@ export const DEFAULT_EMAIL_CONFIG = {
   enabled: false,
   provider: 'brevo', // 'brevo' (khuyên dùng trực tiếp từ Web) | 'resend' | 'supabase_edge' | 'custom_webhook'
   apiKey: '',
-  senderEmail: 'notifications@uniflowslabel.com',
+  senderEmail: 'no-reply@uniflowslabel.com',
   senderName: 'UniFLOWs Record Label',
   supabaseEdgeUrl: '',
   webhookUrl: '',
@@ -96,7 +96,7 @@ export async function sendEmail({ to, subject, html, text, bypassEnabledCheck = 
   const senderName = cfg.senderName || 'UniFLOWs Record Label';
   const senderEmail = (cfg.senderEmail && cfg.senderEmail.includes('@')) 
     ? cfg.senderEmail.trim() 
-    : 'notifications@uniflowslabel.com';
+    : 'no-reply@uniflowslabel.com';
   const sender = `${senderName} <${senderEmail}>`;
 
   // 1. Gửi qua Brevo (Sendinblue) API v3 (Khuyên dùng - hoạt động trực tiếp trên Browser không bị CORS)
@@ -936,14 +936,14 @@ export async function sendTestEmail(toEmail) {
     };
   }
 
-  const subject = `🧪 [UniFLOWs Test] Kiểm tra kết nối Email Domain: ${cfg.senderEmail || 'notifications@uniflowslabel.com'}`;
+  const subject = `🧪 [UniFLOWs Test] Kiểm tra kết nối Email Domain: ${cfg.senderEmail || 'no-reply@uniflowslabel.com'}`;
 
   const contentHtml = `
     <p style="font-size:16px;color:#111827;font-weight:700;margin-top:0;font-family:'Manrope',sans-serif;">
       Xin chúc mừng! Hệ thống Email Domain của bạn đã hoạt động hoàn hảo.
     </p>
     <p style="color:#374151;line-height:1.65;font-family:'Manrope',sans-serif;">
-      Email này được gửi tự động từ địa chỉ <b>${cfg.senderEmail || 'notifications@uniflowslabel.com'}</b> thông qua nhà cung cấp <b>${(cfg.provider || 'BREVO').toUpperCase()}</b>.
+      Email này được gửi tự động từ địa chỉ <b>${cfg.senderEmail || 'no-reply@uniflowslabel.com'}</b> thông qua nhà cung cấp <b>${(cfg.provider || 'BREVO').toUpperCase()}</b>.
     </p>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #16a34a;padding:16px 20px;font-size:13px;color:#166534;margin:20px 0;line-height:1.7;font-family:'DM Mono',Courier,monospace;">
       ✓ Kết nối API nhà cung cấp thành công.<br>
