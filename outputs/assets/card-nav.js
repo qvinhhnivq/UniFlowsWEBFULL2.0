@@ -259,7 +259,7 @@ export async function initCardNav(mountTarget, options = {}) {
             else {
               localStorage.removeItem('uniflows-artist');
               sessionStorage.removeItem('uniflows-artist');
-              location.href = 'artist-login';
+              location.href = 'artist-login.html';
             }
           }
         } else if (linkItem.hash) {

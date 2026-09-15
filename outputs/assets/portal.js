@@ -9,7 +9,7 @@ import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } 
 const rawAuth = sessionStorage.getItem('uniflows-artist') || localStorage.getItem('uniflows-artist');
 const isArtistAuth = rawAuth === 'true' || (rawAuth && rawAuth.startsWith('{')) || !!(sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id'));
 if (!isArtistAuth) {
-  location.replace('artist-login');
+  location.replace('artist-login.html');
 }
 
 const form = document.querySelector('#release-form');
@@ -6731,7 +6731,7 @@ export async function performArtistLogout() {
     localStorage.removeItem('uniflows-artist-id');
     localStorage.removeItem('uniflows-artist-email');
     localStorage.removeItem('uniflows-artist-name');
-    location.href = 'artist-login';
+    location.href = 'artist-login.html';
   }
 }
 window.performArtistLogout = performArtistLogout;
