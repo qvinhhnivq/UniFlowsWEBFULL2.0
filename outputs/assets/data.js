@@ -670,6 +670,7 @@ export async function getData() {
             topCity: stats.topCity || localCachedArtist.topCity || 'Hồ Chí Minh',
             topSource: stats.topSource || localCachedArtist.topSource || 'Spotify Editorial & Algorithmic',
             banking: a.banking || stats.banking || localCachedArtist.banking || null,
+            customLinks: a.custom_links || stats.customLinks || localCachedArtist.customLinks || [],
             products: finalProducts
           };
         });
@@ -842,6 +843,7 @@ export async function saveData(data) {
             topCity: a.topCity || 'Hồ Chí Minh',
             topSource: a.topSource || 'Spotify Editorial & Algorithmic',
             banking: a.banking || null,
+            customLinks: a.customLinks || [],
             products: a.products || []
           };
 
@@ -867,6 +869,7 @@ export async function saveData(data) {
             royalty_rate: a.royaltyRate || '80% Master',
             contract_term: a.contractTerm || '2024 - 2027',
             banking: a.banking || null,
+            custom_links: a.customLinks || [],
             stats: stats,
             updated_at: new Date().toISOString()
           };

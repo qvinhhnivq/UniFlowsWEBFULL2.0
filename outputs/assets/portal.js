@@ -422,55 +422,73 @@ if (artist) {
   const roleBannerEl = document.querySelector('#portal-role-banner');
   const welcomeDescEl = document.querySelector('#portal-welcome-desc');
 
-  const roleMap = {
-    partner: { text: '🤝 ĐỐI TÁC CHIẾN LƯỢC (PARTNER)', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', desc: 'Bảng điều khiển đối tác: Xem số liệu thống kê & nhận doanh thu chia sẻ (Split Royalty) từ các bản phát hành có tham gia.' },
-    collab: { text: '✨ NGHỆ SĨ COLLAB (FEATURED)', bg: '#fdf4ff', color: '#86198f', border: '#f0abfc', desc: 'Bảng điều khiển nghệ sĩ Collab: Theo dõi stats và doanh thu từ các tác phẩm hợp tác theo thỏa thuận Split Royalty.' },
-    producer: { text: '🎛️ PRODUCER / NHẠC SĨ', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe', desc: 'Bảng điều khiển Producer: Theo dõi tác quyền beat, master và doanh thu phân bổ từ các bản phát hành.' },
-    manager: { text: '👔 QUẢN LÝ / ĐẠI DIỆN', bg: '#f1f5f9', color: '#334155', border: '#cbd5e1', desc: 'Bảng điều khiển quản lý: Theo dõi dòng tiền, đối soát và lịch sử phát hành của nghệ sĩ.' },
-    exclusive: { text: '⭐ NGHỆ SĨ ĐỘC QUYỀN', bg: '#fef3c7', color: '#b45309', border: '#fde68a', desc: 'Hồ sơ nghệ sĩ độc quyền UniFLOWs: Toàn quyền quản lý phát hành, catalogue và đối soát tài chính.' },
-    distribution: { text: '💿 NGHỆ SĨ PHÂN PHỐI', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', desc: 'Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP.' }
-  };
+  function renderRoleInfo(lang = getCurrentLang()) {
+    const isEn = lang === 'en';
+    const roleMapVi = {
+      partner: { text: '🤝 ĐỐI TÁC CHIẾN LƯỢC (PARTNER)', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', desc: 'Bảng điều khiển đối tác: Xem số liệu thống kê & nhận doanh thu chia sẻ (Split Royalty) từ các bản phát hành có tham gia.' },
+      collab: { text: '✨ NGHỆ SĨ COLLAB (FEATURED)', bg: '#fdf4ff', color: '#86198f', border: '#f0abfc', desc: 'Bảng điều khiển nghệ sĩ Collab: Theo dõi stats và doanh thu từ các tác phẩm hợp tác theo thỏa thuận Split Royalty.' },
+      producer: { text: '🎛️ PRODUCER / NHẠC SĨ', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe', desc: 'Bảng điều khiển Producer: Theo dõi tác quyền beat, master và doanh thu phân bổ từ các bản phát hành.' },
+      manager: { text: '👔 QUẢN LÝ / ĐẠI DIỆN', bg: '#f1f5f9', color: '#334155', border: '#cbd5e1', desc: 'Bảng điều khiển quản lý: Theo dõi dòng tiền, đối soát và lịch sử phát hành của nghệ sĩ.' },
+      exclusive: { text: '⭐ NGHỆ SĨ ĐỘC QUYỀN', bg: '#fef3c7', color: '#b45309', border: '#fde68a', desc: 'Hồ sơ nghệ sĩ độc quyền UniFLOWs: Toàn quyền quản lý phát hành, catalogue và đối soát tài chính.' },
+      distribution: { text: '💿 NGHỆ SĨ PHÂN PHỐI', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', desc: 'Quản lý toàn bộ catalogue, phát hành âm nhạc mới, theo dõi doanh thu và đối soát DSP.' }
+    };
+    const roleMapEn = {
+      partner: { text: '🤝 STRATEGIC PARTNER', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', desc: 'Partner Dashboard: Monitor streaming statistics and receive split royalty allocations from collaborative releases.' },
+      collab: { text: '✨ COLLAB ARTIST (FEATURED)', bg: '#fdf4ff', color: '#86198f', border: '#f0abfc', desc: 'Collab Artist Dashboard: Track performance stats and split royalty revenue according to collaboration agreements.' },
+      producer: { text: '🎛️ PRODUCER / SONGWRITER', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe', desc: 'Producer Dashboard: Track beat licenses, master royalties, and royalty disbursements.' },
+      manager: { text: '👔 MANAGER / REPRESENTATIVE', bg: '#f1f5f9', color: '#334155', border: '#cbd5e1', desc: 'Management Dashboard: Monitor cashflows, financial statements, and artist release history.' },
+      exclusive: { text: '⭐ EXCLUSIVE ARTIST', bg: '#fef3c7', color: '#b45309', border: '#fde68a', desc: 'UniFLOWs Exclusive Artist Profile: Full control over music releases, catalogue, and financial settlement.' },
+      distribution: { text: '💿 DISTRIBUTION ARTIST', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', desc: 'Manage your music catalogue, distribute new tracks, and track global DSP streaming performance.' }
+    };
+    const roleMap = isEn ? roleMapEn : roleMapVi;
+    const currentRole = roleMap[artist.roleType] || roleMap.distribution;
+    if (roleBadgeEl) {
+      roleBadgeEl.style.display = 'inline-flex';
+      roleBadgeEl.style.alignItems = 'center';
+      roleBadgeEl.textContent = currentRole.text;
+      roleBadgeEl.style.background = currentRole.bg;
+      roleBadgeEl.style.color = currentRole.color;
+      roleBadgeEl.style.border = `1px solid ${currentRole.border}`;
+      roleBadgeEl.style.letterSpacing = '0.5px';
+      roleBadgeEl.style.fontFamily = "'DM Mono', monospace, sans-serif";
+      roleBadgeEl.style.fontSize = '11px';
+      roleBadgeEl.style.fontWeight = '700';
+      roleBadgeEl.style.lineHeight = '1.4';
+      roleBadgeEl.style.whiteSpace = 'nowrap';
+    }
 
-  const currentRole = roleMap[artist.roleType] || roleMap.distribution;
-  if (roleBadgeEl) {
-    roleBadgeEl.style.display = 'inline-flex';
-    roleBadgeEl.style.alignItems = 'center';
-    roleBadgeEl.textContent = currentRole.text;
-    roleBadgeEl.style.background = currentRole.bg;
-    roleBadgeEl.style.color = currentRole.color;
-    roleBadgeEl.style.border = `1px solid ${currentRole.border}`;
-    roleBadgeEl.style.letterSpacing = '0.5px';
-    roleBadgeEl.style.fontFamily = "'DM Mono', monospace, sans-serif";
-    roleBadgeEl.style.fontSize = '11px';
-    roleBadgeEl.style.fontWeight = '700';
-    roleBadgeEl.style.lineHeight = '1.4';
-    roleBadgeEl.style.whiteSpace = 'nowrap';
-  }
+    // Permissions: Collab restriction
+    if (artist.roleType === 'collab') {
+      document.querySelectorAll('.release-action-btn').forEach(btn => {
+        btn.style.display = 'none';
+      });
+      const collabNotice = document.querySelector('#collab-release-notice');
+      if (collabNotice) {
+        collabNotice.style.display = 'block';
+        collabNotice.innerHTML = isEn
+          ? `<strong>✨ Collab Artist Permissions:</strong> You have permission to view analytics and receive split royalties from participating tracks. New release submission is managed by the <b>Primary Artist</b> or <b>Management</b>.`
+          : `<strong>✨ Quyền hạn Tài khoản Nghệ sĩ Collab:</strong> Bạn có quyền xem thống kê phân tích và nhận phân bổ doanh thu (Royalty Splits) từ các bài hát có tham gia. Quyền nộp bản phát hành mới do <b>Nghệ sĩ chính (Primary Artist)</b> hoặc <b>Quản lý</b> thực hiện.`;
+      }
+    }
 
-  // Permissions: Collab restriction
-  if (artist.roleType === 'collab') {
-    document.querySelectorAll('.release-action-btn').forEach(btn => {
-      btn.style.display = 'none';
-    });
-    const collabNotice = document.querySelector('#collab-release-notice');
-    if (collabNotice) collabNotice.style.display = 'block';
-  }
+    if (roleBannerEl) {
+      if (artist.roleType === 'partner' || artist.roleType === 'collab' || artist.roleType === 'producer') {
+        roleBannerEl.style.display = 'block';
+        roleBannerEl.style.background = currentRole.bg;
+        roleBannerEl.style.color = currentRole.color;
+        roleBannerEl.style.border = `1px solid ${currentRole.border}`;
+        roleBannerEl.innerHTML = `<strong>${currentRole.text}:</strong> ${currentRole.desc}`;
+      } else {
+        roleBannerEl.style.display = 'none';
+      }
+    }
 
-  if (roleBannerEl) {
-    if (artist.roleType === 'partner' || artist.roleType === 'collab' || artist.roleType === 'producer') {
-      roleBannerEl.style.display = 'block';
-      roleBannerEl.style.background = currentRole.bg;
-      roleBannerEl.style.color = currentRole.color;
-      roleBannerEl.style.border = `1px solid ${currentRole.border}`;
-      roleBannerEl.innerHTML = `<strong>${currentRole.text}:</strong> ${currentRole.desc}`;
-    } else {
-      roleBannerEl.style.display = 'none';
+    if (welcomeDescEl && currentRole.desc) {
+      welcomeDescEl.textContent = currentRole.desc;
     }
   }
 
-  if (welcomeDescEl && currentRole.desc) {
-    welcomeDescEl.textContent = currentRole.desc;
-  }
+  renderRoleInfo(getCurrentLang());
 
   // Contract & Payout Cycle fields
   const overviewCycleEl = document.querySelector('#overview-payout-cycle');
@@ -515,19 +533,20 @@ function renderPortalAnnouncements(announcements = []) {
 
   if (section) section.style.display = 'block';
 
+  const isEn = getCurrentLang() === 'en';
   container.innerHTML = activeAnnouncements.map(ann => {
     const isImportant = ann.type === 'important';
     const isUpdate = ann.type === 'update';
     
     let badgeClass = 'notif-badge-system';
-    let badgeText = '📢 Thông báo';
+    let badgeText = isEn ? '📢 Notice' : '📢 Thông báo';
     
     if (isImportant) {
       badgeClass = 'notif-badge-release';
-      badgeText = '🔥 Quan trọng';
+      badgeText = isEn ? '🔥 Urgent' : '🔥 Quan trọng';
     } else if (isUpdate) {
       badgeClass = 'notif-badge-payout';
-      badgeText = '⚡ Cập nhật';
+      badgeText = isEn ? '⚡ Update' : '⚡ Cập nhật';
     }
 
     return `
@@ -548,10 +567,10 @@ function renderPortalAnnouncements(announcements = []) {
   const isCollapsed = localStorage.getItem('uniflows-announcements-collapsed') === 'true';
   if (isCollapsed) {
     container.style.display = 'none';
-    if (toggleBtn) toggleBtn.textContent = 'Mở rộng ▼';
+    if (toggleBtn) toggleBtn.textContent = isEn ? 'Expand ▼' : 'Mở rộng ▼';
   } else {
     container.style.display = 'grid';
-    if (toggleBtn) toggleBtn.textContent = 'Thu gọn ▲';
+    if (toggleBtn) toggleBtn.textContent = isEn ? 'Collapse ▲' : 'Thu gọn ▲';
   }
 
   toggleBtn?.addEventListener('click', () => {
@@ -5653,12 +5672,17 @@ function setupSearchableBankDropdown({
         <div style="padding:14px 16px;font-size:12.5px;color:var(--portal-text-dim);text-align:center;">
           Không tìm thấy ngân hàng hoặc ví điện tử nào phù hợp.
         </div>
+        <div class="bank-dropdown-footer-close" style="padding:8px 10px;text-align:center;border-top:1px solid var(--glass-border-subtle);background:var(--glass-bg-subtle);border-radius:0 0 14px 14px;">
+          <button type="button" class="button alt bank-close-explicit-btn" style="width:100%;font-size:11.5px;padding:6px 12px;border-radius:8px;font-weight:700;">✕ Đóng danh sách / Close</button>
+        </div>
       `;
+      const cBtn = dropdown.querySelector('.bank-close-explicit-btn');
+      cBtn?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); closeDropdown(); });
       return;
     }
 
     const currentVal = hiddenInput?.value || '';
-    dropdown.innerHTML = list.map((b, idx) => {
+    const itemsHtml = list.map((b, idx) => {
       const isSelected = currentVal === `${b.shortName} (${b.code})` || currentVal === b.shortName || currentVal === b.code;
       return `
         <div class="bank-option-item ${isSelected ? 'selected' : ''}" data-index="${idx}">
@@ -5674,6 +5698,15 @@ function setupSearchableBankDropdown({
       `;
     }).join('');
 
+    dropdown.innerHTML = `
+      <div class="bank-options-scroll" style="display:flex;flex-direction:column;gap:3px;max-height:240px;overflow-y:auto;">
+        ${itemsHtml}
+      </div>
+      <div class="bank-dropdown-footer-close" style="padding:8px 10px;text-align:center;border-top:1px solid var(--glass-border-subtle);background:var(--glass-bg-subtle);border-radius:0 0 14px 14px;margin-top:4px;">
+        <button type="button" class="button alt bank-close-explicit-btn" style="width:100%;font-size:11.5px;padding:6px 12px;border-radius:8px;font-weight:700;">✕ Đóng danh sách (Close)</button>
+      </div>
+    `;
+
     dropdown.querySelectorAll('.bank-option-item').forEach(item => {
       const handleSelect = (e) => {
         e.preventDefault();
@@ -5684,9 +5717,14 @@ function setupSearchableBankDropdown({
           selectBank(selected);
         }
       };
-      item.addEventListener('mousedown', handleSelect);
-      item.addEventListener('touchstart', handleSelect, { passive: false });
       item.addEventListener('click', handleSelect);
+    });
+
+    const closeBtn = dropdown.querySelector('.bank-close-explicit-btn');
+    closeBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeDropdown();
     });
   }
 
@@ -5751,6 +5789,21 @@ function setupSearchableBankDropdown({
     }
   });
 
+  const arrow = wrapper.querySelector('.bank-search-arrow');
+  if (arrow) {
+    arrow.style.cursor = 'pointer';
+    arrow.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (wrapper.classList.contains('open')) {
+        closeDropdown();
+      } else {
+        openDropdown();
+        searchInput.focus();
+      }
+    });
+  }
+
   searchInput.addEventListener('input', () => {
     if (!wrapper.classList.contains('open')) {
       wrapper.classList.add('open');
@@ -5803,13 +5856,13 @@ function setupSearchableBankDropdown({
   }
 
   const handleOutsideClick = (e) => {
-    if (!wrapper.contains(e.target)) {
+    if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
       closeDropdown();
     }
   };
 
-  document.addEventListener('click', handleOutsideClick);
-  document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+  document.addEventListener('click', handleOutsideClick, true);
+  document.addEventListener('touchend', handleOutsideClick, true);
 
   return {
     setBank: (bankCodeOrShortName) => {
@@ -5882,6 +5935,54 @@ function initProfileSettingsDialog() {
     noticeEl.style.border = `1px solid ${isSuccess ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`;
   }
 
+  // Helper for Custom Platform Links in Tab 2
+  const customLinksContainer = document.querySelector('#profile-custom-links-container');
+  const addCustomLinkBtn = document.querySelector('#add-custom-link-btn');
+
+  function createCustomLinkRow(name = '', url = '') {
+    const row = document.createElement('div');
+    row.className = 'custom-link-row';
+    row.style.cssText = 'display:grid;grid-template-columns:140px 1fr 34px;gap:8px;align-items:center;';
+    
+    row.innerHTML = `
+      <input type="text" class="custom-platform-name-input" placeholder="TÊN NỀN TẢNG" value="${esc(name.toUpperCase())}" style="text-transform:uppercase;font-weight:800;font-size:12px;letter-spacing:0.03em;" required>
+      <input type="url" class="custom-platform-url-input" placeholder="https://..." value="${esc(url)}" style="font-size:12.5px;" required>
+      <button type="button" class="button alt remove-custom-link-btn" title="Xóa liên kết này" style="padding:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#ef4444;border-color:rgba(239,68,68,0.3);border-radius:8px;font-size:13px;cursor:pointer;">✕</button>
+    `;
+
+    const nameInput = row.querySelector('.custom-platform-name-input');
+    nameInput?.addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+
+    const removeBtn = row.querySelector('.remove-custom-link-btn');
+    removeBtn?.addEventListener('click', () => {
+      row.remove();
+    });
+
+    return row;
+  }
+
+  function renderCustomLinks(links = []) {
+    if (!customLinksContainer) return;
+    customLinksContainer.innerHTML = '';
+    if (Array.isArray(links) && links.length > 0) {
+      links.forEach(l => {
+        if (l && (l.name || l.url)) {
+          customLinksContainer.appendChild(createCustomLinkRow(l.name || '', l.url || ''));
+        }
+      });
+    }
+  }
+
+  addCustomLinkBtn?.addEventListener('click', () => {
+    if (!customLinksContainer) return;
+    const newRow = createCustomLinkRow('', '');
+    customLinksContainer.appendChild(newRow);
+    const firstInput = newRow.querySelector('.custom-platform-name-input');
+    firstInput?.focus();
+  });
+
   function populateProfileData() {
     if (noticeEl) noticeEl.style.display = 'none';
 
@@ -5907,7 +6008,7 @@ function initProfileSettingsDialog() {
     if (accNum) accNum.value = banking.accountNumber || '';
     if (accName) accName.value = banking.accountName || '';
 
-    // Tab 2: Info
+    // Tab 2: Info & Custom Links
     const nameInp = document.querySelector('#profile-artist-name-input');
     const genreInp = document.querySelector('#profile-genre-input');
     const bioInp = document.querySelector('#profile-bio-input');
@@ -5919,6 +6020,8 @@ function initProfileSettingsDialog() {
     if (bioInp) bioInp.value = artist.bio || '';
     if (igInp) igInp.value = (artist.socials && artist.socials.instagram) || artist.instagram || '';
     if (tiktokInp) tiktokInp.value = (artist.socials && artist.socials.tiktok) || artist.tiktok || '';
+
+    renderCustomLinks(artist.customLinks || artist.custom_links || []);
 
     // Tab 3: Photo
     const photoFile = document.querySelector('#profile-photo-file-input');
@@ -6008,7 +6111,7 @@ function initProfileSettingsDialog() {
     }
   });
 
-  // Form 2: Artist Info Submit
+  // Form 2: Artist Info & Custom Links Submit
   const infoForm = document.querySelector('#profile-info-form');
   infoForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -6022,6 +6125,16 @@ function initProfileSettingsDialog() {
       showProfileNotice('Tên hiển thị nghệ sĩ không được để trống.', false);
       return;
     }
+
+    // Collect custom links
+    const customLinks = [];
+    document.querySelectorAll('#profile-custom-links-container .custom-link-row').forEach(row => {
+      const name = (row.querySelector('.custom-platform-name-input')?.value || '').trim().toUpperCase();
+      const url = (row.querySelector('.custom-platform-url-input')?.value || '').trim();
+      if (name && url) {
+        customLinks.push({ name, url });
+      }
+    });
 
     const saveBtn = document.querySelector('#save-profile-info-btn');
     if (saveBtn) {
@@ -6048,6 +6161,43 @@ function initProfileSettingsDialog() {
       if (!liveData.artists[currentArtistIdx].socials) liveData.artists[currentArtistIdx].socials = {};
       liveData.artists[currentArtistIdx].socials.instagram = ig;
       liveData.artists[currentArtistIdx].socials.tiktok = tiktok;
+      liveData.artists[currentArtistIdx].customLinks = customLinks;
+
+      artist.name = newName;
+      artist.genre = genre;
+      artist.bio = bio;
+      if (!artist.socials) artist.socials = {};
+      artist.socials.instagram = ig;
+      artist.socials.tiktok = tiktok;
+      artist.customLinks = customLinks;
+
+      if (data.artists && data.artists[currentArtistIdx]) {
+        data.artists[currentArtistIdx] = { ...liveData.artists[currentArtistIdx] };
+      }
+
+      await saveData(liveData);
+      try {
+        localStorage.setItem('uniflows-artist', JSON.stringify(artist));
+        sessionStorage.setItem('uniflows-artist-name', newName);
+      } catch {}
+
+      // Update header DOM
+      const artistDisplay = document.querySelector('#artist-display-name');
+      if (artistDisplay) artistDisplay.textContent = newName;
+      if (window.cardNavInstance && typeof window.cardNavInstance.updateArtistInfo === 'function') {
+        window.cardNavInstance.updateArtistInfo(newName);
+      }
+
+      showProfileNotice('✓ Đã cập nhật hồ sơ nghệ sĩ và các nền tảng liên kết thành công!', true);
+    } catch (err) {
+      showProfileNotice('Lỗi: ' + (err.message || 'Không thể cập nhật hồ sơ.'), false);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Lưu cập nhật Hồ sơ';
+      }
+    }
+  });
 
       artist.name = newName;
       artist.genre = genre;
@@ -6234,6 +6384,30 @@ function initProfileSettingsDialog() {
   });
 }
 
+function openSettingsBankingTab() {
+  payoutDialog?.close();
+  const profileDialog = document.querySelector('#profile-settings-dialog');
+  if (profileDialog) {
+    const bankingTabBtn = document.querySelector('.profile-tab-btn[data-tab="profile-tab-banking"]');
+    bankingTabBtn?.click();
+    const openProfileBtn = document.querySelector('#open-profile-settings-btn');
+    openProfileBtn?.click();
+  }
+}
+
+document.querySelector('#payout-edit-bank-btn')?.addEventListener('click', openSettingsBankingTab);
+document.querySelector('#payout-open-settings-btn')?.addEventListener('click', openSettingsBankingTab);
+
+const payoutConfirmCheckbox = document.querySelector('#payout-confirm-checkbox');
+payoutConfirmCheckbox?.addEventListener('change', () => {
+  if (submitPayoutBtn) {
+    const isChecked = payoutConfirmCheckbox.checked;
+    submitPayoutBtn.disabled = !isChecked;
+    submitPayoutBtn.style.opacity = isChecked ? '1' : '0.5';
+    submitPayoutBtn.style.cursor = isChecked ? 'pointer' : 'not-allowed';
+  }
+});
+
 function openPayoutModalWithPrefill() {
   if (availableBalanceNumber < 1000000) {
     alert(`Số dư khả dụng hiện tại của bạn là ₫ ${availableBalanceNumber.toLocaleString('vi-VN')}, chưa đạt mức rút tối thiểu (₫ 1,000,000).`);
@@ -6251,30 +6425,46 @@ function openPayoutModalWithPrefill() {
   const pill100 = document.querySelector('.percent-pill-btn[data-percent="1.0"]');
   if (pill100) pill100.classList.add('active');
 
-  // Pre-fill Default Saved Bank Details if available
   const banking = artist.banking || {};
   const hasSavedBank = !!(banking.bank && banking.accountNumber);
-  const savedHint = document.querySelector('#payout-saved-bank-hint');
+
+  const savedBankCard = document.querySelector('#payout-saved-bank-card');
+  const noBankCard = document.querySelector('#payout-no-bank-card');
+  const confirmWrap = document.querySelector('#payout-confirmation-wrap');
+  const confirmCheckbox = document.querySelector('#payout-confirm-checkbox');
+
+  const displayBank = document.querySelector('#payout-display-bank');
+  const displayAccNum = document.querySelector('#payout-display-acc-num');
+  const displayAccName = document.querySelector('#payout-display-acc-name');
+
+  if (confirmCheckbox) confirmCheckbox.checked = false;
 
   if (hasSavedBank) {
-    if (payoutBankDropdownHelper) {
-      payoutBankDropdownHelper.setBank(banking.bank);
-    } else {
-      const sInp = document.querySelector('#payout-bank-search');
-      const hInp = document.querySelector('#payout-bank');
-      if (sInp) sInp.value = banking.bank;
-      if (hInp) hInp.value = banking.bank;
+    if (savedBankCard) savedBankCard.style.display = 'block';
+    if (noBankCard) noBankCard.style.display = 'none';
+    if (confirmWrap) confirmWrap.style.display = 'block';
+
+    if (displayBank) displayBank.textContent = banking.bank;
+    if (displayAccNum) displayAccNum.textContent = banking.accountNumber;
+    if (displayAccName) displayAccName.textContent = (banking.accountName || '').toUpperCase();
+
+    if (submitPayoutBtn) {
+      submitPayoutBtn.disabled = true;
+      submitPayoutBtn.style.opacity = '0.5';
+      submitPayoutBtn.style.cursor = 'not-allowed';
+      submitPayoutBtn.textContent = 'Xác nhận rút tiền →';
     }
-    const accNumInp = document.querySelector('#payout-account-number');
-    const accNameInp = document.querySelector('#payout-account-name');
-    if (accNumInp) accNumInp.value = banking.accountNumber || '';
-    if (accNameInp) accNameInp.value = banking.accountName || '';
-    if (savedHint) savedHint.style.display = 'block';
   } else {
-    if (payoutBankDropdownHelper) {
-      payoutBankDropdownHelper.setBank('');
+    if (savedBankCard) savedBankCard.style.display = 'none';
+    if (noBankCard) noBankCard.style.display = 'block';
+    if (confirmWrap) confirmWrap.style.display = 'none';
+
+    if (submitPayoutBtn) {
+      submitPayoutBtn.disabled = true;
+      submitPayoutBtn.style.opacity = '0.5';
+      submitPayoutBtn.style.cursor = 'not-allowed';
+      submitPayoutBtn.textContent = 'Chưa thiết lập ngân hàng';
     }
-    if (savedHint) savedHint.style.display = 'none';
   }
 
   payoutDialog?.showModal();
@@ -6316,12 +6506,17 @@ closePayoutDialogBtnFooter?.addEventListener('click', () => {
 payoutRequestForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const amountVal = parseInt(document.querySelector('#payout-amount')?.value, 10);
-  const bank = document.querySelector('#payout-bank')?.value.trim() || document.querySelector('#payout-bank-search')?.value.trim();
-  const accountNumber = document.querySelector('#payout-account-number')?.value.trim();
-  const accountName = document.querySelector('#payout-account-name')?.value.trim().toUpperCase();
+  const banking = artist.banking || {};
 
-  if (!bank) {
-    alert('Vui lòng chọn hoặc nhập Ngân hàng / Ví thụ hưởng.');
+  if (!banking.bank || !banking.accountNumber) {
+    alert('Vui lòng thiết lập thông tin tài khoản ngân hàng trong phần Cài đặt trước khi thực hiện rút tiền.');
+    openSettingsBankingTab();
+    return;
+  }
+
+  const confirmCheckbox = document.querySelector('#payout-confirm-checkbox');
+  if (!confirmCheckbox || !confirmCheckbox.checked) {
+    alert('Vui lòng tích chọn ô xác nhận thông tin tài khoản thụ hưởng là chính xác trước khi gửi yêu cầu.');
     return;
   }
 
@@ -6342,9 +6537,9 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
 
   const artistEmail = artist?.email || sessionEmail || '';
   const bankInfoPayload = {
-    bank,
-    accountNumber,
-    accountName,
+    bank: banking.bank,
+    accountNumber: banking.accountNumber,
+    accountName: (banking.accountName || '').toUpperCase(),
     email: artistEmail
   };
 
@@ -6386,7 +6581,7 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
     await dispatchAdminNotification({
       type: 'payout_request',
       title: `Yêu cầu rút tiền: ₫ ${amountVal.toLocaleString('vi-VN')}`,
-      message: `Nghệ sĩ "${artist.name}" vừa gửi yêu cầu rút tiền ₫ ${amountVal.toLocaleString('vi-VN')} về ngân hàng ${bank} (${accountNumber}).`,
+      message: `Nghệ sĩ "${artist.name}" vừa gửi yêu cầu rút tiền ₫ ${amountVal.toLocaleString('vi-VN')} về ngân hàng ${banking.bank} (${banking.accountNumber}).`,
       artistId: artist.id,
       artistName: artist.name,
       targetTab: 'admin-tab-payouts',
@@ -6404,7 +6599,7 @@ payoutRequestForm?.addEventListener('submit', async (e) => {
   } finally {
     if (submitPayoutBtn) {
       submitPayoutBtn.disabled = false;
-      submitPayoutBtn.textContent = 'Gửi yêu cầu rút tiền';
+      submitPayoutBtn.textContent = 'Xác nhận rút tiền →';
     }
   }
 });
@@ -7419,6 +7614,8 @@ function initPortalLanguage() {
     if (textEl) textEl.textContent = isEn ? 'English' : 'Tiếng Việt';
 
     applyTranslations(lang);
+    try { renderRoleInfo(lang); } catch {}
+    try { renderArtistPublishingEarnings(); } catch {}
   }
 
   updatePortalLanguageUI(currentLang);
@@ -7428,6 +7625,12 @@ function initPortalLanguage() {
     const next = current === 'vi' ? 'en' : 'vi';
     setLang(next);
     updatePortalLanguageUI(next);
+  });
+
+  window.addEventListener('uniflows-lang-change', (e) => {
+    const lang = e.detail?.lang || getCurrentLang();
+    try { renderRoleInfo(lang); } catch {}
+    try { renderArtistPublishingEarnings(); } catch {}
   });
 }
 
@@ -7440,37 +7643,38 @@ function renderArtistPublishingEarnings() {
   const listEl = document.querySelector('#artist-publishing-contracts-list');
   if (!pubRevEl || !listEl) return;
 
+  const isEn = getCurrentLang() === 'en';
   const contracts = artist.publishingContracts || [];
   const pubRev = parseInt(String(artist.publishingRevenue || '0').replace(/[^0-9]/g, ''), 10) || 0;
 
   pubRevEl.textContent = `₫ ${pubRev.toLocaleString('vi-VN')}`;
-  if (badgeEl) badgeEl.textContent = `${contracts.length} Hợp đồng đã cấp phép`;
+  if (badgeEl) badgeEl.textContent = isEn ? `${contracts.length} Licensed Agreements` : `${contracts.length} Hợp đồng đã cấp phép`;
 
   if (contracts.length === 0) {
-    listEl.innerHTML = `<p class="empty" style="font-size:13px;padding:16px;background:rgba(255,255,255,0.05);border:1px dashed rgba(255,255,255,0.2);border-radius:10px;color:#94a3b8;">Chưa có hợp đồng cấp phép Sync phát sinh trong kỳ này. Khi các tác phẩm của bạn được cấp phép sử dụng cho Phim hoặc TVC, khoản thanh toán sẽ tự động hiển thị tại đây.</p>`;
+    listEl.innerHTML = `<p class="empty" style="font-size:13px;padding:16px;background:rgba(255,255,255,0.05);border:1px dashed rgba(255,255,255,0.2);border-radius:10px;color:#94a3b8;">${isEn ? 'No active sync licensing agreements recorded in this period. When your tracks are cleared and licensed for films, TVCs, or games, royalty disbursements will appear here.' : 'Chưa có hợp đồng cấp phép Sync phát sinh trong kỳ này. Khi các tác phẩm của bạn được cấp phép sử dụng cho Phim hoặc TVC, khoản thanh toán sẽ tự động hiển thị tại đây.'}</p>`;
     return;
   }
 
   listEl.innerHTML = `
     <div style="border:1px solid rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;background:rgba(0,0,0,0.2);">
       <div style="display:grid;grid-template-columns:120px 1.8fr 1.5fr 1fr 1fr 140px;background:rgba(255,255,255,0.08);padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;color:#94a3b8;font-family:'DM Mono',monospace;">
-        <span>Ngày cấp phép</span>
-        <span>Tác phẩm & Đơn vị mua</span>
-        <span>Loại hình & Thời hạn</span>
-        <span>Tổng phí Sync</span>
-        <span>Tỷ lệ Split</span>
-        <span>Thực nhận</span>
+        <span>${isEn ? 'Licensed Date' : 'Ngày cấp phép'}</span>
+        <span>${isEn ? 'Track & Client' : 'Tác phẩm & Đơn vị mua'}</span>
+        <span>${isEn ? 'Media & Term' : 'Loại hình & Thời hạn'}</span>
+        <span>${isEn ? 'Total Sync Fee' : 'Tổng phí Sync'}</span>
+        <span>${isEn ? 'Split %' : 'Tỷ lệ Split'}</span>
+        <span>${isEn ? 'Net Payable' : 'Thực nhận'}</span>
       </div>
       ${contracts.map(c => `
         <div style="display:grid;grid-template-columns:120px 1.8fr 1.5fr 1fr 1fr 140px;padding:14px;border-top:1px solid rgba(255,255,255,0.08);font-size:13px;align-items:center;">
-          <span style="font-family:'DM Mono',monospace;color:#94a3b8;font-size:12px;">${esc(c.licensedDate || 'Gần đây')}</span>
+          <span style="font-family:'DM Mono',monospace;color:#94a3b8;font-size:12px;">${esc(c.licensedDate || (isEn ? 'Recent' : 'Gần đây'))}</span>
           <div>
             <strong style="color:#fff;font-size:14px;display:block;">${esc(c.trackTitle)}</strong>
             <span style="font-size:12px;color:#94a3b8;">${esc(c.client)}</span>
           </div>
           <div>
             <span style="font-size:12px;color:#38bdf8;">${esc(c.mediaType)}</span>
-            <small style="display:block;color:#94a3b8;margin-top:2px;">${esc(c.territory || 'Việt Nam')} · ${esc(c.term || '1 Năm')}</small>
+            <small style="display:block;color:#94a3b8;margin-top:2px;">${esc(c.territory || (isEn ? 'Vietnam' : 'Việt Nam'))} · ${esc(c.term || (isEn ? '1 Year' : '1 Năm'))}</small>
           </div>
           <span style="font-family:'DM Mono',monospace;color:#cbd5e1;">₫ ${(c.totalFee || 0).toLocaleString('vi-VN')}</span>
           <b style="font-family:'DM Mono',monospace;color:#818cf8;">${c.artistSplitPct || 75}%</b>

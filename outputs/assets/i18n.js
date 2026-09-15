@@ -144,6 +144,73 @@ export const translations = {
     btn_request_payout: 'Yêu cầu rút tiền',
     btn_new_release: '+ Nộp bản phát hành mới',
 
+    // DSP Status Bar & Metrics
+    portal_dsp_connected: '● DSP CONNECTED',
+    portal_dsp_dist: 'Phân phối tới <b>150+ Nền tảng Âm nhạc Toàn cầu</b>',
+    portal_master_quality: 'Chất lượng Master: <b>24-bit Lossless Studio</b>',
+    metric_streams_label: '🎧 Streams tháng này',
+    metric_streams_global: 'Toàn cầu',
+    metric_revenue_label: '💵 Doanh thu ước tính',
+    metric_revenue_vnd: 'VNĐ',
+    metric_pending_label: '💿 Bản phát hành đang duyệt',
+    metric_pending_queue: 'A&R Queue',
+    metric_wallet_label: '💳 Số dư khả dụng',
+    metric_wallet_sub: 'Wallet',
+    metric_streams_foot: 'Dữ liệu đối soát DSP toàn cầu',
+    metric_revenue_cycle: 'Kỳ đối soát: Hàng tháng',
+    metric_pending_foot: 'Kiểm duyệt Audio Master & Artwork',
+    metric_wallet_foot: 'Sẵn sàng gửi yêu cầu rút tiền',
+    announcements_title: 'Thông báo từ Hãng Đĩa UniFLOWs',
+    announcements_collapse: 'Thu gọn ▲',
+    announcements_expand: 'Mở rộng ▼',
+    announcements_loading: 'Đang tải thông báo từ Label...',
+    dsp_share_title: 'Thị phần Doanh thu theo Nền tảng Streaming',
+    dsp_share_desc: 'Phân bổ dòng tiền từ các DSPs hàng đầu toàn cầu.',
+
+    // Releases & Catalog
+    tab_releases_title: 'Catalogue Bản phát hành',
+    tab_releases_desc: 'Quản lý kho nhạc, theo dõi trạng thái kiểm duyệt và SmartLinks.',
+    filter_all_products: 'Tất cả sản phẩm',
+    filter_live: '🟢 Đã phát hành',
+    filter_pending: '⏳ Đang chờ duyệt',
+    filter_draft: '📝 Bản nháp',
+    filter_takedown: '🔴 Yêu cầu gỡ',
+    release_search_ph: 'Tìm kiếm bài hát theo Tên, ISRC hoặc Định dạng...',
+    release_list_loading: 'Đang tải danh sách bài hát...',
+
+    // Earnings & Finance
+    tab_earnings_title: 'Doanh thu & Đối soát tài chính',
+    tab_earnings_desc: 'Theo dõi số dư khả dụng, lịch sử giao dịch và đối soát hợp đồng theo kỳ.',
+    contract_dist_title: 'Hợp đồng phân phối âm nhạc',
+    contract_payout_cycle_label: 'Kỳ đối soát:',
+    contract_royalty_rate_label: 'Tỷ lệ Royalty:',
+    pending_statement_label: 'Đang chờ đối soát (Pending)',
+    cleared_balance_label: 'Số dư khả dụng (Cleared)',
+    processing_payout_label: 'Đang xử lý rút',
+    step_1_req: '1. Gửi yêu cầu rút',
+    step_2_audit: '2. Kế toán đối soát DSP',
+    step_3_disburse: '3. Giải ngân 24/7',
+    contract_note_default: 'Ngưỡng thanh toán tối thiểu: ₫ 1,000,000 · Kỳ đối soát: Hàng tháng',
+    dsp_report_sub: 'Báo cáo đối soát DSP',
+    publishing_revenue_title: 'Doanh thu Cấp phép Sync & Tác quyền (Publishing Royalties)',
+    publishing_revenue_desc: 'Thu nhập từ cấp phép đồng bộ cho Phim Điện ảnh, TVC Quảng cáo, Games, YouTube và tác quyền biểu diễn.',
+    publishing_total_sync: 'Tổng doanh thu Sync thực nhận',
+    publishing_ledger_title: '📋 Sổ cái Hợp đồng Cấp phép Sync Licensing (Sync License Ledger)',
+    statements_title: '📄 Báo Cáo Đối Soát Phân Phối Định Kỳ (Revenue Statements)',
+    statements_desc: 'Số liệu đối soát thực tế được tổng hợp từ các DSP toàn cầu (Spotify, Apple, YouTube, Meta, TikTok...).',
+    track_ledger_title: 'Báo cáo chi tiết theo từng bài hát (Royalty Ledger)',
+    payout_history_title: 'Lịch sử & Trạng thái yêu cầu rút tiền',
+
+    // Insights & Territories
+    tab_insights_title: 'Thống kê Người nghe & Editorial Insights',
+    tab_insights_desc: 'Phân tích lượt stream, phân bố địa lý người nghe và thành tích playlist.',
+    territory_title: '🌍 Phân bố Quốc gia (Top Territories)',
+    city_title: '🏙️ Thành phố hàng đầu (Top Cities)',
+    source_title: '📡 Kênh khám phá (Top Source)',
+    territory_loading: 'Đang tải dữ liệu địa lý...',
+    city_loading: 'Đang tải dữ liệu thành phố...',
+    source_loading: 'Đang tải dữ liệu nguồn phát...',
+
     // Artist Portal & Profile & Payout System
     btn_artist_notifs: '🔔 Thông báo',
     btn_profile_settings: '⚙️ Hồ sơ & Cài đặt',
@@ -175,6 +242,8 @@ export const translations = {
     profile_genre_ph: 'Ví dụ: Dream Pop / Indie / R&B...',
     profile_bio_label: 'Tiểu sử & Phong cách (Bio)',
     profile_bio_ph: 'Giới thiệu về nghệ sĩ...',
+    profile_custom_links_label: 'Các nền tảng / Mạng xã hội khác',
+    profile_add_link_btn: 'Thêm nền tảng',
     profile_save_info_btn: '💾 Lưu cập nhật Hồ sơ',
     profile_photo_desc: 'Ảnh hiển thị trên website chính thức của Hãng Đĩa UniFLOWs',
     profile_photo_upload_label: 'Tải lên ảnh mới (Tỉ lệ 1:1, tự động tối ưu WebP)',
@@ -199,6 +268,14 @@ export const translations = {
     payout_amt_ph: 'Tối thiểu 1,000,000 VNĐ',
     payout_btn_submit: 'Xác nhận rút tiền →',
     payout_btn_cancel: 'Hủy bỏ',
+    payout_free_trans: 'Miễn phí GD',
+    payout_pill_all: '100% (Tất cả)',
+    payout_beneficiary_title: 'Tài khoản thụ hưởng đã lưu',
+    payout_edit_in_settings: '✏️ Sửa trong Cài đặt',
+    payout_no_bank_title: 'Chưa thiết lập tài khoản ngân hàng',
+    payout_no_bank_desc: 'Bạn cần lưu thông tin tài khoản ngân hàng thụ hưởng trong phần Cài đặt trước khi thực hiện rút tiền.',
+    payout_open_settings_btn: '⚙️ Mở Cài đặt ngân hàng ngay',
+    payout_confirm_checkbox_label: 'Tôi xác nhận thông tin tài khoản thụ hưởng trên là hoàn toàn chính xác và chịu trách nhiệm về giao dịch này.',
 
     // Artwork Inspector & Migration
     art_inspect_title: '🔍 Kết quả kiểm định Artwork (Pre-flight Quality Check):',
@@ -244,9 +321,52 @@ export const translations = {
     submit_form_proudest: 'Dự án / Tác phẩm tự hào nhất (Hoặc thành tích nổi bật)',
     submit_btn_submit: '🚀 GỬI BẢN DEMO ĐẾN ĐỘI NGŨ A&R',
     submit_success_title: 'ĐÃ TIẾP NHẬN BẢN DEMO THÀNH CÔNG!',
-    submit_success_msg: 'Cảm ơn bạn đã chia sẻ âm nhạc với UniFLOWs. Đội ngũ A&R sẽ lắng nghe kỹ lưỡng từng bản demo và phản hồi qua email trong vòng 3 - 5 ngày làm việc.'
-  },
+    submit_success_msg: 'Cảm ơn bạn đã chia sẻ âm nhạc với UniFLOWs. Đội ngũ A&R sẽ lắng nghe kỹ lưỡng từng bản demo và phản hồi qua email trong vòng 3 - 5 ngày làm việc.',
 
+    // Support, Services, Rights & A&R
+    service_support_title: 'Bản quyền, Cấp quyền Green-list & Hỗ trợ A&R',
+    service_support_desc: 'Quản lý Content ID, cấp phép kênh YouTube/TikTok sử dụng nhạc và theo dõi tiến độ xử lý từ Admin.',
+    service_dmca_title: 'Báo cáo vi phạm Bản quyền',
+    service_dmca_desc: 'Phát hiện video reup trái phép, sử dụng beat không xin phép? Gửi báo cáo để Admin quét Content ID hoặc gửi Strike gỡ bài.',
+    service_dmca_btn: '🚨 + Báo cáo vi phạm mới',
+    service_greenlist_title: 'Cấp quyền Kênh (Green-list)',
+    service_greenlist_desc: 'Ủy quyền cho kênh YouTube, tài khoản TikTok hoặc đối tác sử dụng nhạc mà không bị Content ID quét gậy bản quyền.',
+    service_greenlist_btn: '✨ + Thêm kênh Green-list',
+    service_pitch_title: 'A&R Editorial Pitching',
+    service_pitch_desc: 'Pitching trực tiếp tới Tổng biên tập Spotify & Apple Music để đưa ca khúc mới vào các playlist chính thức.',
+    service_pitch_btn: 'Gửi bài Pitching A&R',
+    service_isrc_title: 'Cấp mã ISRC & Bản quyền ℗',
+    service_isrc_desc: 'Đăng ký định danh ISRC chuẩn quốc tế và chứng nhận bản quyền ghi âm độc quyền cho bài hát.',
+    service_isrc_btn: 'Yêu cầu cấp mã ISRC',
+    service_takedown_title: 'Yêu Cầu Gỡ Bài Hát (Takedown)',
+    service_takedown_desc: 'Gửi lệnh gỡ bài hát khỏi toàn bộ hoặc từng nền tảng cụ thể (Spotify, Apple Music, TikTok, Zing, v.v.).',
+    service_takedown_btn: '🗑️ + Yêu cầu gỡ bài hát',
+    service_transfer_title: 'Chuyển Giao Catalog Về Hãng',
+    service_transfer_desc: 'Chuyển giao các tác phẩm từ nhà phân phối cũ về UniFLOWs để giữ nguyên lượt stream và playlist.',
+    service_transfer_btn: '📦 + Yêu cầu chuyển Catalog',
+    service_tracker_title: 'Lịch sử Yêu cầu Dịch vụ & Xử lý Bản quyền',
+    service_tracker_desc: 'Theo dõi tình trạng xử lý các yêu cầu bản quyền và cấp quyền Green-list đã gửi tới Admin.',
+    service_tracker_refresh: '🔄 Làm mới',
+
+    // Calendar
+    calendar_title: '📅 Lịch Phát Hành',
+    calendar_desc: 'Theo dõi lịch ra mắt các đĩa đơn và album sắp tới.',
+    calendar_meeting_sub: 'A&R Consultation & Meeting',
+    calendar_meeting_title: 'Họp Trực Tiếp / Online Cùng Đội Ngũ A&R UniFLOWs',
+    calendar_meeting_desc: 'Bạn cần thẩm định bản thu mới, thảo luận về chiến dịch pitching Spotify hay kế hoạch phát hành đĩa đơn/album? Hãy đặt lịch hẹn với đại diện A&R để được hỗ trợ chuyên sâu.',
+    calendar_meeting_btn: '📅 Đặt Lịch Hẹn Ngay ↗',
+
+    // Lyrics
+    lyrics_title: '🎤 Synced Lyrics Studio (.LRC Generator)',
+    lyrics_desc: 'Đồng bộ lời bài hát chạy chữ theo mili-giây thời gian thực cho Spotify, Apple Music, Instagram Stories và TikTok.',
+
+    // Insights and charts
+    chart_6_months: '6 Tháng gần nhất',
+    chart_agg_sub: 'Tổng hợp toàn bộ catalogue trên 150+ nền tảng',
+    demographics_title: '👥 Nhân khẩu học Người nghe (Audience Demographics)',
+    demographics_empty: '📊 Chưa đủ dữ liệu mẫu nhân khẩu học. Báo cáo độ tuổi, giới tính và thiết bị của người nghe sẽ tự động tổng hợp khi catalogue đạt ngưỡng tối thiểu theo tiêu chuẩn DSP Telemetry (Spotify for Artists / Apple Music).',
+    playlists_showcase_title: '🌟 Thành tích Playlist (Editorial Placements)'
+  },
 
   en: {
     // Navigation & Header
@@ -389,6 +509,73 @@ export const translations = {
     btn_request_payout: 'Request Payout',
     btn_new_release: '+ New Release',
 
+    // DSP Status Bar & Metrics
+    portal_dsp_connected: '● DSP CONNECTED',
+    portal_dsp_dist: 'Distributed to <b>150+ Global Music Platforms</b>',
+    portal_master_quality: 'Mastering Standard: <b>24-bit Lossless Studio</b>',
+    metric_streams_label: '🎧 Streams this Month',
+    metric_streams_global: 'Worldwide',
+    metric_revenue_label: '💵 Estimated Royalties',
+    metric_revenue_vnd: 'VND',
+    metric_pending_label: '💿 Releases in Review',
+    metric_pending_queue: 'A&R Queue',
+    metric_wallet_label: '💳 Payable Balance',
+    metric_wallet_sub: 'Wallet',
+    metric_streams_foot: 'Verified global DSP distribution data',
+    metric_revenue_cycle: 'Settlement cycle: Monthly',
+    metric_pending_foot: 'Reviewing Audio Master & Artwork',
+    metric_wallet_foot: 'Ready for withdrawal request',
+    announcements_title: 'Announcements from UniFLOWs Label',
+    announcements_collapse: 'Collapse ▲',
+    announcements_expand: 'Expand ▼',
+    announcements_loading: 'Loading announcements from Label...',
+    dsp_share_title: 'Revenue Share by Streaming Platform',
+    dsp_share_desc: 'Distribution breakdown across global DSP platforms.',
+
+    // Releases & Catalog
+    tab_releases_title: 'Releases Catalogue',
+    tab_releases_desc: 'Manage track library, monitor delivery status and SmartLinks.',
+    filter_all_products: 'All Releases',
+    filter_live: '🟢 Live / Distributed',
+    filter_pending: '⏳ In Review',
+    filter_draft: '📝 Drafts',
+    filter_takedown: '🔴 Takedowns',
+    release_search_ph: 'Search tracks by Title, ISRC or Format...',
+    release_list_loading: 'Loading track library...',
+
+    // Earnings & Finance
+    tab_earnings_title: 'Revenue & Financial Settlement',
+    tab_earnings_desc: 'Track available balance, transaction history and contractual statements.',
+    contract_dist_title: 'Music Distribution Agreement',
+    contract_payout_cycle_label: 'Settlement Cycle:',
+    contract_royalty_rate_label: 'Royalty Rate:',
+    pending_statement_label: 'Pending Settlement',
+    cleared_balance_label: 'Available Balance (Cleared)',
+    processing_payout_label: 'In Payout Queue',
+    step_1_req: '1. Submit Request',
+    step_2_audit: '2. DSP Audit & Clear',
+    step_3_disburse: '3. 24/7 Bank Transfer',
+    contract_note_default: 'Minimum payout threshold: ₫ 1,000,000 · Settlement cycle: Monthly',
+    dsp_report_sub: 'DSP Audit Statement',
+    publishing_revenue_title: 'Sync Licensing & Publishing Royalties',
+    publishing_revenue_desc: 'Earnings from synchronizations in Films, TVCs, Games, YouTube, and performance rights.',
+    publishing_total_sync: 'Total Sync Net Revenue',
+    publishing_ledger_title: '📋 Sync Licensing Agreement Ledger',
+    statements_title: '📄 Periodic Distribution Statements',
+    statements_desc: 'Consolidated statements across global DSP partners (Spotify, Apple, YouTube, Meta, TikTok...).',
+    track_ledger_title: 'Detailed Track Royalty Ledger',
+    payout_history_title: 'Payout History & Request Status',
+
+    // Insights & Territories
+    tab_insights_title: 'Audience Analytics & Editorial Insights',
+    tab_insights_desc: 'Stream trajectories, geographic audience distribution, and playlist placements.',
+    territory_title: '🌍 Top Territories',
+    city_title: '🏙️ Top Cities',
+    source_title: '📡 Discovery Sources',
+    territory_loading: 'Loading geographic distribution...',
+    city_loading: 'Loading top cities...',
+    source_loading: 'Loading streaming sources...',
+
     // Artist Portal & Profile & Payout System
     btn_artist_notifs: '🔔 Notifications',
     btn_profile_settings: '⚙️ Profile & Settings',
@@ -420,6 +607,8 @@ export const translations = {
     profile_genre_ph: 'E.g.: Dream Pop / Indie / R&B...',
     profile_bio_label: 'Biography & Artistic Style (Bio)',
     profile_bio_ph: 'Introduce about the artist...',
+    profile_custom_links_label: 'Other Platforms & Social Channels',
+    profile_add_link_btn: 'Add Platform',
     profile_save_info_btn: '💾 Save Profile Updates',
     profile_photo_desc: 'Photo displayed on the official UniFLOWs Label website',
     profile_photo_upload_label: 'Upload new photo (1:1 aspect ratio, WebP auto-optimized)',
@@ -444,6 +633,14 @@ export const translations = {
     payout_amt_ph: 'Minimum 1,000,000 VND',
     payout_btn_submit: 'Confirm Payout Request →',
     payout_btn_cancel: 'Cancel',
+    payout_free_trans: 'Free Fee',
+    payout_pill_all: '100% (All)',
+    payout_beneficiary_title: 'Saved Beneficiary Account',
+    payout_edit_in_settings: '✏️ Edit in Settings',
+    payout_no_bank_title: 'No Bank Account Configured',
+    payout_no_bank_desc: 'Please configure and save your beneficiary bank account in Profile Settings before requesting a payout.',
+    payout_open_settings_btn: '⚙️ Open Banking Settings Now',
+    payout_confirm_checkbox_label: 'I confirm the above beneficiary details are accurate and take full responsibility for this transaction.',
 
     // Artwork Inspector & Migration
     art_inspect_title: '🔍 Artwork Pre-flight Inspection Results:',
@@ -489,7 +686,51 @@ export const translations = {
     submit_form_proudest: 'Proudest Project / Musical Milestones',
     submit_btn_submit: '🚀 SUBMIT DEMO TO A&R TEAM',
     submit_success_title: 'DEMO SUBMISSION RECEIVED!',
-    submit_success_msg: 'Thank you for sharing your sound with UniFLOWs. Our A&R team carefully listens to every submission and will get in touch via email within 3-5 business days.'
+    submit_success_msg: 'Thank you for sharing your sound with UniFLOWs. Our A&R team carefully listens to every submission and will get in touch via email within 3-5 business days.',
+
+    // Support, Services, Rights & A&R
+    service_support_title: 'Copyright, Green-listing & A&R Support',
+    service_support_desc: 'Manage Content ID, green-list YouTube/TikTok channels, and track admin resolution progress.',
+    service_dmca_title: 'Report Copyright Infringement',
+    service_dmca_desc: 'Discovered unauthorized reuploads or stolen beats? Submit a report for Content ID enforcement or takedown strikes.',
+    service_dmca_btn: '🚨 + Submit Infringement Report',
+    service_greenlist_title: 'Channel Green-listing',
+    service_greenlist_desc: 'Authorize YouTube channels, TikTok accounts, or partners to use music without copyright claims.',
+    service_greenlist_btn: '✨ + Request Channel Green-list',
+    service_pitch_title: 'A&R Editorial Pitching',
+    service_pitch_desc: 'Direct editorial pitching to Spotify & Apple Music curators for official playlist placements.',
+    service_pitch_btn: 'Submit A&R Pitching',
+    service_isrc_title: 'ISRC & Copyright ℗ Assignment',
+    service_isrc_desc: 'Register international standard ISRC identifiers and master recording copyright certificates.',
+    service_isrc_btn: 'Request ISRC Assignment',
+    service_takedown_title: 'Platform Takedown Request',
+    service_takedown_desc: 'Issue takedown requests from all or specific streaming platforms.',
+    service_takedown_btn: '🗑️ + Request Track Takedown',
+    service_transfer_title: 'Catalog Migration to Label',
+    service_transfer_desc: 'Migrate music catalogue from previous distributors to UniFLOWs while preserving ISRCs, stream counts and playlists.',
+    service_transfer_btn: '📦 + Request Catalog Migration',
+    service_tracker_title: 'Service & Copyright Request Tracker',
+    service_tracker_desc: 'Track real-time status of copyright enforcement and green-listing requests submitted to Admin.',
+    service_tracker_refresh: '🔄 Refresh',
+
+    // Calendar
+    calendar_title: '📅 Release Calendar',
+    calendar_desc: 'Monitor upcoming single and album release dates.',
+    calendar_meeting_sub: 'A&R Consultation & Meeting',
+    calendar_meeting_title: 'In-Person / Online Meeting with UniFLOWs A&R Team',
+    calendar_meeting_desc: 'Need mastering review, Spotify pitching strategy, or release rollout planning? Book a dedicated session with our A&R executives.',
+    calendar_meeting_btn: '📅 Book A&R Session ↗',
+
+    // Lyrics
+    lyrics_title: '🎤 Synced Lyrics Studio (.LRC Generator)',
+    lyrics_desc: 'Synchronize millisecond-accurate scrolling lyrics for Spotify, Apple Music, Instagram Stories, and TikTok.',
+
+    // Insights and charts
+    chart_6_months: 'Last 6 Months',
+    chart_agg_sub: 'Aggregated across 150+ global DSP platforms',
+    demographics_title: '👥 Audience Demographics',
+    demographics_empty: '📊 Insufficient demographic sample data. Age, gender, and device telemetry will automatically populate once your catalogue reaches minimum DSP thresholds.',
+    playlists_showcase_title: '🌟 Editorial Playlist Placements'
   }
 };
 
@@ -540,6 +781,9 @@ export function applyTranslations(lang = getCurrentLang()) {
   document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
     btn.innerHTML = lang === 'vi' ? '🇬🇧 English' : '🇻🇳 Tiếng Việt';
   });
+
+  // Broadcast language change to portal and other components
+  window.dispatchEvent(new CustomEvent('uniflows-lang-change', { detail: { lang } }));
 }
 
 

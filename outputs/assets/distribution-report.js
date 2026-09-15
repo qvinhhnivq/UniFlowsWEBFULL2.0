@@ -161,7 +161,7 @@ export function parseCSV(text) {
   // Revenue columns
   const iArtistNet = col(['artist (','thực nhận','artist net','artist share','net payable'],['artist (','thực nhận','artist net','net pay']);
   const iGross   = col(['gross (vnd)','gross (usd)','gross amount in currency','gross amount','gross revenue','gross','doanh thu gross','tổng doanh thu'],['gross','doanh thu']);
-  const iNet     = col(['net amount in currency','net amount','net revenue','net'],['net amount']);
+  const iCurrency = col(['currency','original currency','tiền tệ','loại tiền'],['currency','tiền tệ']);
   const iExRate  = col(['exchange rate','tỷ giá'],['exchange rate','tỷ giá']);
 
   const records = [];
@@ -171,6 +171,7 @@ export function parseCSV(text) {
 
     const rawArtist = iArtist !==-1 ? (cells[iArtist] || '').trim() : '';
     const rawTrack  = iTrack  !==-1 ? (cells[iTrack]  || '').trim() : '';
+    const rawCurrency = iCurrency !==-1 ? (cells[iCurrency] || '').trim().toUpperCase() : '';
 
     // Ignore summary, total, header-repeat, or footer rows
     const aLower = rawArtist.toLowerCase();
@@ -191,22 +192,35 @@ export function parseCSV(text) {
     const isrc    = iIsrc    !==-1 ? (cells[iIsrc]||'').trim() : '';
     const date    = iDate    !==-1 ? (cells[iDate]||'').trim() : '';
 
-    const exRate = iExRate !==-1 ? parseRawNumber(cells[iExRate]) : state.exchangeRate;
+    const exRate = iExRate !==-1 ? (parseRawNumber(cells[iExRate]) || state.exchangeRate) : state.exchangeRate;
     let revenue = 0;
+    let matchedHeader = '';
     const artistNetVal = iArtistNet !==-1 ? parseRawNumber(cells[iArtistNet]) : 0;
     const grossVal = iGross !==-1 ? parseRawNumber(cells[iGross]) : 0;
     const netVal   = iNet !==-1 ? parseRawNumber(cells[iNet]) : 0;
 
     if (artistNetVal > 0) {
       revenue = artistNetVal;
+      matchedHeader = headers[iArtistNet] || '';
     } else if (grossVal > 0) {
       revenue = grossVal;
+      matchedHeader = headers[iGross] || '';
     } else if (netVal > 0) {
       revenue = netVal;
+      matchedHeader = headers[iNet] || '';
     }
 
-    // Auto-convert foreign currency if revenue is tiny (USD/EUR fractions)
-    if (revenue > 0 && revenue < 100 && exRate > 1000) {
+    const hLow = matchedHeader.toLowerCase();
+    const isExplicitVND = rawCurrency === 'VND' || rawCurrency === 'VNĐ' ||
+                          hLow.includes('vnd') || hLow.includes('vnđ') ||
+                          hLow.includes('thực nhận') || hLow.includes('gross (vnd)') || hLow.includes('artist (');
+
+    const isExplicitForeign = rawCurrency === 'USD' || rawCurrency === 'EUR' || rawCurrency === 'GBP' ||
+                              hLow.includes('(usd)') || hLow.includes('(eur)');
+
+    if (isExplicitForeign && revenue > 0) {
+      revenue = revenue * exRate;
+    } else if (!isExplicitVND && iExRate !== -1 && cells[iExRate] && rawCurrency && rawCurrency !== 'VND' && rawCurrency !== 'VNĐ') {
       revenue = revenue * exRate;
     }
 
