@@ -7,17 +7,83 @@
 let filterCount = 0;
 
 /**
+ * Checks if current browser supports SVG filters inside backdrop-filter
+ */
+export function supportsSVGFilters() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return false;
+  }
+  const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+  const isFirefox = /Firefox/.test(navigator.userAgent);
+  if (isWebkit || isFirefox) {
+    return false;
+  }
+  const div = document.createElement('div');
+  div.style.backdropFilter = 'url(#test-glass-filter)';
+  return div.style.backdropFilter !== '';
+}
+
+/**
+ * Generates an SVG Displacement Map Data URI
+ */
+export function generateDisplacementMapDataUri({
+  width = 400,
+  height = 200,
+  borderRadius = 20,
+  borderWidth = 0.07,
+  brightness = 50,
+  opacity = 0.93,
+  blur = 11,
+  mixBlendMode = 'difference',
+  redGradId,
+  blueGradId
+}) {
+  const actualWidth = Math.max(10, width);
+  const actualHeight = Math.max(10, height);
+  const edgeSize = Math.min(actualWidth, actualHeight) * (borderWidth * 0.5);
+
+  const svgContent = `
+    <svg viewBox="0 0 ${actualWidth} ${actualHeight}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="${redGradId}" x1="100%" y1="0%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#0000"/>
+          <stop offset="100%" stop-color="red"/>
+        </linearGradient>
+        <linearGradient id="${blueGradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#0000"/>
+          <stop offset="100%" stop-color="blue"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" fill="black"></rect>
+      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${borderRadius}" fill="url(#${redGradId})" />
+      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${borderRadius}" fill="url(#${blueGradId})" style="mix-blend-mode: ${mixBlendMode}" />
+      <rect x="${edgeSize}" y="${edgeSize}" width="${Math.max(1, actualWidth - edgeSize * 2)}" height="${Math.max(1, actualHeight - edgeSize * 2)}" rx="${borderRadius}" fill="hsl(0 0% ${brightness}% / ${opacity})" style="filter:blur(${blur}px)" />
+    </svg>
+  `.trim();
+
+  return `data:image/svg+xml,${encodeURIComponent(svgContent)}`;
+}
+
+/**
  * Creates and injects an SVG displacement and chromatic aberration filter
  */
-function createGlassSvgFilter({
+export function createGlassSvgFilter({
   id,
-  displace = 0.5,
+  width = 400,
+  height = 200,
+  borderRadius = 20,
+  borderWidth = 0.07,
+  brightness = 50,
+  opacity = 0.93,
+  blur = 11,
+  displace = 0.7,
   distortionScale = -180,
   redOffset = 0,
   greenOffset = 10,
   blueOffset = 20,
-  brightness = 50,
-  opacity = 0.93
+  xChannel = 'R',
+  yChannel = 'G',
+  mixBlendMode = 'difference'
 }) {
   let svgDefs = document.querySelector('#glass-surface-svg-defs');
   if (!svgDefs) {
@@ -29,97 +95,118 @@ function createGlassSvgFilter({
     svgDefs = svg;
   }
 
-  // Base frequency derived from displace
-  const baseFreq = Math.max(0.005, Math.min(0.08, 0.02 * displace));
-  const scale = Math.abs(distortionScale) * (displace || 1) * 0.15;
-  const brightnessMultiplier = (brightness || 50) / 50;
+  const redGradId = `red-grad-${id}`;
+  const blueGradId = `blue-grad-${id}`;
+  const mapUri = generateDisplacementMapDataUri({
+    width,
+    height,
+    borderRadius,
+    borderWidth,
+    brightness,
+    opacity,
+    blur,
+    mixBlendMode,
+    redGradId,
+    blueGradId
+  });
 
-  const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-  filter.id = id;
-  filter.setAttribute('x', '-20%');
-  filter.setAttribute('y', '-20%');
-  filter.setAttribute('width', '140%');
-  filter.setAttribute('height', '140%');
-  filter.setAttribute('color-interpolation-filters', 'sRGB');
+  let filter = document.getElementById(id);
+  if (!filter) {
+    filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+    filter.id = id;
+    filter.setAttribute('x', '0%');
+    filter.setAttribute('y', '0%');
+    filter.setAttribute('width', '100%');
+    filter.setAttribute('height', '100%');
+    filter.setAttribute('color-interpolation-filters', 'sRGB');
+    svgDefs.appendChild(filter);
+  }
 
   filter.innerHTML = `
-    <feTurbulence type="fractalNoise" baseFrequency="${baseFreq}" numOctaves="3" result="noise" />
-    <feDisplacementMap in="SourceGraphic" in2="noise" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-    
-    <!-- Chromatic Aberration: Red, Green, Blue Channels Offset -->
-    <feOffset in="displaced" dx="${redOffset * 0.1}" dy="${redOffset * 0.1}" result="redLayer" />
-    <feColorMatrix in="redLayer" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 ${opacity} 0" result="redOnly" />
+    <feImage id="feImg-${id}" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" href="${mapUri}" />
 
-    <feOffset in="displaced" dx="${greenOffset * 0.1}" dy="${greenOffset * 0.1}" result="greenLayer" />
-    <feColorMatrix in="greenLayer" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 ${opacity} 0" result="greenOnly" />
+    <!-- Red Channel Displacement -->
+    <feDisplacementMap id="dispRed-${id}" in="SourceGraphic" in2="map" scale="${distortionScale + redOffset}" xChannelSelector="${xChannel}" yChannelSelector="${yChannel}" result="dispRed" />
+    <feColorMatrix in="dispRed" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
 
-    <feOffset in="displaced" dx="${blueOffset * 0.1}" dy="${blueOffset * 0.1}" result="blueLayer" />
-    <feColorMatrix in="blueLayer" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 ${opacity} 0" result="blueOnly" />
+    <!-- Green Channel Displacement -->
+    <feDisplacementMap id="dispGreen-${id}" in="SourceGraphic" in2="map" scale="${distortionScale + greenOffset}" xChannelSelector="${xChannel}" yChannelSelector="${yChannel}" result="dispGreen" />
+    <feColorMatrix in="dispGreen" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
 
-    <!-- Combine Channels with Screen Mode -->
-    <feBlend mode="screen" in="redOnly" in2="greenOnly" result="redGreen" />
-    <feBlend mode="screen" in="redGreen" in2="blueOnly" result="chromatic" />
+    <!-- Blue Channel Displacement -->
+    <feDisplacementMap id="dispBlue-${id}" in="SourceGraphic" in2="map" scale="${distortionScale + blueOffset}" xChannelSelector="${xChannel}" yChannelSelector="${yChannel}" result="dispBlue" />
+    <feColorMatrix in="dispBlue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
 
-    <!-- Adjust Brightness -->
-    <feComponentTransfer in="chromatic" result="finalGlass">
-      <feFuncR type="linear" slope="${brightnessMultiplier}" />
-      <feFuncG type="linear" slope="${brightnessMultiplier}" />
-      <feFuncB type="linear" slope="${brightnessMultiplier}" />
-    </feComponentTransfer>
+    <!-- Screen Blend Channels -->
+    <feBlend in="red" in2="green" mode="screen" result="rg" />
+    <feBlend in="rg" in2="blue" mode="screen" result="output" />
+    <feGaussianBlur in="output" stdDeviation="${displace}" />
   `;
 
-  svgDefs.appendChild(filter);
-  return id;
+  return { filterId: id, redGradId, blueGradId, mapUri };
 }
 
 /**
- * Creates or wraps an element with GlassSurface properties
+ * Creates a standalone GlassSurface container
  */
 export function createGlassSurface(options = {}) {
   const {
-    width,
-    height,
-    borderRadius = 18,
-    className = '',
-    displace = 0.5,
+    width = 200,
+    height = 80,
+    borderRadius = 20,
+    borderWidth = 0.07,
+    brightness = 50,
+    opacity = 0.93,
+    blur = 11,
+    displace = 0.7,
     distortionScale = -180,
     redOffset = 0,
     greenOffset = 10,
     blueOffset = 20,
-    brightness = 50,
-    opacity = 0.93,
-    mixBlendMode = 'normal',
+    xChannel = 'R',
+    yChannel = 'G',
+    mixBlendMode = 'difference',
+    backgroundOpacity = 0,
+    saturation = 1.8,
+    className = '',
     children = null,
     interactive = true
   } = options;
 
   filterCount++;
   const filterId = `glass-filter-${filterCount}`;
+  const isSvgSupported = supportsSVGFilters();
+
   createGlassSvgFilter({
     id: filterId,
+    width: typeof width === 'number' ? width : 400,
+    height: typeof height === 'number' ? height : 200,
+    borderRadius,
+    borderWidth,
+    brightness,
+    opacity,
+    blur,
     displace,
     distortionScale,
     redOffset,
     greenOffset,
     blueOffset,
-    brightness,
-    opacity
+    xChannel,
+    yChannel,
+    mixBlendMode
   });
 
   const surface = document.createElement('div');
-  surface.className = `glass-surface ${className}`.trim();
+  surface.className = `glass-surface ${isSvgSupported ? 'glass-surface--svg' : 'glass-surface--fallback'} ${className}`.trim();
 
   if (width) surface.style.width = typeof width === 'number' ? `${width}px` : width;
   if (height) surface.style.height = typeof height === 'number' ? `${height}px` : height;
   if (borderRadius !== undefined) surface.style.borderRadius = typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius;
+  surface.style.setProperty('--filter-id', `url(#${filterId})`);
+  surface.style.setProperty('--glass-frost', backgroundOpacity);
+  surface.style.setProperty('--glass-saturation', saturation);
 
-  // Filter effect layer
-  const filterLayer = document.createElement('div');
-  filterLayer.className = 'glass-surface-filter-layer';
-  filterLayer.style.mixBlendMode = mixBlendMode;
-  surface.appendChild(filterLayer);
-
-  // Interactive glare layer
+  // Glare
   if (interactive) {
     const glare = document.createElement('div');
     glare.className = 'glass-surface-glare';
@@ -127,16 +214,14 @@ export function createGlassSurface(options = {}) {
 
     surface.addEventListener('mousemove', (e) => {
       const rect = surface.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      surface.style.setProperty('--mouse-x', `${x}px`);
-      surface.style.setProperty('--mouse-y', `${y}px`);
+      surface.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+      surface.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
     });
   }
 
-  // Content wrapper
+  // Content
   const content = document.createElement('div');
-  content.className = 'glass-surface-content';
+  content.className = 'glass-surface__content';
   if (typeof children === 'string') {
     content.innerHTML = children;
   } else if (children instanceof HTMLElement) {
@@ -149,60 +234,143 @@ export function createGlassSurface(options = {}) {
   }
   surface.appendChild(content);
 
+  // ResizeObserver for dynamic displacement map updates
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width: w, height: h } = entry.contentRect;
+        if (w > 0 && h > 0) {
+          const redGradId = `red-grad-${filterId}`;
+          const blueGradId = `blue-grad-${filterId}`;
+          const map = generateDisplacementMapDataUri({
+            width: w,
+            height: h,
+            borderRadius,
+            borderWidth,
+            brightness,
+            opacity,
+            blur,
+            mixBlendMode,
+            redGradId,
+            blueGradId
+          });
+          const feImg = document.getElementById(`feImg-${filterId}`);
+          if (feImg) feImg.setAttribute('href', map);
+        }
+      }
+    });
+    ro.observe(surface);
+  }
+
   return surface;
 }
 
 /**
- * Enhances an existing DOM element into a GlassSurface
+ * Enhances an existing DOM element with dynamic Liquid Glass displacement
  */
 export function enhanceWithGlassSurface(element, options = {}) {
   const el = typeof element === 'string' ? document.querySelector(element) : element;
   if (!el) return null;
 
   const {
-    borderRadius,
-    displace = 0.4,
-    distortionScale = -120,
+    borderRadius = 20,
+    borderWidth = 0.07,
+    brightness = 50,
+    opacity = 0.93,
+    blur = 11,
+    displace = 0.7,
+    distortionScale = -160,
     redOffset = 0,
-    greenOffset = 6,
-    blueOffset = 12,
-    brightness = 52,
-    opacity = 0.95,
-    mixBlendMode = 'normal',
+    greenOffset = 8,
+    blueOffset = 16,
+    xChannel = 'R',
+    yChannel = 'G',
+    mixBlendMode = 'difference',
+    backgroundOpacity = 0,
+    saturation = 1.8,
     interactive = true
   } = options;
 
   filterCount++;
   const filterId = `glass-filter-${filterCount}`;
+  const isSvgSupported = supportsSVGFilters();
+
+  const rect = el.getBoundingClientRect();
+  const w = rect.width || 300;
+  const h = rect.height || 150;
+
   createGlassSvgFilter({
     id: filterId,
+    width: w,
+    height: h,
+    borderRadius: typeof borderRadius === 'number' ? borderRadius : 20,
+    borderWidth,
+    brightness,
+    opacity,
+    blur,
     displace,
     distortionScale,
     redOffset,
     greenOffset,
     blueOffset,
-    brightness,
-    opacity
+    xChannel,
+    yChannel,
+    mixBlendMode
   });
 
   el.classList.add('glass-surface');
+  if (isSvgSupported) {
+    el.classList.add('glass-surface--svg');
+  } else {
+    el.classList.add('glass-surface--fallback');
+  }
+
   if (borderRadius !== undefined) {
     el.style.borderRadius = typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius;
   }
+  el.style.setProperty('--filter-id', `url(#${filterId})`);
+  el.style.setProperty('--glass-frost', backgroundOpacity);
+  el.style.setProperty('--glass-saturation', saturation);
 
-  // Add glare if not present
+  // Glare
   if (interactive && !el.querySelector('.glass-surface-glare')) {
     const glare = document.createElement('div');
     glare.className = 'glass-surface-glare';
     el.appendChild(glare);
 
     el.addEventListener('mousemove', (e) => {
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      el.style.setProperty('--mouse-x', `${x}px`);
-      el.style.setProperty('--mouse-y', `${y}px`);
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mouse-x', `${e.clientX - r.left}px`);
+      el.style.setProperty('--mouse-y', `${e.clientY - r.top}px`);
     });
+  }
+
+  // Dynamic Resize Tracking
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width: rw, height: rh } = entry.contentRect;
+        if (rw > 0 && rh > 0) {
+          const redGradId = `red-grad-${filterId}`;
+          const blueGradId = `blue-grad-${filterId}`;
+          const map = generateDisplacementMapDataUri({
+            width: rw,
+            height: rh,
+            borderRadius: typeof borderRadius === 'number' ? borderRadius : 20,
+            borderWidth,
+            brightness,
+            opacity,
+            blur,
+            mixBlendMode,
+            redGradId,
+            blueGradId
+          });
+          const feImg = document.getElementById(`feImg-${filterId}`);
+          if (feImg) feImg.setAttribute('href', map);
+        }
+      }
+    });
+    ro.observe(el);
   }
 
   return el;
@@ -220,66 +388,56 @@ export function initPortalGlassSurfaces() {
     document.head.appendChild(link);
   }
 
-  // Enhance Profile Bar
+  // Profile Bar
   enhanceWithGlassSurface('.portal-profile-bar', {
-    borderRadius: 20,
-    displace: 0.35,
-    distortionScale: -100,
+    borderRadius: 24,
+    distortionScale: -150,
     redOffset: 0,
     greenOffset: 8,
     blueOffset: 16
   });
 
-  // Enhance Status Bar
+  // Overview status bar
   const statusBar = document.querySelector('#tab-overview > div:first-child');
   if (statusBar) {
     enhanceWithGlassSurface(statusBar, {
-      borderRadius: 14,
-      displace: 0.25,
-      distortionScale: -80,
-      redOffset: 0,
-      greenOffset: 5,
-      blueOffset: 10
-    });
-  }
-
-  // Enhance Role Banner if present
-  enhanceWithGlassSurface('#portal-role-banner', {
-    borderRadius: 12,
-    displace: 0.3
-  });
-
-  // Enhance notification dropdown
-  enhanceWithGlassSurface('#notif-dropdown', {
-    borderRadius: 14,
-    displace: 0.35
-  });
-
-  // Enhance stats and dashboard cards
-  document.querySelectorAll('.portal-stat-card, .metric-card, .dashboard-card, .card, .panel, .form-section').forEach(card => {
-    enhanceWithGlassSurface(card, {
-      borderRadius: 18,
-      displace: 0.3,
-      distortionScale: -90,
+      borderRadius: 16,
+      distortionScale: -120,
       redOffset: 0,
       greenOffset: 6,
       blueOffset: 12
     });
+  }
+
+  // Role Banner
+  enhanceWithGlassSurface('#portal-role-banner', {
+    borderRadius: 14,
+    distortionScale: -100
   });
 
-  // Enhance all modal dialogs
-  document.querySelectorAll('dialog, .portal-dialog, .modal-box').forEach(dlg => {
-    enhanceWithGlassSurface(dlg, {
-      borderRadius: 24,
-      displace: 0.4,
-      distortionScale: -120,
+  // Stats & metric cards
+  document.querySelectorAll('.portal-card-metric, .portal-stat-card, .metric-card, .dashboard-card, .service-card').forEach(card => {
+    enhanceWithGlassSurface(card, {
+      borderRadius: 20,
+      distortionScale: -140,
       redOffset: 0,
       greenOffset: 8,
       blueOffset: 16
     });
   });
 
-  // Enhance data tables & release items
+  // Modal dialogs
+  document.querySelectorAll('dialog, .portal-dialog').forEach(dlg => {
+    enhanceWithGlassSurface(dlg, {
+      borderRadius: 26,
+      distortionScale: -180,
+      redOffset: 0,
+      greenOffset: 10,
+      blueOffset: 20
+    });
+  });
+
+  // Data tables & release items
   document.querySelectorAll('.data-table, .release-row, .track-row, .catalog-item, .payout-history-table').forEach(item => {
     if (!item.classList.contains('glass-surface')) {
       item.classList.add('glass-surface');
@@ -291,7 +449,7 @@ export function refreshGlassSurfaces() {
   initPortalGlassSurfaces();
 }
 
-// Auto-enhance when hash or tabs change
+// Auto-enhance on hash/route or tab changes
 if (typeof window !== 'undefined') {
   window.addEventListener('hashchange', () => {
     setTimeout(initPortalGlassSurfaces, 60);
@@ -301,10 +459,13 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Auto init if in browser
+// Global browser exports
 if (typeof window !== 'undefined') {
   window.createGlassSurface = createGlassSurface;
   window.enhanceWithGlassSurface = enhanceWithGlassSurface;
   window.initPortalGlassSurfaces = initPortalGlassSurfaces;
   window.refreshGlassSurfaces = refreshGlassSurfaces;
+  window.supportsSVGFilters = supportsSVGFilters;
+  window.generateDisplacementMapDataUri = generateDisplacementMapDataUri;
+  window.createGlassSvgFilter = createGlassSvgFilter;
 }
