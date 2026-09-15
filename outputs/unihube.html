@@ -7,8 +7,12 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="assets/glass-surface.css">
+  <link rel="stylesheet" href="assets/gradient-waves.css">
+  <link rel="stylesheet" href="assets/dither.css">
+  <link rel="stylesheet" href="assets/card-nav.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
   <style>
     /* Uni-HUBE Accent Theme: Warm Amber / Gold */
     :root {
@@ -156,7 +160,13 @@
     }
   </style>
 </head>
-<body data-page="unihube">
+<body class="portal-body" data-page="unihube">
+  <!-- Dynamic WebGL GradientWaves Shader Background for Light Theme -->
+  <div id="portal-gradient-waves-bg" class="portal-gradient-waves-backdrop" aria-hidden="true"></div>
+
+  <!-- Dynamic WebGL Dither Shader Background for Dark Theme -->
+  <div id="portal-dither-bg" class="portal-dither-backdrop" aria-hidden="true"></div>
+
   <main>
     <!-- 01: Hero Section (Same style as index.html / unipublishing.html) -->
     <section class="home-hero">

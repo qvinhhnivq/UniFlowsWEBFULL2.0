@@ -2200,3 +2200,340 @@ dialog[open].release-dialog-shell {
 .profile-tab-panel.active {
   display: block;
 }
+
+/* ==============================================================================
+   11. DEMO SUBMISSION (SUBMIT-MUSIC) LIQUID GLASS THEME
+   ============================================================================== */
+.submit-hero {
+  position: relative !important;
+  background: var(--glass-bg-elevated) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding: 70px 4vw 48px !important;
+  overflow: hidden !important;
+}
+
+.submit-form-shell {
+  max-width: 980px !important;
+  margin: 0 auto !important;
+  padding: 40px 4vw 90px !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.form-section-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  padding: 32px !important;
+  margin-bottom: 28px !important;
+  border-radius: 20px !important;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.25s ease !important;
+}
+
+.form-section-card:hover {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.form-section-card h3 {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  margin: 0 0 6px !important;
+  letter-spacing: -0.04em !important;
+  color: var(--portal-text-main) !important;
+}
+
+.form-section-card p.subhead {
+  font-size: 13px !important;
+  color: var(--portal-text-muted) !important;
+  margin: 0 0 22px !important;
+}
+
+.genre-chip {
+  padding: 7px 16px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--portal-text-main) !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.22s ease !important;
+}
+
+.genre-chip:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: #38bdf8 !important;
+  transform: translateY(-1px);
+}
+
+.genre-chip.active {
+  background: linear-gradient(135deg, #0284c7, #38bdf8) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
+}
+
+.goal-option-card {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  padding: 14px 18px !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  cursor: pointer !important;
+  margin-bottom: 10px !important;
+  transition: all 0.22s ease !important;
+  color: var(--portal-text-main) !important;
+}
+
+.goal-option-card:hover, .goal-option-card.selected {
+  border-color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.12) !important;
+}
+
+.goal-option-card strong {
+  color: var(--portal-text-main) !important;
+}
+
+.goal-option-card small {
+  color: var(--portal-text-muted) !important;
+}
+
+.submit-dialog-box {
+  background: var(--glass-bg-elevated) !important;
+  backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
+  -webkit-backdrop-filter: blur(48px) saturate(220%) brightness(102%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  max-width: 580px !important;
+  width: 92vw !important;
+  padding: 42px !important;
+  border-radius: 24px !important;
+  text-align: center !important;
+  color: var(--portal-text-main) !important;
+}
+
+/* ==============================================================================
+   12. UNI-HUBE CREATIVE STUDIO & PRODUCER ROSTER THEME
+   ============================================================================== */
+.home-hero {
+  position: relative !important;
+  background: transparent !important;
+}
+
+.hube-filter-group {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  padding: 24px 3vw !important;
+  border-bottom: 1px solid var(--glass-border-subtle) !important;
+  background: transparent !important;
+}
+
+.hube-filter-btn {
+  padding: 8px 18px !important;
+  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-bg-subtle) !important;
+  font: 11px 'DM Mono', monospace !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  color: var(--portal-text-main) !important;
+  transition: all 0.22s ease !important;
+}
+
+.hube-filter-btn.active, .hube-filter-btn:hover {
+  background: var(--portal-text-main) !important;
+  color: var(--portal-bg) !important;
+  border-color: var(--portal-text-main) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .hube-filter-btn.active,
+.portal-body.dark-mode .hube-filter-btn.active {
+  background: #ffffff !important;
+  color: #0b0b0b !important;
+  border-color: #ffffff !important;
+}
+
+.hube-badge {
+  font: 10px 'DM Mono', monospace !important;
+  letter-spacing: 1.2px !important;
+  text-transform: uppercase !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-weight: 800 !important;
+  display: inline-block !important;
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+.producer-card, .studio-booking-card, .service-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.25s ease !important;
+}
+
+.producer-card:hover, .studio-booking-card:hover, .service-card:hover {
+  transform: translateY(-4px) scale(1.01) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ==============================================================================
+   13. UNIPUBLISHING SYNC & CATALOGUE LICENSING THEME
+   ============================================================================== */
+.pub-hero {
+  position: relative !important;
+  background: var(--glass-bg-elevated) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  border-bottom: 2px solid #38bdf8 !important;
+  padding: 70px 4vw 50px !important;
+  color: #ffffff !important;
+  overflow: hidden !important;
+}
+
+.kpi-strip {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  background: var(--glass-bg-subtle) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  color: var(--portal-text-main) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.kpi-item {
+  padding: 18px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  border-right: 1px solid var(--glass-border-subtle) !important;
+}
+
+.kpi-badge {
+  font-family: 'DM Mono', monospace !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  color: #0b0b0b !important;
+  background: var(--lime) !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(216, 255, 72, 0.3) !important;
+}
+
+.catalogue-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  margin-bottom: 18px !important;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.25s ease !important;
+  color: var(--portal-text-main) !important;
+}
+
+.catalogue-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35) !important;
+  border-color: #38bdf8 !important;
+}
+
+.rights-badge.precleared {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.4) !important;
+}
+
+.rights-badge.publishing-only {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+.platform-pill {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  color: var(--portal-text-main) !important;
+  border-radius: 6px !important;
+}
+
+/* ==============================================================================
+   14. COMPREHENSIVE OVERRIDES FOR DATA-PAGES (UNIPUBLISHING, UNIHUBE, SUBMIT-MUSIC)
+   ============================================================================== */
+[data-page="unipublishing"] #catalogue-section > div,
+[data-page="unipublishing"] #panel-track-order,
+[data-page="unipublishing"] #panel-verify-cert,
+[data-page="unipublishing"] .notice-box,
+[data-page="unipublishing"] .faq-item,
+[data-page="unipublishing"] .kpi-strip,
+[data-page="unipublishing"] .catalogue-card,
+[data-page="unipublishing"] #order-section > div,
+[data-page="unipublishing"] .dialog-glass,
+[data-page="unihube"] .hube-booking-box,
+[data-page="unihube"] .hube-service-card,
+[data-page="unihube"] .producer-card,
+[data-page="unihube"] .service-card,
+[data-page="submit-music"] .form-section-card,
+[data-page="submit-music"] .submit-dialog-box {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--portal-text-main) !important;
+}
+
+[data-page="unipublishing"] .notice-box {
+  background: rgba(2, 132, 199, 0.12) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  border-left: 4px solid #38bdf8 !important;
+  color: var(--portal-text-main) !important;
+}
+
+[data-page="unipublishing"] input,
+[data-page="unipublishing"] select,
+[data-page="unipublishing"] textarea,
+[data-page="submit-music"] input,
+[data-page="submit-music"] select,
+[data-page="submit-music"] textarea,
+[data-page="unihube"] input,
+[data-page="unihube"] select,
+[data-page="unihube"] textarea {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  color: var(--portal-text-main) !important;
+  border-radius: 8px !important;
+}
+
+[data-theme="dark"] [data-page="unipublishing"] h2,
+[data-theme="dark"] [data-page="unipublishing"] h3,
+[data-theme="dark"] [data-page="unipublishing"] h4,
+[data-theme="dark"] [data-page="unipublishing"] strong,
+[data-theme="dark"] [data-page="unihube"] h2,
+[data-theme="dark"] [data-page="unihube"] h3,
+[data-theme="dark"] [data-page="unihube"] strong,
+[data-theme="dark"] [data-page="submit-music"] h2,
+[data-theme="dark"] [data-page="submit-music"] h3,
+[data-theme="dark"] [data-page="submit-music"] strong {
+  color: #ffffff !important;
+}
+
+
