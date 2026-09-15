@@ -43,7 +43,9 @@
     import { supabase, isSupabaseConfigured, getCurrentUserProfile } from '/assets/supabase.js';
 
     // Auto-login if previously remembered
-    if (localStorage.getItem('uniflows-artist') === 'true' || sessionStorage.getItem('uniflows-artist') === 'true') {
+    const rawAuth = localStorage.getItem('uniflows-artist') || sessionStorage.getItem('uniflows-artist');
+    const isAuth = rawAuth === 'true' || (rawAuth && rawAuth.startsWith('{')) || !!(localStorage.getItem('uniflows-artist-id') || sessionStorage.getItem('uniflows-artist-id'));
+    if (isAuth) {
       location.replace('/portal');
     }
 

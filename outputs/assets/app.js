@@ -17,7 +17,8 @@ import { initStaggeredMenu } from './staggered-menu.js';
     } else if (host.startsWith('48k.')) {
       window.location.replace(`${protocol}//uniflowslabel.com/48kcollective${search}${hash}`);
     } else if (host.startsWith('portal.') || host.startsWith('artist.')) {
-      const isAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
+      const rawAuth = sessionStorage.getItem('uniflows-artist') || localStorage.getItem('uniflows-artist');
+      const isAuth = rawAuth === 'true' || (rawAuth && rawAuth.startsWith('{')) || !!(sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id'));
       window.location.replace(`${protocol}//uniflowslabel.com/${isAuth ? 'portal' : 'artist-login'}${search}${hash}`);
     } else {
       window.location.replace(`${protocol}//uniflowslabel.com/${search}${hash}`);

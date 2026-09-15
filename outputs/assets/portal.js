@@ -6,7 +6,8 @@ import './security.js';
 import { initCardNav } from './card-nav.js';
 import { initPortalGlassSurfaces, createGlassSurface, enhanceWithGlassSurface } from './glass-surface.js';
 // Kiểm tra quyền đăng nhập
-const isArtistAuth = sessionStorage.getItem('uniflows-artist') === 'true' || localStorage.getItem('uniflows-artist') === 'true';
+const rawAuth = sessionStorage.getItem('uniflows-artist') || localStorage.getItem('uniflows-artist');
+const isArtistAuth = rawAuth === 'true' || (rawAuth && rawAuth.startsWith('{')) || !!(sessionStorage.getItem('uniflows-artist-id') || localStorage.getItem('uniflows-artist-id'));
 if (!isArtistAuth) {
   location.replace('artist-login');
 }
@@ -6097,7 +6098,10 @@ function initProfileSettingsDialog() {
 
       await saveData(liveData);
       try {
-        localStorage.setItem('uniflows-artist', JSON.stringify(artist));
+        localStorage.setItem('uniflows-artist-data', JSON.stringify(artist));
+        if (localStorage.getItem('uniflows-artist')) {
+          localStorage.setItem('uniflows-artist', 'true');
+        }
       } catch {}
 
       showProfileNotice('✓ Đã lưu thông tin tài khoản ngân hàng mặc định thành công! Mỗi khi rút tiền, hệ thống sẽ tự động điền sẵn.', true);
@@ -6177,7 +6181,10 @@ function initProfileSettingsDialog() {
 
       await saveData(liveData);
       try {
-        localStorage.setItem('uniflows-artist', JSON.stringify(artist));
+        localStorage.setItem('uniflows-artist-data', JSON.stringify(artist));
+        if (localStorage.getItem('uniflows-artist')) {
+          localStorage.setItem('uniflows-artist', 'true');
+        }
         sessionStorage.setItem('uniflows-artist-name', newName);
       } catch {}
 
@@ -6189,41 +6196,6 @@ function initProfileSettingsDialog() {
       }
 
       showProfileNotice('✓ Đã cập nhật hồ sơ nghệ sĩ và các nền tảng liên kết thành công!', true);
-    } catch (err) {
-      showProfileNotice('Lỗi: ' + (err.message || 'Không thể cập nhật hồ sơ.'), false);
-    } finally {
-      if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.textContent = '💾 Lưu cập nhật Hồ sơ';
-      }
-    }
-  });
-
-      artist.name = newName;
-      artist.genre = genre;
-      artist.bio = bio;
-      if (!artist.socials) artist.socials = {};
-      artist.socials.instagram = ig;
-      artist.socials.tiktok = tiktok;
-
-      if (data.artists && data.artists[currentArtistIdx]) {
-        data.artists[currentArtistIdx] = { ...liveData.artists[currentArtistIdx] };
-      }
-
-      await saveData(liveData);
-      try {
-        localStorage.setItem('uniflows-artist', JSON.stringify(artist));
-        sessionStorage.setItem('uniflows-artist-name', newName);
-      } catch {}
-
-      // Update header DOM
-      const artistDisplay = document.querySelector('#artist-display-name');
-      if (artistDisplay) artistDisplay.textContent = newName;
-      if (window.cardNavInstance && typeof window.cardNavInstance.updateArtistInfo === 'function') {
-        window.cardNavInstance.updateArtistInfo(newName);
-      }
-
-      showProfileNotice('✓ Đã cập nhật hồ sơ nghệ sĩ thành công!', true);
     } catch (err) {
       showProfileNotice('Lỗi: ' + (err.message || 'Không thể cập nhật hồ sơ.'), false);
     } finally {
