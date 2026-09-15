@@ -4383,7 +4383,7 @@ function renderReleaseListItems() {
   }
 
   if (filtered.length === 0) {
-    list.innerHTML = '<p class="empty" style="padding:20px;background:#fff;border:1px solid var(--line);border-radius:4px;">Không tìm thấy bản phát hành nào theo bộ lọc này.</p>';
+    list.innerHTML = '<p class="empty" style="padding:28px 20px;border-radius:18px;background:var(--glass-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);color:var(--portal-text-muted);text-align:center;font-size:13.5px;box-shadow:var(--glass-shadow);">Không tìm thấy bản phát hành nào theo bộ lọc này.</p>';
     return;
   }
 
@@ -5517,11 +5517,11 @@ async function loadArtistPayouts() {
   // Render Payout History Table
   if (payoutHistoryList) {
     if (artistPayoutRequests.length === 0) {
-      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;padding:16px;background:var(--portal-card-bg);border:1px solid var(--portal-card-border);border-radius:10px;color:var(--portal-text-muted);">Chưa có yêu cầu rút tiền nào được tạo.</p>';
+      payoutHistoryList.innerHTML = '<p class="empty" style="font-size:13px;padding:20px;border-radius:14px;background:var(--glass-bg-subtle);border:1px solid var(--glass-border-subtle);color:var(--portal-text-muted);text-align:center;">Chưa có yêu cầu rút tiền nào được tạo.</p>';
     } else {
       payoutHistoryList.innerHTML = `
-        <div style="border:1px solid var(--portal-card-border);background:var(--portal-card-bg);border-radius:12px;overflow:hidden;box-shadow:var(--portal-shadow);margin-top:10px;">
-          <div style="display:grid;grid-template-columns:120px 140px 1fr 160px;background:var(--portal-hover-bg);padding:12px 16px;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--portal-text-muted);border-bottom:1px solid var(--portal-card-border);font-family:'DM Mono',monospace;">
+        <div style="border:1px solid var(--glass-border);background:var(--glass-bg);border-radius:16px;overflow:hidden;box-shadow:var(--glass-shadow);margin-top:10px;">
+          <div style="display:grid;grid-template-columns:120px 140px 1fr 160px;background:var(--glass-bg-subtle);padding:14px 18px;font-weight:800;font-size:11px;text-transform:uppercase;color:var(--portal-text-muted);border-bottom:1px solid var(--glass-border-subtle);font-family:'DM Mono',monospace;letter-spacing:0.5px;">
             <span>Ngày yêu cầu</span>
             <span>Số tiền rút</span>
             <span>Tài khoản nhận tiền</span>
@@ -5534,26 +5534,32 @@ async function loadArtistPayouts() {
             const bank = req.bank_info || {};
             const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('vi-VN') : 'Vừa xong';
 
+            const badgeBg = isPending 
+              ? 'background:rgba(245, 158, 11, 0.18);color:#fbbf24;border:1px solid rgba(245, 158, 11, 0.4);' 
+              : (isApproved 
+                ? 'background:rgba(16, 185, 129, 0.18);color:#34d399;border:1px solid rgba(16, 185, 129, 0.4);' 
+                : 'background:rgba(239, 68, 68, 0.18);color:#f87171;border:1px solid rgba(239, 68, 68, 0.4);');
+
             return `
-              <div style="border-bottom:1px solid var(--portal-card-border);padding:14px 16px;font-size:13px;">
+              <div style="border-bottom:1px solid var(--glass-border-subtle);padding:16px 18px;font-size:13.5px;">
                 <div style="display:grid;grid-template-columns:120px 140px 1fr 160px;align-items:center;">
                   <span style="font-size:12px;color:var(--portal-text-dim);font-family:'DM Mono',monospace;">${esc(dateStr)}</span>
-                  <strong style="font-size:15px;font-family:'DM Mono',monospace;color:${isPending ? '#d97706' : (isApproved ? '#16a34a' : '#dc2626')};">
+                  <strong style="font-size:15.5px;font-family:'DM Mono',monospace;color:${isPending ? '#fbbf24' : (isApproved ? '#34d399' : '#f87171')};font-weight:900;">
                     ₫ ${parseInt(req.amount || 0).toLocaleString('vi-VN')}
                   </strong>
-                  <span>
-                    <strong>${esc(bank.bank || 'Ngân hàng')}</strong> · <span style="font-family:monospace;font-weight:bold;">${esc(bank.accountNumber || '')}</span> (${esc(bank.accountName || '')})
+                  <span style="color:var(--portal-text-main);">
+                    <strong style="color:#ffffff;">${esc(bank.bank || 'Ngân hàng')}</strong> · <span style="font-family:'DM Mono',monospace;font-weight:bold;color:#38bdf8;">${esc(bank.accountNumber || '')}</span> (<span style="color:var(--portal-text-muted);">${esc(bank.accountName || '')}</span>)
                   </span>
                   <span>
-                    <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;background:${isPending ? '#fef3c7' : (isApproved ? '#dcfce7' : '#fee2e2')};color:${isPending ? '#b45309' : (isApproved ? '#15803d' : '#cf1322')};">
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:12px;font-size:11.5px;font-weight:800;${badgeBg}">
                       ${isPending ? '⏳ Đang chờ xem xét' : (isApproved ? '✅ Đã thanh toán' : '❌ Bị từ chối')}
                     </span>
                   </span>
                 </div>
                 ${(isRejected && req.rejection_reason) ? `
-                  <div style="margin-top:10px;background:#fff2f0;border:1px solid #ffccc7;padding:8px 12px;font-size:12px;color:#cf1322;border-radius:6px;">
-                    <b>Lý do từ chối từ Admin:</b> ${esc(req.rejection_reason)} <br>
-                    <small style="color:#666;">(Số tiền này đã được hoàn trả lại về Số dư khả dụng của bạn).</small>
+                  <div style="margin-top:12px;background:rgba(239, 68, 68, 0.12);border:1px solid rgba(239, 68, 68, 0.35);padding:10px 14px;font-size:12.5px;border-radius:10px;line-height:1.5;">
+                    <b style="color:#f87171;">Lý do từ chối từ Admin:</b> <span style="color:#fecaca;">${esc(req.rejection_reason)}</span> <br>
+                    <small style="color:var(--portal-text-dim);display:block;margin-top:3px;">(Số tiền này đã được hoàn trả lại về Số dư khả dụng của bạn).</small>
                   </div>
                 ` : ''}
               </div>

@@ -590,7 +590,7 @@ dialog,
 
 /* Territory and Audience Cards */
 .portal-territory-card {
-  padding: 24px !important;
+  padding: 24px 26px !important;
   border-top: 3px solid #6366f1 !important;
   border-radius: 20px !important;
 }
@@ -599,15 +599,23 @@ dialog,
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 12px 0 !important;
-  border-bottom: 1px solid var(--glass-border-subtle) !important;
-  font-size: 14px !important;
+  padding: 11px 16px !important;
+  margin-bottom: 8px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  font-size: 13.5px !important;
   font-weight: 600 !important;
-  color: var(--portal-text-main) !important;
+  color: #ffffff !important;
+  transition: background 0.2s ease;
+}
+
+.portal-territory-row:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
 }
 
 .portal-territory-row:last-child {
-  border-bottom: none !important;
+  margin-bottom: 0 !important;
 }
 
 .portal-territory-progress {
@@ -615,7 +623,7 @@ dialog,
   height: 8px !important;
   background: rgba(255, 255, 255, 0.12) !important;
   border-radius: 999px !important;
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: none !important;
   overflow: hidden !important;
   margin-left: 14px !important;
 }
@@ -626,9 +634,66 @@ dialog,
   border-radius: 999px !important;
 }
 
+/* Demographics and Playlists spacing */
+#portal-demographics-container {
+  margin-top: 8px !important;
+}
+
+#portal-demographics-container > div {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 18px 22px !important;
+  box-shadow: none !important;
+}
+
 /* ==============================================================================
    2.2. RELEASES CATALOGUE & ROW LIQUID GLASS CARDS
    ============================================================================== */
+.portal-filter-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(104%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  border-radius: 20px !important;
+  padding: 20px 24px !important;
+  margin-top: 20px !important;
+  margin-bottom: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+.portal-filter-card .portal-search-bar-wrap {
+  width: 100% !important;
+  background: rgba(24, 27, 44, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 0 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+.portal-filter-card .portal-search-bar {
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 13.5px !important;
+  padding: 12px 0 12px 10px !important;
+  outline: none !important;
+}
+
+.portal-filter-card .filter-chips {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 .portal-release-card {
   display: grid !important;
   grid-template-columns: 80px 1fr auto auto !important;
@@ -954,18 +1019,42 @@ dialog,
 }
 
 .notif-badge-tag {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
 
 .notif-badge-release { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
 .notif-badge-payout { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 .notif-badge-system { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+[data-theme="dark"] .notif-badge-release,
+.portal-body.dark-mode .notif-badge-release {
+  background: rgba(239, 68, 68, 0.22) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+}
+
+[data-theme="dark"] .notif-badge-payout,
+.portal-body.dark-mode .notif-badge-payout {
+  background: rgba(16, 185, 129, 0.22) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.45) !important;
+}
+
+[data-theme="dark"] .notif-badge-system,
+.portal-body.dark-mode .notif-badge-system {
+  background: rgba(56, 189, 248, 0.22) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.45) !important;
+}
 
 .notif-card-title {
   font-size: 14px;

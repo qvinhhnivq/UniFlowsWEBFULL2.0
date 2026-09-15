@@ -476,7 +476,7 @@ export function initPortalGlassSurfaces() {
   });
 
   // Data tables & release items
-  document.querySelectorAll('.data-table, .release-row, .track-row, .catalog-item, .payout-history-table, .portal-territory-row').forEach(item => {
+  document.querySelectorAll('.data-table, .release-row, .track-row, .catalog-item, .payout-history-table').forEach(item => {
     if (!item.classList.contains('glass-surface')) {
       item.classList.add('glass-surface');
     }
