@@ -6175,50 +6175,89 @@ async function loadNotifications() {
   renderNotificationsUI();
 }
 
+let currentNotifFilter = 'all';
+
 function renderNotificationsUI() {
   const notifList = document.querySelector('#notif-list');
   const badge = document.querySelector('#notif-badge');
+  const pulseIndicator = document.querySelector('#notif-pulse-indicator');
+  const totalCountEl = document.querySelector('#notif-total-count');
+  const unreadCountEl = document.querySelector('#notif-unread-count');
   if (!notifList) return;
 
+  const totalCount = artistNotifications.length;
   const unreadCount = artistNotifications.filter(n => !n.is_read).length;
+
+  if (totalCountEl) totalCountEl.textContent = String(totalCount);
+  if (unreadCountEl) unreadCountEl.textContent = String(unreadCount);
 
   if (badge) {
     if (unreadCount > 0) {
-      badge.style.display = 'block';
-      badge.textContent = String(unreadCount);
+      badge.style.display = 'inline-block';
+      badge.textContent = `${unreadCount} MỚI`;
     } else {
       badge.style.display = 'none';
     }
   }
 
-  if (artistNotifications.length === 0) {
-    notifList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--portal-text-muted); font-size: 12px;">Không có thông báo nào</div>';
+  if (pulseIndicator) {
+    pulseIndicator.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+  }
+
+  let filtered = artistNotifications;
+  if (currentNotifFilter === 'unread') {
+    filtered = artistNotifications.filter(n => !n.is_read);
+  }
+
+  if (filtered.length === 0) {
+    notifList.innerHTML = `
+      <div class="notif-empty-state" style="padding: 45px 20px; text-align: center; color: var(--portal-text-muted);">
+        <span style="font-size: 32px; display: block; margin-bottom: 10px;">📭</span>
+        <strong style="font-size: 14px; color: var(--portal-text-main); display: block;">Không có thông báo nào</strong>
+        <p style="margin: 4px 0 0; font-size: 12px;">${currentNotifFilter === 'unread' ? 'Bạn đã đọc hết tất cả thông báo!' : 'Chưa có thông báo nào mới từ Hãng Đĩa.'}</p>
+      </div>
+    `;
     return;
   }
 
-  notifList.innerHTML = artistNotifications.map((n, idx) => {
+  notifList.innerHTML = filtered.map((n) => {
+    const origIdx = artistNotifications.indexOf(n);
     const isUnread = !n.is_read;
-    const timeStr = n.created_at ? new Date(n.created_at).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
-    const bgStyle = isUnread ? 'background: rgba(37, 99, 235, 0.06);' : 'background: transparent;';
-    const dotColor = n.type === 'payout' ? '#16a34a' : (n.type === 'release' ? '#2563eb' : '#f59e0b');
+    const timeStr = n.created_at ? new Date(n.created_at).toLocaleString('vi-VN', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }) : '';
+
+    let badgeClass = 'notif-badge-system';
+    let badgeText = 'HỆ THỐNG';
+    if (n.type === 'release' || (n.title && n.title.includes('phát hành'))) {
+      badgeClass = 'notif-badge-release';
+      badgeText = 'A&R / BÀI HÁT';
+    } else if (n.type === 'payout' || (n.title && n.title.includes('tiền'))) {
+      badgeClass = 'notif-badge-payout';
+      badgeText = 'DOANH THU & VÍ';
+    }
 
     return `
-      <div class="notif-item" data-notif-idx="${idx}" style="padding: 12px 16px; border-bottom: 1px solid var(--portal-card-border); ${bgStyle} display: flex; gap: 10px; align-items: flex-start; transition: background 0.2s;">
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUnread ? dotColor : '#94a3b8'}; margin-top:5px; flex-shrink:0;"></span>
-        <div style="flex:1;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="font-size: 12px; color: var(--portal-text-main); font-weight:${isUnread ? '700' : '500'};">${esc(n.title)}</strong>
-            <small style="font-size: 10px; color: var(--portal-text-dim); font-family:'DM Mono',monospace;">${esc(timeStr)}</small>
-          </div>
-          <p style="font-size: 11.5px; color: ${isUnread ? 'var(--portal-text-main)' : 'var(--portal-text-muted)'}; margin: 4px 0 0; line-height: 1.4;">${esc(n.message)}</p>
+      <div class="notif-card-item ${isUnread ? 'unread' : ''}" data-notif-idx="${origIdx}">
+        <div class="notif-card-header">
+          <span class="notif-badge-tag ${badgeClass}">${badgeText}</span>
+          <span class="notif-time-badge" style="font-size:10.5px; color:var(--portal-text-dim); font-family:'DM Mono',monospace;">${esc(timeStr)}</span>
         </div>
-        ${isUnread ? `
-          <button type="button" class="mark-single-read-btn" data-notif-idx="${idx}" title="Đánh dấu đã đọc" style="background:none; border:none; color:#2563eb; cursor:pointer; padding:2px 4px; font-size:12px; flex-shrink:0;">
-            ✓
-          </button>
-        ` : `
-          <span style="font-size:10px; color:var(--portal-text-dim); flex-shrink:0;" title="Đã xem">✓✓</span>
-        `}
+        <h4 class="notif-card-title">${esc(n.title)}</h4>
+        <p class="notif-card-body">${esc(n.message)}</p>
+        <div class="notif-card-footer">
+          <span style="font-size:11px; color:${isUnread ? '#2563eb' : 'var(--portal-text-dim)'}; font-weight:700;">
+            ${isUnread ? '● Chưa đọc' : '✓ Đã xem'}
+          </span>
+          ${isUnread ? `
+            <button type="button" class="mark-single-read-btn" data-notif-idx="${origIdx}" style="background:none; border:none; color:#2563eb; cursor:pointer; font-weight:700; font-size:11.5px; padding:2px 6px;">
+              Đánh dấu đã đọc ✓
+            </button>
+          ` : ''}
+        </div>
       </div>
     `;
   }).join('');
@@ -6247,50 +6286,68 @@ function renderNotificationsUI() {
 
 function initNotifications() {
   const btnNotif = document.querySelector('#btn-notif');
-  const dropdown = document.querySelector('#notif-dropdown');
+  const drawer = document.querySelector('#portal-notif-drawer');
+  const backdrop = document.querySelector('#portal-notif-backdrop');
+  const closeBtn = document.querySelector('#close-notif-drawer-btn');
   const markAllRead = document.querySelector('#mark-all-read-btn');
+  const filterTabs = document.querySelectorAll('.notif-tab-btn');
 
-  if (btnNotif && dropdown) {
-    btnNotif.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = dropdown.style.display === 'block';
-      dropdown.style.display = isOpen ? 'none' : 'block';
+  function openNotifDrawer() {
+    drawer?.classList.add('open');
+    backdrop?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeNotifDrawer() {
+    drawer?.classList.remove('open');
+    backdrop?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  btnNotif?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openNotifDrawer();
+  });
+
+  closeBtn?.addEventListener('click', closeNotifDrawer);
+  backdrop?.addEventListener('click', closeNotifDrawer);
+
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      filterTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentNotifFilter = tab.dataset.filter || 'all';
+      renderNotificationsUI();
     });
+  });
 
-    document.addEventListener('click', (e) => {
-      if (!dropdown.contains(e.target) && !btnNotif.contains(e.target)) {
-        dropdown.style.display = 'none';
+  if (markAllRead) {
+    markAllRead.addEventListener('click', async () => {
+      artistNotifications.forEach(n => { n.is_read = true; });
+      const notifStorageKey = 'uniflows-notifications-' + currentArtistId;
+      localStorage.setItem(notifStorageKey, JSON.stringify(artistNotifications));
+      renderNotificationsUI();
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('notifications').update({ is_read: true }).eq('artist_id', currentArtistId);
+        } catch {}
       }
     });
+  }
 
-    if (markAllRead) {
-      markAllRead.addEventListener('click', async () => {
-        artistNotifications.forEach(n => { n.is_read = true; });
-        const notifStorageKey = 'uniflows-notifications-' + currentArtistId;
-        localStorage.setItem(notifStorageKey, JSON.stringify(artistNotifications));
-        renderNotificationsUI();
+  loadNotifications();
 
-        if (isSupabaseConfigured()) {
-          try {
-            await supabase.from('notifications').update({ is_read: true }).eq('artist_id', currentArtistId);
-          } catch {}
-        }
-      });
-    }
-
-    loadNotifications();
-
-    // Subscribe to realtime notifications
-    if (isSupabaseConfigured()) {
-      try {
-        supabase
-          .channel('public:notifications:' + currentArtistId)
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
-            loadNotifications();
-          })
-          .subscribe();
-      } catch {}
-    }
+  // Subscribe to realtime notifications
+  if (isSupabaseConfigured()) {
+    try {
+      supabase
+        .channel('public:notifications:' + currentArtistId)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+          loadNotifications();
+        })
+        .subscribe();
+    } catch {}
   }
 }
 
