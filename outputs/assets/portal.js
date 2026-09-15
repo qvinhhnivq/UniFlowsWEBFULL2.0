@@ -669,6 +669,1841 @@ function updateLiveMockup() {
   if (mockDateEl) mockDateEl.textContent = date || 'Chưa chọn ngày';
 }
 
+
+// ====================================================
+// UNIFLOWS PORTAL — DSP PLATFORMS & TERRITORIES DATA
+// ====================================================
+
+export const DISTRIBUTION_PLATFORMS = [
+  {
+    "id": "spotify",
+    "name": "Spotify",
+    "cat": "Toàn cầu",
+    "color": "#1ed760",
+    "icon": "spotify"
+  },
+  {
+    "id": "applemusic",
+    "name": "Apple Music & iTunes",
+    "cat": "Toàn cầu",
+    "color": "#fc3c44",
+    "icon": "applemusic"
+  },
+  {
+    "id": "tiktok",
+    "name": "TikTok & TikTok Music",
+    "cat": "Video ngắn & MXH",
+    "color": "#000000",
+    "icon": "tiktok"
+  },
+  {
+    "id": "meta",
+    "name": "Meta (Instagram & Facebook Reels)",
+    "cat": "Video ngắn & MXH",
+    "color": "#0081fb",
+    "icon": "meta"
+  },
+  {
+    "id": "ytmusic",
+    "name": "YouTube Music",
+    "cat": "Toàn cầu",
+    "color": "#ff0000",
+    "icon": "ytmusic"
+  },
+  {
+    "id": "ytcid",
+    "name": "YouTube Content ID (CID)",
+    "cat": "Bảo vệ tác quyền",
+    "color": "#cc0000",
+    "icon": "ytcid"
+  },
+  {
+    "id": "zingmp3",
+    "name": "Zing MP3",
+    "cat": "Việt Nam",
+    "color": "#8b3bfe",
+    "icon": "zingmp3"
+  },
+  {
+    "id": "nhaccuatui",
+    "name": "NhacCuaTui (NCT)",
+    "cat": "Việt Nam",
+    "color": "#0072bc",
+    "icon": "nhaccuatui"
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon Music",
+    "cat": "Toàn cầu",
+    "color": "#00a8e1",
+    "icon": "amazon"
+  },
+  {
+    "id": "tidal",
+    "name": "TIDAL (Hi-Fi Master)",
+    "cat": "Hi-Res Audio",
+    "color": "#000000",
+    "icon": "tidal"
+  },
+  {
+    "id": "deezer",
+    "name": "Deezer",
+    "cat": "Toàn cầu",
+    "color": "#a238ff",
+    "icon": "deezer"
+  },
+  {
+    "id": "soundcloud",
+    "name": "SoundCloud",
+    "cat": "Streaming & Creator",
+    "color": "#ff5500",
+    "icon": "soundcloud"
+  },
+  {
+    "id": "pandora",
+    "name": "Pandora",
+    "cat": "Bắc Mỹ",
+    "color": "#005483",
+    "icon": "pandora"
+  },
+  {
+    "id": "shazam",
+    "name": "Shazam",
+    "cat": "Nhận diện âm nhạc",
+    "color": "#0088ff",
+    "icon": "shazam"
+  },
+  {
+    "id": "tencent",
+    "name": "Tencent Music (QQ / Kugou / Kuwo)",
+    "cat": "Đại lục & Châu Á",
+    "color": "#12b7f5",
+    "icon": "tencent"
+  },
+  {
+    "id": "netease",
+    "name": "NetEase Cloud Music",
+    "cat": "Đại lục & Châu Á",
+    "color": "#c20c0c",
+    "icon": "netease"
+  },
+  {
+    "id": "boomplay",
+    "name": "Boomplay",
+    "cat": "Châu Phi & Quốc tế",
+    "color": "#f57c00",
+    "icon": "boomplay"
+  },
+  {
+    "id": "anghami",
+    "name": "Anghami",
+    "cat": "Trung Đông & Bắc Phi",
+    "color": "#7b1fa2",
+    "icon": "anghami"
+  },
+  {
+    "id": "audiomack",
+    "name": "Audiomack",
+    "cat": "Hip-Hop & Quốc tế",
+    "color": "#ffa000",
+    "icon": "audiomack"
+  },
+  {
+    "id": "iheart",
+    "name": "iHeartRadio",
+    "cat": "Bắc Mỹ & Radio",
+    "color": "#c62828",
+    "icon": "iheart"
+  },
+  {
+    "id": "beatport",
+    "name": "Beatport",
+    "cat": "Electronic & DJ",
+    "color": "#00ff80",
+    "icon": "beatport"
+  },
+  {
+    "id": "traxsource",
+    "name": "Traxsource",
+    "cat": "Electronic & Club",
+    "color": "#1e293b",
+    "icon": "traxsource"
+  },
+  {
+    "id": "qobuz",
+    "name": "Qobuz",
+    "cat": "Studio Hi-Res 24-bit",
+    "color": "#2563eb",
+    "icon": "qobuz"
+  },
+  {
+    "id": "joox",
+    "name": "Joox Music",
+    "cat": "Đông Nam Á",
+    "color": "#00c853",
+    "icon": "joox"
+  },
+  {
+    "id": "linemusic",
+    "name": "LINE MUSIC",
+    "cat": "Nhật Bản & Đài Loan",
+    "color": "#00b900",
+    "icon": "linemusic"
+  },
+  {
+    "id": "awa",
+    "name": "AWA",
+    "cat": "Nhật Bản",
+    "color": "#ea580c",
+    "icon": "awa"
+  },
+  {
+    "id": "melon",
+    "name": "Melon",
+    "cat": "Hàn Quốc (K-Pop)",
+    "color": "#00cd3c",
+    "icon": "melon"
+  },
+  {
+    "id": "flo",
+    "name": "FLO",
+    "cat": "Hàn Quốc",
+    "color": "#3b82f6",
+    "icon": "flo"
+  },
+  {
+    "id": "genie",
+    "name": "Genie Music",
+    "cat": "Hàn Quốc (KT)",
+    "color": "#0284c7",
+    "icon": "genie"
+  },
+  {
+    "id": "bugs",
+    "name": "Bugs!",
+    "cat": "Hàn Quốc",
+    "color": "#e11d48",
+    "icon": "bugs"
+  },
+  {
+    "id": "vibe",
+    "name": "VIBE (Naver)",
+    "cat": "Hàn Quốc",
+    "color": "#9333ea",
+    "icon": "vibe"
+  },
+  {
+    "id": "capcut",
+    "name": "CapCut & Resso Sound Library",
+    "cat": "Video Creator Ecosystem",
+    "color": "#0f172a",
+    "icon": "capcut"
+  },
+  {
+    "id": "other100",
+    "name": "Hơn 100 nền tảng đối tác toàn cầu khác",
+    "cat": "Global DSP Network",
+    "color": "#0f172a",
+    "icon": "other100",
+    "isSpecial": true
+  }
+];
+
+export const WORLD_COUNTRIES = [
+  {
+    "code": "VN",
+    "name": "Việt Nam",
+    "nameEn": "Vietnam",
+    "flag": "🇻🇳",
+    "region": "asean"
+  },
+  {
+    "code": "US",
+    "name": "Hoa Kỳ (Mỹ)",
+    "nameEn": "United States",
+    "flag": "🇺🇸",
+    "region": "na"
+  },
+  {
+    "code": "GB",
+    "name": "Vương quốc Anh",
+    "nameEn": "United Kingdom",
+    "flag": "🇬🇧",
+    "region": "eu"
+  },
+  {
+    "code": "JP",
+    "name": "Nhật Bản",
+    "nameEn": "Japan",
+    "flag": "🇯🇵",
+    "region": "asia"
+  },
+  {
+    "code": "KR",
+    "name": "Hàn Quốc",
+    "nameEn": "South Korea",
+    "flag": "🇰🇷",
+    "region": "asia"
+  },
+  {
+    "code": "FR",
+    "name": "Pháp",
+    "nameEn": "France",
+    "flag": "🇫🇷",
+    "region": "eu"
+  },
+  {
+    "code": "DE",
+    "name": "Đức",
+    "nameEn": "Germany",
+    "flag": "🇩🇪",
+    "region": "eu"
+  },
+  {
+    "code": "AU",
+    "name": "Úc (Australia)",
+    "nameEn": "Australia",
+    "flag": "🇦🇺",
+    "region": "oceania"
+  },
+  {
+    "code": "CA",
+    "name": "Canada",
+    "nameEn": "Canada",
+    "flag": "🇨🇦",
+    "region": "na"
+  },
+  {
+    "code": "SG",
+    "name": "Singapore",
+    "nameEn": "Singapore",
+    "flag": "🇸🇬",
+    "region": "asean"
+  },
+  {
+    "code": "TH",
+    "name": "Thái Lan",
+    "nameEn": "Thailand",
+    "flag": "🇹🇭",
+    "region": "asean"
+  },
+  {
+    "code": "MY",
+    "name": "Malaysia",
+    "nameEn": "Malaysia",
+    "flag": "🇲🇾",
+    "region": "asean"
+  },
+  {
+    "code": "ID",
+    "name": "Indonesia",
+    "nameEn": "Indonesia",
+    "flag": "🇮🇩",
+    "region": "asean"
+  },
+  {
+    "code": "PH",
+    "name": "Philippines",
+    "nameEn": "Philippines",
+    "flag": "🇵🇭",
+    "region": "asean"
+  },
+  {
+    "code": "TW",
+    "name": "Đài Loan",
+    "nameEn": "Taiwan",
+    "flag": "🇹🇼",
+    "region": "asia"
+  },
+  {
+    "code": "HK",
+    "name": "Hồng Kông",
+    "nameEn": "Hong Kong",
+    "flag": "🇭🇰",
+    "region": "asia"
+  },
+  {
+    "code": "CN",
+    "name": "Trung Quốc",
+    "nameEn": "China",
+    "flag": "🇨🇳",
+    "region": "asia"
+  },
+  {
+    "code": "IN",
+    "name": "Ấn Độ",
+    "nameEn": "India",
+    "flag": "🇮🇳",
+    "region": "asia"
+  },
+  {
+    "code": "LA",
+    "name": "Lào",
+    "nameEn": "Laos",
+    "flag": "🇱🇦",
+    "region": "asean"
+  },
+  {
+    "code": "KH",
+    "name": "Campuchia",
+    "nameEn": "Cambodia",
+    "flag": "🇰🇭",
+    "region": "asean"
+  },
+  {
+    "code": "MM",
+    "name": "Myanmar",
+    "nameEn": "Myanmar",
+    "flag": "🇲🇲",
+    "region": "asean"
+  },
+  {
+    "code": "BN",
+    "name": "Brunei",
+    "nameEn": "Brunei",
+    "flag": "🇧🇳",
+    "region": "asean"
+  },
+  {
+    "code": "TL",
+    "name": "Đông Timor",
+    "nameEn": "Timor-Leste",
+    "flag": "🇹🇱",
+    "region": "asean"
+  },
+  {
+    "code": "BR",
+    "name": "Brazil",
+    "nameEn": "Brazil",
+    "flag": "🇧🇷",
+    "region": "sa"
+  },
+  {
+    "code": "MX",
+    "name": "Mexico",
+    "nameEn": "Mexico",
+    "flag": "🇲🇽",
+    "region": "na"
+  },
+  {
+    "code": "ES",
+    "name": "Tây Ban Nha",
+    "nameEn": "Spain",
+    "flag": "🇪🇸",
+    "region": "eu"
+  },
+  {
+    "code": "IT",
+    "name": "Ý (Italy)",
+    "nameEn": "Italy",
+    "flag": "🇮🇹",
+    "region": "eu"
+  },
+  {
+    "code": "NL",
+    "name": "Hà Lan",
+    "nameEn": "Netherlands",
+    "flag": "🇳🇱",
+    "region": "eu"
+  },
+  {
+    "code": "SE",
+    "name": "Thụy Điển",
+    "nameEn": "Sweden",
+    "flag": "🇸🇪",
+    "region": "eu"
+  },
+  {
+    "code": "NO",
+    "name": "Na Uy",
+    "nameEn": "Norway",
+    "flag": "🇳🇴",
+    "region": "eu"
+  },
+  {
+    "code": "DK",
+    "name": "Đan Mạch",
+    "nameEn": "Denmark",
+    "flag": "🇩🇰",
+    "region": "eu"
+  },
+  {
+    "code": "FI",
+    "name": "Phần Lan",
+    "nameEn": "Finland",
+    "flag": "🇫🇮",
+    "region": "eu"
+  },
+  {
+    "code": "CH",
+    "name": "Thụy Sĩ",
+    "nameEn": "Switzerland",
+    "flag": "🇨🇭",
+    "region": "eu"
+  },
+  {
+    "code": "AT",
+    "name": "Áo (Austria)",
+    "nameEn": "Austria",
+    "flag": "🇦🇹",
+    "region": "eu"
+  },
+  {
+    "code": "BE",
+    "name": "Bỉ (Belgium)",
+    "nameEn": "Belgium",
+    "flag": "🇧🇪",
+    "region": "eu"
+  },
+  {
+    "code": "IE",
+    "name": "Ireland",
+    "nameEn": "Ireland",
+    "flag": "🇮🇪",
+    "region": "eu"
+  },
+  {
+    "code": "NZ",
+    "name": "New Zealand",
+    "nameEn": "New Zealand",
+    "flag": "🇳🇿",
+    "region": "oceania"
+  },
+  {
+    "code": "PL",
+    "name": "Ba Lan",
+    "nameEn": "Poland",
+    "flag": "🇵🇱",
+    "region": "eu"
+  },
+  {
+    "code": "PT",
+    "name": "Bồ Đào Nha",
+    "nameEn": "Portugal",
+    "flag": "🇵🇹",
+    "region": "eu"
+  },
+  {
+    "code": "CZ",
+    "name": "Cộng hòa Séc",
+    "nameEn": "Czech Republic",
+    "flag": "🇨🇿",
+    "region": "eu"
+  },
+  {
+    "code": "HU",
+    "name": "Hungary",
+    "nameEn": "Hungary",
+    "flag": "🇭🇺",
+    "region": "eu"
+  },
+  {
+    "code": "RO",
+    "name": "Romania",
+    "nameEn": "Romania",
+    "flag": "🇷🇴",
+    "region": "eu"
+  },
+  {
+    "code": "GR",
+    "name": "Hy Lạp",
+    "nameEn": "Greece",
+    "flag": "🇬🇷",
+    "region": "eu"
+  },
+  {
+    "code": "TR",
+    "name": "Thổ Nhĩ Kỳ",
+    "nameEn": "Turkey",
+    "flag": "🇹🇷",
+    "region": "eu"
+  },
+  {
+    "code": "RU",
+    "name": "Nga",
+    "nameEn": "Russia",
+    "flag": "🇷🇺",
+    "region": "eu"
+  },
+  {
+    "code": "UA",
+    "name": "Ukraina",
+    "nameEn": "Ukraine",
+    "flag": "🇺🇦",
+    "region": "eu"
+  },
+  {
+    "code": "AR",
+    "name": "Argentina",
+    "nameEn": "Argentina",
+    "flag": "🇦🇷",
+    "region": "sa"
+  },
+  {
+    "code": "CL",
+    "name": "Chile",
+    "nameEn": "Chile",
+    "flag": "🇨🇱",
+    "region": "sa"
+  },
+  {
+    "code": "CO",
+    "name": "Colombia",
+    "nameEn": "Colombia",
+    "flag": "🇨🇴",
+    "region": "sa"
+  },
+  {
+    "code": "PE",
+    "name": "Peru",
+    "nameEn": "Peru",
+    "flag": "🇵🇪",
+    "region": "sa"
+  },
+  {
+    "code": "ZA",
+    "name": "Nam Phi",
+    "nameEn": "South Africa",
+    "flag": "🇿🇦",
+    "region": "africa"
+  },
+  {
+    "code": "NG",
+    "name": "Nigeria",
+    "nameEn": "Nigeria",
+    "flag": "🇳🇬",
+    "region": "africa"
+  },
+  {
+    "code": "EG",
+    "name": "Ai Cập",
+    "nameEn": "Egypt",
+    "flag": "🇪🇬",
+    "region": "africa"
+  },
+  {
+    "code": "AE",
+    "name": "UAE",
+    "nameEn": "United Arab Emirates",
+    "flag": "🇦🇪",
+    "region": "me"
+  },
+  {
+    "code": "SA",
+    "name": "Ả Rập Xê Út",
+    "nameEn": "Saudi Arabia",
+    "flag": "🇸🇦",
+    "region": "me"
+  },
+  {
+    "code": "IL",
+    "name": "Israel",
+    "nameEn": "Israel",
+    "flag": "🇮🇱",
+    "region": "me"
+  },
+  {
+    "code": "KZ",
+    "name": "Kazakhstan",
+    "nameEn": "Kazakhstan",
+    "flag": "🇰🇿",
+    "region": "asia"
+  },
+  {
+    "code": "AL",
+    "name": "Albania",
+    "nameEn": "Albania",
+    "flag": "🇦🇱",
+    "region": "eu"
+  },
+  {
+    "code": "DZ",
+    "name": "Algeria",
+    "nameEn": "Algeria",
+    "flag": "🇩🇿",
+    "region": "africa"
+  },
+  {
+    "code": "AD",
+    "name": "Andorra",
+    "nameEn": "Andorra",
+    "flag": "🇦🇩",
+    "region": "eu"
+  },
+  {
+    "code": "AO",
+    "name": "Angola",
+    "nameEn": "Angola",
+    "flag": "🇦🇴",
+    "region": "africa"
+  },
+  {
+    "code": "AM",
+    "name": "Armenia",
+    "nameEn": "Armenia",
+    "flag": "🇦🇲",
+    "region": "asia"
+  },
+  {
+    "code": "AZ",
+    "name": "Azerbaijan",
+    "nameEn": "Azerbaijan",
+    "flag": "🇦🇿",
+    "region": "asia"
+  },
+  {
+    "code": "BS",
+    "name": "Bahamas",
+    "nameEn": "Bahamas",
+    "flag": "🇧🇸",
+    "region": "na"
+  },
+  {
+    "code": "BH",
+    "name": "Bahrain",
+    "nameEn": "Bahrain",
+    "flag": "🇧🇭",
+    "region": "me"
+  },
+  {
+    "code": "BD",
+    "name": "Bangladesh",
+    "nameEn": "Bangladesh",
+    "flag": "🇧🇩",
+    "region": "asia"
+  },
+  {
+    "code": "BB",
+    "name": "Barbados",
+    "nameEn": "Barbados",
+    "flag": "🇧🇧",
+    "region": "na"
+  },
+  {
+    "code": "BY",
+    "name": "Belarus",
+    "nameEn": "Belarus",
+    "flag": "🇧🇾",
+    "region": "eu"
+  },
+  {
+    "code": "BZ",
+    "name": "Belize",
+    "nameEn": "Belize",
+    "flag": "🇧🇿",
+    "region": "na"
+  },
+  {
+    "code": "BJ",
+    "name": "Benin",
+    "nameEn": "Benin",
+    "flag": "🇧🇯",
+    "region": "africa"
+  },
+  {
+    "code": "BT",
+    "name": "Bhutan",
+    "nameEn": "Bhutan",
+    "flag": "🇧🇹",
+    "region": "asia"
+  },
+  {
+    "code": "BO",
+    "name": "Bolivia",
+    "nameEn": "Bolivia",
+    "flag": "🇧🇴",
+    "region": "sa"
+  },
+  {
+    "code": "BA",
+    "name": "Bosnia & Herzegovina",
+    "nameEn": "Bosnia and Herzegovina",
+    "flag": "🇧🇦",
+    "region": "eu"
+  },
+  {
+    "code": "BW",
+    "name": "Botswana",
+    "nameEn": "Botswana",
+    "flag": "🇧🇼",
+    "region": "africa"
+  },
+  {
+    "code": "BG",
+    "name": "Bulgaria",
+    "nameEn": "Bulgaria",
+    "flag": "🇧🇬",
+    "region": "eu"
+  },
+  {
+    "code": "BF",
+    "name": "Burkina Faso",
+    "nameEn": "Burkina Faso",
+    "flag": "🇧🇫",
+    "region": "africa"
+  },
+  {
+    "code": "BI",
+    "name": "Burundi",
+    "nameEn": "Burundi",
+    "flag": "🇧🇮",
+    "region": "africa"
+  },
+  {
+    "code": "CV",
+    "name": "Cabo Verde",
+    "nameEn": "Cabo Verde",
+    "flag": "🇨🇻",
+    "region": "africa"
+  },
+  {
+    "code": "CM",
+    "name": "Cameroon",
+    "nameEn": "Cameroon",
+    "flag": "🇨🇲",
+    "region": "africa"
+  },
+  {
+    "code": "CF",
+    "name": "Trung Phi",
+    "nameEn": "Central African Republic",
+    "flag": "🇨🇫",
+    "region": "africa"
+  },
+  {
+    "code": "TD",
+    "name": "Chad",
+    "nameEn": "Chad",
+    "flag": "🇹🇩",
+    "region": "africa"
+  },
+  {
+    "code": "KM",
+    "name": "Comoros",
+    "nameEn": "Comoros",
+    "flag": "🇰🇲",
+    "region": "africa"
+  },
+  {
+    "code": "CG",
+    "name": "Congo",
+    "nameEn": "Congo",
+    "flag": "🇨🇬",
+    "region": "africa"
+  },
+  {
+    "code": "CD",
+    "name": "DR Congo",
+    "nameEn": "DR Congo",
+    "flag": "🇨🇩",
+    "region": "africa"
+  },
+  {
+    "code": "CR",
+    "name": "Costa Rica",
+    "nameEn": "Costa Rica",
+    "flag": "🇨🇷",
+    "region": "na"
+  },
+  {
+    "code": "HR",
+    "name": "Croatia",
+    "nameEn": "Croatia",
+    "flag": "🇭🇷",
+    "region": "eu"
+  },
+  {
+    "code": "CU",
+    "name": "Cuba",
+    "nameEn": "Cuba",
+    "flag": "🇨🇺",
+    "region": "na"
+  },
+  {
+    "code": "CY",
+    "name": "Síp (Cyprus)",
+    "nameEn": "Cyprus",
+    "flag": "🇨🇾",
+    "region": "eu"
+  },
+  {
+    "code": "DJ",
+    "name": "Djibouti",
+    "nameEn": "Djibouti",
+    "flag": "🇩🇯",
+    "region": "africa"
+  },
+  {
+    "code": "DM",
+    "name": "Dominica",
+    "nameEn": "Dominica",
+    "flag": "🇩🇲",
+    "region": "na"
+  },
+  {
+    "code": "DO",
+    "name": "Cộng hòa Dominica",
+    "nameEn": "Dominican Republic",
+    "flag": "🇩🇴",
+    "region": "na"
+  },
+  {
+    "code": "EC",
+    "name": "Ecuador",
+    "nameEn": "Ecuador",
+    "flag": "🇪🇨",
+    "region": "sa"
+  },
+  {
+    "code": "SV",
+    "name": "El Salvador",
+    "nameEn": "El Salvador",
+    "flag": "🇸🇻",
+    "region": "na"
+  },
+  {
+    "code": "GQ",
+    "name": "Guinea Xích Đạo",
+    "nameEn": "Equatorial Guinea",
+    "flag": "🇬🇶",
+    "region": "africa"
+  },
+  {
+    "code": "ER",
+    "name": "Eritrea",
+    "nameEn": "Eritrea",
+    "flag": "🇪🇷",
+    "region": "africa"
+  },
+  {
+    "code": "EE",
+    "name": "Estonia",
+    "nameEn": "Estonia",
+    "flag": "🇪🇪",
+    "region": "eu"
+  },
+  {
+    "code": "SZ",
+    "name": "Eswatini",
+    "nameEn": "Eswatini",
+    "flag": "🇸🇿",
+    "region": "africa"
+  },
+  {
+    "code": "ET",
+    "name": "Ethiopia",
+    "nameEn": "Ethiopia",
+    "flag": "🇪🇹",
+    "region": "africa"
+  },
+  {
+    "code": "FJ",
+    "name": "Fiji",
+    "nameEn": "Fiji",
+    "flag": "🇫🇯",
+    "region": "oceania"
+  },
+  {
+    "code": "GA",
+    "name": "Gabon",
+    "nameEn": "Gabon",
+    "flag": "🇬🇦",
+    "region": "africa"
+  },
+  {
+    "code": "GM",
+    "name": "Gambia",
+    "nameEn": "Gambia",
+    "flag": "🇬🇲",
+    "region": "africa"
+  },
+  {
+    "code": "GE",
+    "name": "Georgia",
+    "nameEn": "Georgia",
+    "flag": "🇬🇪",
+    "region": "asia"
+  },
+  {
+    "code": "GH",
+    "name": "Ghana",
+    "nameEn": "Ghana",
+    "flag": "🇬🇭",
+    "region": "africa"
+  },
+  {
+    "code": "GD",
+    "name": "Grenada",
+    "nameEn": "Grenada",
+    "flag": "🇬🇩",
+    "region": "na"
+  },
+  {
+    "code": "GT",
+    "name": "Guatemala",
+    "nameEn": "Guatemala",
+    "flag": "🇬🇹",
+    "region": "na"
+  },
+  {
+    "code": "GN",
+    "name": "Guinea",
+    "nameEn": "Guinea",
+    "flag": "🇬🇳",
+    "region": "africa"
+  },
+  {
+    "code": "GW",
+    "name": "Guinea-Bissau",
+    "nameEn": "Guinea-Bissau",
+    "flag": "🇬🇼",
+    "region": "africa"
+  },
+  {
+    "code": "GY",
+    "name": "Guyana",
+    "nameEn": "Guyana",
+    "flag": "🇬🇾",
+    "region": "sa"
+  },
+  {
+    "code": "HT",
+    "name": "Haiti",
+    "nameEn": "Haiti",
+    "flag": "🇭🇹",
+    "region": "na"
+  },
+  {
+    "code": "HN",
+    "name": "Honduras",
+    "nameEn": "Honduras",
+    "flag": "🇭🇳",
+    "region": "na"
+  },
+  {
+    "code": "IS",
+    "name": "Iceland",
+    "nameEn": "Iceland",
+    "flag": "🇮🇸",
+    "region": "eu"
+  },
+  {
+    "code": "IR",
+    "name": "Iran",
+    "nameEn": "Iran",
+    "flag": "🇮🇷",
+    "region": "me"
+  },
+  {
+    "code": "IQ",
+    "name": "Iraq",
+    "nameEn": "Iraq",
+    "flag": "🇮🇶",
+    "region": "me"
+  },
+  {
+    "code": "JM",
+    "name": "Jamaica",
+    "nameEn": "Jamaica",
+    "flag": "🇯🇲",
+    "region": "na"
+  },
+  {
+    "code": "JO",
+    "name": "Jordan",
+    "nameEn": "Jordan",
+    "flag": "🇯🇴",
+    "region": "me"
+  },
+  {
+    "code": "KE",
+    "name": "Kenya",
+    "nameEn": "Kenya",
+    "flag": "🇰🇪",
+    "region": "africa"
+  },
+  {
+    "code": "KW",
+    "name": "Kuwait",
+    "nameEn": "Kuwait",
+    "flag": "🇰🇼",
+    "region": "me"
+  },
+  {
+    "code": "KG",
+    "name": "Kyrgyzstan",
+    "nameEn": "Kyrgyzstan",
+    "flag": "🇰🇬",
+    "region": "asia"
+  },
+  {
+    "code": "LV",
+    "name": "Latvia",
+    "nameEn": "Latvia",
+    "flag": "🇱🇻",
+    "region": "eu"
+  },
+  {
+    "code": "LB",
+    "name": "Lebanon",
+    "nameEn": "Lebanon",
+    "flag": "🇱🇧",
+    "region": "me"
+  },
+  {
+    "code": "LS",
+    "name": "Lesotho",
+    "nameEn": "Lesotho",
+    "flag": "🇱🇸",
+    "region": "africa"
+  },
+  {
+    "code": "LR",
+    "name": "Liberia",
+    "nameEn": "Liberia",
+    "flag": "🇱🇷",
+    "region": "africa"
+  },
+  {
+    "code": "LY",
+    "name": "Libya",
+    "nameEn": "Libya",
+    "flag": "🇱🇾",
+    "region": "africa"
+  },
+  {
+    "code": "LI",
+    "name": "Liechtenstein",
+    "nameEn": "Liechtenstein",
+    "flag": "🇱🇮",
+    "region": "eu"
+  },
+  {
+    "code": "LT",
+    "name": "Lithuania",
+    "nameEn": "Lithuania",
+    "flag": "🇱🇹",
+    "region": "eu"
+  },
+  {
+    "code": "LU",
+    "name": "Luxembourg",
+    "nameEn": "Luxembourg",
+    "flag": "🇱🇺",
+    "region": "eu"
+  },
+  {
+    "code": "MG",
+    "name": "Madagascar",
+    "nameEn": "Madagascar",
+    "flag": "🇲🇬",
+    "region": "africa"
+  },
+  {
+    "code": "MW",
+    "name": "Malawi",
+    "nameEn": "Malawi",
+    "flag": "🇲🇼",
+    "region": "africa"
+  },
+  {
+    "code": "MV",
+    "name": "Maldives",
+    "nameEn": "Maldives",
+    "flag": "🇲🇻",
+    "region": "asia"
+  },
+  {
+    "code": "ML",
+    "name": "Mali",
+    "nameEn": "Mali",
+    "flag": "🇲🇱",
+    "region": "africa"
+  },
+  {
+    "code": "MT",
+    "name": "Malta",
+    "nameEn": "Malta",
+    "flag": "🇲🇹",
+    "region": "eu"
+  },
+  {
+    "code": "MR",
+    "name": "Mauritania",
+    "nameEn": "Mauritania",
+    "flag": "🇲🇷",
+    "region": "africa"
+  },
+  {
+    "code": "MU",
+    "name": "Mauritius",
+    "nameEn": "Mauritius",
+    "flag": "🇲🇺",
+    "region": "africa"
+  },
+  {
+    "code": "MD",
+    "name": "Moldova",
+    "nameEn": "Moldova",
+    "flag": "🇲🇩",
+    "region": "eu"
+  },
+  {
+    "code": "MC",
+    "name": "Monaco",
+    "nameEn": "Monaco",
+    "flag": "🇲🇨",
+    "region": "eu"
+  },
+  {
+    "code": "MN",
+    "name": "Mông Cổ",
+    "nameEn": "Mongolia",
+    "flag": "🇲🇳",
+    "region": "asia"
+  },
+  {
+    "code": "ME",
+    "name": "Montenegro",
+    "nameEn": "Montenegro",
+    "flag": "🇲🇪",
+    "region": "eu"
+  },
+  {
+    "code": "MA",
+    "name": "Morocco",
+    "nameEn": "Morocco",
+    "flag": "🇲🇦",
+    "region": "africa"
+  },
+  {
+    "code": "MZ",
+    "name": "Mozambique",
+    "nameEn": "Mozambique",
+    "flag": "🇲🇿",
+    "region": "africa"
+  },
+  {
+    "code": "NA",
+    "name": "Namibia",
+    "nameEn": "Namibia",
+    "flag": "🇳🇦",
+    "region": "africa"
+  },
+  {
+    "code": "NP",
+    "name": "Nepal",
+    "nameEn": "Nepal",
+    "flag": "🇳🇵",
+    "region": "asia"
+  },
+  {
+    "code": "NI",
+    "name": "Nicaragua",
+    "nameEn": "Nicaragua",
+    "flag": "🇳🇮",
+    "region": "na"
+  },
+  {
+    "code": "NE",
+    "name": "Niger",
+    "nameEn": "Niger",
+    "flag": "🇳🇪",
+    "region": "africa"
+  },
+  {
+    "code": "MK",
+    "name": "Bắc Macedonia",
+    "nameEn": "North Macedonia",
+    "flag": "🇲🇰",
+    "region": "eu"
+  },
+  {
+    "code": "OM",
+    "name": "Oman",
+    "nameEn": "Oman",
+    "flag": "🇴🇲",
+    "region": "me"
+  },
+  {
+    "code": "PK",
+    "name": "Pakistan",
+    "nameEn": "Pakistan",
+    "flag": "🇵🇰",
+    "region": "asia"
+  },
+  {
+    "code": "PA",
+    "name": "Panama",
+    "nameEn": "Panama",
+    "flag": "🇵🇦",
+    "region": "na"
+  },
+  {
+    "code": "PG",
+    "name": "Papua New Guinea",
+    "nameEn": "Papua New Guinea",
+    "flag": "🇵🇬",
+    "region": "oceania"
+  },
+  {
+    "code": "PY",
+    "name": "Paraguay",
+    "nameEn": "Paraguay",
+    "flag": "🇵🇾",
+    "region": "sa"
+  },
+  {
+    "code": "QA",
+    "name": "Qatar",
+    "nameEn": "Qatar",
+    "flag": "🇶🇦",
+    "region": "me"
+  },
+  {
+    "code": "RW",
+    "name": "Rwanda",
+    "nameEn": "Rwanda",
+    "flag": "🇷🇼",
+    "region": "africa"
+  },
+  {
+    "code": "SN",
+    "name": "Senegal",
+    "nameEn": "Senegal",
+    "flag": "🇸🇳",
+    "region": "africa"
+  },
+  {
+    "code": "RS",
+    "name": "Serbia",
+    "nameEn": "Serbia",
+    "flag": "🇷🇸",
+    "region": "eu"
+  },
+  {
+    "code": "SK",
+    "name": "Slovakia",
+    "nameEn": "Slovakia",
+    "flag": "🇸🇰",
+    "region": "eu"
+  },
+  {
+    "code": "SI",
+    "name": "Slovenia",
+    "nameEn": "Slovenia",
+    "flag": "🇸🇮",
+    "region": "eu"
+  },
+  {
+    "code": "LK",
+    "name": "Sri Lanka",
+    "nameEn": "Sri Lanka",
+    "flag": "🇱🇰",
+    "region": "asia"
+  },
+  {
+    "code": "SD",
+    "name": "Sudan",
+    "nameEn": "Sudan",
+    "flag": "🇸🇩",
+    "region": "africa"
+  },
+  {
+    "code": "SR",
+    "name": "Suriname",
+    "nameEn": "Suriname",
+    "flag": "🇸🇷",
+    "region": "sa"
+  },
+  {
+    "code": "SY",
+    "name": "Syria",
+    "nameEn": "Syria",
+    "flag": "🇸🇾",
+    "region": "me"
+  },
+  {
+    "code": "TJ",
+    "name": "Tajikistan",
+    "nameEn": "Tajikistan",
+    "flag": "🇹🇯",
+    "region": "asia"
+  },
+  {
+    "code": "TZ",
+    "name": "Tanzania",
+    "nameEn": "Tanzania",
+    "flag": "🇹🇿",
+    "region": "africa"
+  },
+  {
+    "code": "TG",
+    "name": "Togo",
+    "nameEn": "Togo",
+    "flag": "🇹🇬",
+    "region": "africa"
+  },
+  {
+    "code": "TN",
+    "name": "Tunisia",
+    "nameEn": "Tunisia",
+    "flag": "🇹🇳",
+    "region": "africa"
+  },
+  {
+    "code": "TM",
+    "name": "Turkmenistan",
+    "nameEn": "Turkmenistan",
+    "flag": "🇹🇲",
+    "region": "asia"
+  },
+  {
+    "code": "UG",
+    "name": "Uganda",
+    "nameEn": "Uganda",
+    "flag": "🇺🇬",
+    "region": "africa"
+  },
+  {
+    "code": "UY",
+    "name": "Uruguay",
+    "nameEn": "Uruguay",
+    "flag": "🇺🇾",
+    "region": "sa"
+  },
+  {
+    "code": "UZ",
+    "name": "Uzbekistan",
+    "nameEn": "Uzbekistan",
+    "flag": "🇺🇿",
+    "region": "asia"
+  },
+  {
+    "code": "VE",
+    "name": "Venezuela",
+    "nameEn": "Venezuela",
+    "flag": "🇻🇪",
+    "region": "sa"
+  },
+  {
+    "code": "YE",
+    "name": "Yemen",
+    "nameEn": "Yemen",
+    "flag": "🇾🇪",
+    "region": "me"
+  },
+  {
+    "code": "ZM",
+    "name": "Zambia",
+    "nameEn": "Zambia",
+    "flag": "🇿🇲",
+    "region": "africa"
+  },
+  {
+    "code": "ZW",
+    "name": "Zimbabwe",
+    "nameEn": "Zimbabwe",
+    "flag": "🇿🇼",
+    "region": "africa"
+  }
+];
+
+export const WORLD_LANGUAGES = [
+  "Tiếng Việt",
+  "Tiếng Anh (English)",
+  "Tiếng Hàn (Korean)",
+  "Tiếng Nhật (Japanese)",
+  "Tiếng Trung - Quan Thoại (Mandarin)",
+  "Tiếng Trung - Quảng Đông (Cantonese)",
+  "Tiếng Pháp (French)",
+  "Tiếng Tây Ban Nha (Spanish)",
+  "Tiếng Đức (German)",
+  "Tiếng Nga (Russian)",
+  "Tiếng Bồ Đào Nha (Portuguese)",
+  "Tiếng Ý (Italian)",
+  "Tiếng Thái (Thai)",
+  "Tiếng Indonesia (Indonesian)",
+  "Tiếng Mã Lai (Malay)",
+  "Tiếng Tagalog (Philippines)",
+  "Tiếng Hindi (Ấn Độ)",
+  "Tiếng Ả Rập (Arabic)",
+  "Tiếng Thổ Nhĩ Kỳ (Turkish)",
+  "Tiếng Hà Lan (Dutch)",
+  "Tiếng Ba Lan (Polish)",
+  "Tiếng Thụy Điển (Swedish)",
+  "Tiếng Ukraina (Ukrainian)",
+  "Tiếng Đan Mạch (Danish)",
+  "Tiếng Na Uy (Norwegian)",
+  "Tiếng Phần Lan (Finnish)",
+  "Tiếng Hy Lạp (Greek)",
+  "Tiếng Séc (Czech)",
+  "Tiếng Hungary (Hungarian)",
+  "Tiếng Romania (Romanian)",
+  "Tiếng Do Thái (Hebrew)",
+  "Tiếng Ba Tư (Persian / Farsi)",
+  "Tiếng Bengal (Bengali)",
+  "Tiếng Tamil",
+  "Tiếng Urdu",
+  "Không lời / Hòa tấu (Instrumental)",
+  "Ngôn ngữ khác (Other Language)"
+];
+
+export function getDspSvgIcon(iconKey) {
+  switch(iconKey) {
+    case 'spotify':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#1ed760"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 0 1-.857.206c-2.348-1.434-5.304-1.758-8.785-.963a.624.624 0 0 1-.277-1.217c3.808-.87 7.076-.503 9.713 1.117.29.177.382.56.206.857zm1.224-2.721a.78.78 0 0 1-1.073.257c-2.687-1.652-6.784-2.13-9.964-1.164a.78.78 0 0 1-.453-1.493c3.633-1.103 8.147-.577 11.233 1.327.355.218.47.68.257 1.073zm.105-2.835C14.693 8.94 9.387 8.765 6.309 9.7a.936.936 0 0 1-.55-1.79c3.528-1.07 9.39-.868 13.148 1.363a.936.936 0 0 1-.992 1.595z"/></svg>`;
+    case 'applemusic':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#fc3c44"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 1.01-2.87-.96.04-2.1.65-2.77 1.43-.59.69-1.11 1.77-.97 2.82 1.08.08 2.14-.58 2.73-1.38z"/></svg>`;
+    case 'tiktok':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#000000"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.86.12V9.42a6.33 6.33 0 0 0-.86-.06 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 10.79 4.49 6.31 6.31 0 0 0 1.89-4.52V9.01a8.27 8.27 0 0 0 4.84 1.56V7.12c-.35 0-.71-.14-1.07-.43z"/></svg>`;
+    case 'meta':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#0081fb"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.65 14.65c-.75.75-1.74 1.16-2.8 1.16-1.06 0-2.05-.41-2.8-1.16L6.5 12.1a3.96 3.96 0 0 1 0-5.6 3.96 3.96 0 0 1 5.6 0l.9.9.9-.9a3.96 3.96 0 0 1 5.6 0 3.96 3.96 0 0 1 0 5.6l-2.85 2.85z"/></svg>`;
+    case 'ytmusic':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#ff0000"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6" fill="#fff"/><polygon points="10,9 15,12 10,15" fill="#ff0000"/></svg>`;
+    case 'ytcid':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#cc0000"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm-2 15l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>`;
+    case 'zingmp3':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#8b3bfe"/><path d="M7 8h10l-6 8h6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+    case 'nhaccuatui':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#0072bc"/><path d="M9 16V8l8 2v6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8" cy="16" r="2" fill="#fff"/><circle cx="16" cy="16" r="2" fill="#fff"/></svg>`;
+    case 'amazon':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#00a8e1"/><path d="M7 14c3.5 2 6.5 2 10 0M17 14l-2-1" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`;
+    case 'tidal':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#000000"><rect x="3" y="10" width="4" height="4" transform="rotate(45 5 12)" fill="#000"/><rect x="8.5" y="4.5" width="4" height="4" transform="rotate(45 10.5 6.5)" fill="#000"/><rect x="8.5" y="15.5" width="4" height="4" transform="rotate(45 10.5 17.5)" fill="#000"/><rect x="14" y="10" width="4" height="4" transform="rotate(45 16 12)" fill="#000"/></svg>`;
+    case 'deezer':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#a238ff"/><rect x="7" y="12" width="2" height="4" fill="#fff"/><rect x="10" y="9" width="2" height="7" fill="#fff"/><rect x="13" y="7" width="2" height="9" fill="#fff"/><rect x="16" y="10" width="2" height="6" fill="#fff"/></svg>`;
+    case 'soundcloud':
+      return `<svg viewBox="0 0 24 24" width="20" height="20" fill="#ff5500"><path d="M12 8c0-.6.4-1 1-1 .5 0 .9.3 1 .8.4-.5 1-.8 1.7-.8 1.4 0 2.5 1.1 2.5 2.5 0 .1 0 .2-.1.3.9.4 1.6 1.3 1.6 2.4 0 1.5-1.2 2.8-2.7 2.8H7c-2.2 0-4-1.8-4-4 0-2 1.5-3.6 3.4-3.9.4-1.8 2-3.1 3.9-3.1 1.7 0 3.1 1 3.7 2.5z"/></svg>`;
+    case 'pandora':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#005483"/><path d="M9 7h4.5c2 0 3.5 1.3 3.5 3.3 0 2-1.5 3.2-3.5 3.2H11v3.5H9V7z" fill="#fff"/></svg>`;
+    case 'shazam':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#0088ff"/><path d="M14.5 10.5a3.5 3.5 0 0 0-4.95-4.95l-3.5 3.5a3.5 3.5 0 1 0 4.95 4.95l.7-.7a1 1 0 0 0-1.4-1.4l-.7.7a1.5 1.5 0 1 1-2.12-2.12l3.5-3.5a1.5 1.5 0 1 1 2.12 2.12l-.7.7a1 1 0 0 0 1.4 1.4l.7-.7z" fill="#fff"/></svg>`;
+    case 'beatport':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#00ff80"/><circle cx="12" cy="12" r="4" fill="#000"/><circle cx="12" cy="12" r="1.5" fill="#00ff80"/></svg>`;
+    case 'qobuz':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#2563eb"/><circle cx="11" cy="11" r="4.5" stroke="#fff" stroke-width="2" fill="none"/><line x1="14" y1="14" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;
+    case 'linemusic':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#00b900"/><path d="M8 8v8l8-4z" fill="#fff"/></svg>`;
+    case 'other100':
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#0f172a"/><path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm-1 3h2v4h4v2h-4v4h-2v-4H7v-2h4V7z" fill="#38bdf8"/></svg>`;
+    default:
+      return `<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#475569"/><path d="M9 16V8l8 2v6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+  }
+}
+
+export function initDspControls() {
+  const container = document.querySelector('#dsp-grid-container');
+  const countEl = document.querySelector('#dsp-selected-count');
+  const selectAllBtn = document.querySelector('#btn-dsp-select-all');
+  const deselectAllBtn = document.querySelector('#btn-dsp-deselect-all');
+  const searchInput = document.querySelector('#dsp-search-input');
+  if (!container) return;
+
+  // Render cards
+  container.innerHTML = DISTRIBUTION_PLATFORMS.map(p => `
+    <div class="dsp-card dsp-card-active" data-dsp-id="${p.id}" data-dsp-name="${p.name.toLowerCase()}" data-dsp-cat="${p.cat.toLowerCase()}">
+      <input type="checkbox" class="dsp-checkbox" name="dsp_channels" value="${p.id}" checked>
+      <div class="dsp-icon-wrap">${getDspSvgIcon(p.icon)}</div>
+      <div class="dsp-info">
+        <span class="dsp-title">${p.name}</span>
+        <span class="dsp-cat-badge">${p.cat}</span>
+      </div>
+    </div>
+  `).join('');
+
+  function updateCount() {
+    const checked = container.querySelectorAll('.dsp-checkbox:checked').length;
+    if (countEl) countEl.textContent = checked;
+    const badge = document.querySelector('#dsp-selected-badge');
+    if (badge) {
+      if (checked === DISTRIBUTION_PLATFORMS.length) {
+        badge.style.borderColor = '#10b981';
+        badge.style.background = '#ecfdf5';
+        badge.style.color = '#047857';
+      } else if (checked === 0) {
+        badge.style.borderColor = '#f87171';
+        badge.style.background = '#fef2f2';
+        badge.style.color = '#b91c1c';
+      } else {
+        badge.style.borderColor = '#cbd5e1';
+        badge.style.background = '#f8fafc';
+        badge.style.color = '#0f172a';
+      }
+    }
+  }
+
+  // Card click toggles checkbox
+  container.querySelectorAll('.dsp-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.tagName.toLowerCase() === 'input') return;
+      const cb = card.querySelector('.dsp-checkbox');
+      if (cb) {
+        cb.checked = !cb.checked;
+        card.classList.toggle('dsp-card-active', cb.checked);
+        updateCount();
+      }
+    });
+
+    const cb = card.querySelector('.dsp-checkbox');
+    if (cb) {
+      cb.addEventListener('change', () => {
+        card.classList.toggle('dsp-card-active', cb.checked);
+        updateCount();
+      });
+    }
+  });
+
+  // Select all
+  selectAllBtn?.addEventListener('click', () => {
+    container.querySelectorAll('.dsp-card').forEach(card => {
+      const cb = card.querySelector('.dsp-checkbox');
+      if (cb) cb.checked = true;
+      card.classList.add('dsp-card-active');
+    });
+    updateCount();
+  });
+
+  // Deselect all
+  deselectAllBtn?.addEventListener('click', () => {
+    container.querySelectorAll('.dsp-card').forEach(card => {
+      const cb = card.querySelector('.dsp-checkbox');
+      if (cb) cb.checked = false;
+      card.classList.remove('dsp-card-active');
+    });
+    updateCount();
+  });
+
+  // Filter search
+  searchInput?.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    container.querySelectorAll('.dsp-card').forEach(card => {
+      const name = card.getAttribute('data-dsp-name') || '';
+      const cat = card.getAttribute('data-dsp-cat') || '';
+      const id = card.getAttribute('data-dsp-id') || '';
+      if (!q || name.includes(q) || cat.includes(q) || id.includes(q)) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+
+  updateCount();
+}
+
+export function initTerritoryControls() {
+  const radioWorldwide = document.querySelector('#territory-radio-worldwide');
+  const radioCustom = document.querySelector('#territory-radio-custom');
+  const cardWorldwide = document.querySelector('#territory-card-worldwide');
+  const cardCustom = document.querySelector('#territory-card-custom');
+  const customPanel = document.querySelector('#territory-custom-panel');
+  const countriesGrid = document.querySelector('#territory-countries-grid');
+  const countEl = document.querySelector('#territory-selected-count');
+  const searchInput = document.querySelector('#territory-search-input');
+
+  const btnAll = document.querySelector('#btn-territory-all');
+  const btnNone = document.querySelector('#btn-territory-none');
+  const btnVn = document.querySelector('#btn-territory-vn-only');
+  const btnAsean = document.querySelector('#btn-territory-asean');
+
+  if (!countriesGrid) return;
+
+  // Render countries
+  countriesGrid.innerHTML = WORLD_COUNTRIES.map(c => `
+    <div class="country-card country-card-active" data-country-code="${c.code}" data-country-name="${c.name.toLowerCase()}" data-country-name-en="${c.nameEn.toLowerCase()}" data-country-region="${c.region}">
+      <input type="checkbox" class="country-checkbox" name="territory_countries" value="${c.code}" checked style="accent-color:#0f172a;width:15px;height:15px;margin:0;cursor:pointer;">
+      <span class="country-flag">${c.flag}</span>
+      <div class="country-info">
+        <span class="country-name">${c.name}</span>
+        <span class="country-name-sub">${c.nameEn}</span>
+      </div>
+      <span class="country-code-badge">${c.code}</span>
+    </div>
+  `).join('');
+
+  function updateCountryCount() {
+    const checked = countriesGrid.querySelectorAll('.country-checkbox:checked').length;
+    if (countEl) countEl.textContent = checked;
+  }
+
+  function setMode(mode) {
+    if (mode === 'worldwide') {
+      if (radioWorldwide) radioWorldwide.checked = true;
+      if (radioCustom) radioCustom.checked = false;
+      if (cardWorldwide) {
+        cardWorldwide.style.borderColor = '#0f172a';
+        cardWorldwide.style.background = '#f8fafc';
+      }
+      if (cardCustom) {
+        cardCustom.style.borderColor = '#e2e8f0';
+        cardCustom.style.background = '#fff';
+      }
+      if (customPanel) customPanel.style.display = 'none';
+    } else {
+      if (radioWorldwide) radioWorldwide.checked = false;
+      if (radioCustom) radioCustom.checked = true;
+      if (cardCustom) {
+        cardCustom.style.borderColor = '#0f172a';
+        cardCustom.style.background = '#f8fafc';
+      }
+      if (cardWorldwide) {
+        cardWorldwide.style.borderColor = '#e2e8f0';
+        cardWorldwide.style.background = '#fff';
+      }
+      if (customPanel) customPanel.style.display = 'block';
+    }
+  }
+
+  radioWorldwide?.addEventListener('change', () => setMode('worldwide'));
+  radioCustom?.addEventListener('change', () => setMode('custom'));
+  cardWorldwide?.addEventListener('click', () => setMode('worldwide'));
+  cardCustom?.addEventListener('click', () => setMode('custom'));
+
+  // Card click toggles checkbox
+  countriesGrid.querySelectorAll('.country-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.tagName.toLowerCase() === 'input') return;
+      const cb = card.querySelector('.country-checkbox');
+      if (cb) {
+        cb.checked = !cb.checked;
+        card.classList.toggle('country-card-active', cb.checked);
+        updateCountryCount();
+      }
+    });
+
+    const cb = card.querySelector('.country-checkbox');
+    if (cb) {
+      cb.addEventListener('change', () => {
+        card.classList.toggle('country-card-active', cb.checked);
+        updateCountryCount();
+      });
+    }
+  });
+
+  // Buttons
+  btnAll?.addEventListener('click', () => {
+    countriesGrid.querySelectorAll('.country-card').forEach(card => {
+      const cb = card.querySelector('.country-checkbox');
+      if (cb) cb.checked = true;
+      card.classList.add('country-card-active');
+    });
+    updateCountryCount();
+  });
+
+  btnNone?.addEventListener('click', () => {
+    countriesGrid.querySelectorAll('.country-card').forEach(card => {
+      const cb = card.querySelector('.country-checkbox');
+      if (cb) cb.checked = false;
+      card.classList.remove('country-card-active');
+    });
+    updateCountryCount();
+  });
+
+  btnVn?.addEventListener('click', () => {
+    countriesGrid.querySelectorAll('.country-card').forEach(card => {
+      const code = card.getAttribute('data-country-code');
+      const cb = card.querySelector('.country-checkbox');
+      const isVN = (code === 'VN');
+      if (cb) cb.checked = isVN;
+      card.classList.toggle('country-card-active', isVN);
+    });
+    updateCountryCount();
+  });
+
+  btnAsean?.addEventListener('click', () => {
+    countriesGrid.querySelectorAll('.country-card').forEach(card => {
+      const reg = card.getAttribute('data-country-region');
+      const cb = card.querySelector('.country-checkbox');
+      const isAsean = (reg === 'asean');
+      if (cb) cb.checked = isAsean;
+      card.classList.toggle('country-card-active', isAsean);
+    });
+    updateCountryCount();
+  });
+
+  // Search
+  searchInput?.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    countriesGrid.querySelectorAll('.country-card').forEach(card => {
+      const code = (card.getAttribute('data-country-code') || '').toLowerCase();
+      const name = card.getAttribute('data-country-name') || '';
+      const nameEn = card.getAttribute('data-country-name-en') || '';
+      if (!q || code === q || name.includes(q) || nameEn.includes(q)) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+
+  updateCountryCount();
+}
+
+export function initLanguageSearchableControls() {
+  const inputEl = document.querySelector('#wizard-language-input');
+  const hiddenVal = document.querySelector('#wizard-language-val');
+  const dropdown = document.querySelector('#wizard-language-dropdown');
+  if (!inputEl || !dropdown) return;
+
+  function renderDropdown(filterText = '') {
+    const q = filterText.trim().toLowerCase();
+    const matches = WORLD_LANGUAGES.filter(lang => !q || lang.toLowerCase().includes(q));
+    if (matches.length === 0) {
+      dropdown.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#94a3b8;text-align:center;">Không tìm thấy ngôn ngữ phù hợp</div>`;
+      return;
+    }
+    dropdown.innerHTML = matches.map((lang, idx) => `
+      <div class="searchable-lang-item ${lang === hiddenVal?.value ? 'selected' : ''}" data-lang="${lang}" style="padding:8px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+        <span>${lang}</span>
+        ${lang === hiddenVal?.value ? '<span style="color:#0284c7;font-weight:bold;">✓</span>' : ''}
+      </div>
+    `).join('');
+
+    dropdown.querySelectorAll('.searchable-lang-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const selectedLang = item.getAttribute('data-lang');
+        if (inputEl) inputEl.value = selectedLang;
+        if (hiddenVal) hiddenVal.value = selectedLang;
+        dropdown.style.display = 'none';
+      });
+    });
+  }
+
+  inputEl.addEventListener('focus', () => {
+    renderDropdown(inputEl.value);
+    dropdown.style.display = 'block';
+  });
+
+  inputEl.addEventListener('input', (e) => {
+    renderDropdown(e.target.value);
+    dropdown.style.display = 'block';
+  });
+
+  // Keyboard navigation
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dropdown.style.display = 'none';
+    } else if (e.key === 'Enter') {
+      const firstItem = dropdown.querySelector('.searchable-lang-item');
+      if (firstItem) {
+        e.preventDefault();
+        const selectedLang = firstItem.getAttribute('data-lang');
+        inputEl.value = selectedLang;
+        if (hiddenVal) hiddenVal.value = selectedLang;
+        dropdown.style.display = 'none';
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!inputEl.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+
 function prepareReleaseWizard() {
   if (primaryArtistInput) primaryArtistInput.value = artist.name;
   if (wizardTracks.length === 0) {
@@ -676,6 +2511,55 @@ function prepareReleaseWizard() {
   }
   initExplicitControls();
   initUpcControls();
+
+  // Reset DSPs to all checked
+  document.querySelectorAll('#dsp-grid-container .dsp-card').forEach(card => {
+    const cb = card.querySelector('.dsp-checkbox');
+    if (cb) cb.checked = true;
+    card.classList.add('dsp-card-active');
+  });
+  const dspCount = document.querySelector('#dsp-selected-count');
+  if (dspCount) dspCount.textContent = (typeof DISTRIBUTION_PLATFORMS !== 'undefined' ? DISTRIBUTION_PLATFORMS.length : 33);
+  const dspBadge = document.querySelector('#dsp-selected-badge');
+  if (dspBadge) {
+    dspBadge.style.borderColor = '#10b981';
+    dspBadge.style.background = '#ecfdf5';
+    dspBadge.style.color = '#047857';
+  }
+
+  // Reset Territory to Worldwide
+  const radWorldwide = document.querySelector('#territory-radio-worldwide');
+  const radCustom = document.querySelector('#territory-radio-custom');
+  const cardWorldwide = document.querySelector('#territory-card-worldwide');
+  const cardCustom = document.querySelector('#territory-card-custom');
+  const customPanel = document.querySelector('#territory-custom-panel');
+  if (radWorldwide) radWorldwide.checked = true;
+  if (radCustom) radCustom.checked = false;
+  if (cardWorldwide) {
+    cardWorldwide.style.borderColor = '#0f172a';
+    cardWorldwide.style.background = '#f8fafc';
+  }
+  if (cardCustom) {
+    cardCustom.style.borderColor = '#e2e8f0';
+    cardCustom.style.background = '#fff';
+  }
+  if (customPanel) customPanel.style.display = 'none';
+
+  // Reset all countries to checked
+  document.querySelectorAll('#territory-countries-grid .country-card').forEach(card => {
+    const cb = card.querySelector('.country-checkbox');
+    if (cb) cb.checked = true;
+    card.classList.add('country-card-active');
+  });
+  const tCount = document.querySelector('#territory-selected-count');
+  if (tCount) tCount.textContent = (typeof WORLD_COUNTRIES !== 'undefined' ? WORLD_COUNTRIES.length : 171);
+
+  // Reset Language to Tiếng Việt
+  const langValInput = document.querySelector('#wizard-language-val');
+  const langTextInput = document.querySelector('#wizard-language-input');
+  if (langValInput) langValInput.value = 'Tiếng Việt';
+  if (langTextInput) langTextInput.value = 'Tiếng Việt';
+
   updateWizardStep(1);
 }
 
@@ -742,13 +2626,27 @@ export function collectReleaseDraftData() {
   const featVal = document.querySelector('#wizard-feat-input')?.value.trim() || '';
   const genreVal = document.querySelector('#wizard-genre-select')?.value || '';
   const secondaryGenreVal = document.querySelector('#wizard-secondary-genre-select')?.value || '';
-  const langVal = formEl?.querySelector('[name="language"]')?.value || 'Tiếng Việt';
+  const langVal = document.querySelector('#wizard-language-val')?.value || formEl?.querySelector('[name="language"]')?.value || 'Tiếng Việt';
   const explicitVal = formEl?.querySelector('input[name="explicit"]:checked')?.value || 'false';
   const artworkExtUrl = document.querySelector('#artwork-external-url')?.value.trim() || '';
   const artworkPreviewSrc = document.querySelector('#wizard-art-preview')?.getAttribute('src') || '';
   const upcChoice = formEl?.querySelector('input[name="upc_choice"]:checked')?.value || 'auto';
   const upcVal = document.querySelector('#wizard-upc-input')?.value.trim() || '';
-  const territoriesVal = formEl?.querySelector('[name="territories"]')?.value || 'Toàn cầu (Worldwide - 150+ Lãnh thổ)';
+
+  // DSP selection
+  const dspCheckboxes = document.querySelectorAll('#dsp-grid-container .dsp-checkbox:checked');
+  const selectedDSPs = Array.from(dspCheckboxes).map(cb => cb.value);
+
+  // Territory selection
+  const territoryModeVal = formEl?.querySelector('input[name="territory_mode"]:checked')?.value || 'worldwide';
+  const countryCheckboxes = document.querySelectorAll('#territory-countries-grid .country-checkbox:checked');
+  const selectedCountries = Array.from(countryCheckboxes).map(cb => cb.value);
+
+  let finalTerritoriesDesc = 'Toàn cầu (Worldwide - 171 Quốc gia)';
+  if (territoryModeVal === 'custom') {
+    finalTerritoriesDesc = `Tùy chọn (${selectedCountries.length} Quốc gia)`;
+  }
+  const territoriesVal = finalTerritoriesDesc;
   const pricingVal = formEl?.querySelector('[name="pricing"]')?.value || 'Standard';
   const songwritersVal = document.querySelector('#wizard-global-songwriters')?.value.trim() || formEl?.querySelector('[name="songwriters"]')?.value.trim() || '';
   const producersVal = document.querySelector('#wizard-global-producers')?.value.trim() || formEl?.querySelector('[name="producers"]')?.value.trim() || '';
@@ -805,6 +2703,9 @@ export function collectReleaseDraftData() {
     upc_choice: upcChoice,
     upc: upcVal,
     territories: territoriesVal,
+    selectedDSPs,
+    territoryMode: territoryModeVal,
+    selectedCountries,
     pricing: pricingVal,
     songwriters: songwritersVal,
     producers: producersVal,
@@ -865,6 +2766,9 @@ export async function saveReleaseDraft(isSilent = false) {
           isDraft: true,
           draftData,
           splits: draftData.splits || [],
+          selectedDSPs: draftData.selectedDSPs || [],
+          territoryMode: draftData.territoryMode || 'worldwide',
+          selectedCountries: draftData.selectedCountries || [],
           updatedAt: draftData.updatedAt
         }
       };
@@ -958,7 +2862,10 @@ export function normalizeDraftData(raw) {
     artworkUrl: innerDraft.artworkUrl || innerDraft.artworkExternalUrl || raw.artwork_url || raw.artworkUrl || '',
     upc_choice: innerDraft.upc_choice || (raw.upc ? 'custom' : 'auto'),
     upc: innerDraft.upc || raw.upc || '',
-    territories: innerDraft.territories || raw.territories || 'Toàn cầu (Worldwide - 150+ Lãnh thổ)',
+    territories: innerDraft.territories || raw.territories || 'Toàn cầu (Worldwide - 171 Quốc gia)',
+    selectedDSPs: innerDraft.selectedDSPs || meta.selectedDSPs || raw.selectedDSPs || ((typeof DISTRIBUTION_PLATFORMS !== 'undefined') ? DISTRIBUTION_PLATFORMS.map(p => p.id) : []),
+    territoryMode: innerDraft.territoryMode || meta.territoryMode || raw.territoryMode || 'worldwide',
+    selectedCountries: innerDraft.selectedCountries || meta.selectedCountries || raw.selectedCountries || ((typeof WORLD_COUNTRIES !== 'undefined') ? WORLD_COUNTRIES.map(c => c.code) : []),
     pricing: innerDraft.pricing || raw.pricing || 'Standard',
     songwriters: innerDraft.songwriters || raw.songwriters || (artist?.name || ''),
     producers: innerDraft.producers || raw.producers || 'UniFLOWs Label',
@@ -1010,6 +2917,73 @@ export function restoreReleaseDraft(rawDraft) {
     // Language
     const langSelect = document.querySelector('#release-form [name="language"]');
     if (langSelect && draftData.language) langSelect.value = draftData.language;
+    const langValInput = document.querySelector('#wizard-language-val');
+    const langTextInput = document.querySelector('#wizard-language-input');
+    if (draftData.language) {
+      if (langValInput) langValInput.value = draftData.language;
+      if (langTextInput) langTextInput.value = draftData.language;
+    }
+
+    // DSP Platforms Restoration
+    if (Array.isArray(draftData.selectedDSPs)) {
+      const dspCards = document.querySelectorAll('#dsp-grid-container .dsp-card');
+      dspCards.forEach(card => {
+        const id = card.getAttribute('data-dsp-id');
+        const cb = card.querySelector('.dsp-checkbox');
+        const isSelected = draftData.selectedDSPs.includes(id);
+        if (cb) cb.checked = isSelected;
+        card.classList.toggle('dsp-card-active', isSelected);
+      });
+      const dspCount = document.querySelector('#dsp-selected-count');
+      if (dspCount) dspCount.textContent = draftData.selectedDSPs.length;
+    }
+
+    // Territory Restoration
+    const isWorldwide = (draftData.territoryMode !== 'custom');
+    const radWorldwide = document.querySelector('#territory-radio-worldwide');
+    const radCustom = document.querySelector('#territory-radio-custom');
+    const cardWorldwide = document.querySelector('#territory-card-worldwide');
+    const cardCustom = document.querySelector('#territory-card-custom');
+    const customPanel = document.querySelector('#territory-custom-panel');
+
+    if (isWorldwide) {
+      if (radWorldwide) radWorldwide.checked = true;
+      if (radCustom) radCustom.checked = false;
+      if (cardWorldwide) {
+        cardWorldwide.style.borderColor = '#0f172a';
+        cardWorldwide.style.background = '#f8fafc';
+      }
+      if (cardCustom) {
+        cardCustom.style.borderColor = '#e2e8f0';
+        cardCustom.style.background = '#fff';
+      }
+      if (customPanel) customPanel.style.display = 'none';
+    } else {
+      if (radWorldwide) radWorldwide.checked = false;
+      if (radCustom) radCustom.checked = true;
+      if (cardCustom) {
+        cardCustom.style.borderColor = '#0f172a';
+        cardCustom.style.background = '#f8fafc';
+      }
+      if (cardWorldwide) {
+        cardWorldwide.style.borderColor = '#e2e8f0';
+        cardWorldwide.style.background = '#fff';
+      }
+      if (customPanel) customPanel.style.display = 'block';
+    }
+
+    if (Array.isArray(draftData.selectedCountries)) {
+      const cCards = document.querySelectorAll('#territory-countries-grid .country-card');
+      cCards.forEach(card => {
+        const code = card.getAttribute('data-country-code');
+        const cb = card.querySelector('.country-checkbox');
+        const isSelected = draftData.selectedCountries.includes(code);
+        if (cb) cb.checked = isSelected;
+        card.classList.toggle('country-card-active', isSelected);
+      });
+      const tCount = document.querySelector('#territory-selected-count');
+      if (tCount) tCount.textContent = draftData.selectedCountries.length;
+    }
 
     // Explicit
     const isExp = draftData.explicit === true || draftData.explicit === 'true';
@@ -1619,7 +3593,7 @@ function renderWizardTracklist() {
             <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
               Nghệ sĩ hợp tác (Featured Artist - Tùy chọn)
             </label>
-            <input type="text" class="track-input-feat" placeholder="Ví dụ: feat. Binz, Grey D..." value="${esc(tr.featuredArtist)}" style="font-size:13px;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <input type="text" class="track-input-feat" placeholder="Tên nghệ sĩ kết hợp (nếu có)..." value="${esc(tr.featuredArtist)}" style="font-size:13px;padding:10px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
           </div>
           <div class="field" style="margin:0;">
             <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:6px;">
@@ -3109,12 +5083,28 @@ form?.addEventListener('submit', async (e) => {
     if (v.linkYoutube) links.youtube = v.linkYoutube.trim();
     if (v.linkZing) links.zingmp3 = v.linkZing.trim();
 
+    // DSP and Territory resolution
+    const dspCheckboxes = document.querySelectorAll('#dsp-grid-container .dsp-checkbox:checked');
+    const selectedDSPs = Array.from(dspCheckboxes).map(cb => cb.value);
+    const territoryModeVal = form.querySelector('input[name="territory_mode"]:checked')?.value || 'worldwide';
+    const countryCheckboxes = document.querySelectorAll('#territory-countries-grid .country-checkbox:checked');
+    const selectedCountries = Array.from(countryCheckboxes).map(cb => cb.value);
+
+    let finalTerritoriesDesc = 'Toàn cầu (Worldwide - 171 Quốc gia)';
+    if (territoryModeVal === 'custom') {
+      finalTerritoriesDesc = `Tùy chọn (${selectedCountries.length} Quốc gia)`;
+    }
+
     const metadataPayload = {
       ...v,
       splits,
       upc: finalUpc,
       genre: v.genre || 'V-Pop',
       secondaryGenre: v.secondaryGenre || '',
+      selectedDSPs,
+      territoryMode: territoryModeVal,
+      selectedCountries,
+      territories: finalTerritoriesDesc,
       syncLicensingConsent: v.syncLicensingConsent === 'on' || v.syncLicensingConsent === true
     };
 
@@ -3164,7 +5154,7 @@ form?.addEventListener('submit', async (e) => {
           producers: finalProducers,
           phonogram: v.phonogram || '℗ 2026 UniFLOWs Label',
           copyright: v.copyright || '© 2026 UniFLOWs Label',
-          territories: v.territories,
+          territories: finalTerritoriesDesc,
           pricing: v.pricing,
           notes: v.notes,
           submission_status: 'Đang chờ UniFLOWs duyệt',
@@ -3198,7 +5188,7 @@ form?.addEventListener('submit', async (e) => {
           producers: finalProducers,
           phonogram: v.phonogram || '℗ 2026 UniFLOWs Label',
           copyright: v.copyright || '© 2026 UniFLOWs Label',
-          territories: v.territories,
+          territories: finalTerritoriesDesc,
           pricing: v.pricing,
           notes: v.notes,
           submission_status: 'Đang chờ UniFLOWs duyệt',
@@ -4943,3 +6933,6 @@ loadArtistServiceRequests();
 initNotifications();
 renderReleaseCalendar();
 initSyncedLyricsStudio();
+initDspControls();
+initTerritoryControls();
+initLanguageSearchableControls();

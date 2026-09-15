@@ -797,7 +797,7 @@
 
         <div class="field" style="margin-bottom:16px;">
           <label style="font-weight:700;">Tên bản phát hành (Release Title) *</label>
-          <input name="title" id="wizard-title-input" required placeholder="Ví dụ: Vệt Sáng, Chuyến Bay Đêm..." style="font-size:16px;padding:14px;">
+          <input name="title" id="wizard-title-input" required placeholder="Nhập tên bản phát hành..." style="font-size:16px;padding:14px;">
         </div>
 
         <div class="mini-grid" style="margin-bottom:16px;">
@@ -822,7 +822,7 @@
         <div class="mini-grid" style="margin-bottom:16px;">
           <div class="field">
             <label>Nghệ sĩ kết hợp (Featuring Artists)</label>
-            <input name="featuredArtist" id="wizard-feat-input" placeholder="Ví dụ: feat. Binz, Grey D (nếu có)">
+            <input name="featuredArtist" id="wizard-feat-input" placeholder="Tên nghệ sĩ kết hợp (nếu có)...">
           </div>
           <div class="field">
             <label style="font-weight:700;">Thể loại âm nhạc chính (Primary Genre) *</label>
@@ -870,7 +870,7 @@
               <option value="Trap / Drill">Trap / Drill</option>
               <option value="Ballad / Acoustic">Ballad / Acoustic</option>
               <option value="Lofi / Chillhop">Lofi / Chillhop</option>
-              <option value="Indie Pop / Rock">Indie Pop / Rock</option>
+              <option value="Indie Pop / Rock">Indie Pop / Indie Rock</option>
               <option value="EDM / Dance">EDM / Dance</option>
               <option value="House / Deep House">House / Deep House</option>
               <option value="Synthwave / City Pop">Synthwave / City Pop</option>
@@ -884,8 +884,15 @@
             </select>
           </div>
           <div class="field">
-            <label>Ngôn ngữ bản thu (Language)</label>
-            <select name="language"><option>Tiếng Việt</option><option>English</option><option>Khác</option></select>
+            <label style="font-weight:700;">Ngôn ngữ bài hát (Audio Language) *</label>
+            <div class="searchable-lang-wrapper" style="position:relative;">
+              <input type="text" id="wizard-language-input" autocomplete="off" placeholder="Tìm hoặc chọn ngôn ngữ (gõ bàn phím: Tiếng Việt, Anh, Hàn, Nhật...)..." value="Tiếng Việt" style="font-size:13px;padding:11px 14px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer;" required>
+              <input type="hidden" name="language" id="wizard-language-val" value="Tiếng Việt">
+              <span id="wizard-language-arrow" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:11px;">▼</span>
+              <div id="wizard-language-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:260px;overflow-y:auto;background:#fff;border:1.5px solid #0f172a;border-radius:6px;box-shadow:0 12px 28px rgba(15,23,42,0.15);z-index:99999;">
+                <!-- Rendered dynamically and keyboard searchable -->
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1011,11 +1018,11 @@
         <div class="mini-grid" style="margin-bottom:16px;">
           <div class="field">
             <label>Nhạc sĩ sáng tác chính (Songwriters / Composers) *</label>
-            <input name="songwriters" id="wizard-global-songwriters" required placeholder="Họ và tên nhạc sĩ / tác giả lời (tự đồng bộ từ các bài hát)">
+            <input name="songwriters" id="wizard-global-songwriters" required placeholder="Họ và tên tác giả / nhạc sĩ sáng tác...">
           </div>
           <div class="field">
             <label>Nhà sản xuất âm nhạc chính (Music Producers) *</label>
-            <input name="producers" id="wizard-global-producers" required placeholder="Tên Music Producer / Beatmaker">
+            <input name="producers" id="wizard-global-producers" required placeholder="Tên nhà sản xuất âm nhạc / Producer...">
           </div>
         </div>
 
@@ -1052,13 +1059,112 @@
 
           <div id="upc-custom-input-box" style="display:none;margin-top:10px;padding:12px 14px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;">
             <label style="font-size:11.5px;font-weight:700;color:#0f172a;display:block;margin-bottom:4px;">Nhập mã UPC / EAN cũ của bạn (12–13 chữ số):</label>
-            <input name="upc" id="wizard-upc-input" placeholder="Ví dụ: 198000123456" style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;letter-spacing:1px;padding:8px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <input name="upc" id="wizard-upc-input" placeholder="Nhập mã UPC / EAN (12–13 chữ số)..." style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;letter-spacing:1px;padding:8px 12px;width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
           </div>
         </div>
 
-        <div class="field" style="margin-bottom:16px;">
-          <label>Lãnh thổ phân phối (Territories)</label>
-          <select name="territories"><option>Toàn cầu (Worldwide - 150+ Lãnh thổ)</option><option>Việt Nam (Vietnam Only)</option></select>
+        <!-- 00A: NỀN TẢNG PHÁT HÀNH TRỰC TUYẾN (DSP CHANNELS) -->
+        <div style="background:#fff;border:1.5px solid #cbd5e1;border-radius:10px;padding:20px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:18px;line-height:1;">🌐</span>
+                <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
+                  Nền Tảng Phát Hành Trực Tuyến (DSP Channels) *
+                </h4>
+              </div>
+              <p style="margin:4px 0 0;font-size:12.5px;color:#64748b;">
+                Chọn các dịch vụ streaming, mạng xã hội và kênh bản quyền bạn muốn phát hành tác phẩm tới (Mặc định chọn tất cả).
+              </p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span id="dsp-selected-badge" style="font-size:11.5px;font-family:'DM Mono',monospace;font-weight:700;padding:4px 10px;background:#f8fafc;color:#0f172a;border-radius:6px;border:1px solid #cbd5e1;">
+                Đã chọn: <b id="dsp-selected-count">33</b>/33 nền tảng
+              </span>
+              <button type="button" id="btn-dsp-select-all" class="button alt" style="padding:5px 12px;font-size:11.5px;font-weight:700;color:#0f172a;border-color:#cbd5e1;background:#fff;cursor:pointer;">
+                ✓ Chọn tất cả
+              </button>
+              <button type="button" id="btn-dsp-deselect-all" class="button alt" style="padding:5px 12px;font-size:11.5px;color:#dc2626;border-color:#fecaca;background:#fff;cursor:pointer;">
+                ✕ Bỏ chọn tất cả
+              </button>
+            </div>
+          </div>
+
+          <!-- DSP Quick Search -->
+          <div style="margin-bottom:12px;">
+            <input type="text" id="dsp-search-input" placeholder="🔍 Lọc nhanh nền tảng (gõ bàn phím: TikTok, Meta, Zing, Spotify, YouTube...)..." style="width:100%;padding:8px 12px;font-size:12.5px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;">
+          </div>
+
+          <!-- DSP Grid Container -->
+          <div id="dsp-grid-container" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:10px;max-height:360px;overflow-y:auto;padding-right:4px;">
+            <!-- Populated dynamically by portal.js -->
+          </div>
+        </div>
+
+        <!-- 00B: LÃNH THỔ & QUỐC GIA PHÂN PHỐI (TERRITORIES) -->
+        <div style="background:#fff;border:1.5px solid #cbd5e1;border-radius:10px;padding:20px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:18px;line-height:1;">🌍</span>
+                <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
+                  Lãnh Thổ &amp; Quốc Gia Phân Phối (Territories) *
+                </h4>
+              </div>
+              <p style="margin:4px 0 0;font-size:12.5px;color:#64748b;">
+                Xác định các vùng lãnh thổ tác phẩm được phép thương mại và stream trên các nền tảng số.
+              </p>
+            </div>
+          </div>
+
+          <!-- Territory Mode Selector -->
+          <div style="display:grid;gap:10px;margin-bottom:14px;">
+            <label class="territory-mode-card" id="territory-card-worldwide" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1.5px solid #0f172a;background:#f8fafc;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+              <input type="radio" name="territory_mode" id="territory-radio-worldwide" value="worldwide" checked style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
+              <div>
+                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">Toàn cầu (Worldwide - Tất cả các quốc gia được phép)</b>
+                <span style="font-size:12px;color:#64748b;display:block;margin-top:2px;">Phân phối đầy đủ tới mọi thị trường quốc tế không bị giới hạn địa lý (khuyến nghị).</span>
+              </div>
+            </label>
+
+            <label class="territory-mode-card" id="territory-card-custom" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+              <input type="radio" name="territory_mode" id="territory-radio-custom" value="custom" style="accent-color:#0f172a;width:18px;height:18px;margin-top:2px;">
+              <div>
+                <b style="display:block;font-size:13px;color:#0f172a;font-weight:700;">Tùy chỉnh quốc gia phân phối (Custom Territory Selection)</b>
+                <span style="font-size:12px;color:#64748b;display:block;margin-top:2px;">Tự chọn hoặc loại trừ từng quốc gia cụ thể (ví dụ: chỉ phát hành tại Việt Nam hoặc Đông Nam Á).</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Custom Territory Panel -->
+          <div id="territory-custom-panel" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+              <span style="font-size:12px;font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;" id="territory-count-badge">
+                Đang chọn: <b id="territory-selected-count">171</b>/171 quốc gia
+              </span>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <button type="button" id="btn-territory-all" class="button alt" style="padding:4px 10px;font-size:11px;font-weight:700;background:#fff;">✓ Chọn tất cả (171)</button>
+                <button type="button" id="btn-territory-none" class="button alt" style="padding:4px 10px;font-size:11px;color:#dc2626;background:#fff;">✕ Bỏ chọn tất cả</button>
+                <button type="button" id="btn-territory-vn-only" class="button alt" style="padding:4px 10px;font-size:11px;font-weight:700;background:#fff;border-color:#0f172a;">Chỉ Việt Nam 🇻🇳</button>
+                <button type="button" id="btn-territory-asean" class="button alt" style="padding:4px 10px;font-size:11px;background:#fff;">Đông Nam Á (ASEAN)</button>
+              </div>
+            </div>
+
+            <!-- Instant Keyboard Search -->
+            <div style="margin-bottom:12px;">
+              <input type="text" id="territory-search-input" placeholder="🔍 Nhập bàn phím tên quốc gia hoặc mã ISO (Việt Nam, Nhật, Mỹ, Hàn, Singapore, US, FR, JP...)..." style="width:100%;padding:9px 14px;font-size:13px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            </div>
+
+            <!-- Country Grid -->
+            <div id="territory-countries-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));gap:8px;max-height:300px;overflow-y:auto;padding-right:4px;">
+              <!-- Populated dynamically -->
+            </div>
+
+            <div style="margin-top:10px;font-size:11.5px;color:#64748b;display:flex;align-items:center;gap:6px;">
+              <span>🛡️</span>
+              <span><b>Tuân thủ cấm vận quốc tế:</b> Triều Tiên (Democratic People's Republic of Korea - KP) không nằm trong danh mục phân phối quốc tế.</span>
+            </div>
+          </div>
         </div>
 
         <!-- 01: ADVANCED ROYALTY SPLITS BUILDER -->
@@ -1129,7 +1235,7 @@
 
         <!-- Pro-Tip Banner -->
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#1e40af;line-height:1.5;">
-          <strong>💡 Lời khuyên từ A&R UniFLOWs:</strong> Hãy chọn ngày phát hành cách ít nhất <b>10 - 14 ngày</b> để đội ngũ A&R có đủ thời gian Pitching trực tiếp vào các Editorial Playlists của Spotify, Apple Music & Zing MP3.
+          <strong>💡 Lời khuyên từ A&R UniFLOWs:</strong> Hãy chọn ngày phát hành cách ít nhất <b>10 - 14 ngày</b> để đội ngũ A&R có đủ thời gian Pitching trực tiếp vào các Editorial Playlists trên các hệ thống phân phối số toàn cầu.
         </div>
 
         <div class="mini-grid" style="margin-bottom:16px;">
@@ -1145,7 +1251,7 @@
 
         <div class="field" style="margin-bottom:20px;">
           <label>Kế hoạch truyền thông & Ghi chú cho đội ngũ Pitching</label>
-          <textarea name="notes" rows="2" placeholder="Chiến dịch TikTok, MV phát hành, định hướng nội dung để pitch playlist..."></textarea>
+          <textarea name="notes" rows="2" placeholder="Kế hoạch truyền thông, định hướng nội dung và câu chuyện bài hát..."></textarea>
         </div>
 
         <!-- Live Studio Mockup Card -->
@@ -1456,16 +1562,16 @@
         <form id="mig-ingest-form">
           <div class="field" style="margin-bottom:12px;">
             <label style="font-weight:700;">Tên bài hát / Bản phát hành cần chuyển giao *</label>
-            <input id="mig-song-title" required placeholder="Ví dụ: Vệt Sáng">
+            <input id="mig-song-title" required placeholder="Nhập tên bài hát / bản phát hành...">
           </div>
           <div class="mini-grid" style="margin-bottom:12px;">
             <div class="field">
               <label style="font-weight:700;">Mã ISRC gốc (12 ký tự) *</label>
-              <input id="mig-isrc-code" required placeholder="VD: US-S1Z-24-00123" style="font-family:'DM Mono',monospace;font-weight:bold;">
+              <input id="mig-isrc-code" required placeholder="Mã ISRC 12 ký tự..." style="font-family:'DM Mono',monospace;font-weight:bold;">
             </div>
             <div class="field">
               <label>Mã Barcode / UPC gốc (nếu có)</label>
-              <input id="mig-upc-code" placeholder="VD: 198000123456" style="font-family:'DM Mono',monospace;">
+              <input id="mig-upc-code" placeholder="Mã Barcode / UPC (nếu có)..." style="font-family:'DM Mono',monospace;">
             </div>
           </div>
           <div class="mini-grid" style="margin-bottom:12px;">

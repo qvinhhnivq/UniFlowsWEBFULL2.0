@@ -1037,6 +1037,116 @@ dialog[open].release-dialog-shell {
   }
 }
 
+/* DSP Channels Platform Selector */
+.dsp-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.dsp-card:hover {
+  border-color: #0f172a;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+.dsp-card.selected {
+  border-color: #0f172a;
+  background: #f8fafc;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+.dsp-icon-wrap {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: #f1f5f9;
+}
+.dsp-card.selected .dsp-icon-wrap {
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.dsp-checkbox {
+  accent-color: #0f172a;
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Country / Territory Card */
+.country-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+.country-card:hover {
+  border-color: #0f172a;
+  background: #f1f5f9;
+}
+.country-card.selected {
+  border-color: #0f172a;
+  background: #f8fafc;
+}
+.country-flag {
+  font-size: 16px;
+  line-height: 1;
+}
+.country-checkbox {
+  accent-color: #0f172a;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  margin: 0;
+}
+.country-code-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #334155;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: auto;
+}
+
+/* Searchable Language Dropdown */
+.searchable-lang-item {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #0f172a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.12s ease;
+}
+.searchable-lang-item:hover, .searchable-lang-item.highlighted {
+  background: #f1f5f9;
+  font-weight: 700;
+}
+.searchable-lang-item.selected {
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 700;
+}
+
 .release-modal-footer {
   display: flex;
   align-items: center;
